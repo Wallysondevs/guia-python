@@ -1,0 +1,1463 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Projeto Jogo da Forca — strings, listas, laços e random.choice passo a passo | Guia Python</title>
+<meta name="description" content="Projeto passo a passo: o jogo da forca em Python. A palavra escondida com sublinhados, letras certas e erradas em listas, limite de erros, validação do chute com strip, lower e isalpha, o desenho do boneco, a palavra sorteada com random.choice e, no fim, lida de um arquivo. Cinco versões com sessões reais no Python 3.14 e missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Projeto <span class="hl">Jogo da Forca</span></h1>
+
+<p class="intro">O jogo da forca de caderno, agora no terminal: o computador escolhe uma palavra e mostra só os tracinhos, um para cada letra. Você chuta letras; cada acerto revela a letra em todos os lugares onde ela aparece, e cada erro desenha mais uma parte do boneco. Seis erros e o boneco está completo: você perdeu. É o projeto ideal para praticar <strong>textos</strong> e <strong>listas</strong> juntos.</p>
+
+<div class="note">
+<strong>Você vai praticar</strong>
+<ul>
+  <li>Percorrer um texto letra por letra com <a href="for.html">for</a> e montar outro texto aos poucos com <code>+=</code> (<a href="operadores-atribuicao.html">Operadores de Atribuição</a>).</li>
+  <li>Perguntar "está dentro?" com <a href="operadores-is-in.html">in e not in</a>, em textos e em listas.</li>
+  <li>Guardar as letras certas e erradas em <a href="listas.html">listas</a> com <a href="listas-adicionar.html">append()</a>.</li>
+  <li>Validar o chute com <a href="strings-metodos.html">strip(), lower(), isalpha() e count()</a>, e pular com <a href="break-continue.html">continue</a>.</li>
+  <li>Desenhar o boneco com o <a href="if-ternario.html">if em uma linha</a> e o escape <a href="strings-escape.html"><code>\\</code></a>.</li>
+  <li>Sortear a palavra com <a href="random.html">random.choice()</a> e, no fim, <a href="arquivos-ler.html">ler as palavras de um arquivo</a>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>O que vamos construir</h2>
+<p>A forca pronta, no terminal da Ana. <strong>A letra depois de cada <code>Letra:</code> foi digitada por ela</strong>:</p>
+
+<pre class="term" data-cwd="~/projetos/forca">$ python3 forca.py
+=== Jogo da Forca: frutas ===
+  +---+
+      |
+      |
+      |
+      |
+=======
+_ _ _ _ _ _
+Letra: e
+Não tem e.
+  +---+
+  O   |                                « primeiro erro: a cabeça
+      |
+      |
+      |
+=======
+_ _ _ _ _ _
+Erradas: e
+Letra: i
+Tem 1 letra(s) i!
+  +---+
+  O   |
+      |
+      |
+      |
+=======
+_ _ i _ _ _
+Erradas: e
+Letra: a
+Tem 2 letra(s) a!
+  +---+
+  O   |
+      |
+      |
+      |
+=======
+_ _ i a _ a
+Erradas: e
+Letra: b
+Tem 1 letra(s) b!
+  +---+
+  O   |
+      |
+      |
+      |
+=======
+_ _ i a b a
+Erradas: e
+Letra: g
+Tem 1 letra(s) g!
+  +---+
+  O   |
+      |
+      |
+      |
+=======
+g _ i a b a
+Erradas: e
+Letra: o
+Tem 1 letra(s) o!
+  +---+
+  O   |
+      |
+      |
+      |
+=======
+g o i a b a
+Erradas: e
+Você venceu! A palavra era goiaba.</pre>
+
+<p>Cinco versões, uma novidade em cada:</p>
+
+<ol class="passo">
+  <li><a href="#versao1">A palavra escondida</a> (percorrer o texto, a lista <code>certas</code>).</li>
+  <li><a href="#versao2">Erros contados: dá para perder</a> (a lista <code>erradas</code>, <code>len</code>).</li>
+  <li><a href="#versao3">Chute validado</a> (<code>strip</code>, <code>lower</code>, <code>isalpha</code>, <code>continue</code>).</li>
+  <li><a href="#versao4">Funções, desenho e palavra sorteada</a> (<code>def</code>, <code>random.choice</code>).</li>
+  <li><a href="#versao5">As palavras num arquivo</a> (<code>open</code> e <code>with</code>).</li>
+</ol>
+
+<h3>Antes de começar</h3>
+<p>Você vai usar <a href="strings.html">strings</a>, <a href="listas.html">listas</a>, <code>while True</code> com <code>break</code> (como na <a href="projeto-calculadora.html">Calculadora</a>) e <code>random</code> (como no <a href="projeto-adivinhacao.html">Jogo de Adivinhação</a>). Crie a pasta; o arquivo vai se chamar <code>forca.py</code>:</p>
+
+<pre class="term">$ mkdir -p projetos/forca
+$ cd projetos/forca</pre>
+
+<hr>
+
+<h2 id="versao1">Versão 1 · A palavra escondida</h2>
+<p>Primeiro, só o coração do jogo: a palavra fixa <code>"banana"</code>, os tracinhos e as letras aparecendo. Sem erros, sem forca: o jogo termina quando a palavra inteira estiver descoberta.</p>
+
+<p>A ideia: o programa guarda numa lista as letras que a pessoa já acertou. A cada volta, ele <strong>monta a "máscara"</strong> da palavra do zero: passa letra por letra de <code>"banana"</code> e, para cada uma, pergunta "esta letra já foi acertada?". Se sim, escreve a letra; se não, escreve <code>_</code>.</p>
+
+<pre class="file" data-file="forca.py">palavra = "banana"
+certas = []
+
+print("=== Jogo da Forca ===")
+while True:
+    mascara = ""
+    for letra in palavra:
+        if letra in certas:
+            mascara += letra + " "
+        else:
+            mascara += "_ "
+    print(mascara)
+
+    if "_" not in mascara:
+        print("Você descobriu a palavra!")
+        break
+
+    chute = input("Letra: ")
+    if chute in palavra:
+        certas.append(chute)
+</pre>
+
+<dl class="anatomy">
+  <dt>certas = []</dt><dd>Uma lista vazia: as letras acertadas vão entrar aqui.</dd>
+  <dt>mascara = ""</dt><dd>Um texto vazio, que vai crescer letra por letra. Recomeça vazio a cada volta do <code>while</code>.</dd>
+  <dt>for letra in palavra:</dt><dd>Um <code>for</code> sobre um texto passa por cada caractere: <code>"b"</code>, <code>"a"</code>, <code>"n"</code>, <code>"a"</code>, <code>"n"</code>, <code>"a"</code>.</dd>
+  <dt>if letra in certas:</dt><dd>"Esta letra está na lista das acertadas?"</dd>
+  <dt>mascara += letra + " "</dt><dd>Acrescenta a letra e um espaço no fim da máscara. O <code>+=</code> é "o que já tinha, mais isto".</dd>
+  <dt>if "_" not in mascara:</dt><dd>Se não sobrou nenhum tracinho, todas as letras foram descobertas.</dd>
+  <dt>if chute in palavra: certas.append(chute)</dt><dd>Se a letra existe na palavra, entra na lista. Uma vez na lista, ela aparece em <strong>todos</strong> os lugares, porque a máscara confere cada posição.</dd>
+</dl>
+
+<pre class="term" data-cwd="~/projetos/forca">$ python3 forca.py
+=== Jogo da Forca ===
+_ _ _ _ _ _
+Letra: a
+_ a _ a _ a                            « um chute, três letras
+Letra: x
+_ a _ a _ a                            « x não existe: nada acontece
+Letra: b
+b a _ a _ a
+Letra: n
+b a n a n a
+Você descobriu a palavra!</pre>
+
+<p>Funciona, mas repare no <code>x</code>: errar não custa nada, e a pessoa nem fica sabendo que errou. A versão 2 conta os erros.</p>
+
+<div class="note">
+<strong>Por que montar a máscara do zero a cada volta?</strong>
+<p>Parece mais fácil guardar o texto <code>"_ _ _ _ _ _"</code> e ir trocando os tracinhos pelas letras. Mas em Python <strong>um texto não pode ser alterado por dentro</strong>: ele é imutável. Tentar trocar uma letra dá erro:</p>
+<pre class="file" data-file="editar.py">palavra = "banana"
+palavra[0] = "B"
+</pre>
+<pre class="term" data-cwd="~/projetos/forca">$ python3 editar.py
+Traceback (most recent call last):
+  File "/home/ana/projetos/forca/editar.py", line 2, in &lt;module&gt;
+    palavra[0] = "B"
+    ~~~~~~~^^^
+TypeError: 'str' object does not support item assignment</pre>
+<p><code>TypeError: 'str' object does not support item assignment</code> = "um objeto <code>str</code> não aceita atribuição a um item": dá para <strong>ler</strong> <code>palavra[0]</code>, mas não para trocá-lo. Para "mudar" um texto, cria-se um texto novo. É o que a versão 1 faz: um <code>mascara</code> novo a cada volta. A aula <a href="mutabilidade.html">Mutável × Imutável</a> explica a diferença entre textos e listas.</p>
+</div>
+
+<div class="trypy" data-stdin="b\na\nn" data-goal="out:b a n a n a;;out:Você descobriu a palavra!;;semerro">
+<p class="try-task"><strong>Missão (versão 1):</strong> o programa mostra os tracinhos e pede letras, mas nunca guarda os acertos: a palavra nunca aparece. No lugar do comentário, escreva o <code>if</code> que coloca o chute na lista <code>certas</code> quando a letra está na palavra. A entrada da missão é <code>b</code>, <code>a</code>, <code>n</code>.</p>
+<pre class="script" data-file="forca.py">palavra = "banana"
+certas = []
+
+print("=== Jogo da Forca ===")
+while True:
+    mascara = ""
+    for letra in palavra:
+        if letra in certas:
+            mascara += letra + " "
+        else:
+            mascara += "_ "
+    print(mascara)
+
+    if "_" not in mascara:
+        print("Você descobriu a palavra!")
+        break
+
+    chute = input("Letra: ")
+    # guarde o chute em certas, se a letra estiver na palavra
+</pre>
+<pre class="solucao" data-file="forca.py">palavra = "banana"
+certas = []
+
+print("=== Jogo da Forca ===")
+while True:
+    mascara = ""
+    for letra in palavra:
+        if letra in certas:
+            mascara += letra + " "
+        else:
+            mascara += "_ "
+    print(mascara)
+
+    if "_" not in mascara:
+        print("Você descobriu a palavra!")
+        break
+
+    chute = input("Letra: ")
+    if chute in palavra:
+        certas.append(chute)
+</pre>
+</div>
+
+<p>No código inicial, quando a entrada da missão acaba, o <code>input()</code> não tem mais o que ler e o programa termina com um erro <code>EOFError</code> ("fim do arquivo": a entrada acabou). É o sinal de que o jogo continuava esperando letras.</p>
+
+<hr>
+
+<h2 id="versao2">Versão 2 · Erros contados: dá para perder</h2>
+<p>Agora cada letra errada vai para uma segunda lista, <code>erradas</code>. Quantos erros a pessoa já fez? É o tamanho dessa lista: <code>len(erradas)</code>. Com 6 erros, ela perde.</p>
+
+<pre class="file" data-file="forca.py">palavra = "banana"
+MAX_ERROS = 6
+certas = []
+erradas = []
+
+print("=== Jogo da Forca ===")
+while True:
+    mascara = ""
+    for letra in palavra:
+        if letra in certas:
+            mascara += letra + " "
+        else:
+            mascara += "_ "
+    print(mascara)
+    print(f"Erros: {len(erradas)} de {MAX_ERROS}")
+
+    if "_" not in mascara:
+        print(f"Você venceu! A palavra era {palavra}.")
+        break
+    if len(erradas) == MAX_ERROS:
+        print(f"Você perdeu! A palavra era {palavra}.")
+        break
+
+    chute = input("Letra: ")
+    if chute in palavra:
+        certas.append(chute)
+        print("Tem!")
+    else:
+        erradas.append(chute)
+        print("Não tem.")
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>O que entrou</th><th>Para quê</th></tr>
+<tr><td><code>MAX_ERROS = 6</code></td><td>O limite (cabeça, tronco, dois braços, duas pernas), em MAIÚSCULAS por ser um valor fixo.</td></tr>
+<tr><td><code>erradas = []</code></td><td>A segunda lista: as letras que não existem na palavra.</td></tr>
+<tr><td><code>len(erradas)</code></td><td>Quantos itens a lista tem = quantos erros (veja <a href="funcoes-embutidas.html">Funções Embutidas</a>).</td></tr>
+<tr><td><code>if len(erradas) == MAX_ERROS:</code></td><td>O fim do jogo por derrota. Vem <strong>depois</strong> do teste da vitória e <strong>antes</strong> do <code>input</code>: assim, o jogo para assim que o sexto erro acontece.</td></tr>
+<tr><td><code>else: erradas.append(chute)</code></td><td>A letra não está na palavra: vai para as erradas, e o jogo avisa.</td></tr>
+</table>
+</div>
+
+<p>Uma vitória e uma derrota:</p>
+
+<pre class="term" data-cwd="~/projetos/forca">$ python3 forca.py
+=== Jogo da Forca ===
+_ _ _ _ _ _
+Erros: 0 de 6
+Letra: a
+Tem!
+_ a _ a _ a
+Erros: 0 de 6
+Letra: e
+Não tem.
+_ a _ a _ a
+Erros: 1 de 6
+Letra: n
+Tem!
+_ a n a n a
+Erros: 1 de 6
+Letra: o
+Não tem.
+_ a n a n a
+Erros: 2 de 6
+Letra: b
+Tem!
+b a n a n a
+Erros: 2 de 6
+Você venceu! A palavra era banana.
+$ python3 forca.py
+=== Jogo da Forca ===
+_ _ _ _ _ _
+Erros: 0 de 6
+Letra: e
+Não tem.
+_ _ _ _ _ _
+Erros: 1 de 6
+Letra: i
+Não tem.
+_ _ _ _ _ _
+Erros: 2 de 6
+Letra: o
+Não tem.
+_ _ _ _ _ _
+Erros: 3 de 6
+Letra: u
+Não tem.
+_ _ _ _ _ _
+Erros: 4 de 6
+Letra: s
+Não tem.
+_ _ _ _ _ _
+Erros: 5 de 6
+Letra: t
+Não tem.
+_ _ _ _ _ _
+Erros: 6 de 6
+Você perdeu! A palavra era banana.</pre>
+
+<h3>Quando dá errado na versão 2</h3>
+
+<div class="cenario">
+<strong>Letra maiúscula conta como erro</strong>
+<pre class="term" data-cwd="~/projetos/forca">$ python3 forca.py
+=== Jogo da Forca ===
+_ _ _ _ _ _
+Erros: 0 de 6
+Letra: A
+Não tem.                               « mas banana tem a!
+_ _ _ _ _ _
+Erros: 1 de 6
+Letra: B
+Não tem.
+_ _ _ _ _ _
+Erros: 2 de 6
+Letra: N
+Não tem.
+_ _ _ _ _ _
+Erros: 3 de 6
+Letra: a
+Tem!
+_ a _ a _ a
+Erros: 3 de 6
+Letra: b
+Tem!
+b a _ a _ a
+Erros: 3 de 6
+Letra: n
+Tem!
+b a n a n a
+Erros: 3 de 6
+Você venceu! A palavra era banana.</pre>
+<p>Para o Python, <code>"A"</code> e <code>"a"</code> são caracteres diferentes, e <code>"A" in "banana"</code> é <code>False</code>. Com o <kbd>Caps Lock</kbd> ligado, a Ana gastou três erros com letras que existiam. Não houve traceback: o programa fez exatamente o que foi mandado. A versão 3 passa o chute para minúscula.</p>
+</div>
+
+<div class="cenario">
+<strong>Só <kbd>Enter</kbd>: "Tem!"</strong>
+<pre class="term" data-cwd="~/projetos/forca">$ python3 forca.py
+=== Jogo da Forca ===
+_ _ _ _ _ _
+Erros: 0 de 6
+Letra:
+Tem!                                   « a Ana só apertou Enter
+_ _ _ _ _ _
+Erros: 0 de 6
+Letra: x
+Não tem.
+_ _ _ _ _ _
+Erros: 1 de 6
+Letra: ^CTraceback (most recent call last):
+  File "/home/ana/projetos/forca/forca.py", line 24, in &lt;module&gt;
+    chute = input("Letra: ")
+KeyboardInterrupt
+</pre>
+<p>Apertar só <kbd>Enter</kbd> faz o <code>input()</code> devolver o texto vazio, <code>""</code>. E o texto vazio está "dentro" de qualquer texto:</p>
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; "" in "banana"
+True
+&gt;&gt;&gt; exit()</pre>
+<p>Então o jogo disse "Tem!" e guardou <code>""</code> na lista <code>certas</code>, sem revelar nada. Também <code>"an"</code> daria "Tem!", porque o <code>in</code> entre textos procura um <strong>pedaço</strong>. A versão 3 só aceita exatamente uma letra. (No fim, a Ana saiu com <kbd>Ctrl</kbd>+<kbd>C</kbd>, que interrompe o programa com <code>KeyboardInterrupt</code>.)</p>
+</div>
+
+<div class="trypy" data-stdin="e\ni\no\nu\ns\nt" data-goal="out:Você perdeu! A palavra era banana.;;semerro">
+<p class="try-task"><strong>Missão (versão 2):</strong> o jogo conta os erros, mas nunca termina por derrota: depois do sexto erro, continua pedindo letras. Logo depois do <code>if</code> da vitória, acrescente o <code>if</code> que confere <code>len(erradas) == MAX_ERROS</code>, mostra <code>Você perdeu! A palavra era banana.</code> (use <code>{palavra}</code>) e sai com <code>break</code>. A entrada da missão são seis letras que não existem em banana.</p>
+<pre class="script" data-file="forca.py">palavra = "banana"
+MAX_ERROS = 6
+certas = []
+erradas = []
+
+print("=== Jogo da Forca ===")
+while True:
+    mascara = ""
+    for letra in palavra:
+        if letra in certas:
+            mascara += letra + " "
+        else:
+            mascara += "_ "
+    print(mascara)
+    print(f"Erros: {len(erradas)} de {MAX_ERROS}")
+
+    if "_" not in mascara:
+        print(f"Você venceu! A palavra era {palavra}.")
+        break
+
+    chute = input("Letra: ")
+    if chute in palavra:
+        certas.append(chute)
+        print("Tem!")
+    else:
+        erradas.append(chute)
+        print("Não tem.")
+</pre>
+<pre class="solucao" data-file="forca.py">palavra = "banana"
+MAX_ERROS = 6
+certas = []
+erradas = []
+
+print("=== Jogo da Forca ===")
+while True:
+    mascara = ""
+    for letra in palavra:
+        if letra in certas:
+            mascara += letra + " "
+        else:
+            mascara += "_ "
+    print(mascara)
+    print(f"Erros: {len(erradas)} de {MAX_ERROS}")
+
+    if "_" not in mascara:
+        print(f"Você venceu! A palavra era {palavra}.")
+        break
+    if len(erradas) == MAX_ERROS:
+        print(f"Você perdeu! A palavra era {palavra}.")
+        break
+
+    chute = input("Letra: ")
+    if chute in palavra:
+        certas.append(chute)
+        print("Tem!")
+    else:
+        erradas.append(chute)
+        print("Não tem.")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao3">Versão 3 · Chute validado</h2>
+<p>Três defesas novas, todas antes de o chute ser contado: o chute é limpo (sem espaços, em minúscula), tem de ser <strong>uma letra só</strong>, e não pode ser uma letra já tentada. Se não passar, o programa avisa e volta para o começo do laço com <a href="break-continue.html">continue</a>, sem contar nada.</p>
+
+<pre class="file" data-file="forca.py">palavra = "banana"
+MAX_ERROS = 6
+certas = []
+erradas = []
+
+print("=== Jogo da Forca ===")
+while True:
+    mascara = ""
+    for letra in palavra:
+        if letra in certas:
+            mascara += letra + " "
+        else:
+            mascara += "_ "
+    print(mascara)
+    print(f"Erros: {len(erradas)} de {MAX_ERROS}")
+
+    if "_" not in mascara:
+        print(f"Você venceu! A palavra era {palavra}.")
+        break
+    if len(erradas) == MAX_ERROS:
+        print(f"Você perdeu! A palavra era {palavra}.")
+        break
+
+    chute = input("Letra: ").strip().lower()
+    if len(chute) != 1 or not chute.isalpha():
+        print("Digite uma letra só.")
+        continue
+    if chute in certas or chute in erradas:
+        print(f"Você já tentou a letra {chute}.")
+        continue
+
+    if chute in palavra:
+        certas.append(chute)
+        print("Tem!")
+    else:
+        erradas.append(chute)
+        print("Não tem.")
+</pre>
+
+<dl class="anatomy">
+  <dt>input("Letra: ").strip().lower()</dt><dd>Tira os espaços das pontas e passa para minúscula: <code>" B "</code> vira <code>"b"</code>.</dd>
+  <dt>len(chute) != 1</dt><dd>Recusa o texto vazio (só <kbd>Enter</kbd>, tamanho 0) e os chutes de duas letras ou mais (<code>"ab"</code>).</dd>
+  <dt>not chute.isalpha()</dt><dd><code>isalpha()</code> ("é alfabético?") dá <code>True</code> só para letras. O <code>not</code> inverte: recusa <code>"1"</code>, <code>"?"</code>, <code>"-"</code>.</dd>
+  <dt>or</dt><dd>Basta <strong>um</strong> dos dois problemas para recusar (veja <a href="operadores-logicos.html">and, or e not</a>).</dd>
+  <dt>chute in certas or chute in erradas</dt><dd>A letra já está numa das listas: a pessoa já tentou. Sem este teste, repetir uma letra errada contaria como mais um erro.</dd>
+  <dt>continue</dt><dd>Volta para o começo do <code>while</code>: a máscara aparece de novo e o programa pede outra letra, sem mexer nas listas.</dd>
+</dl>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; "b".isalpha()
+True
+&gt;&gt;&gt; "1".isalpha()
+False
+&gt;&gt;&gt; "ç".isalpha()
+True
+&gt;&gt;&gt; exit()</pre>
+
+<p>O <code>"ç"</code> também é letra para o Python: o <code>isalpha()</code> conhece os acentos e as letras de outros alfabetos.</p>
+
+<pre class="term" data-cwd="~/projetos/forca">$ python3 forca.py
+=== Jogo da Forca ===
+_ _ _ _ _ _
+Erros: 0 de 6
+Letra: B
+Tem!                                   « o B virou b
+b _ _ _ _ _
+Erros: 0 de 6
+Letra: b
+Você já tentou a letra b.
+b _ _ _ _ _
+Erros: 0 de 6
+Letra:
+Digite uma letra só.
+b _ _ _ _ _
+Erros: 0 de 6
+Letra: ab
+Digite uma letra só.
+b _ _ _ _ _
+Erros: 0 de 6
+Letra: 1
+Digite uma letra só.
+b _ _ _ _ _
+Erros: 0 de 6
+Letra: a
+Tem!
+b a _ a _ a
+Erros: 0 de 6
+Letra: n
+Tem!
+b a n a n a
+Erros: 0 de 6
+Você venceu! A palavra era banana.</pre>
+
+<p>Nenhuma das quatro tentativas inválidas virou erro: o placar ficou em <code>0 de 6</code> o tempo todo.</p>
+
+<div class="trypy" data-stdin="B\nb\n\nab\n1\na\nn" data-goal="out:Você já tentou a letra b.;;out:Digite uma letra só.;;out:Você venceu! A palavra era banana.;;out:Erros: 0 de 6;;semerro">
+<p class="try-task"><strong>Missão (versão 3):</strong> este é o código da versão 2. Faça o chute passar por <code>.strip().lower()</code> e acrescente, logo depois do <code>input</code>, os dois testes com <code>continue</code>: "uma letra só" e "já tentou". A entrada da missão é <code>B</code>, <code>b</code>, só <kbd>Enter</kbd>, <code>ab</code>, <code>1</code>, <code>a</code>, <code>n</code>: devem aparecer os dois avisos e a vitória sem nenhum erro (<code>Erros: 0 de 6</code> no fim).</p>
+<pre class="script" data-file="forca.py">palavra = "banana"
+MAX_ERROS = 6
+certas = []
+erradas = []
+
+print("=== Jogo da Forca ===")
+while True:
+    mascara = ""
+    for letra in palavra:
+        if letra in certas:
+            mascara += letra + " "
+        else:
+            mascara += "_ "
+    print(mascara)
+    print(f"Erros: {len(erradas)} de {MAX_ERROS}")
+
+    if "_" not in mascara:
+        print(f"Você venceu! A palavra era {palavra}.")
+        break
+    if len(erradas) == MAX_ERROS:
+        print(f"Você perdeu! A palavra era {palavra}.")
+        break
+
+    chute = input("Letra: ")
+
+    if chute in palavra:
+        certas.append(chute)
+        print("Tem!")
+    else:
+        erradas.append(chute)
+        print("Não tem.")
+</pre>
+<pre class="solucao" data-file="forca.py">palavra = "banana"
+MAX_ERROS = 6
+certas = []
+erradas = []
+
+print("=== Jogo da Forca ===")
+while True:
+    mascara = ""
+    for letra in palavra:
+        if letra in certas:
+            mascara += letra + " "
+        else:
+            mascara += "_ "
+    print(mascara)
+    print(f"Erros: {len(erradas)} de {MAX_ERROS}")
+
+    if "_" not in mascara:
+        print(f"Você venceu! A palavra era {palavra}.")
+        break
+    if len(erradas) == MAX_ERROS:
+        print(f"Você perdeu! A palavra era {palavra}.")
+        break
+
+    chute = input("Letra: ").strip().lower()
+    if len(chute) != 1 or not chute.isalpha():
+        print("Digite uma letra só.")
+        continue
+    if chute in certas or chute in erradas:
+        print(f"Você já tentou a letra {chute}.")
+        continue
+
+    if chute in palavra:
+        certas.append(chute)
+        print("Tem!")
+    else:
+        erradas.append(chute)
+        print("Não tem.")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao4">Versão 4 · Funções, desenho e palavra sorteada</h2>
+<p>Hora de virar jogo de verdade: a palavra é sorteada de uma lista de frutas com <code>random.choice()</code>, e o boneco aparece na forca, uma parte por erro. Com tanta coisa, o programa ganha três <a href="funcoes.html">funções</a>: uma desenha, uma monta a máscara e uma lê a letra.</p>
+
+<pre class="file" data-file="forca.py">import random
+
+PALAVRAS = ["abacaxi", "acerola", "banana", "caju", "goiaba",
+            "laranja", "melancia", "morango", "pitanga"]
+MAX_ERROS = 6
+
+
+def desenhar(erros):
+    """Desenha a forca com as partes do boneco que já apareceram."""
+    cabeca = "O" if erros &gt;= 1 else " "
+    tronco = "|" if erros &gt;= 2 else " "
+    braco_esq = "/" if erros &gt;= 3 else " "
+    braco_dir = "\\" if erros &gt;= 4 else " "
+    perna_esq = "/" if erros &gt;= 5 else " "
+    perna_dir = "\\" if erros &gt;= 6 else " "
+    print("  +---+")
+    print(f"  {cabeca}   |")
+    print(f" {braco_esq}{tronco}{braco_dir}  |")
+    print(f" {perna_esq} {perna_dir}  |")
+    print("      |")
+    print("=======")
+
+
+def mascarar(palavra, certas):
+    """Devolve a palavra com _ no lugar das letras ainda não descobertas."""
+    mascara = ""
+    for letra in palavra:
+        if letra in certas:
+            mascara += letra + " "
+        else:
+            mascara += "_ "
+    return mascara.strip()
+
+
+def ler_letra(tentadas):
+    """Pergunta até a pessoa digitar uma letra que ainda não tentou."""
+    while True:
+        chute = input("Letra: ").strip().lower()
+        if len(chute) != 1 or not chute.isalpha():
+            print("Digite uma letra só.")
+        elif chute in tentadas:
+            print(f"Você já tentou a letra {chute}.")
+        else:
+            return chute
+
+
+palavra = random.choice(PALAVRAS)
+certas = []
+erradas = []
+
+print("=== Jogo da Forca: frutas ===")
+while True:
+    desenhar(len(erradas))
+    mascara = mascarar(palavra, certas)
+    print(mascara)
+    if erradas:
+        print("Erradas:", ", ".join(erradas))
+
+    if "_" not in mascara:
+        print(f"Você venceu! A palavra era {palavra}.")
+        break
+    if len(erradas) == MAX_ERROS:
+        print(f"Você perdeu! A palavra era {palavra}.")
+        break
+
+    chute = ler_letra(certas + erradas)
+    if chute in palavra:
+        certas.append(chute)
+        print(f"Tem {palavra.count(chute)} letra(s) {chute}!")
+    else:
+        erradas.append(chute)
+        print(f"Não tem {chute}.")
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Peça</th><th>O que faz</th></tr>
+<tr><td><code>PALAVRAS = [ … ]</code></td><td>A lista de frutas, quebrada em duas linhas: dentro de colchetes, o Python deixa continuar na linha de baixo. Palavras sem acento, de propósito (veja <a href="#ideias">Ideias para continuar</a>).</td></tr>
+<tr><td><code>random.choice(PALAVRAS)</code></td><td>"Escolha": sorteia <strong>um item</strong> da lista. Cada fruta tem a mesma chance.</td></tr>
+<tr><td><code>cabeca = "O" if erros &gt;= 1 else " "</code></td><td>Um <a href="if-ternario.html">if em uma linha</a>: vale <code>"O"</code> se já houve 1 erro, senão um espaço. Cada parte do boneco tem a sua linha, e aparece a partir do seu número de erros.</td></tr>
+<tr><td><code>"\\"</code></td><td>A barra invertida sozinha. Dentro de um texto, <code>\</code> começa um escape (como <code>\n</code>), então, para escrever <strong>uma</strong> barra, escrevem-se <strong>duas</strong> (veja <a href="strings-escape.html">Caracteres de Escape</a>).</td></tr>
+<tr><td><code>return mascara.strip()</code></td><td>A função <strong>devolve</strong> a máscara, sem o espaço que sobrava no fim.</td></tr>
+<tr><td><code>ler_letra(certas + erradas)</code></td><td>O <code>+</code> entre duas listas cria uma lista nova com os itens das duas: todas as letras já tentadas.</td></tr>
+<tr><td><code>if erradas:</code></td><td>Uma lista vazia conta como <code>False</code> num <code>if</code>; com algum item, como <code>True</code>. Então: "se já há letras erradas, mostre-as".</td></tr>
+<tr><td><code>", ".join(erradas)</code></td><td>Junta os itens da lista num texto, com <code>", "</code> entre eles: <code>"e, o, r"</code>.</td></tr>
+<tr><td><code>palavra.count(chute)</code></td><td>Conta quantas vezes a letra aparece: <code>"banana".count("a")</code> é 3.</td></tr>
+</table>
+</div>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; "banana".count("a")
+3
+&gt;&gt;&gt; ", ".join(["x", "z", "e"])
+'x, z, e'
+&gt;&gt;&gt; bool([])
+False
+&gt;&gt;&gt; bool(["x"])
+True
+&gt;&gt;&gt; ["a", "b"] + ["x"]
+['a', 'b', 'x']
+&gt;&gt;&gt; exit()</pre>
+
+<p>Uma partida perdida, para ver o boneco inteiro:</p>
+
+<pre class="term" data-cwd="~/projetos/forca">$ python3 forca.py
+=== Jogo da Forca: frutas ===
+  +---+
+      |
+      |
+      |
+      |
+=======
+_ _ _ _ _ _ _
+Letra: a
+Tem 3 letra(s) a!
+  +---+
+      |
+      |
+      |
+      |
+=======
+a _ a _ a _ _
+Letra: e
+Não tem e.
+  +---+
+  O   |
+      |
+      |
+      |
+=======
+a _ a _ a _ _
+Erradas: e
+Letra: o
+Não tem o.
+  +---+
+  O   |
+  |   |
+      |
+      |
+=======
+a _ a _ a _ _
+Erradas: e, o
+Letra: r
+Não tem r.
+  +---+
+  O   |
+ /|   |
+      |
+      |
+=======
+a _ a _ a _ _
+Erradas: e, o, r
+Letra: s
+Não tem s.
+  +---+
+  O   |
+ /|\  |
+      |
+      |
+=======
+a _ a _ a _ _
+Erradas: e, o, r, s
+Letra: i
+Tem 1 letra(s) i!
+  +---+
+  O   |
+ /|\  |
+      |
+      |
+=======
+a _ a _ a _ i
+Erradas: e, o, r, s
+Letra: n
+Não tem n.
+  +---+
+  O   |
+ /|\  |
+ /    |
+      |
+=======
+a _ a _ a _ i
+Erradas: e, o, r, s, n
+Letra: t
+Não tem t.
+  +---+
+  O   |
+ /|\  |
+ / \  |
+      |
+=======
+a _ a _ a _ i
+Erradas: e, o, r, s, n, t
+Você perdeu! A palavra era abacaxi.</pre>
+
+<div class="tip">
+<strong>Testando com a semente</strong>
+<p>Como no <a href="projeto-adivinhacao.html">Jogo de Adivinhação</a>, a missão abaixo usa <code>random.seed(5)</code> antes do sorteio: com essa semente, o <code>random.choice(PALAVRAS)</code> escolhe sempre <strong>goiaba</strong> (no terminal e no editor), e a missão pode conferir o resultado. No jogo de verdade, sem semente.</p>
+</div>
+
+<div class="trypy" data-stdin="g\no\ni\na\nb" data-goal="out:Você venceu! A palavra era goiaba.;;src:random\.choice\(;;semerro">
+<p class="try-task"><strong>Missão (versão 4):</strong> a lista <code>PALAVRAS</code> existe, mas a palavra ainda é sempre <code>"banana"</code>. Troque essa linha por um sorteio com <code>random.choice(PALAVRAS)</code>. Com a semente 5, a palavra sorteada é goiaba, e a entrada da missão (<code>g</code>, <code>o</code>, <code>i</code>, <code>a</code>, <code>b</code>) a descobre.</p>
+<pre class="script" data-file="forca.py">import random
+
+random.seed(5)  # só para a missão: o sorteio dá sempre goiaba
+PALAVRAS = ["abacaxi", "acerola", "banana", "caju", "goiaba",
+            "laranja", "melancia", "morango", "pitanga"]
+MAX_ERROS = 6
+
+
+def desenhar(erros):
+    """Desenha a forca com as partes do boneco que já apareceram."""
+    cabeca = "O" if erros &gt;= 1 else " "
+    tronco = "|" if erros &gt;= 2 else " "
+    braco_esq = "/" if erros &gt;= 3 else " "
+    braco_dir = "\\" if erros &gt;= 4 else " "
+    perna_esq = "/" if erros &gt;= 5 else " "
+    perna_dir = "\\" if erros &gt;= 6 else " "
+    print("  +---+")
+    print(f"  {cabeca}   |")
+    print(f" {braco_esq}{tronco}{braco_dir}  |")
+    print(f" {perna_esq} {perna_dir}  |")
+    print("      |")
+    print("=======")
+
+
+def mascarar(palavra, certas):
+    """Devolve a palavra com _ no lugar das letras ainda não descobertas."""
+    mascara = ""
+    for letra in palavra:
+        if letra in certas:
+            mascara += letra + " "
+        else:
+            mascara += "_ "
+    return mascara.strip()
+
+
+def ler_letra(tentadas):
+    """Pergunta até a pessoa digitar uma letra que ainda não tentou."""
+    while True:
+        chute = input("Letra: ").strip().lower()
+        if len(chute) != 1 or not chute.isalpha():
+            print("Digite uma letra só.")
+        elif chute in tentadas:
+            print(f"Você já tentou a letra {chute}.")
+        else:
+            return chute
+
+
+palavra = "banana"
+certas = []
+erradas = []
+
+print("=== Jogo da Forca: frutas ===")
+while True:
+    desenhar(len(erradas))
+    mascara = mascarar(palavra, certas)
+    print(mascara)
+    if erradas:
+        print("Erradas:", ", ".join(erradas))
+
+    if "_" not in mascara:
+        print(f"Você venceu! A palavra era {palavra}.")
+        break
+    if len(erradas) == MAX_ERROS:
+        print(f"Você perdeu! A palavra era {palavra}.")
+        break
+
+    chute = ler_letra(certas + erradas)
+    if chute in palavra:
+        certas.append(chute)
+        print(f"Tem {palavra.count(chute)} letra(s) {chute}!")
+    else:
+        erradas.append(chute)
+        print(f"Não tem {chute}.")
+</pre>
+<pre class="solucao" data-file="forca.py">import random
+
+random.seed(5)  # só para a missão: o sorteio dá sempre goiaba
+PALAVRAS = ["abacaxi", "acerola", "banana", "caju", "goiaba",
+            "laranja", "melancia", "morango", "pitanga"]
+MAX_ERROS = 6
+
+
+def desenhar(erros):
+    """Desenha a forca com as partes do boneco que já apareceram."""
+    cabeca = "O" if erros &gt;= 1 else " "
+    tronco = "|" if erros &gt;= 2 else " "
+    braco_esq = "/" if erros &gt;= 3 else " "
+    braco_dir = "\\" if erros &gt;= 4 else " "
+    perna_esq = "/" if erros &gt;= 5 else " "
+    perna_dir = "\\" if erros &gt;= 6 else " "
+    print("  +---+")
+    print(f"  {cabeca}   |")
+    print(f" {braco_esq}{tronco}{braco_dir}  |")
+    print(f" {perna_esq} {perna_dir}  |")
+    print("      |")
+    print("=======")
+
+
+def mascarar(palavra, certas):
+    """Devolve a palavra com _ no lugar das letras ainda não descobertas."""
+    mascara = ""
+    for letra in palavra:
+        if letra in certas:
+            mascara += letra + " "
+        else:
+            mascara += "_ "
+    return mascara.strip()
+
+
+def ler_letra(tentadas):
+    """Pergunta até a pessoa digitar uma letra que ainda não tentou."""
+    while True:
+        chute = input("Letra: ").strip().lower()
+        if len(chute) != 1 or not chute.isalpha():
+            print("Digite uma letra só.")
+        elif chute in tentadas:
+            print(f"Você já tentou a letra {chute}.")
+        else:
+            return chute
+
+
+palavra = random.choice(PALAVRAS)
+certas = []
+erradas = []
+
+print("=== Jogo da Forca: frutas ===")
+while True:
+    desenhar(len(erradas))
+    mascara = mascarar(palavra, certas)
+    print(mascara)
+    if erradas:
+        print("Erradas:", ", ".join(erradas))
+
+    if "_" not in mascara:
+        print(f"Você venceu! A palavra era {palavra}.")
+        break
+    if len(erradas) == MAX_ERROS:
+        print(f"Você perdeu! A palavra era {palavra}.")
+        break
+
+    chute = ler_letra(certas + erradas)
+    if chute in palavra:
+        certas.append(chute)
+        print(f"Tem {palavra.count(chute)} letra(s) {chute}!")
+    else:
+        erradas.append(chute)
+        print(f"Não tem {chute}.")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao5">Versão 5 · As palavras num arquivo</h2>
+<p>Para trocar as palavras, hoje é preciso mexer no código. Muito melhor guardá-las num arquivo de texto, <code>palavras.txt</code>, uma por linha, na mesma pasta do jogo. Qualquer pessoa edita o arquivo (no editor de textos) e o jogo muda, sem tocar no programa. A Ana fez um com animais:</p>
+
+<pre class="term" data-cwd="~/projetos/forca">$ cat palavras.txt
+capivara
+jabuti
+tucano
+tatu
+papagaio
+macaco</pre>
+
+<p>No programa, a lista <code>PALAVRAS</code> some, entra o nome do arquivo e uma função nova, <code>carregar_palavras</code>. As outras três funções ficam iguais:</p>
+
+<pre class="file" data-file="forca.py">import random
+
+ARQUIVO = "palavras.txt"
+MAX_ERROS = 6
+
+
+def carregar_palavras(nome_arquivo):
+    """Lê o arquivo (uma palavra por linha) e devolve a lista de palavras."""
+    palavras = []
+    with open(nome_arquivo, encoding="utf-8") as arquivo:
+        for linha in arquivo:
+            linha = linha.strip().lower()
+            if linha:
+                palavras.append(linha)
+    return palavras
+
+
+# desenhar, mascarar e ler_letra: iguais à versão 4
+
+
+palavras = carregar_palavras(ARQUIVO)
+palavra = random.choice(palavras)
+certas = []
+erradas = []
+
+print("=== Jogo da Forca ===")
+# … o laço principal, igual à versão 4 …
+</pre>
+
+<dl class="anatomy">
+  <dt>with open(nome_arquivo, encoding="utf-8") as arquivo:</dt><dd>Abre o arquivo para leitura e o chama de <code>arquivo</code> dentro do bloco. O <code>with</code> fecha o arquivo sozinho no fim do bloco, mesmo se der erro; o <code>encoding="utf-8"</code> garante que acentos sejam lidos certo. Veja <a href="arquivos.html">Abrindo Arquivos</a>.</dd>
+  <dt>for linha in arquivo:</dt><dd>Um <code>for</code> sobre um arquivo aberto passa por cada linha. Cada linha vem com o <code>\n</code> do fim (veja <a href="arquivos-ler.html">Lendo Arquivos</a>).</dd>
+  <dt>linha = linha.strip().lower()</dt><dd>Tira o <code>\n</code> e espaços, e passa para minúscula: <code>"Tatu \n"</code> vira <code>"tatu"</code>.</dd>
+  <dt>if linha:</dt><dd>Um texto vazio conta como <code>False</code>: pula as linhas em branco do arquivo (uma linha vazia no fim é comum).</dd>
+  <dt>return palavras</dt><dd>Devolve a lista pronta, no mesmo formato da antiga <code>PALAVRAS</code>. Por isso o resto do programa nem percebe a mudança.</dd>
+</dl>
+
+<pre class="term" data-cwd="~/projetos/forca">$ python3 forca.py
+=== Jogo da Forca ===
+  +---+
+      |
+      |
+      |
+      |
+=======
+_ _ _ _ _ _
+Letra: e
+Não tem e.
+  +---+
+  O   |
+      |
+      |
+      |
+=======
+_ _ _ _ _ _
+Erradas: e
+Letra: a
+Tem 2 letra(s) a!
+  +---+
+  O   |
+      |
+      |
+      |
+=======
+_ a _ a _ _
+Erradas: e
+Letra: c
+Tem 2 letra(s) c!
+  +---+
+  O   |
+      |
+      |
+      |
+=======
+_ a c a c _
+Erradas: e
+Letra: m
+Tem 1 letra(s) m!
+  +---+
+  O   |
+      |
+      |
+      |
+=======
+m a c a c _
+Erradas: e
+Letra: o
+Tem 1 letra(s) o!
+  +---+
+  O   |
+      |
+      |
+      |
+=======
+m a c a c o
+Erradas: e
+Você venceu! A palavra era macaco.</pre>
+
+<h3>Quando dá errado na versão 5</h3>
+
+<div class="cenario">
+<strong>O arquivo não está na pasta: <code>FileNotFoundError</code></strong>
+<pre class="term" data-cwd="~/projetos/forca">$ mv palavras.txt guardado.txt
+$ python3 forca.py
+Traceback (most recent call last):
+  File "/home/ana/projetos/forca/forca.py", line 57, in &lt;module&gt;
+    palavras = carregar_palavras(ARQUIVO)
+  File "/home/ana/projetos/forca/forca.py", line 10, in carregar_palavras
+    with open(nome_arquivo, encoding="utf-8") as arquivo:
+         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'palavras.txt'</pre>
+<p>(As linhas 57 e 10 são as do arquivo completo, com as quatro funções.) Este traceback tem <strong>dois</strong> trechos <code>File …</code>, e é preciso lê-los de cima para baixo como um caminho: a linha 57 (no programa principal, <code>&lt;module&gt;</code>) chamou <code>carregar_palavras</code>; dentro dela, na linha 10, o <code>open</code> falhou. A última linha diz o motivo: <code>FileNotFoundError: [Errno 2] No such file or directory: 'palavras.txt'</code> = "arquivo não encontrado: não existe esse arquivo ou pasta". O Python procura o arquivo na pasta <strong>de onde o programa foi rodado</strong>. <strong>Como consertar:</strong> rode o jogo de dentro da pasta onde está o <code>palavras.txt</code> (ou devolva o arquivo para lá).</p>
+</div>
+
+<div class="cenario">
+<strong>O arquivo existe, mas está vazio: <code>IndexError</code></strong>
+<pre class="term" data-cwd="~/projetos/forca">$ touch palavras.txt
+$ python3 forca.py
+Traceback (most recent call last):
+  File "/home/ana/projetos/forca/forca.py", line 58, in &lt;module&gt;
+    palavra = random.choice(palavras)
+  File "/usr/lib/python3.14/random.py", line 353, in choice
+    raise IndexError('Cannot choose from an empty sequence')
+IndexError: Cannot choose from an empty sequence</pre>
+<p>O <code>touch</code> criou um <code>palavras.txt</code> vazio. A leitura deu certo (uma lista vazia), mas sortear de uma lista vazia é impossível: <code>IndexError: Cannot choose from an empty sequence</code> = "não dá para escolher de uma sequência vazia". Repare no segundo <code>File</code>: o erro aconteceu <strong>dentro</strong> do módulo <code>random</code> (no arquivo <code>random.py</code> do próprio Python). Isso não quer dizer que o Python está com defeito: siga o traceback até a última linha que é <strong>sua</strong> (a 58), que é onde está a causa. <strong>Como consertar:</strong> confira a lista antes de sortear: <code>if not palavras: print("O arquivo palavras.txt está vazio."); sys.exit(1)</code> (o <code>sys.exit</code> está na aula <a href="os-sys.html">Os Módulos os e sys</a>).</p>
+</div>
+
+<p>Na caixa abaixo, o <code>palavras.txt</code> aparece numa <strong>aba</strong> ao lado do programa: ele fica na mesma pasta, e você pode editá-lo.</p>
+
+<div class="trypy" data-stdin="t\nu\nc\na\nn\no" data-goal="out:Você venceu! A palavra era tucano.;;src:open\(;;semerro">
+<p class="try-task"><strong>Missão (versão 5):</strong> o jogo ainda usa a lista de frutas. Escreva a função <code>carregar_palavras(nome_arquivo)</code> como na versão 5 (com <code>with open(…)</code>) e troque o sorteio por <code>random.choice(carregar_palavras(ARQUIVO))</code>. Com a semente 7 e o arquivo da aba <code>palavras.txt</code>, a palavra é tucano, e a entrada da missão a descobre.</p>
+<pre class="script" data-file="forca.py">import random
+
+random.seed(7)  # só para a missão: com o palavras.txt da aba, dá tucano
+ARQUIVO = "palavras.txt"
+PALAVRAS = ["abacaxi", "acerola", "banana", "caju", "goiaba",
+            "laranja", "melancia", "morango", "pitanga"]
+MAX_ERROS = 6
+
+
+def desenhar(erros):
+    """Desenha a forca com as partes do boneco que já apareceram."""
+    cabeca = "O" if erros &gt;= 1 else " "
+    tronco = "|" if erros &gt;= 2 else " "
+    braco_esq = "/" if erros &gt;= 3 else " "
+    braco_dir = "\\" if erros &gt;= 4 else " "
+    perna_esq = "/" if erros &gt;= 5 else " "
+    perna_dir = "\\" if erros &gt;= 6 else " "
+    print("  +---+")
+    print(f"  {cabeca}   |")
+    print(f" {braco_esq}{tronco}{braco_dir}  |")
+    print(f" {perna_esq} {perna_dir}  |")
+    print("      |")
+    print("=======")
+
+
+def mascarar(palavra, certas):
+    """Devolve a palavra com _ no lugar das letras ainda não descobertas."""
+    mascara = ""
+    for letra in palavra:
+        if letra in certas:
+            mascara += letra + " "
+        else:
+            mascara += "_ "
+    return mascara.strip()
+
+
+def ler_letra(tentadas):
+    """Pergunta até a pessoa digitar uma letra que ainda não tentou."""
+    while True:
+        chute = input("Letra: ").strip().lower()
+        if len(chute) != 1 or not chute.isalpha():
+            print("Digite uma letra só.")
+        elif chute in tentadas:
+            print(f"Você já tentou a letra {chute}.")
+        else:
+            return chute
+
+
+palavra = random.choice(PALAVRAS)
+certas = []
+erradas = []
+
+print("=== Jogo da Forca ===")
+while True:
+    desenhar(len(erradas))
+    mascara = mascarar(palavra, certas)
+    print(mascara)
+    if erradas:
+        print("Erradas:", ", ".join(erradas))
+
+    if "_" not in mascara:
+        print(f"Você venceu! A palavra era {palavra}.")
+        break
+    if len(erradas) == MAX_ERROS:
+        print(f"Você perdeu! A palavra era {palavra}.")
+        break
+
+    chute = ler_letra(certas + erradas)
+    if chute in palavra:
+        certas.append(chute)
+        print(f"Tem {palavra.count(chute)} letra(s) {chute}!")
+    else:
+        erradas.append(chute)
+        print(f"Não tem {chute}.")
+</pre>
+<pre class="script" data-file="palavras.txt">capivara
+jabuti
+tucano
+tatu
+papagaio
+macaco
+</pre>
+<pre class="solucao" data-file="forca.py">import random
+
+random.seed(7)  # só para a missão: com o palavras.txt da aba, dá tucano
+ARQUIVO = "palavras.txt"
+MAX_ERROS = 6
+
+
+def carregar_palavras(nome_arquivo):
+    """Lê o arquivo (uma palavra por linha) e devolve a lista de palavras."""
+    palavras = []
+    with open(nome_arquivo, encoding="utf-8") as arquivo:
+        for linha in arquivo:
+            linha = linha.strip().lower()
+            if linha:
+                palavras.append(linha)
+    return palavras
+
+
+def desenhar(erros):
+    """Desenha a forca com as partes do boneco que já apareceram."""
+    cabeca = "O" if erros &gt;= 1 else " "
+    tronco = "|" if erros &gt;= 2 else " "
+    braco_esq = "/" if erros &gt;= 3 else " "
+    braco_dir = "\\" if erros &gt;= 4 else " "
+    perna_esq = "/" if erros &gt;= 5 else " "
+    perna_dir = "\\" if erros &gt;= 6 else " "
+    print("  +---+")
+    print(f"  {cabeca}   |")
+    print(f" {braco_esq}{tronco}{braco_dir}  |")
+    print(f" {perna_esq} {perna_dir}  |")
+    print("      |")
+    print("=======")
+
+
+def mascarar(palavra, certas):
+    """Devolve a palavra com _ no lugar das letras ainda não descobertas."""
+    mascara = ""
+    for letra in palavra:
+        if letra in certas:
+            mascara += letra + " "
+        else:
+            mascara += "_ "
+    return mascara.strip()
+
+
+def ler_letra(tentadas):
+    """Pergunta até a pessoa digitar uma letra que ainda não tentou."""
+    while True:
+        chute = input("Letra: ").strip().lower()
+        if len(chute) != 1 or not chute.isalpha():
+            print("Digite uma letra só.")
+        elif chute in tentadas:
+            print(f"Você já tentou a letra {chute}.")
+        else:
+            return chute
+
+
+palavra = random.choice(carregar_palavras(ARQUIVO))
+certas = []
+erradas = []
+
+print("=== Jogo da Forca ===")
+while True:
+    desenhar(len(erradas))
+    mascara = mascarar(palavra, certas)
+    print(mascara)
+    if erradas:
+        print("Erradas:", ", ".join(erradas))
+
+    if "_" not in mascara:
+        print(f"Você venceu! A palavra era {palavra}.")
+        break
+    if len(erradas) == MAX_ERROS:
+        print(f"Você perdeu! A palavra era {palavra}.")
+        break
+
+    chute = ler_letra(certas + erradas)
+    if chute in palavra:
+        certas.append(chute)
+        print(f"Tem {palavra.count(chute)} letra(s) {chute}!")
+    else:
+        erradas.append(chute)
+        print(f"Não tem {chute}.")
+</pre>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de montar a máscara</h2>
+<p>O <code>for</code> com <code>+=</code> das versões 1 a 4 é o jeito mais fácil de entender. Programadores experientes costumam escrever a mesma coisa numa linha só, com <code>join</code> e o <code>if</code> em uma linha dentro de uma <a href="list-comprehension.html">list comprehension</a>:</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; palavra = "banana"
+&gt;&gt;&gt; certas = ["a", "n"]
+&gt;&gt;&gt; " ".join([letra if letra in certas else "_" for letra in palavra])
+'_ a n a n a'
+&gt;&gt;&gt; " ".join(letra if letra in certas else "_" for letra in palavra)
+'_ a n a n a'
+&gt;&gt;&gt; exit()</pre>
+
+<p>Lendo de dentro para fora: "para cada <code>letra</code> da <code>palavra</code>, use a letra se ela estiver em <code>certas</code>, senão <code>"_"</code>"; depois, o <code>" ".join</code> junta tudo com espaços (e já sem o espaço sobrando no fim). A segunda forma, sem os colchetes, dá o mesmo resultado: quando a "comprehension" é o único argumento da função, os colchetes podem sair (ela vira uma expressão geradora, assunto da aula <a href="geradores.html">Geradores</a>).</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>for</code> com <code>mascara += …</code></td><td>Quando você está aprendendo, ou quando cada passo precisa de mais de uma linha. É a forma mais clara.</td></tr>
+<tr><td><code>" ".join([… for letra in palavra])</code></td><td>Quando a regra cabe numa linha e você já lê comprehensions com facilidade.</td></tr>
+<tr><td>Listas (<code>certas</code>, <code>erradas</code>)</td><td>Guardam a ordem das tentativas, que o jogo mostra em "Erradas: e, o, r".</td></tr>
+<tr><td>Um <a href="conjuntos.html">conjunto</a> (<code>set()</code>)</td><td>Se a ordem não importasse: o <code>in</code> num conjunto é mais rápido e ele nunca repete itens. Numa forca, com poucas letras, tanto faz.</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="ideias">Ideias para continuar</h2>
+<ul>
+  <li><strong>Palavras com acento</strong> (maçã, pêssego): do jeito que está, a pessoa teria de digitar <code>ã</code> e <code>ê</code>. Uma saída é comparar sem acentos, com o módulo <code>unicodedata</code> da biblioteca do Python.</li>
+  <li><strong>Chutar a palavra inteira</strong>: se o chute tiver mais de uma letra, compare com a palavra; acertou, venceu; errou, perde duas vidas.</li>
+  <li><strong>Categorias</strong>: um arquivo por tema (<code>frutas.txt</code>, <code>animais.txt</code>), e o jogo pergunta qual tema a pessoa quer.</li>
+  <li><strong>Jogar de novo</strong>, com placar de vitórias e derrotas, como no <a href="projeto-adivinhacao.html">Jogo de Adivinhação</a>.</li>
+</ul>
+
+<hr>
+
+<h2>Referência rápida do projeto</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Para que serviu</th></tr>
+<tr><td><code>for letra in palavra:</code></td><td>Passar por cada letra do texto</td></tr>
+<tr><td><code>mascara += letra + " "</code></td><td>Montar a máscara aos poucos (textos não mudam por dentro: cria-se um novo)</td></tr>
+<tr><td><code>letra in certas</code> / <code>"_" not in mascara</code></td><td>Perguntar se está (ou não está) dentro</td></tr>
+<tr><td><code>certas.append(chute)</code></td><td>Guardar a letra na lista</td></tr>
+<tr><td><code>len(erradas)</code></td><td>Contar os erros</td></tr>
+<tr><td><code>.strip().lower()</code>, <code>len(chute) != 1</code>, <code>.isalpha()</code></td><td>Aceitar só uma letra, em minúscula</td></tr>
+<tr><td><code>continue</code></td><td>Recusar o chute sem contar nada</td></tr>
+<tr><td><code>"O" if erros &gt;= 1 else " "</code></td><td>Escolher entre dois valores numa linha</td></tr>
+<tr><td><code>"\\"</code></td><td>Uma barra invertida dentro de um texto</td></tr>
+<tr><td><code>random.choice(lista)</code></td><td>Sortear um item da lista</td></tr>
+<tr><td><code>", ".join(erradas)</code>, <code>palavra.count(letra)</code></td><td>Juntar a lista num texto; contar uma letra</td></tr>
+<tr><td><code>with open(nome, encoding="utf-8") as arquivo:</code></td><td>Ler as palavras do arquivo, linha por linha</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>TypeError: 'str' object does not support item assignment</code></td><td>Tentou trocar uma letra de um texto (<code>palavra[0] = "B"</code>): monte um texto novo</td></tr>
+<tr><td>Letra maiúscula conta como erro</td><td>Faltou o <code>.lower()</code></td></tr>
+<tr><td>Só <kbd>Enter</kbd> (ou duas letras) dá "Tem!"</td><td><code>"" in "banana"</code> é <code>True</code>: exija <code>len(chute) == 1</code></td></tr>
+<tr><td>Repetir uma letra errada gasta outra vida</td><td>Faltou o teste "já tentou"</td></tr>
+<tr><td>O jogo nunca termina com 6 erros</td><td>Faltou o <code>if len(erradas) == MAX_ERROS: … break</code></td></tr>
+<tr><td><code>EOFError</code> numa missão</td><td>A entrada da missão acabou e o programa ainda pedia letras</td></tr>
+<tr><td><code>FileNotFoundError: … 'palavras.txt'</code></td><td>O arquivo não está na pasta de onde o programa foi rodado</td></tr>
+<tr><td><code>IndexError: Cannot choose from an empty sequence</code></td><td><code>random.choice</code> com uma lista vazia (arquivo vazio)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Guardar a letra</h3>
+<p>Complete o método que acrescenta o chute no fim da lista:</p>
+<div class="ex-code">certas.<input data-answer="append" aria-label="método">(chute)</div>
+</div>
+
+<div class="exercise">
+<h3>2. Ainda tem tracinho?</h3>
+<p>Complete para testar se <strong>não</strong> sobrou nenhum <code>_</code> na máscara:</p>
+<div class="ex-code">if "_" <input data-answer="not in" aria-label="operador"> mascara:</div>
+</div>
+
+<div class="exercise">
+<h3>3. Sortear da lista</h3>
+<p>Complete a função do módulo <code>random</code> que sorteia um item da lista:</p>
+<div class="ex-code">palavra = random.<input data-answer="choice" aria-label="função">(PALAVRAS)</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Na versão 2, a Ana apertou só <kbd>Enter</kbd> e o jogo respondeu "Tem!". Por quê?</p>
+<label><input type="radio" name="q4"> Porque <code>input()</code> devolve <code>None</code> quando a pessoa só aperta <kbd>Enter</kbd></label>
+<label><input type="radio" name="q4"> Porque o texto vazio <code>""</code> está "dentro" de qualquer texto: <code>"" in "banana"</code> é <code>True</code></label>
+<label><input type="radio" name="q4"> Porque banana tem um espaço</label>
+<label><input type="radio" name="q4"> Porque a lista <code>certas</code> estava vazia</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. Por que a versão 1 monta a máscara de novo a cada volta, em vez de trocar o <code>_</code> pela letra?</p>
+<label><input type="radio" name="q5"> Porque é mais rápido</label>
+<label><input type="radio" name="q5"> Porque o <code>for</code> só funciona com textos novos</label>
+<label><input type="radio" name="q5"> Porque listas não guardam letras</label>
+<label><input type="radio" name="q5"> Porque textos são imutáveis: <code>mascara[0] = "b"</code> daria <code>TypeError</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Para escrever uma barra invertida <code>\</code> num texto do Python, como se escreve?</p>
+<label><input type="radio" name="q6"> <code>"\\"</code></label>
+<label><input type="radio" name="q6"> <code>"\"</code></label>
+<label><input type="radio" name="q6"> <code>"/"</code></label>
+<label><input type="radio" name="q6"> <code>"\n"</code></label>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Um <code>for</code> sobre um texto passa letra por letra; com <code>+=</code>, dá para montar outro texto aos poucos.</li>
+  <li>Textos são imutáveis: para "mudar" um, crie um novo. Listas mudam: <code>append</code> acrescenta.</li>
+  <li>O <code>in</code> pergunta "está dentro?"; entre textos, procura um pedaço (e o texto vazio está em todos).</li>
+  <li><code>len(erradas)</code> conta os erros; o teste de derrota vem antes de pedir a próxima letra.</li>
+  <li><code>.strip().lower()</code>, <code>len(chute) == 1</code> e <code>.isalpha()</code> garantem uma letra só; <code>continue</code> recusa sem contar.</li>
+  <li><code>random.choice</code> sorteia um item de uma lista; <code>random.seed</code> deixa o sorteio previsível para testar.</li>
+  <li>Guardar os dados num arquivo (<code>palavras.txt</code>) separa o jogo do conteúdo. Leia com <code>with open(…, encoding="utf-8")</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
