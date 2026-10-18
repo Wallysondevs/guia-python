@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Métodos de Lista — append, extend, insert, remove, pop, sort e os outros | Guia Python</title>
+<meta name="description" content="Referência rápida dos 11 métodos de lista do Python 3.14 (append, extend, insert, remove, pop, clear, index, count, sort, reverse, copy) e das operações com listas (len, in, +, *, índices, fatias, del), com exemplo curto, resultado real, os erros comuns e o link para a aula.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Métodos de Lista</span></h1>
+
+<p class="intro">Esta é a página de consulta rápida dos <strong>métodos de lista</strong>: as funções que toda lista (<code>list</code>) já traz e que você chama com um ponto, como em <code>compras.append("café")</code>. São só 11, para adicionar, remover, procurar, ordenar e copiar. No fim estão também as operações com listas que não são métodos (<code>len</code>, <code>in</code>, <code>+</code>, índices, fatias, <code>del</code>). A explicação passo a passo começa na aula <a href="listas.html">Listas</a>.</p>
+
+<div class="note">
+<strong>Como ler as tabelas</strong>
+<ul>
+  <li><strong>Exemplo</strong> é o que você digitaria depois do <code>&gt;&gt;&gt;</code> do <a href="repl.html">modo interativo</a>, uma linha depois da outra; <strong>Resultado</strong> é o que o Python 3.14.4 respondeu no computador da Ana.</li>
+  <li>Muitos métodos de lista <strong>não devolvem nada</strong> (devolvem <code>None</code>, que o modo interativo não mostra): eles mudam a própria lista. Por isso vários exemplos terminam com o nome da lista sozinho, para mostrar como ela ficou.</li>
+  <li>Quando o exemplo dá erro, o resultado mostra a última linha da mensagem do Python (em inglês).</li>
+</ul>
+</div>
+
+<div class="warning">
+<strong>A diferença para as strings: a lista muda</strong>
+<p>Os métodos de <a href="ref-metodos-string.html">string</a> devolvem um texto novo e deixam o original igual. Os de lista fazem o contrário: <strong>mudam a própria lista</strong> e devolvem <code>None</code> ("nada"). Por isso nunca escreva <code>compras = compras.sort()</code>:</p>
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; compras = ["pão", "leite", "café"]
+&gt;&gt;&gt; compras = compras.sort()
+&gt;&gt;&gt; print(compras)
+None
+&gt;&gt;&gt; compras[0]
+Traceback (most recent call last):
+  File "&lt;python-input-3&gt;", line 1, in &lt;module&gt;
+    compras[0]
+    ~~~~~~~^^^
+TypeError: 'NoneType' object is not subscriptable
+&gt;&gt;&gt; exit()
+</pre>
+<p>O <code>sort()</code> ordenou a lista e devolveu <code>None</code>, e a atribuição guardou esse <code>None</code> em <code>compras</code>: a lista se perdeu. A última linha, <code>TypeError: 'NoneType' object is not subscriptable</code>, quer dizer "o valor <code>None</code> não aceita <code>[ ]</code>". O certo é só <code>compras.sort()</code>, sem o <code>compras =</code>. O mesmo vale para <code>append</code>, <code>extend</code>, <code>insert</code>, <code>remove</code>, <code>clear</code> e <code>reverse</code>.</p>
+</div>
+
+<hr>
+
+<h2 id="metodos">Os 11 métodos, de relance</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Método</th><th>O que faz</th><th>Muda a lista?</th><th>Devolve</th></tr>
+<tr><td><code>append(x)</code></td><td>põe <code>x</code> no fim</td><td>sim</td><td><code>None</code></td></tr>
+<tr><td><code>extend(itens)</code></td><td>põe cada um dos itens no fim</td><td>sim</td><td><code>None</code></td></tr>
+<tr><td><code>insert(i, x)</code></td><td>põe <code>x</code> na posição <code>i</code></td><td>sim</td><td><code>None</code></td></tr>
+<tr><td><code>remove(x)</code></td><td>tira o primeiro <code>x</code></td><td>sim</td><td><code>None</code></td></tr>
+<tr><td><code>pop()</code> / <code>pop(i)</code></td><td>tira o último item / o da posição <code>i</code></td><td>sim</td><td>o item tirado</td></tr>
+<tr><td><code>clear()</code></td><td>esvazia a lista</td><td>sim</td><td><code>None</code></td></tr>
+<tr><td><code>index(x)</code></td><td>acha a posição do primeiro <code>x</code></td><td>não</td><td>um número</td></tr>
+<tr><td><code>count(x)</code></td><td>conta quantas vezes <code>x</code> aparece</td><td>não</td><td>um número</td></tr>
+<tr><td><code>sort()</code></td><td>ordena</td><td>sim</td><td><code>None</code></td></tr>
+<tr><td><code>reverse()</code></td><td>inverte a ordem</td><td>sim</td><td><code>None</code></td></tr>
+<tr><td><code>copy()</code></td><td>faz uma cópia</td><td>não</td><td>uma lista nova</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="adicionar">Adicionar</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Método</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>append(x)</code></td><td>Acrescenta <strong>um</strong> item no fim (<em>append</em> = "anexar").</td><td><code>compras = ["pão", "leite"]</code><br><code>compras.append("café")</code><br><code>compras</code></td><td><code>['pão', 'leite', 'café']</code></td><td><a href="listas-adicionar.html">Adicionando Itens</a></td></tr>
+<tr><td></td><td>uma lista vira <strong>um item só</strong> (uma lista dentro da lista)</td><td><code>compras.append(["ovo", "sal"])</code><br><code>compras</code></td><td><code>['pão', 'leite', 'café', ['ovo', 'sal']]</code></td><td></td></tr>
+<tr><td><code>extend(itens)</code></td><td>Acrescenta <strong>cada</strong> item de outra lista (<em>extend</em> = "estender").</td><td><code>compras = ["pão", "leite"]</code><br><code>compras.extend(["ovo", "sal"])</code><br><code>compras</code></td><td><code>['pão', 'leite', 'ovo', 'sal']</code></td><td><a href="listas-adicionar.html">Adicionando Itens</a></td></tr>
+<tr><td></td><td>cuidado: um texto é uma sequência de letras</td><td><code>compras.extend("mel")</code><br><code>compras</code></td><td><code>['pão', 'leite', 'ovo', 'sal', 'm', 'e', 'l']</code></td><td></td></tr>
+<tr><td><code>lista += itens</code></td><td>O mesmo que <code>extend</code>.</td><td><code>compras += ["uva"]</code></td><td>(a lista ganha <code>'uva'</code> no fim)</td><td><a href="operadores-atribuicao.html">Operadores de Atribuição</a></td></tr>
+<tr><td><code>insert(i, x)</code></td><td>Põe <code>x</code> <strong>antes</strong> da posição <code>i</code>; os outros andam uma casa.</td><td><code>compras = ["pão", "leite"]</code><br><code>compras.insert(0, "arroz")</code><br><code>compras</code></td><td><code>['arroz', 'pão', 'leite']</code></td><td><a href="listas-adicionar.html">Adicionando Itens</a></td></tr>
+<tr><td></td><td>posição depois do fim: vai para o fim, sem erro</td><td><code>compras.insert(99, "fim")</code><br><code>compras</code></td><td><code>['arroz', 'pão', 'leite', 'fim']</code></td><td></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="remover">Remover</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Método</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>remove(x)</code></td><td>Tira o <strong>primeiro</strong> item igual a <code>x</code> (pelo valor).</td><td><code>compras = ["pão", "leite", "café", "leite"]</code><br><code>compras.remove("leite")</code><br><code>compras</code></td><td><code>['pão', 'café', 'leite']</code></td><td><a href="listas-remover.html">Removendo Itens</a></td></tr>
+<tr><td></td><td>se não tem, dá erro</td><td><code>compras.remove("sal")</code></td><td><code>ValueError: list.remove(x): x not in list</code></td><td></td></tr>
+<tr><td><code>pop()</code></td><td>Tira o <strong>último</strong> item e o devolve (para você usar).</td><td><code>compras = ["pão", "leite", "café"]</code><br><code>compras.pop()</code><br><code>compras</code></td><td><code>'café'</code><br><code>['pão', 'leite']</code></td><td><a href="listas-remover.html">Removendo Itens</a></td></tr>
+<tr><td><code>pop(i)</code></td><td>Tira o item da posição <code>i</code> e o devolve.</td><td><code>compras.pop(0)</code><br><code>compras</code></td><td><code>'pão'</code><br><code>['leite']</code></td><td></td></tr>
+<tr><td></td><td>lista vazia</td><td><code>[].pop()</code></td><td><code>IndexError: pop from empty list</code></td><td></td></tr>
+<tr><td><code>clear()</code></td><td>Esvazia a lista (ela continua existindo, com 0 itens).</td><td><code>compras.clear()</code><br><code>compras</code></td><td><code>[]</code></td><td><a href="listas-remover.html">Removendo Itens</a></td></tr>
+<tr><td><code>del lista[i]</code></td><td>Não é método: apaga pela posição, sem devolver.</td><td><code>compras = ["pão", "leite", "café"]</code><br><code>del compras[1]</code><br><code>compras</code></td><td><code>['pão', 'café']</code></td><td><a href="listas-remover.html">Removendo Itens</a></td></tr>
+<tr><td><code>del lista[a:b]</code></td><td>Apaga uma fatia inteira.</td><td><code>compras = ["a", "b", "c", "d", "e"]</code><br><code>del compras[1:3]</code><br><code>compras</code></td><td><code>['a', 'd', 'e']</code></td><td></td></tr>
+</table>
+</div>
+
+<div class="tip">
+<strong>Qual usar para remover?</strong>
+<ul>
+  <li>Sabe o <strong>valor</strong> (<code>"leite"</code>): <code>remove</code>.</li>
+  <li>Sabe a <strong>posição</strong> e quer o item de volta: <code>pop(i)</code>. O <code>pop()</code> sem número é o jeito de usar uma lista como pilha (o último que entra é o primeiro que sai).</li>
+  <li>Sabe a posição e não precisa do item: <code>del lista[i]</code>.</li>
+  <li>Quer tirar <strong>todos</strong> os itens de um valor: uma <a href="list-comprehension.html">list comprehension</a>, como <code>[x for x in compras if x != "leite"]</code>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2 id="procurar">Procurar e contar</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Método</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>index(x)</code></td><td>A posição do <strong>primeiro</strong> item igual a <code>x</code> (a primeira posição é 0).</td><td><code>notas = [7.5, 9.0, 6.5, 9.0]</code><br><code>notas.index(9.0)</code></td><td><code>1</code></td><td><a href="listas-acessar.html">Acessando Itens</a></td></tr>
+<tr><td><code>index(x, início)</code></td><td>Procura a partir da posição <code>início</code>.</td><td><code>notas.index(9.0, 2)</code></td><td><code>3</code></td><td></td></tr>
+<tr><td></td><td>se não tem, dá erro (lista não tem <code>find</code>)</td><td><code>notas.index(10)</code></td><td><code>ValueError: list.index(x): x not in list</code></td><td></td></tr>
+<tr><td><code>count(x)</code></td><td>Quantas vezes <code>x</code> aparece.</td><td><code>notas.count(9.0)</code>, <code>notas.count(10)</code></td><td><code>2</code>, <code>0</code></td><td><a href="listas-acessar.html">Acessando Itens</a></td></tr>
+<tr><td><code>x in lista</code></td><td>Não é método: "tem?"</td><td><code>9.0 in notas</code></td><td><code>True</code></td><td><a href="operadores-is-in.html">is e in</a></td></tr>
+<tr><td><code>x not in lista</code></td><td>"não tem?"</td><td><code>10 not in notas</code></td><td><code>True</code></td><td></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="ordenar">Ordenar e inverter</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Método</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>sort()</code></td><td>Ordena a própria lista, do menor para o maior.</td><td><code>numeros = [3, 1, 2]</code><br><code>numeros.sort()</code><br><code>numeros</code></td><td><code>[1, 2, 3]</code></td><td><a href="listas-ordenar.html">Ordenando Listas</a></td></tr>
+<tr><td><code>sort(reverse=True)</code></td><td>Do maior para o menor.</td><td><code>numeros.sort(reverse=True)</code><br><code>numeros</code></td><td><code>[3, 2, 1]</code></td><td></td></tr>
+<tr><td></td><td>textos: as maiúsculas vêm antes</td><td><code>nomes = ["Bia", "ana", "Caio"]</code><br><code>nomes.sort()</code><br><code>nomes</code></td><td><code>['Bia', 'Caio', 'ana']</code></td><td></td></tr>
+<tr><td><code>sort(key=função)</code></td><td>Ordena pelo resultado da função em cada item. A função vai <strong>sem parênteses</strong>.</td><td><code>nomes.sort(key=str.lower)</code><br><code>nomes</code></td><td><code>['ana', 'Bia', 'Caio']</code></td><td><a href="lambda.html">lambda</a></td></tr>
+<tr><td></td><td>pelo tamanho</td><td><code>itens = ["arroz", "sal", "macarrão"]</code><br><code>itens.sort(key=len)</code><br><code>itens</code></td><td><code>['sal', 'arroz', 'macarrão']</code></td><td></td></tr>
+<tr><td></td><td>o <code>sort</code> devolve <code>None</code></td><td><code>print(numeros.sort())</code></td><td><code>None</code></td><td></td></tr>
+<tr><td></td><td>não dá para comparar texto com número</td><td><code>[3, "a", 1].sort()</code></td><td><code>TypeError: '&lt;' not supported between instances of 'str' and 'int'</code></td><td></td></tr>
+<tr><td><code>sorted(lista)</code></td><td>Função embutida: devolve uma lista <strong>nova</strong> ordenada; a original fica igual. Aceita os mesmos <code>key=</code> e <code>reverse=</code>.</td><td><code>numeros = [3, 1, 2]</code><br><code>sorted(numeros)</code><br><code>numeros</code></td><td><code>[1, 2, 3]</code><br><code>[3, 1, 2]</code></td><td><a href="listas-ordenar.html">Ordenando Listas</a></td></tr>
+<tr><td><code>reverse()</code></td><td>Inverte a ordem atual (não ordena!).</td><td><code>numeros.reverse()</code><br><code>numeros</code></td><td><code>[2, 1, 3]</code></td><td><a href="listas-ordenar.html">Ordenando Listas</a></td></tr>
+<tr><td><code>lista[::-1]</code></td><td>Uma cópia invertida, sem mexer na original.</td><td><code>[1, 2, 3][::-1]</code></td><td><code>[3, 2, 1]</code></td><td><a href="strings-fatias.html">Índices e Fatias</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="copiar">Copiar</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>b = a</code></td><td><strong>Não copia</strong>: <code>a</code> e <code>b</code> passam a ser dois nomes para a <strong>mesma</strong> lista.</td><td><code>a = [1, 2, 3]</code><br><code>b = a</code><br><code>b.append(4)</code><br><code>a</code></td><td><code>[1, 2, 3, 4]</code> (o <code>a</code> mudou também!)</td><td><a href="listas-copiar.html">Copiando Listas</a></td></tr>
+<tr><td><code>copy()</code></td><td>Uma lista nova com os mesmos itens.</td><td><code>a = [1, 2, 3]</code><br><code>c = a.copy()</code><br><code>c.append(4)</code><br><code>a</code>, depois <code>c</code></td><td><code>[1, 2, 3]</code><br><code>[1, 2, 3, 4]</code></td><td><a href="listas-copiar.html">Copiando Listas</a></td></tr>
+<tr><td><code>a[:]</code>, <code>list(a)</code></td><td>Outros dois jeitos de copiar.</td><td><code>a[:]</code>, <code>list(a)</code></td><td><code>[1, 2, 3]</code>, <code>[1, 2, 3]</code></td><td></td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>Cópia rasa</strong>
+<p><code>copy()</code>, <code>[:]</code> e <code>list()</code> copiam só a lista de fora. Se dentro dela houver outras listas, elas continuam compartilhadas. Para copiar tudo, até o fundo, existe o <code>copy.deepcopy()</code>: veja <a href="copias.html">Cópia Rasa e Cópia Profunda</a>.</p>
+</div>
+
+<hr>
+
+<h2 id="operacoes">Operações com listas (que não são métodos)</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>len(lista)</code></td><td>Quantos itens.</td><td><code>len(["pão", "leite"])</code></td><td><code>2</code></td><td><a href="listas.html">Listas</a></td></tr>
+<tr><td><code>a + b</code></td><td>Uma lista nova com os itens das duas.</td><td><code>[1, 2] + [3]</code></td><td><code>[1, 2, 3]</code></td><td><a href="listas.html">Listas</a></td></tr>
+<tr><td><code>lista * n</code></td><td>Repete os itens <code>n</code> vezes.</td><td><code>[0] * 4</code></td><td><code>[0, 0, 0, 0]</code></td><td></td></tr>
+<tr><td><code>lista[i]</code></td><td>O item da posição <code>i</code>; negativo conta do fim.</td><td><code>compras = ["pão", "leite", "café", "ovo"]</code><br><code>compras[0]</code>, <code>compras[-1]</code></td><td><code>'pão'</code>, <code>'ovo'</code></td><td><a href="listas-acessar.html">Acessando Itens</a></td></tr>
+<tr><td></td><td>posição que não existe</td><td><code>compras[5]</code></td><td><code>IndexError: list index out of range</code></td><td></td></tr>
+<tr><td><code>lista[a:b]</code>, <code>lista[::passo]</code></td><td>Uma fatia (uma lista nova).</td><td><code>compras[1:3]</code>, <code>compras[::2]</code></td><td><code>['leite', 'café']</code>, <code>['pão', 'café']</code></td><td><a href="listas-acessar.html">Acessando Itens</a></td></tr>
+<tr><td><code>lista[i] = x</code></td><td>Troca o item da posição <code>i</code>.</td><td><code>compras[0] = "arroz"</code><br><code>compras</code></td><td><code>['arroz', 'leite', 'café', 'ovo']</code></td><td><a href="listas-alterar.html">Alterando Itens</a></td></tr>
+<tr><td><code>lista[a:b] = itens</code></td><td>Troca uma fatia inteira (pode mudar o tamanho).</td><td><code>compras[1:3] = ["mel"]</code><br><code>compras</code></td><td><code>['arroz', 'mel', 'ovo']</code></td><td><a href="listas-alterar.html">Alterando Itens</a></td></tr>
+<tr><td><code>min</code>, <code>max</code>, <code>sum</code></td><td>O menor, o maior e a soma.</td><td><code>min([7.5, 9.0, 6.5]), max([7.5, 9.0, 6.5]), sum([7.5, 9.0, 6.5])</code></td><td><code>(6.5, 9.0, 23.0)</code></td><td><a href="ref-funcoes-embutidas.html#numeros">Funções Embutidas</a></td></tr>
+<tr><td><code>a == b</code>, <code>a &lt; b</code></td><td>Compara item por item, da esquerda para a direita.</td><td><code>[1, 2, 3] == [1, 2, 3]</code>, <code>[1, 2] &lt; [1, 3]</code></td><td><code>True</code>, <code>True</code></td><td><a href="operadores-comparacao.html">Comparações</a></td></tr>
+<tr><td><code>[expr for x in …]</code></td><td>Monta uma lista nova a partir de outra.</td><td><code>[n * 2 for n in [1, 2, 3]]</code></td><td><code>[2, 4, 6]</code></td><td><a href="list-comprehension.html">List Comprehension</a></td></tr>
+<tr><td></td><td>com filtro</td><td><code>[n for n in [7.5, 4.0, 9.0] if n &gt;= 7]</code></td><td><code>[7.5, 9.0]</code></td><td></td></tr>
+<tr><td><code>for item in lista:</code></td><td>Passa por todos os itens, um por vez.</td><td colspan="2">veja <a href="listas-percorrer.html">Percorrendo uma Lista</a></td><td><a href="for.html">for</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Experimente</h2>
+
+<div class="trypy" data-goal="out:['arroz', 'café', 'feijão', 'leite'];;src:\.append\(;;src:\.remove\(;;src:\.sort\(">
+<p class="try-task"><strong>Missão:</strong> arrume a lista de compras da Ana com três métodos, um por linha: acrescente <code>"café"</code> com <code>append</code>, tire o <code>"sal"</code> com <code>remove</code> e ponha tudo em ordem com <code>sort</code>. A saída deve ser <code>['arroz', 'café', 'feijão', 'leite']</code>. Lembre: nada de <code>compras = …</code> nessas linhas.</p>
+<pre class="script" data-file="main.py">compras = ["leite", "sal", "arroz", "feijão"]
+
+print(compras)
+</pre>
+<pre class="solucao" data-file="main.py">compras = ["leite", "sal", "arroz", "feijão"]
+compras.append("café")
+compras.remove("sal")
+compras.sort()
+print(compras)
+</pre>
+</div>
+
+<div class="trypy">
+<p class="try-task"><strong>Livre:</strong> a fila da padaria. Mude os nomes, troque <code>pop(0)</code> por <code>pop()</code> e veja quem é atendido.</p>
+<pre class="script" data-file="main.py">fila = ["Ana", "Bia", "Caio"]
+fila.append("Davi")
+print("Chegou o Davi:", fila)
+atendido = fila.pop(0)
+print("Atendido:", atendido)
+print("Ainda na fila:", fila, "-", len(fila), "pessoas")
+print("Posição do Caio:", fila.index("Caio") + 1)
+fila.insert(0, "Eva")
+fila.reverse()
+print(fila)
+</pre>
+</div>
+
+<p>No computador da Ana, a fila fica assim:</p>
+
+<pre class="term">$ python3 fila.py
+Chegou o Davi: ['Ana', 'Bia', 'Caio', 'Davi']
+Atendido: Ana
+Ainda na fila: ['Bia', 'Caio', 'Davi'] - 3 pessoas
+Posição do Caio: 2
+['Davi', 'Caio', 'Bia', 'Eva']
+</pre>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Os 11 métodos de lista: <code>append</code>, <code>extend</code>, <code>insert</code>, <code>remove</code>, <code>pop</code>, <code>clear</code>, <code>index</code>, <code>count</code>, <code>sort</code>, <code>reverse</code>, <code>copy</code>.</li>
+  <li>Quase todos mudam a própria lista e devolvem <code>None</code>: nunca escreva <code>lista = lista.sort()</code>. Só <code>pop</code>, <code>index</code>, <code>count</code> e <code>copy</code> devolvem algo útil.</li>
+  <li><code>append</code> põe um item; <code>extend</code> põe vários; <code>insert</code> põe numa posição.</li>
+  <li><code>remove</code> tira pelo valor; <code>pop</code> tira pela posição e devolve; <code>del</code> apaga pela posição.</li>
+  <li><code>sort()</code> muda a lista; <code>sorted()</code> devolve uma nova. Os dois aceitam <code>key=</code> e <code>reverse=True</code>.</li>
+  <li><code>b = a</code> não copia: use <code>a.copy()</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
