@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Índices e Fatias — pegando pedaços de um texto | Guia Python</title>
+<meta name="description" content="Índices e fatias de strings em Python para quem está começando: a posição de cada caractere começa no zero, índices negativos contam do fim, fatias [início:fim] (o fim não entra), o passo [::2] e o texto ao contrário [::-1], a data e o telefone recortados em pedaços e os erros reais IndexError e TypeError, com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Índices</span> e <span class="hl">Fatias</span></h1>
+
+<p class="intro">Na aula <a href="strings.html">Strings</a> você viu que um texto é uma fileira de caracteres, em ordem. Como cada caractere tem o seu lugar na fileira, dá para pedir ao Python "me dá o primeiro", "me dá o último" ou "me dá do terceiro ao quinto". O lugar de cada caractere é o seu <strong>índice</strong>, e um pedaço do texto é uma <strong>fatia</strong> (em inglês, <em>slice</em>). Com isso você vai tirar o ano de uma data, o DDD de um telefone, e até escrever uma palavra ao contrário.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A pegar um caractere pela posição, com <code>texto[0]</code>, e por que a contagem começa no <strong>zero</strong>.</li>
+  <li>Os índices <strong>negativos</strong>, que contam do fim: <code>texto[-1]</code> é o último.</li>
+  <li>A pegar um pedaço com <code>texto[início:fim]</code>, e por que o <code>fim</code> não entra.</li>
+  <li>O <strong>passo</strong>: <code>texto[::2]</code> pula de dois em dois, e <code>texto[::-1]</code> vira o texto ao contrário.</li>
+  <li>A recortar uma data e um telefone em pedaços.</li>
+  <li>Os erros reais: <code>IndexError: string index out of range</code> e <code>TypeError: string indices must be integers</code>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: as casas de uma rua</h2>
+<p>Pense numa rua com uma casa para cada letra da palavra <code>"Brasil"</code>. Cada casa tem um número na porta. Só que, nesta rua, a primeira casa é a de número <strong>0</strong>, e não a de número 1. É como os andares de um prédio no Brasil: o térreo é o andar 0, o primeiro andar fica <strong>acima</strong> dele. E a rua tem uma segunda numeração, pintada do outro lado, que conta a partir do fim, com números negativos:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Caractere</th><td><code>B</code></td><td><code>r</code></td><td><code>a</code></td><td><code>s</code></td><td><code>i</code></td><td><code>l</code></td></tr>
+<tr><th>Índice (do começo)</th><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td></tr>
+<tr><th>Índice (do fim)</th><td>-6</td><td>-5</td><td>-4</td><td>-3</td><td>-2</td><td>-1</td></tr>
+</table>
+</div>
+
+<p>A palavra tem 6 letras, então os índices do começo vão de 0 a <strong>5</strong> (sempre um a menos que o tamanho). Os do fim vão de -1 (o último) a -6 (o primeiro).</p>
+
+<hr>
+
+<h2>1. Um caractere: <code>texto[índice]</code></h2>
+
+<pre class="file" data-file="indices.py">pais = "Brasil"
+
+print(pais[0])
+print(pais[1])
+print(pais[5])
+print(pais[-1])
+print(pais[-2])
+print(len(pais))
+</pre>
+
+<dl class="anatomy">
+  <dt>pais</dt><dd>O texto de onde você quer tirar o caractere.</dd>
+  <dt>[ ]</dt><dd>Os colchetes, colados no nome, querem dizer "a posição…".</dd>
+  <dt>0</dt><dd>O índice: qual posição. Precisa ser um número <strong>inteiro</strong>.</dd>
+  <dt>-1</dt><dd>Índice negativo: conta do fim. <code>-1</code> é sempre o último caractere, seja qual for o tamanho do texto.</dd>
+</dl>
+
+<pre class="term">$ python3 indices.py
+B
+r
+l
+l
+i
+6
+</pre>
+
+<p><code>pais[0]</code> é o <code>B</code>, o primeiro; <code>pais[1]</code> é o <code>r</code>, o <strong>segundo</strong>. O último é <code>pais[5]</code>, e também <code>pais[-1]</code>: duas maneiras de chegar à mesma casa. O <code>-1</code> é o mais usado, porque você não precisa saber o tamanho do texto para pegar o último.</p>
+
+<div class="tip">
+<strong>Por que começa no zero?</strong>
+<p>O índice diz <strong>quantos passos</strong> você anda desde o começo do texto. Para chegar no primeiro caractere, você anda zero passos; no segundo, um passo. Quase todas as linguagens de programação contam assim. Estranha no começo, vira costume rápido.</p>
+</div>
+
+<hr>
+
+<h2>2. Um pedaço: <code>texto[início:fim]</code></h2>
+<p>Para pegar mais de um caractere, ponha <strong>dois</strong> índices separados por dois-pontos. Isso é uma <strong>fatia</strong>:</p>
+
+<pre class="file" data-file="fatias.py">pais = "Brasil"
+
+print(pais[0:3])
+print(pais[2:5])
+print(pais[:3])
+print(pais[3:])
+print(pais[-3:])
+print(pais[:])
+</pre>
+
+<dl class="anatomy">
+  <dt>pais[0:3]</dt><dd>Do índice 0 <strong>até antes</strong> do 3: as posições 0, 1 e 2.</dd>
+  <dt>início</dt><dd>O primeiro índice: <strong>entra</strong> na fatia.</dd>
+  <dt>:</dt><dd>Os dois-pontos separam o início do fim.</dd>
+  <dt>fim</dt><dd>O segundo índice: <strong>não entra</strong>. A fatia para logo antes dele.</dd>
+  <dt>pais[:3]</dt><dd>Sem o início: começa do começo.</dd>
+  <dt>pais[3:]</dt><dd>Sem o fim: vai até o fim do texto.</dd>
+  <dt>pais[:]</dt><dd>Sem os dois: o texto inteiro.</dd>
+</dl>
+
+<pre class="term">$ python3 fatias.py
+Bra
+asi
+Bra
+sil
+sil
+Brasil
+</pre>
+
+<ul>
+  <li><code>pais[0:3]</code> e <code>pais[:3]</code> dão <code>Bra</code>: os 3 primeiros.</li>
+  <li><code>pais[2:5]</code> dá <code>asi</code>: as posições 2, 3 e 4 (a 5, o <code>l</code>, ficou de fora).</li>
+  <li><code>pais[3:]</code> dá <code>sil</code>: da posição 3 até o fim.</li>
+  <li><code>pais[-3:]</code> também dá <code>sil</code>: os 3 últimos.</li>
+</ul>
+
+<p>Por que o fim não entra? Porque assim a conta fica fácil: <code>texto[:3]</code> são os <strong>3</strong> primeiros, e o tamanho de <code>texto[2:5]</code> é <code>5 - 2</code>, isto é, 3. E <code>texto[:3]</code> mais <code>texto[3:]</code> dá o texto inteiro, sem repetir nem perder nada: um termina exatamente onde o outro começa.</p>
+
+<h3>Um uso de verdade: recortando uma data</h3>
+<p>As datas costumam ser guardadas no formato ano-mês-dia, como <code>"2026-10-18"</code>. Sabendo as posições, a Ana tira cada parte com uma fatia e monta a data do jeito brasileiro:</p>
+
+<pre class="file" data-file="data.py">data = "2026-10-18"
+
+ano = data[:4]
+mes = data[5:7]
+dia = data[8:]
+
+print("Ano:", ano)
+print("Mês:", mes)
+print("Dia:", dia)
+print(dia + "/" + mes + "/" + ano)
+</pre>
+
+<pre class="term">$ python3 data.py
+Ano: 2026
+Mês: 10
+Dia: 18
+18/10/2026
+</pre>
+
+<p>As posições 0 a 3 são o ano; a 4 é o traço; 5 e 6, o mês; a 7 é outro traço; 8 e 9, o dia. Os pedaços continuam sendo <strong>textos</strong> (<code>"2026"</code>, não <code>2026</code>), e o <code>+</code> emenda textos (aula <a href="strings-juntar.html">Juntar e Repetir Textos</a>). Para trabalhar com datas de verdade, com contas de dias, existe um módulo próprio: <a href="datetime.html">datetime</a>.</p>
+
+<div class="trypy" data-goal="out:Mês: 10;;src:data\[">
+<p class="try-task"><strong>Missão:</strong> o programa já mostra o ano. Acrescente uma linha que mostre o <strong>mês</strong>, tirado da variável <code>data</code> com uma fatia: <code>Mês: 10</code>.</p>
+<pre class="script" data-file="main.py">data = "2026-10-18"
+print("Ano:", data[:4])
+</pre>
+<pre class="solucao" data-file="main.py">data = "2026-10-18"
+print("Ano:", data[:4])
+print("Mês:", data[5:7])
+</pre>
+</div>
+
+<hr>
+
+<h2>3. O passo: de dois em dois, e ao contrário</h2>
+<p>A fatia aceita um terceiro número, depois de mais um dois-pontos: o <strong>passo</strong>, que diz de quanto em quanto pular. Com os algarismos de 0 a 9 fica fácil de ver:</p>
+
+<pre class="file" data-file="passo.py">numeros = "0123456789"
+
+print(numeros[::2])
+print(numeros[1::2])
+print(numeros[::3])
+print(numeros[2:8:2])
+print(numeros[::-1])
+print(numeros[8:2:-2])
+</pre>
+
+<pre class="term">$ python3 passo.py
+02468
+13579
+0369
+246
+9876543210
+864
+</pre>
+
+<dl class="anatomy">
+  <dt>[::2]</dt><dd>Início e fim vazios (o texto todo), passo 2: um sim, um não. Pegou os pares.</dd>
+  <dt>[1::2]</dt><dd>Começa no índice 1, passo 2: os ímpares.</dd>
+  <dt>[::3]</dt><dd>De três em três.</dd>
+  <dt>[2:8:2]</dt><dd>Do 2 até antes do 8, de dois em dois: 2, 4, 6.</dd>
+  <dt>[::-1]</dt><dd>Passo <strong>negativo</strong>: anda para trás. Com início e fim vazios, vai do último ao primeiro: o texto <strong>ao contrário</strong>.</dd>
+  <dt>[8:2:-2]</dt><dd>Para trás, do 8 até antes do 2, de dois em dois: 8, 6, 4. Com passo negativo, o início é o lado <strong>direito</strong>.</dd>
+</dl>
+
+<p>Dos passos, o <code>[::-1]</code> é de longe o mais usado. Com ele, a Ana descobre se uma palavra é um <strong>palíndromo</strong> (lida igual nos dois sentidos):</p>
+
+<pre class="file" data-file="palindromo.py">palavra = "arara"
+print(palavra[::-1])
+print(palavra == palavra[::-1])
+
+palavra = "banana"
+print(palavra[::-1])
+print(palavra == palavra[::-1])
+</pre>
+
+<pre class="term">$ python3 palindromo.py
+arara
+True
+ananab
+False
+</pre>
+
+<div class="trypy" data-goal="out:amoR;;src:\[::-1\]">
+<p class="try-task"><strong>Missão:</strong> mostre o nome da cidade <strong>ao contrário</strong>, usando uma fatia com passo -1.</p>
+<pre class="script" data-file="main.py">cidade = "Roma"
+print(cidade)
+</pre>
+<pre class="solucao" data-file="main.py">cidade = "Roma"
+print(cidade[::-1])
+</pre>
+</div>
+
+<hr>
+
+<h2>4. Fatias e a imutabilidade</h2>
+<p>Lembra que um texto não pode ser alterado (<code>nome[0] = "B"</code> dá <code>TypeError</code>, aula <a href="strings.html">Strings</a>)? A fatia <strong>não muda</strong> o texto original: ela fabrica um texto novo, com uma cópia do pedaço. Então, para "trocar" a primeira letra, você monta um texto novo, com a letra nova mais o resto do antigo:</p>
+
+<pre class="file" data-file="trocar.py">nome = "Ana"
+nome = "B" + nome[1:]
+print(nome)
+</pre>
+
+<pre class="term">$ python3 trocar.py
+Bna
+</pre>
+
+<p><code>nome[1:]</code> é <code>"na"</code> (do índice 1 até o fim); <code>"B" + "na"</code> dá o texto novo <code>"Bna"</code>, que é guardado de volta em <code>nome</code>.</p>
+
+<hr>
+
+<h2>5. Fatias que passam do fim não dão erro</h2>
+<p>Uma diferença importante entre um índice e uma fatia: a fatia é <strong>tolerante</strong>. Se o fim passar do tamanho do texto, ela simplesmente para no último caractere:</p>
+
+<pre class="file" data-file="fora-fatia.py">pais = "Brasil"
+print(pais[2:100])
+print(pais[10:20])
+print(len(pais[10:20]))
+</pre>
+
+<pre class="term">$ python3 fora-fatia.py
+asil
+
+0
+</pre>
+
+<p><code>pais[2:100]</code> deu <code>asil</code>: do 2 até o fim, sem reclamar do 100. E <code>pais[10:20]</code>, que começa depois do fim, deu o <strong>texto vazio</strong> (a linha em branco), de tamanho 0. Já um índice sozinho fora do texto dá erro, como você vai ver em <a href="#errado">Quando dá errado</a>.</p>
+
+<hr>
+
+<h2>Formas diferentes de pegar o mesmo pedaço</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Você quer…</th><th>Prefira</th><th>Também funciona</th><th>Por quê</th></tr>
+<tr><td>o último caractere</td><td><code>texto[-1]</code></td><td><code>texto[len(texto) - 1]</code></td><td>Mais curto, e não precisa saber o tamanho</td></tr>
+<tr><td>os 3 primeiros</td><td><code>texto[:3]</code></td><td><code>texto[0:3]</code></td><td>O 0 no início é desnecessário</td></tr>
+<tr><td>os 3 últimos</td><td><code>texto[-3:]</code></td><td><code>texto[len(texto) - 3:]</code></td><td>Mais curto e claro</td></tr>
+<tr><td>tudo menos o primeiro</td><td><code>texto[1:]</code></td><td><code>texto[1:len(texto)]</code></td><td>Sem o fim, vai até o fim</td></tr>
+<tr><td>tudo menos o último</td><td><code>texto[:-1]</code></td><td><code>texto[:len(texto) - 1]</code></td><td>Mais curto</td></tr>
+<tr><td>o texto ao contrário</td><td><code>texto[::-1]</code></td><td>(um laço <code>for</code>, aula <a href="for.html">for</a>)</td><td>Uma linha só</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Índice fora do texto: <code>IndexError</code></strong>
+<p>"Brasil" tem 6 letras, então a Ana pediu a de número 6, achando que era a última:</p>
+<pre class="file" data-file="fora.py">pais = "Brasil"
+print(pais[6])
+</pre>
+<pre class="term">$ python3 fora.py
+Traceback (most recent call last):
+  File "/home/ana/fora.py", line 2, in &lt;module&gt;
+    print(pais[6])
+          ~~~~^^^
+IndexError: string index out of range
+</pre>
+<dl class="anatomy">
+  <dt>File "/home/ana/fora.py", line 2</dt><dd>O erro está na linha 2.</dd>
+  <dt>~~~~^^^</dt><dd>Os <code>~</code> sublinham o texto (<code>pais</code>), e os <code>^</code>, o índice que deu problema (<code>[6]</code>).</dd>
+  <dt>IndexError:</dt><dd>"Erro de índice".</dd>
+  <dt>string index out of range</dt><dd>"Índice do texto fora do intervalo": não existe a posição 6. Os índices de "Brasil" vão de 0 a 5.</dd>
+</dl>
+<p>Com índice negativo, o limite é o mesmo do outro lado: <code>-6</code> é o primeiro, <code>-7</code> já não existe.</p>
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; pais = "Brasil"
+&gt;&gt;&gt; pais[-7]
+Traceback (most recent call last):
+  File "&lt;python-input-1&gt;", line 1, in &lt;module&gt;
+    pais[-7]
+    ~~~~^^^^
+IndexError: string index out of range
+&gt;&gt;&gt; exit()
+</pre>
+<p><strong>Como consertar:</strong> o último caractere é <code>pais[5]</code> (o tamanho menos um) ou, melhor, <code>pais[-1]</code>. Lembre: num texto de tamanho N, o maior índice é N - 1.</p>
+</div>
+
+<div class="cenario">
+<strong>Índice que é um texto: <code>TypeError</code></strong>
+<pre class="file" data-file="indice-texto.py">pais = "Brasil"
+posicao = "2"
+print(pais[posicao])
+</pre>
+<pre class="term">$ python3 indice-texto.py
+Traceback (most recent call last):
+  File "/home/ana/indice-texto.py", line 3, in &lt;module&gt;
+    print(pais[posicao])
+          ~~~~^^^^^^^^^
+TypeError: string indices must be integers, not 'str'
+</pre>
+<p><code>string indices must be integers, not 'str'</code>: "os índices de um texto precisam ser números inteiros, não <code>str</code>". O <code>"2"</code> entre aspas é um texto. Isso acontece muito quando a posição vem do teclado, porque o <code>input()</code> sempre devolve texto. <strong>Como consertar:</strong> converta, <code>pais[int(posicao)]</code> (aula <a href="conversao.html">Conversão de Tipos</a>).</p>
+</div>
+
+<div class="cenario">
+<strong>Índice com casas decimais: <code>TypeError</code></strong>
+<p>A Ana quer a letra do meio e dividiu o tamanho por 2:</p>
+<pre class="file" data-file="indice-float.py">pais = "Brasil"
+meio = len(pais) / 2
+print(pais[meio])
+</pre>
+<pre class="term">$ python3 indice-float.py
+Traceback (most recent call last):
+  File "/home/ana/indice-float.py", line 3, in &lt;module&gt;
+    print(pais[meio])
+          ~~~~^^^^^^
+TypeError: string indices must be integers, not 'float'
+</pre>
+<p>A divisão <code>/</code> sempre dá um <code>float</code> (<code>6 / 2</code> é <code>3.0</code>, e não <code>3</code>), e <code>3.0</code> não serve de índice, mesmo sem nada depois da vírgula. <strong>Como consertar:</strong> use a divisão inteira <code>//</code> (aula <a href="operadores-aritmeticos.html">Operadores Aritméticos</a>):</p>
+<pre class="file" data-file="indice-meio.py">pais = "Brasil"
+meio = len(pais) // 2
+print(pais[meio])
+print(pais[:meio])
+print(pais[meio:])
+</pre>
+<pre class="term">$ python3 indice-meio.py
+s
+Bra
+sil
+</pre>
+</div>
+
+<div class="cenario">
+<strong>Querer mudar o texto pelo índice</strong>
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; pais = "Brasil"
+&gt;&gt;&gt; pais[0] = "b"
+Traceback (most recent call last):
+  File "&lt;python-input-1&gt;", line 1, in &lt;module&gt;
+    pais[0] = "b"
+    ~~~~^^^
+TypeError: 'str' object does not support item assignment
+&gt;&gt;&gt; exit()
+</pre>
+<p>Com índices você <strong>lê</strong>, mas não escreve: textos são imutáveis. <strong>Como consertar:</strong> monte um texto novo, <code>pais = "b" + pais[1:]</code> (seção 4), ou use o <code>replace()</code> da aula <a href="strings-metodos.html">Métodos de Texto</a>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<p>Com <code>t = "Brasil"</code>:</p>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que pega</th><th>Resultado</th></tr>
+<tr><td><code>t[0]</code></td><td>O primeiro caractere</td><td><code>'B'</code></td></tr>
+<tr><td><code>t[-1]</code></td><td>O último</td><td><code>'l'</code></td></tr>
+<tr><td><code>t[2:5]</code></td><td>Do 2 até antes do 5</td><td><code>'asi'</code></td></tr>
+<tr><td><code>t[:3]</code></td><td>Os 3 primeiros</td><td><code>'Bra'</code></td></tr>
+<tr><td><code>t[3:]</code></td><td>Do 3 até o fim</td><td><code>'sil'</code></td></tr>
+<tr><td><code>t[-3:]</code></td><td>Os 3 últimos</td><td><code>'sil'</code></td></tr>
+<tr><td><code>t[:]</code></td><td>Tudo</td><td><code>'Brasil'</code></td></tr>
+<tr><td><code>t[::2]</code></td><td>De dois em dois</td><td><code>'Bai'</code></td></tr>
+<tr><td><code>t[::-1]</code></td><td>Ao contrário</td><td><code>'lisarB'</code></td></tr>
+<tr><td><code>t[6]</code></td><td>Não existe</td><td><code>IndexError</code></td></tr>
+<tr><td><code>t[2:100]</code></td><td>Fatia que passa do fim: para no fim</td><td><code>'asil'</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+<p>Use <code>p = "Teresina"</code> em todos.</p>
+
+<div class="exercise">
+<h3>1. A primeira e a última</h3>
+<p>Complete os índices para pegar o <code>T</code> e o <code>a</code> do fim:</p>
+<div class="ex-code">print(p[<input data-answer="0" aria-label="índice do primeiro">], p[<input data-answer="-1|7" aria-label="índice do último">])</div>
+</div>
+
+<div class="exercise">
+<h3>2. O começo</h3>
+<p>Complete a fatia que pega <code>Tere</code>:</p>
+<div class="ex-code">print(p[:<input data-answer="4" aria-label="fim">])</div>
+</div>
+
+<div class="exercise">
+<h3>3. O fim</h3>
+<p>Complete a fatia que pega <code>sina</code>, contando do fim:</p>
+<div class="ex-code">print(p[<input data-answer="-4" aria-label="início">:])</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. O que <code>p[1:3]</code> mostra?</p>
+<label><input type="radio" name="q4"> <code>Ter</code></label>
+<label><input type="radio" name="q4"> <code>er</code></label>
+<label><input type="radio" name="q4"> <code>ere</code></label>
+<label><input type="radio" name="q4"> <code>e</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. O que acontece com <code>p[8]</code>?</p>
+<label><input type="radio" name="q5"> Mostra <code>a</code>, a última letra</label>
+<label><input type="radio" name="q5"> Mostra o texto vazio</label>
+<label><input type="radio" name="q5"> Dá <code>IndexError</code>: os índices vão de 0 a 7</label>
+<label><input type="radio" name="q5"> Mostra <code>T</code>: volta para o começo</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. O que <code>p[::-1]</code> mostra?</p>
+<label><input type="radio" name="q6"> <code>anisereT</code></label>
+<label><input type="radio" name="q6"> <code>a</code></label>
+<label><input type="radio" name="q6"> <code>Teresin</code></label>
+<label><input type="radio" name="q6"> Dá erro: índice negativo</label>
+</div>
+
+<h3>Missão final: o telefone formatado</h3>
+
+<div class="trypy" data-goal="out:(86) 98888-7777;;semerro">
+<p class="try-task"><strong>Missão:</strong> o telefone da Ana está guardado só com os algarismos. Mostre-o formatado, assim: <code>(86) 98888-7777</code>. Os 2 primeiros algarismos são o DDD, os 5 seguintes são a primeira parte do número, e o resto é a segunda parte.</p>
+<pre class="script" data-file="main.py">telefone = "86988887777"
+print("DDD:", telefone[:2])
+</pre>
+<pre class="solucao" data-file="main.py">telefone = "86988887777"
+print("(" + telefone[:2] + ") " + telefone[2:7] + "-" + telefone[7:])
+</pre>
+</div>
+
+<p>Dica: <code>telefone[2:7]</code> são as posições 2, 3, 4, 5 e 6. Quando você conhecer as <a href="f-strings.html">f-strings</a>, vai escrever isso de um jeito bem mais limpo.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Cada caractere tem um <strong>índice</strong>, a partir do <strong>0</strong>. Num texto de tamanho N, o último é o N - 1.</li>
+  <li>Índices negativos contam do fim: <code>texto[-1]</code> é o último.</li>
+  <li><code>texto[início:fim]</code> é uma <strong>fatia</strong>: o início entra, o fim não. Sem o início, começa do começo; sem o fim, vai até o fim.</li>
+  <li>O terceiro número é o <strong>passo</strong>: <code>[::2]</code> pula de dois em dois, <code>[::-1]</code> dá o texto ao contrário.</li>
+  <li>A fatia não muda o texto: ela cria um texto novo. Fatia que passa do fim não dá erro; índice fora do texto dá <code>IndexError: string index out of range</code>.</li>
+  <li>O índice precisa ser um <code>int</code>: <code>"2"</code> e <code>3.0</code> dão <code>TypeError: string indices must be integers</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
