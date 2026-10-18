@@ -83,7 +83,7 @@ $ ls -l loja.db
 -rw-r--r-- 1 ana ana 0 Oct 18 11:45 loja.db
 </pre>
 
-<p>O <code>print(con)</code> mostra só "um objeto de conexão" e um endereço na memória (o <code>0x7f…</code> muda a cada execução). E o <code>ls -l</code> mostra que o arquivo <code>loja.db</code> apareceu na pasta, com 0 bytes: o banco existe, mas ainda não tem nada dentro.</p>
+<p>O <code>print(con)</code> mostra só "um objeto de conexão" e um endereço na memória (o <code>0x7f…</code> muda a cada execução). A versão do SQLite também depende de onde o Python roda: no Ubuntu da Ana é a <code>3.46.1</code>; no editor do guia aparece <code>3.39.0</code>, e tudo o que esta aula usa funciona igual nas duas. E o <code>ls -l</code> mostra que o arquivo <code>loja.db</code> apareceu na pasta, com 0 bytes: o banco existe, mas ainda não tem nada dentro.</p>
 
 <div class="note">
 <strong>Um banco que vive só na memória</strong>
