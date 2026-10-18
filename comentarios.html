@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Comentários — o # e os recados para quem lê o código | Guia Python</title>
+<meta name="description" content="Comentários em Python para quem está começando: o # na linha inteira e no fim da linha, comentários de várias linhas, desligar uma linha para testar, por que o texto entre três aspas não é um comentário de verdade, o # dentro de aspas, bons e maus comentários, e os erros reais de quem vem de outras linguagens (// e /* */) ou esquece o #.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Comentários</span></h1>
+
+<p class="intro">Um programa é lido por duas plateias: o Python, que executa, e as <strong>pessoas</strong>, que precisam entender o que ele faz (inclusive você, daqui a três meses). Os <strong>comentários</strong> são os recados para as pessoas: textos dentro do programa que o Python simplesmente ignora. Em Python, um comentário começa com o sinal <code>#</code> (que se chama "cerquilha", "jogo da velha" ou <em>hash</em>). Nesta aula você vai aprender a escrever comentários, a usar o <code>#</code> para "desligar" uma linha enquanto testa, a diferença entre um comentário e um texto entre três aspas, e o que acontece quando alguém escreve comentários do jeito de outras linguagens.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A escrever um comentário com <code>#</code>, numa linha inteira ou no fim de uma linha de código.</li>
+  <li>A escrever comentários de várias linhas.</li>
+  <li>A <strong>"comentar"</strong> uma linha de código para ela não rodar, sem apagá-la.</li>
+  <li>Por que o <code>#</code> dentro de aspas não é comentário.</li>
+  <li>Por que um texto entre três aspas (<code>"""…"""</code>) não é um comentário de verdade.</li>
+  <li>O que é um bom comentário, e o que é um comentário inútil.</li>
+  <li>Os erros reais: <code>//</code> e <code>/* */</code> de outras linguagens, e o <code>#</code> esquecido.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: o post-it na receita</h2>
+<p>A Ana tem um caderno de receitas que já passou pela avó e pela mãe. Nas margens, cada uma deixou recados a lápis: "a vó usava manteiga, não margarina", "forno da casa nova esquenta mais: 35 minutos bastam", "dobrar a receita para o aniversário". Esses recados <strong>não são passos da receita</strong>: quem faz o bolo lê, entende o porquê das coisas, mas não "executa" o recado.</p>
+
+<p>Os comentários são esses recados a lápis. O Python, ao ler o arquivo, pula tudo o que vem depois de um <code>#</code> até o fim da linha, como se não existisse. As pessoas leem e entendem melhor o programa.</p>
+
+<hr>
+
+<h2>1. O primeiro comentário</h2>
+
+<pre class="file" data-file="recibo.py"># Recibo da Padaria Pão Quente
+# Preços de outubro de 2026
+
+print("Padaria Pão Quente")
+print("10 pães:", 10 * 0.75)    # o pão custa R$ 0,75
+print("1 leite:", 6.50)
+print("Total:", 10 * 0.75 + 6.50)
+</pre>
+
+<pre class="term" data-cwd="~/python">$ python3 recibo.py
+Padaria Pão Quente
+10 pães: 7.5
+1 leite: 6.5
+Total: 14.0</pre>
+
+<p>Nenhum comentário apareceu na tela, e nenhum mudou o resultado. Para o Python, o programa é exatamente o mesmo que o recibo da aula <a href="primeiro-programa.html">Seu Primeiro Programa</a>, sem os comentários.</p>
+
+<dl class="anatomy">
+  <dt># Recibo da Padaria Pão Quente</dt><dd>Um comentário de <strong>linha inteira</strong>: a linha começa com <code>#</code>, então ela toda é ignorada. Bom para dizer, no topo, o que o programa faz.</dd>
+  <dt>print("10 pães:", 10 * 0.75)</dt><dd>Código normal: o Python executa até o <code>#</code>.</dd>
+  <dt># o pão custa R$ 0,75</dt><dd>Um comentário no <strong>fim da linha</strong> (<em>inline</em>): explica de onde veio o <code>0.75</code>. Tudo a partir do <code>#</code> é ignorado.</dd>
+</dl>
+
+<div class="tip">
+<strong>O jeito recomendado de escrever</strong>
+<p>O guia de estilo do Python (a PEP 8) sugere: depois do <code>#</code>, <strong>um espaço</strong> antes do texto (<code># assim</code>, e não <code>#assim</code>); e, num comentário no fim da linha, pelo menos <strong>dois espaços</strong> entre o código e o <code>#</code>. Não é obrigatório, mas deixa tudo mais fácil de ler.</p>
+</div>
+
+<h3>No modo interativo também</h3>
+<p>No <a href="repl.html">modo interativo</a>, um comentário sozinho não faz nada, e um comentário depois de uma conta não atrapalha a conta:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; # isto é um comentário
+&gt;&gt;&gt; 2 + 3  # uma conta
+5
+&gt;&gt;&gt; exit()</pre>
+
+<hr>
+
+<h2>2. Comentários de várias linhas</h2>
+<p>O Python não tem um sinal especial para comentários de várias linhas. O jeito é começar <strong>cada linha</strong> com <code>#</code>:</p>
+
+<pre class="file" data-file="estoque.py"># Controle do estoque da lojinha da Ana.
+# Cada produto tem um preço e uma quantidade.
+# Atualizar os preços toda segunda-feira.
+print("Estoque da lojinha")
+</pre>
+
+<p>Parece trabalhoso, mas os editores fazem isso por você: selecione as linhas e use o atalho de comentar. No VS Code, é <kbd>Ctrl</kbd>+<kbd>/</kbd>; no IDLE, <kbd>Alt</kbd>+<kbd>3</kbd> comenta e <kbd>Alt</kbd>+<kbd>4</kbd> descomenta. Cada editor tem o seu: procure "comentar" (<em>comment</em>) no menu.</p>
+
+<hr>
+
+<h2>3. "Desligando" uma linha para testar</h2>
+<p>Um uso muito comum do <code>#</code> não é escrever recados, mas <strong>desligar código</strong>. A Ana quer ver o recibo sem a linha dos pães, mas sem apagá-la (vai precisar dela de volta depois). Basta pôr um <code>#</code> na frente:</p>
+
+<pre class="file" data-file="teste.py">print("Padaria Pão Quente")
+# print("10 pães:", 10 * 0.75)
+print("1 leite:", 6.50)
+</pre>
+
+<pre class="term" data-cwd="~/python">$ python3 teste.py
+Padaria Pão Quente
+1 leite: 6.5                                       « a linha dos pães não rodou</pre>
+
+<p>Os programadores chamam isso de <strong>"comentar"</strong> a linha. Para ela voltar a funcionar, "descomente": apague o <code>#</code>. É ótimo para procurar um erro: você desliga partes do programa até descobrir qual delas causa o problema.</p>
+
+<div class="trypy" data-goal="outre:^Padaria Pão Quente\n1 leite: 6.5\n$;;src:#.*Promoção cancelada">
+<p class="try-task"><strong>Missão:</strong> a promoção acabou, mas a Ana quer guardar a linha para a próxima. Em vez de apagar, <strong>comente</strong> a linha da promoção (ponha um <code>#</code> no começo dela) e rode: devem sobrar só o nome da padaria e o leite.</p>
+<pre class="script" data-file="main.py">print("Padaria Pão Quente")
+print("Promoção cancelada! Pão em dobro só amanhã.")
+print("1 leite:", 6.50)
+</pre>
+<pre class="solucao" data-file="main.py">print("Padaria Pão Quente")
+# print("Promoção cancelada! Pão em dobro só amanhã.")
+print("1 leite:", 6.50)
+</pre>
+</div>
+
+<hr>
+
+<h2>4. O <code>#</code> dentro de aspas não é comentário</h2>
+<p>O <code>#</code> só começa um comentário quando está <strong>fora</strong> de um texto. Dentro das aspas, ele é um caractere como outro qualquer:</p>
+
+<pre class="file" data-file="aspas.py">print("Promoção # 1: pão em dobro")   # este # é comentário
+print('Use a tag #padaria')
+</pre>
+
+<pre class="term" data-cwd="~/python">$ python3 aspas.py
+Promoção # 1: pão em dobro
+Use a tag #padaria</pre>
+
+<p>O primeiro <code>#</code> da linha 1 está dentro das aspas, então faz parte do texto e apareceu na tela. O segundo está fora, então começa o comentário. Na linha 2, o <code>#padaria</code> também está dentro das aspas.</p>
+
+<hr>
+
+<h2>5. E os textos entre três aspas?</h2>
+<p>Em muito código Python você vai encontrar trechos assim, entre <strong>três aspas</strong>:</p>
+
+<pre class="file" data-file="tripla.py">"""
+Recibo da padaria.
+Escrito pela Ana em outubro de 2026.
+"""
+print("Padaria Pão Quente")
+</pre>
+
+<pre class="term" data-cwd="~/python">$ python3 tripla.py
+Padaria Pão Quente</pre>
+
+<p>O texto entre as três aspas não apareceu, e por isso muita gente acha que ele é um "comentário de várias linhas". <strong>Não é.</strong> As três aspas criam um <strong>texto</strong> (uma <em>string</em>) que pode ter várias linhas. Num arquivo, um texto solto, que ninguém mostra nem guarda, não faz nada visível, como o <code>"Ana"</code> solto da aula <a href="repl.html">O Modo Interativo</a>. Mas ele existe: o Python lê e cria o texto. No modo interativo, dá para ver a diferença:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; # isto é um comentário
+&gt;&gt;&gt; "isto é um texto"
+'isto é um texto'                                  « o texto tem valor; o comentário, não
+&gt;&gt;&gt; exit()</pre>
+
+<p>Os textos entre três aspas têm um uso importante e oficial: as <strong>docstrings</strong>, que documentam funções, classes e módulos, e que o <code>help</code> mostra (aula <a href="docstrings.html">Docstrings</a>). No topo de um arquivo, como no exemplo acima, eles são a docstring do módulo, e esse uso é legítimo. Para recados no meio do código, use <code>#</code>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th>Comentário <code>#</code></th><th>Texto <code>"""…"""</code></th></tr>
+<tr><td><strong>O que é</strong></td><td>Nada: o Python ignora</td><td>Um texto de verdade</td></tr>
+<tr><td><strong>Várias linhas</strong></td><td>Um <code>#</code> em cada linha</td><td>Sim, entre as três aspas</td></tr>
+<tr><td><strong>No <code>&gt;&gt;&gt;</code></strong></td><td>Não mostra nada</td><td>Mostra o texto</td></tr>
+<tr><td><strong>Use para</strong></td><td>Recados no meio do código; desligar linhas</td><td>Docstrings: no começo de um arquivo, de uma função ou de uma classe</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>6. Comentários e a indentação</h2>
+<p>Como o Python ignora o comentário inteiro, o recuo de uma linha de comentário não importa: ela não entra nem sai de bloco nenhum.</p>
+
+<pre class="file" data-file="bloco.py">aberta = True
+if aberta:
+# este comentário está fora do recuo
+    print("Aberta!")
+        # e este, com recuo demais
+    print("Pode entrar.")
+</pre>
+
+<pre class="term" data-cwd="~/python">$ python3 bloco.py
+Aberta!
+Pode entrar.</pre>
+
+<p>Nenhum <code>IndentationError</code> (aula <a href="sintaxe.html">Sintaxe e Indentação</a>). Mas não faça assim: o costume é dar ao comentário o <strong>mesmo recuo</strong> do código que ele explica, para ficar claro a que parte ele se refere.</p>
+
+<hr>
+
+<h2>7. O que é um bom comentário</h2>
+<p>Um comentário bom diz o que o código <strong>não consegue dizer sozinho</strong>: o <strong>porquê</strong> de uma escolha, de onde vem um número, um cuidado que quem mexer depois precisa ter. Um comentário ruim repete o que o código já diz.</p>
+
+<pre class="file" data-file="ruim.py">print("Total:", 10 * 0.75)   # mostra o total
+</pre>
+
+<p>Esse comentário é inútil: o próprio <code>print("Total:"…</code> já diz que mostra o total. Compare:</p>
+
+<pre class="file" data-file="bom.py">print("Total:", 10 * 0.75)   # 10 pães a R$ 0,75 (preço da tabela de outubro)
+</pre>
+
+<p>Agora o leitor sabe o que são o <code>10</code> e o <code>0.75</code>, e de onde veio o preço. Algumas dicas:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Faça</th><th>Evite</th></tr>
+<tr><td>Explique o <strong>porquê</strong>: <code># o forno novo esquenta mais: 35 min</code></td><td>Repetir o código: <code># soma 1</code> ao lado de <code>x = x + 1</code></td></tr>
+<tr><td>Diga de onde vêm os números: <code># preço de outubro</code></td><td>Comentários que ficaram velhos: o código mudou e o comentário não</td></tr>
+<tr><td>Avise dos cuidados: <code># não mudar a ordem: o total depende disso</code></td><td>Comentar cada linha "por obrigação"</td></tr>
+<tr><td>Marque o que falta fazer: <code># TODO: aceitar pagamento em cartão</code></td><td>Deixar montes de código comentado esquecido no arquivo</td></tr>
+</table>
+</div>
+
+<p>O <code>TODO</code> ("a fazer", em inglês) é um costume: muitos editores destacam os comentários que começam com ele, para você achar o que ficou pendente. E lembre: um nome bem escolhido (<code>preco_do_pao</code> em vez de <code>p</code>) muitas vezes dispensa o comentário. Você vai ver isso em <a href="nomes-variaveis.html">Nomes de Variáveis</a>.</p>
+
+<div class="note">
+<strong>Duas linhas com <code>#</code> que não são recados</strong>
+<p>A linha <code>#!/usr/bin/env python3</code>, no começo de um arquivo, é um comentário para o Python, mas o Linux a usa para saber quem executa o arquivo (aula <a href="executar.html">Rodando um Programa</a>). E em programas antigos aparece às vezes <code># -*- coding: utf-8 -*-</code> no topo: ela avisava o Python 2 de que o arquivo tinha acentos. No Python 3, o padrão já é UTF-8, e ela não é mais necessária.</p>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de deixar um recado</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Exemplo</th><th>Quando usar</th></tr>
+<tr><td><code>#</code> numa linha inteira</td><td><code># Recibo da padaria</code></td><td>Explicar o trecho que vem embaixo</td></tr>
+<tr><td><code>#</code> no fim da linha</td><td><code>print(10 * 0.75)  # preço de outubro</code></td><td>Um recado curto sobre aquela linha</td></tr>
+<tr><td>Vários <code>#</code> seguidos</td><td><code># linha 1</code> ⏎ <code># linha 2</code></td><td>Explicações maiores</td></tr>
+<tr><td><code>#</code> na frente de código</td><td><code># print("teste")</code></td><td>Desligar uma linha temporariamente</td></tr>
+<tr><td><code>"""…"""</code></td><td>No topo do arquivo ou de uma função</td><td>Só docstrings (aula <a href="docstrings.html">Docstrings</a>)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Quando dá errado</h2>
+
+<div class="cenario">
+<strong><code>//</code>, o comentário de outras linguagens</strong>
+<p>Quem já viu JavaScript, C, Java ou PHP costuma escrever comentários com duas barras:</p>
+<pre class="file" data-file="e1.py">// Recibo da padaria
+print("Padaria Pão Quente")
+</pre>
+<pre class="term" data-cwd="~/python">$ python3 e1.py
+  File "/home/ana/python/e1.py", line 1
+    // Recibo da padaria
+    ^^
+SyntaxError: invalid syntax</pre>
+<p><strong>O que aconteceu:</strong> em Python, <code>//</code> não é comentário: é um operador de conta, a "divisão inteira" (<code>7 // 2</code> dá <code>3</code>; aula <a href="operadores-aritmeticos.html">Operadores Aritméticos</a>). Uma divisão sem nada antes não faz sentido, e o Python reclama de sintaxe. Repare que nem a linha 2 rodou: é um <code>SyntaxError</code>. <strong>Como resolver:</strong> troque <code>//</code> por <code>#</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>/* … */</code>, o comentário de bloco do C</strong>
+<pre class="file" data-file="e2.py">/* Recibo da padaria */
+print("Padaria Pão Quente")
+</pre>
+<pre class="term" data-cwd="~/python">$ python3 e2.py
+  File "/home/ana/python/e2.py", line 1
+    /* Recibo da padaria */
+    ^
+SyntaxError: invalid syntax</pre>
+<p><strong>O que aconteceu:</strong> o Python não tem comentários de bloco. Para ele, <code>/</code> é divisão e <code>*</code> é multiplicação, e a linha não faz sentido. <strong>Como resolver:</strong> <code># Recibo da padaria</code>, com um <code>#</code> em cada linha.</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu o <code>#</code></strong>
+<p>A Ana escreveu o recado e esqueceu o sinal:</p>
+<pre class="file" data-file="e3.py">Recibo da padaria
+print("Padaria Pão Quente")
+</pre>
+<pre class="term" data-cwd="~/python">$ python3 e3.py
+  File "/home/ana/python/e3.py", line 1
+    Recibo da padaria
+           ^^
+SyntaxError: invalid syntax</pre>
+<p><strong>O que aconteceu:</strong> sem o <code>#</code>, o Python tenta entender o recado como código. Três palavras soltas, uma depois da outra, não formam uma instrução. Os <code>^^</code> apontam para o <code>da</code>: o Python até aceitaria <code>Recibo</code> sozinho como um nome, mas não um nome seguido de outro. Com uma palavra só, o erro muda:</p>
+<pre class="term" data-cwd="~/python">$ python3 e3b.py
+Traceback (most recent call last):
+  File "/home/ana/python/e3b.py", line 1, in &lt;module&gt;
+    Recibo
+NameError: name 'Recibo' is not defined</pre>
+<p>Agora a linha <code>Recibo</code> é "gramaticalmente" certa (um nome sozinho), e o Python tentou usá-la como uma variável, que não existe. <strong>Como resolver:</strong> nos dois casos, ponha o <code>#</code> no começo do recado.</p>
+</div>
+
+<div class="cenario">
+<strong>Recado no fim da linha, sem o <code>#</code></strong>
+<pre class="file" data-file="e5.py">print("Padaria Pão Quente")  print o nome da padaria
+</pre>
+<pre class="term" data-cwd="~/python">$ python3 e5.py
+  File "/home/ana/python/e5.py", line 1
+    print("Padaria Pão Quente")  print o nome da padaria
+                                 ^^^^^
+SyntaxError: invalid syntax</pre>
+<p><strong>O que aconteceu:</strong> depois do <code>)</code>, a instrução acabou, e o Python encontrou mais palavras na mesma linha. <strong>Como resolver:</strong> <code>print("Padaria Pão Quente")  # mostra o nome da padaria</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Três aspas que nunca fecham</strong>
+<pre class="file" data-file="e4.py">"""
+Recibo da padaria.
+print("Padaria Pão Quente")
+</pre>
+<pre class="term" data-cwd="~/python">$ python3 e4.py
+  File "/home/ana/python/e4.py", line 1
+    """
+    ^
+SyntaxError: unterminated triple-quoted string literal (detected at line 3)</pre>
+<p><strong>O que aconteceu:</strong> "texto entre três aspas não terminado (percebido na linha 3)". As três aspas da linha 1 abriram um texto e ninguém o fechou, então até o <code>print</code> virou parte do texto. Esse é mais um motivo para usar <code>#</code> nos recados. <strong>Como resolver:</strong> feche com outras três aspas, ou troque o bloco por linhas com <code>#</code>.</p>
+</div>
+
+<div class="trypy" data-goal="out:Padaria Pão Quente;;semerro;;src:^#">
+<p class="try-task"><strong>Missão:</strong> a Ana deixou um recado na primeira linha, mas escreveu do jeito do JavaScript, e o programa não roda. Transforme o recado num comentário de Python e rode.</p>
+<pre class="script" data-file="main.py">// Programa da padaria: mostra o nome e o preço do pão
+print("Padaria Pão Quente")
+print("Pão francês:", 0.75)
+</pre>
+<pre class="solucao" data-file="main.py"># Programa da padaria: mostra o nome e o preço do pão
+print("Padaria Pão Quente")
+print("Pão francês:", 0.75)
+</pre>
+</div>
+
+<h3>Missão final: comente o recibo</h3>
+
+<div class="trypy" data-goal="src:^#\s*\S;;src:\)\s+#\s*\S;;out:Total: 14.0;;semerro">
+<p class="try-task"><strong>Missão:</strong> deixe o recibo da padaria explicado para quem for mexer nele depois. Acrescente (1) um comentário de linha inteira no topo, dizendo o que o programa faz, e (2) um comentário no fim de alguma linha de <code>print</code>, explicando um dos números (por exemplo, o preço do pão). O resultado na tela não pode mudar.</p>
+<pre class="script" data-file="main.py">print("Padaria Pão Quente")
+print("10 pães:", 10 * 0.75)
+print("1 leite:", 6.50)
+print("Total:", 10 * 0.75 + 6.50)
+</pre>
+<pre class="solucao" data-file="main.py"># Recibo da Padaria Pão Quente
+print("Padaria Pão Quente")
+print("10 pães:", 10 * 0.75)  # o pão custa R$ 0,75
+print("1 leite:", 6.50)
+print("Total:", 10 * 0.75 + 6.50)
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code># texto</code></td><td>Comentário: o Python ignora do <code>#</code> até o fim da linha</td></tr>
+<tr><td><code>código  # texto</code></td><td>Comentário no fim da linha (dois espaços antes do <code>#</code>)</td></tr>
+<tr><td><code># código</code></td><td>"Comenta" (desliga) a linha</td></tr>
+<tr><td><code>"texto # não é comentário"</code></td><td>Dentro de aspas, o <code>#</code> é só um caractere</td></tr>
+<tr><td><code>"""…"""</code></td><td>Texto de várias linhas (use para docstrings, não para comentários)</td></tr>
+<tr><td><code># TODO: …</code></td><td>Costume para marcar o que falta fazer</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>SyntaxError: invalid syntax</code> com <code>^^</code> embaixo de <code>//</code></td><td>Comentário do jeito de JavaScript/C: use <code>#</code></td></tr>
+<tr><td><code>SyntaxError: invalid syntax</code> com <code>^</code> embaixo de <code>/*</code></td><td>Comentário de bloco do C: use <code>#</code> em cada linha</td></tr>
+<tr><td><code>SyntaxError: invalid syntax</code> no meio de um recado, ou <code>NameError</code> com uma palavra do recado</td><td>Faltou o <code>#</code></td></tr>
+<tr><td><code>SyntaxError: unterminated triple-quoted string literal</code></td><td>Três aspas abertas e não fechadas</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O sinal do comentário</h3>
+<p>Complete para a linha virar um comentário:</p>
+<div class="ex-code"><input data-answer="#" aria-label="sinal"> Recibo da padaria</div>
+</div>
+
+<div class="exercise">
+<h3>2. Desligar uma linha</h3>
+<p>Complete para esta linha não rodar:</p>
+<div class="ex-code"><input data-answer="#" aria-label="sinal"> print("teste")</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. O que aparece na tela com <code>print("Sala #3")  # a sala da Ana</code>?</p>
+<label><input type="radio" name="q3"> <code>Sala</code></label>
+<label><input type="radio" name="q3"> <code>Sala #3</code></label>
+<label><input type="radio" name="q3"> <code>Sala #3  # a sala da Ana</code></label>
+<label><input type="radio" name="q3"> Nada: a linha inteira é um comentário.</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">4. A Ana escreveu <code>// total do dia</code> no programa e recebeu <code>SyntaxError: invalid syntax</code>. Por quê?</p>
+<label><input type="radio" name="q4"> Porque comentários não podem ter acentos.</label>
+<label><input type="radio" name="q4"> Porque o comentário tem de ficar no fim do arquivo.</label>
+<label><input type="radio" name="q4"> Porque faltou fechar com <code>//</code> no fim.</label>
+<label><input type="radio" name="q4"> Porque em Python o comentário começa com <code>#</code>; o <code>//</code> é a divisão inteira.</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Qual destes comentários é o mais útil?</p>
+<label><input type="radio" name="q5"> <code>total = 10 * 0.75  # 10 pães a R$ 0,75, preço de outubro</code></label>
+<label><input type="radio" name="q5"> <code>total = 10 * 0.75  # multiplica 10 por 0.75</code></label>
+<label><input type="radio" name="q5"> <code>total = 10 * 0.75  # total</code></label>
+<label><input type="radio" name="q5"> <code>total = 10 * 0.75  # código</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">6. Sobre o texto entre três aspas (<code>"""…"""</code>), é correto dizer:</p>
+<label><input type="radio" name="q6"> É o comentário oficial de várias linhas do Python.</label>
+<label><input type="radio" name="q6"> O Python ignora completamente, como o <code>#</code>.</label>
+<label><input type="radio" name="q6"> É um texto de verdade; serve para docstrings, e no <code>&gt;&gt;&gt;</code> ele aparece na tela.</label>
+<label><input type="radio" name="q6"> Só funciona no modo interativo.</label>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Comentários são recados para as <strong>pessoas</strong>: o Python ignora tudo do <code>#</code> até o fim da linha.</li>
+  <li>O <code>#</code> pode ocupar a linha inteira ou vir no fim de uma linha de código (dois espaços antes, um depois). Várias linhas: um <code>#</code> em cada.</li>
+  <li>"Comentar" uma linha de código (pôr <code>#</code> na frente) a desliga sem apagar; ótimo para testar.</li>
+  <li>Dentro de aspas, o <code>#</code> é só um caractere.</li>
+  <li>O texto entre três aspas não é comentário: é um texto, usado nas docstrings.</li>
+  <li>Bons comentários explicam o <strong>porquê</strong> e de onde vêm os números; não repetem o código.</li>
+  <li><code>//</code> e <code>/* */</code>, de outras linguagens, dão <code>SyntaxError</code> em Python; um recado sem <code>#</code> também.</li>
+  <li>Próximo passo: o <code>print</code> a fundo, em <a href="print.html">print()</a>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
