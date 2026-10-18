@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python else nos Laços — o bloco que roda quando não houve break | Guia Python</title>
+<meta name="description" content="O else do for e do while no Python para quem nunca programou: o bloco que roda quando o laço termina sem break, o caso de procurar e não achar, a senha bloqueada depois de três erros, o jogo de adivinhar, descobrir se um número é primo, a lista vazia, a variável achou e o operador in como alternativas, e os erros reais do Python 3.14.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">else</span> nos Laços</h1>
+
+<p class="intro">Na aula <a href="break-continue.html">break e continue</a>, a busca parava com <code>break</code> quando achava o que procurava. Mas e quando <strong>não acha</strong>? O laço termina do mesmo jeito, chega na mesma linha, e o programa não tem como saber o que aconteceu. Para isso o Python tem um recurso que muitas outras linguagens não têm: um <code>else</code> ("senão") pendurado no <strong>laço</strong>. Ele roda quando o laço chega ao fim <strong>sem ter passado por um <code>break</code></strong>: o caso de "procurei em tudo e não achei".</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>Onde se escreve o <code>else</code> de um <code>for</code> e de um <code>while</code>, e quando ele roda.</li>
+  <li>A regra única: o <code>else</code> roda se o laço <strong>terminou sozinho</strong>, e não roda se saiu por <code>break</code>.</li>
+  <li>A avisar "não está na lista", "acesso bloqueado" e "acabaram as tentativas".</li>
+  <li>A descobrir se um número é <strong>primo</strong> com <code>for</code>, <code>break</code> e <code>else</code>.</li>
+  <li>Os casos que surpreendem: laço sem <code>break</code> e lista vazia.</li>
+  <li>Outras formas de fazer (a variável <code>achou</code> e o operador <code>in</code>) e os erros reais de indentação.</li>
+</ul>
+</div>
+
+<p>Todos os programas desta aula rodaram no <strong>Python 3.14</strong> da máquina da Ana (usuária <code>ana</code>, computador <code>notebook</code>), com <code>python3 arquivo.py</code>.</p>
+
+<hr>
+
+<h2>A ideia: "se abrir todas as gavetas e não achar, avise"</h2>
+<p>A Ana pede ao filho: <em>"Procure a chave nas gavetas. Achou, pode parar. <strong>Se abrir todas e não achar</strong>, me avise."</em> Repare que esse aviso só faz sentido em um dos finais da busca:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Como a busca terminou</th><th>No laço</th><th>Avisa "não achei"?</th></tr>
+<tr><td>Achou a chave e parou no meio</td><td>Saiu por <code>break</code></td><td><strong>Não</strong></td></tr>
+<tr><td>Abriu todas as gavetas, uma por uma, e a chave não estava em nenhuma</td><td>O laço terminou sozinho</td><td><strong>Sim</strong></td></tr>
+</table>
+</div>
+
+<p>O <code>else</code> do laço é esse aviso. Ele não quer dizer "senão" no sentido do <a href="if-else.html">if e else</a>; é mais um <strong>"se não houve <code>break</code>"</strong>. Muita gente lê o <code>else</code> de um laço como "<strong>nobreak</strong>" (em inglês, "sem break"), e é um bom jeito de lembrar.</p>
+
+<hr>
+
+<h2>1. <code>for</code> com <code>else</code>: procurar e não achar</h2>
+<p>A lista de convidados da festa, agora procurando o Fábio, que não foi convidado:</p>
+
+<pre class="file" data-file="busca_else.py">convidados = ["Ana", "Bruno", "Carla", "Davi", "Elisa"]
+procurado = "Fábio"
+for nome in convidados:
+    if nome == procurado:
+        print(f"{procurado} está na lista.")
+        break
+else:
+    print(f"{procurado} não está na lista.")
+print("Fim da busca.")
+</pre>
+
+<pre class="term">$ python3 busca_else.py
+Fábio não está na lista.
+Fim da busca.</pre>
+
+<dl class="anatomy">
+  <dt>for nome in convidados:</dt><dd>Passa pelos cinco nomes.</dd>
+  <dt>if nome == procurado: … break</dt><dd>Se achar, avisa e sai do laço com <code>break</code>.</dd>
+  <dt>else:</dt><dd>Atenção à indentação: o <code>else</code> está na <strong>margem esquerda</strong>, alinhado com o <code>for</code>, e não com o <code>if</code>. É isso que faz dele o <code>else</code> <strong>do laço</strong>. Leva dois-pontos, como o <code>for</code>.</dd>
+  <dt>print(f"{procurado} não está na lista.")</dt><dd>O bloco do <code>else</code>, indentado. Roda <strong>uma vez</strong>, depois da última volta, e <strong>só se nenhum <code>break</code> aconteceu</strong>.</dd>
+  <dt>print("Fim da busca.")</dt><dd>Fora do laço e fora do <code>else</code>: roda sempre.</dd>
+</dl>
+
+<p>O Fábio não estava em nenhuma volta, o <code>break</code> nunca rodou, o laço terminou sozinho, e o <code>else</code> deu o aviso. Agora, procurando a Carla (só a segunda linha muda: <code>procurado = "Carla"</code>):</p>
+
+<pre class="term">$ python3 busca_else_carla.py
+Carla está na lista.
+Fim da busca.</pre>
+
+<p>Na terceira volta, achou a Carla, e o <code>break</code> saiu do laço <strong>pulando o <code>else</code></strong>. O programa foi direto para o <code>Fim da busca.</code>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Caminho</th><th>Roda o <code>else</code>?</th><th>Depois</th></tr>
+<tr><td>O laço passou por todos os itens (ou a condição do <code>while</code> ficou falsa)</td><td><strong>Sim</strong></td><td>Primeira linha depois do <code>else</code></td></tr>
+<tr><td>O laço saiu por <code>break</code></td><td><strong>Não</strong></td><td>Primeira linha depois do <code>else</code></td></tr>
+</table>
+</div>
+
+<div class="trypy" data-goal="out:Mateus não está na lista.;;src:^else\s*:">
+<p class="try-task"><strong>Missão:</strong> este programa procura o Mateus e não diz nada quando não acha. Acrescente um <code>else</code> <strong>ao laço</strong> (alinhado com o <code>for</code>) que mostre <code>Mateus não está na lista.</code></p>
+<pre class="script" data-file="main.py">convidados = ["Ana", "Bruno", "Carla", "Davi", "Elisa"]
+procurado = "Mateus"
+for nome in convidados:
+    if nome == procurado:
+        print(f"{procurado} está na lista.")
+        break
+print("Fim da busca.")
+</pre>
+<pre class="solucao" data-file="main.py">convidados = ["Ana", "Bruno", "Carla", "Davi", "Elisa"]
+procurado = "Mateus"
+for nome in convidados:
+    if nome == procurado:
+        print(f"{procurado} está na lista.")
+        break
+else:
+    print(f"{procurado} não está na lista.")
+print("Fim da busca.")
+</pre>
+</div>
+
+<hr>
+
+<h2>2. A senha com três chances, agora completa</h2>
+<p>Na aula anterior, o programa da senha terminava igual acertando ou errando as três. Com o <code>else</code>, dá para bloquear o acesso só quando as tentativas acabam:</p>
+
+<pre class="file" data-file="senha_else.py">for tentativa in range(1, 4):
+    senha = input(f"Senha (tentativa {tentativa} de 3): ")
+    if senha == "pao123":
+        print("Bem-vinda, Ana!")
+        break
+    print("Senha errada.")
+else:
+    print("Três erros: acesso bloqueado.")
+print("Fim do programa.")
+</pre>
+
+<p>Errando as três, o <code>range</code> acaba, o laço termina sozinho, e o <code>else</code> roda:</p>
+
+<pre class="term">$ python3 senha_else.py
+Senha (tentativa 1 de 3): abc
+Senha errada.
+Senha (tentativa 2 de 3): 123
+Senha errada.
+Senha (tentativa 3 de 3): pao
+Senha errada.
+Três erros: acesso bloqueado.
+Fim do programa.</pre>
+
+<p>Acertando, o <code>break</code> pula o <code>else</code>:</p>
+
+<pre class="term">$ python3 senha_else.py
+Senha (tentativa 1 de 3): pao123
+Bem-vinda, Ana!
+Fim do programa.</pre>
+
+<hr>
+
+<h2>3. <code>while</code> com <code>else</code></h2>
+<p>O <code>while</code> também aceita <code>else</code>, com a mesma regra: ele roda quando a <strong>condição fica falsa</strong> (o laço terminou sozinho) e não roda se o laço saiu por <code>break</code>. Um jogo de adivinhar com 3 tentativas:</p>
+
+<pre class="file" data-file="adivinhe.py">segredo = 7
+tentativas = 3
+while tentativas &gt; 0:
+    palpite = int(input("Seu palpite (1 a 10): "))
+    if palpite == segredo:
+        print("Acertou!")
+        break
+    tentativas -= 1
+    print(f"Errou! Tentativas restantes: {tentativas}")
+else:
+    print(f"Acabaram as tentativas. O número era {segredo}.")
+</pre>
+
+<pre class="term">$ python3 adivinhe.py
+Seu palpite (1 a 10): 3
+Errou! Tentativas restantes: 2
+Seu palpite (1 a 10): 9
+Errou! Tentativas restantes: 1
+Seu palpite (1 a 10): 5
+Errou! Tentativas restantes: 0
+Acabaram as tentativas. O número era 7.
+$ python3 adivinhe.py
+Seu palpite (1 a 10): 4
+Errou! Tentativas restantes: 2
+Seu palpite (1 a 10): 7
+Acertou!</pre>
+
+<p>Na primeira partida, <code>tentativas</code> chegou a 0, a condição <code>0 &gt; 0</code> ficou falsa, e o <code>else</code> revelou o número. Na segunda, o <code>break</code> do acerto pulou o <code>else</code>. (Esse jogo vira um projeto inteiro mais adiante: <a href="projeto-adivinhacao.html">Jogo de Adivinhação</a>.)</p>
+
+<hr>
+
+<h2>4. Um clássico: o número é primo?</h2>
+<p>Um número é <strong>primo</strong> quando só se divide (sem sobrar resto) por 1 e por ele mesmo: 2, 3, 5, 7, 11… Para saber se um número é primo, procure um divisor entre 2 e o número menos 1. Achou um? Não é primo, pode parar (<code>break</code>). Procurou em todos e não achou? É primo (<code>else</code>). É exatamente o formato "procurar e não achar":</p>
+
+<pre class="file" data-file="primo.py">numero = int(input("Digite um número maior que 1: "))
+for divisor in range(2, numero):
+    if numero % divisor == 0:
+        print(f"{numero} não é primo: divide por {divisor}.")
+        break
+else:
+    print(f"{numero} é primo.")
+</pre>
+
+<pre class="term">$ python3 primo.py
+Digite um número maior que 1: 7
+7 é primo.
+$ python3 primo.py
+Digite um número maior que 1: 9
+9 não é primo: divide por 3.
+$ python3 primo.py
+Digite um número maior que 1: 2
+2 é primo.</pre>
+
+<dl class="anatomy">
+  <dt>range(2, numero)</dt><dd>Os candidatos a divisor: de 2 até o número menos 1 (o fim não entra; veja <a href="range.html">range()</a>).</dd>
+  <dt>numero % divisor == 0</dt><dd>O <code>%</code> dá o <strong>resto</strong> da divisão (aula <a href="operadores-aritmeticos.html">Operadores Aritméticos</a>). Resto zero quer dizer que divide certinho.</dd>
+  <dt>break</dt><dd>Um divisor basta para provar que não é primo: para de procurar.</dd>
+  <dt>else:</dt><dd>Todos os candidatos falharam: é primo.</dd>
+</dl>
+
+<p>Repare no 2: <code>range(2, 2)</code> é vazio, o laço deu zero voltas, nenhum <code>break</code> aconteceu, e o <code>else</code> disse "primo", o que está certo. Com o 1 acontece a mesma coisa (<code>range(2, 1)</code> também é vazio), e o programa responde <code>1 é primo.</code>, o que está <strong>errado</strong>: o 1 não é primo. É por isso que a pergunta pede "um número maior que 1". A seção seguinte fala mais desse caso das zero voltas.</p>
+
+<hr>
+
+<h2>5. Dois casos que surpreendem</h2>
+
+<h3>Sem <code>break</code> no laço, o <code>else</code> roda sempre</h3>
+<pre class="file" data-file="sem_break_else.py">for numero in range(1, 4):
+    print(numero)
+else:
+    print("O else rodou.")
+</pre>
+
+<pre class="term">$ python3 sem_break_else.py
+1
+2
+3
+O else rodou.</pre>
+
+<p>Sem nenhum <code>break</code>, o laço sempre termina sozinho, então o <code>else</code> sempre roda. Funciona, mas não serve para nada: daria no mesmo escrever o <code>print</code> depois do laço, sem <code>else</code>. Use o <code>else</code> de laço <strong>só</strong> quando houver um <code>break</code> lá dentro.</p>
+
+<h3>Lista vazia: o <code>else</code> roda</h3>
+<pre class="file" data-file="vazia_else.py">convidados = []
+procurado = "Carla"
+for nome in convidados:
+    if nome == procurado:
+        print(f"{procurado} está na lista.")
+        break
+else:
+    print(f"{procurado} não está na lista.")
+</pre>
+
+<pre class="term">$ python3 vazia_else.py
+Carla não está na lista.</pre>
+
+<p>Zero voltas também é "terminar sem <code>break</code>". Na busca, é o resultado certo: numa lista vazia, ninguém está na lista.</p>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+<p>O "procurar e não achar" tem três jeitos de escrever. O primeiro você já viu: <code>for</code> com <code>break</code> e <code>else</code>.</p>
+
+<h3>Com uma variável "achou" (a bandeira)</h3>
+<p>Antes do laço, uma variável booleana começa em <code>False</code>; quando acha, vira <code>True</code>. Depois do laço, um <code>if</code> comum olha para ela:</p>
+
+<pre class="file" data-file="bandeira.py">convidados = ["Ana", "Bruno", "Carla", "Davi", "Elisa"]
+procurado = "Fábio"
+achou = False
+for nome in convidados:
+    if nome == procurado:
+        achou = True
+        break
+if achou:
+    print(f"{procurado} está na lista.")
+else:
+    print(f"{procurado} não está na lista.")
+</pre>
+
+<pre class="term">$ python3 bandeira.py
+Fábio não está na lista.</pre>
+
+<p>É o jeito que funciona em qualquer linguagem, e a variável <code>achou</code> continua disponível para usar mais adiante no programa. Custa duas linhas a mais.</p>
+
+<h3>Com o operador <code>in</code></h3>
+<p>Quando a pergunta é só "este item está na lista?", o Python já tem uma resposta pronta, o <code>in</code> (aula <a href="operadores-is-in.html">is e in</a>):</p>
+
+<pre class="file" data-file="com_in.py">convidados = ["Ana", "Bruno", "Carla", "Davi", "Elisa"]
+procurado = "Fábio"
+if procurado in convidados:
+    print(f"{procurado} está na lista.")
+else:
+    print(f"{procurado} não está na lista.")
+</pre>
+
+<pre class="term">$ python3 com_in.py
+Fábio não está na lista.</pre>
+
+<p>Por dentro, o <code>in</code> faz a mesma busca, item por item. O <code>for</code>…<code>else</code> é para quando o teste é mais que uma igualdade: um divisor (o primo), um preço acima de um valor, uma senha numa das tentativas.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Situação</th><th>Qual usar</th></tr>
+<tr><td>Só saber se um valor está na lista</td><td><code>if valor in lista:</code></td></tr>
+<tr><td>Procurar com um teste próprio e agir quando <strong>não</strong> achar</td><td><code>for</code> … <code>break</code> … <code>else:</code></td></tr>
+<tr><td>Precisar do resultado da busca mais adiante no programa</td><td>A variável <code>achou = False</code> / <code>True</code></td></tr>
+<tr><td>Tentativas limitadas (senha, palpites) com aviso no fim</td><td><code>for</code> com <code>range</code> ou <code>while</code>, com <code>break</code> e <code>else:</code></td></tr>
+</table>
+</div>
+
+<div class="tip">
+<strong>Um comentário ajuda quem lê</strong>
+<p>Como o <code>else</code> de laço é pouco conhecido, muita gente o acompanha de um comentário: <code>else:  # não achou</code> ou <code>else:  # sem break</code>. Assim, quem lê o código não confunde com o <code>else</code> de um <code>if</code>.</p>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>O <code>else</code> ficou alinhado com o <code>if</code>, e não com o <code>for</code></strong>
+<pre class="file" data-file="else_errado.py">convidados = ["Ana", "Bruno", "Carla", "Davi", "Elisa"]
+procurado = "Carla"
+for nome in convidados:
+    if nome == procurado:
+        print(f"{procurado} está na lista.")
+        break
+    else:
+        print(f"{procurado} não está na lista.")
+</pre>
+<pre class="term">$ python3 else_errado.py
+Carla não está na lista.
+Carla não está na lista.
+Carla está na lista.</pre>
+<p>Nenhum erro, mas uma saída absurda: "não está", "não está", "está". Com 4 espaços, esse <code>else</code> pertence ao <strong><code>if</code></strong>, e roda em <strong>cada volta</strong> em que o nome não é a Carla (Ana e Bruno). É o erro mais comum com <code>else</code> de laço. <strong>Como consertar:</strong> tire a indentação do <code>else</code> para alinhá-lo com o <code>for</code>, e o seu bloco com 4 espaços.</p>
+</div>
+
+<div class="cenario">
+<strong>Uma linha entre o laço e o <code>else</code></strong>
+<pre class="file" data-file="else_sozinho.py">for numero in range(3):
+    print(numero)
+print("Contei.")
+else:
+    print("Fim")
+</pre>
+<pre class="term">$ python3 else_sozinho.py
+  File "/home/ana/else_sozinho.py", line 4
+    else:
+    ^^^^
+SyntaxError: invalid syntax</pre>
+<p>"Erro de sintaxe: sintaxe inválida", apontando o <code>else</code> da linha 4. O <code>else</code> tem de vir <strong>logo depois</strong> do bloco do laço. O <code>print("Contei.")</code> na margem esquerda encerrou o <code>for</code>, e um <code>else</code> solto, sem <code>for</code>, <code>while</code> ou <code>if</code> antes dele, não faz sentido. <strong>Como consertar:</strong> ponha o <code>else</code> imediatamente depois do bloco do laço, e o <code>print("Contei.")</code> depois do <code>else</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu os dois-pontos</strong>
+<pre class="file" data-file="else_sem_dp.py">for numero in range(3):
+    print(numero)
+else
+    print("Fim")
+</pre>
+<pre class="term">$ python3 else_sem_dp.py
+  File "/home/ana/else_sem_dp.py", line 3
+    else
+        ^
+SyntaxError: expected ':'</pre>
+<p>O <code>else</code> do laço leva dois-pontos, como qualquer linha que abre um bloco. <strong>Como consertar:</strong> <code>else:</code>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>for item in lista:</code> … <code>else:</code></td><td>O bloco do <code>else</code> roda se o <code>for</code> passou por todos os itens sem <code>break</code></td></tr>
+<tr><td><code>while condição:</code> … <code>else:</code></td><td>O bloco do <code>else</code> roda se a condição ficou falsa sem <code>break</code></td></tr>
+<tr><td><code>break</code> dentro do laço</td><td>Sai do laço <strong>e pula o <code>else</code></strong></td></tr>
+<tr><td>Laço de zero voltas</td><td>O <code>else</code> roda (não houve <code>break</code>)</td></tr>
+<tr><td>Laço sem nenhum <code>break</code></td><td>O <code>else</code> roda sempre (então não precisa dele)</td></tr>
+<tr><td><code>else:  # não achou</code></td><td>Costume: um comentário para lembrar que é o <code>else</code> do laço</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td>"Não achei" aparece várias vezes, antes de achar</td><td>O <code>else</code> está indentado junto do <code>if</code>, e não alinhado com o <code>for</code></td></tr>
+<tr><td><code>SyntaxError: invalid syntax</code> apontando o <code>else</code></td><td>Há uma linha entre o fim do laço e o <code>else</code></td></tr>
+<tr><td><code>SyntaxError: expected ':'</code></td><td>Faltaram os dois-pontos do <code>else</code></td></tr>
+<tr><td>O <code>else</code> roda sempre</td><td>O laço não tem <code>break</code> (ou o <code>break</code> nunca é alcançado)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Complete</h3>
+<p>Complete com a palavra que pula o <code>else</code> do laço quando o 4 aparece:</p>
+<div class="ex-code">for n in [1, 3, 4, 7]:<br>&nbsp;&nbsp;&nbsp;&nbsp;if n % 2 == 0:<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print("Achei um par")<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input data-answer="break" aria-label="palavra-chave"><br>else:<br>&nbsp;&nbsp;&nbsp;&nbsp;print("Nenhum par")</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">2. Quando o bloco <code>else</code> de um <code>for</code> roda?</p>
+<label><input type="radio" name="q2"> Quando a lista tem algum item</label>
+<label><input type="radio" name="q2"> Quando o laço termina sem ter passado por um <code>break</code></label>
+<label><input type="radio" name="q2"> Em toda volta em que o <code>if</code> dá <code>False</code></label>
+<label><input type="radio" name="q2"> Só quando o laço sai por <code>break</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">3. O que este programa mostra? <code>for n in [1, 3, 5]:</code> / <code>&nbsp;&nbsp;&nbsp;&nbsp;if n % 2 == 0:</code> / <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break</code> / <code>else:</code> / <code>&nbsp;&nbsp;&nbsp;&nbsp;print("Nenhum par")</code></p>
+<label><input type="radio" name="q3"> Nada</label>
+<label><input type="radio" name="q3"> <code>Nenhum par</code> três vezes</label>
+<label><input type="radio" name="q3"> <code>Nenhum par</code> uma vez</label>
+<label><input type="radio" name="q3"> Dá erro de sintaxe</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">4. Um <code>for</code> sobre uma lista vazia tem um <code>else</code>. O <code>else</code> roda?</p>
+<label><input type="radio" name="q4"> Sim: zero voltas também é terminar sem <code>break</code></label>
+<label><input type="radio" name="q4"> Não: o laço nem começou</label>
+<label><input type="radio" name="q4"> Dá <code>IndexError</code></label>
+<label><input type="radio" name="q4"> Só se a lista tiver um <code>break</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. Para saber só se <code>"Carla"</code> está na lista <code>convidados</code>, qual é o jeito mais simples?</p>
+<label><input type="radio" name="q5"> <code>for</code> com <code>break</code> e <code>else</code></label>
+<label><input type="radio" name="q5"> <code>while True</code> com <code>break</code></label>
+<label><input type="radio" name="q5"> <code>for nome in convidados: else:</code></label>
+<label><input type="radio" name="q5"> <code>if "Carla" in convidados:</code></label>
+</div>
+
+<h3>Missão final: o detector de primos</h3>
+
+<div class="trypy" data-stdin="97" data-goal="out:97 é primo.;;src:^else\s*:">
+<p class="try-task"><strong>Missão:</strong> o programa já descobre quando um número <strong>não</strong> é primo, mas fica calado quando ele é. A caixa vai "digitar" <code>97</code>. Acrescente o <code>else</code> do laço para mostrar <code>97 é primo.</code> Depois, troque a entrada por <code>91</code> e veja o que acontece.</p>
+<pre class="script" data-file="main.py">numero = int(input("Digite um número maior que 1: "))
+for divisor in range(2, numero):
+    if numero % divisor == 0:
+        print(f"{numero} não é primo: divide por {divisor}.")
+        break
+</pre>
+<pre class="solucao" data-file="main.py">numero = int(input("Digite um número maior que 1: "))
+for divisor in range(2, numero):
+    if numero % divisor == 0:
+        print(f"{numero} não é primo: divide por {divisor}.")
+        break
+else:
+    print(f"{numero} é primo.")
+</pre>
+</div>
+
+<p>No lab, o 97 deu <code>97 é primo.</code>. E o 91? Parece primo, mas não é: experimente.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>for</code> e <code>while</code> aceitam um <code>else:</code>, escrito logo depois do bloco do laço e <strong>alinhado com o <code>for</code>/<code>while</code></strong>.</li>
+  <li>O <code>else</code> do laço roda quando o laço termina <strong>sozinho</strong> (acabaram os itens, ou a condição ficou falsa) e é <strong>pulado</strong> quando o laço sai por <code>break</code>. Pense nele como "nobreak".</li>
+  <li>É o jeito natural de escrever "procurei e não achei": convidado fora da lista, acesso bloqueado, número primo.</li>
+  <li>Zero voltas também roda o <code>else</code>. Sem <code>break</code> no laço, o <code>else</code> não tem utilidade.</li>
+  <li>Alternativas: a variável <code>achou</code> (funciona em qualquer linguagem) e o <code>in</code> (para "está na lista?").</li>
+  <li>Cuidado com a indentação: um <code>else</code> alinhado com o <code>if</code> vira o <code>else</code> do <code>if</code> e roda a cada volta.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>

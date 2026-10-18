@@ -326,7 +326,13 @@ $ echo $?
 <p>Se a tela encher tão rápido que o <kbd>Ctrl</kbd>+<kbd>C</kbd> parece não fazer efeito, espere um instante: o terminal ainda está mostrando as linhas que já tinham sido impressas.</p>
 
 <h3>No editor do guia</h3>
-<p id="editor-infinito">A caixa "Experimente" roda o Python de verdade dentro do navegador, então um laço infinito lá também não termina sozinho. O que o editor faz nesse caso está explicado na aula <a href="simulador.html">O Editor do Guia</a>; na dúvida, confira o passo do laço antes de clicar em Rodar.</p>
+<p id="editor-infinito">A caixa "Experimente" roda o Python de verdade dentro do navegador, então um laço infinito lá também não termina sozinho. A diferença é que o editor tem as suas próprias travas:</p>
+<ul>
+  <li>enquanto o programa roda, o botão <strong>▶ Rodar</strong> vira <strong>■ Parar</strong>. Clicar nele é o <kbd>Ctrl</kbd>+<kbd>C</kbd> do editor: a caixa mostra <code>^C</code> e <code>[programa interrompido]</code>, sem o traceback do <code>KeyboardInterrupt</code>;</li>
+  <li>se o programa passar de <strong>10 segundos</strong> rodando sem terminar, o editor o para sozinho e avisa que pode ser um laço infinito (o tempo em que o programa espera você digitar não conta);</li>
+  <li>se o programa escrever demais (como o <code>Volta 1</code> sem fim), o editor também o para antes disso.</li>
+</ul>
+<p>Mais detalhes na aula <a href="simulador.html">O Editor do Guia</a>.</p>
 
 <h3>Quando o infinito é de propósito: <code>while True</code></h3>
 <p>Às vezes o laço infinito é <strong>proposital</strong>: um programa que fica esperando pedidos até alguém mandar parar. Para isso se escreve <code>while True:</code>, uma condição que é sempre verdadeira. Um laço assim precisa de uma saída no meio do bloco, que é o <code>break</code> (em inglês, "quebrar"). Ele aparece logo abaixo, em <a href="#formas">Formas diferentes</a>, e tem aula própria: <a href="break-continue.html">break e continue</a>.</p>
