@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Conjuntos (set) — coleções sem repetição | Guia Python</title>
+<meta name="description" content="Conjuntos (set) em Python para quem está começando: criar com chaves, por que as repetições somem, por que a ordem de um set de textos muda a cada execução, set() para tirar repetidos de uma lista, add, remove, discard, por que {} é dicionário e não conjunto, e os erros reais KeyError, not subscriptable e unhashable, com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Conjuntos (set)</span></h1>
+
+<p class="intro">A Ana anotou numa lista o número de cada cliente que passou na padaria hoje: <code>[3, 1, 3, 2, 1, 3]</code>. Foram seis visitas, mas quantos clientes <strong>diferentes</strong>? Para perguntas assim o Python tem o <strong>conjunto</strong> (em inglês, <em>set</em>): uma coleção que <strong>não aceita repetidos</strong>. Jogue a lista num conjunto e as repetições somem sozinhas.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A criar um conjunto com chaves <code>{ }</code> ou com <code>set()</code>, e por que os repetidos desaparecem.</li>
+  <li>Que o conjunto <strong>não tem ordem</strong>: com textos, a ordem do <code>print</code> muda de uma execução para outra.</li>
+  <li>A tirar os repetidos de uma lista e a mostrar o resultado em ordem com <code>sorted()</code>.</li>
+  <li>A acrescentar e remover itens: <code>add</code>, <code>remove</code>, <code>discard</code>, <code>clear</code>.</li>
+  <li>A armadilha: <code>{}</code> é um dicionário vazio; conjunto vazio é <code>set()</code>.</li>
+  <li>Os erros reais: <code>KeyError</code>, <code>not subscriptable</code>, <code>unhashable type</code>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: o álbum de figurinhas</h2>
+<p>Pense no álbum de figurinhas da Ana. Cada figurinha entra no álbum <strong>uma vez só</strong>: se ela tirar a figurinha 7 de novo, não tem onde colar, porque o espaço da 7 já está ocupado. E o álbum responde muito bem a uma pergunta: "eu já tenho a 7?". Ele não liga para a <strong>ordem</strong> em que as figurinhas chegaram; só para quais estão lá.</p>
+
+<p>O conjunto do Python é esse álbum: guarda cada valor uma vez, responde rápido se um valor está nele, e não guarda ordem.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th>Lista</th><th>Tupla</th><th>Conjunto</th></tr>
+<tr><td>Como se escreve</td><td><code>[1, 2, 2]</code></td><td><code>(1, 2, 2)</code></td><td><code>{1, 2}</code></td></tr>
+<tr><td>Aceita repetidos</td><td>Sim</td><td>Sim</td><td><strong>Não</strong></td></tr>
+<tr><td>Tem ordem e índice (<code>[0]</code>)</td><td>Sim</td><td>Sim</td><td><strong>Não</strong></td></tr>
+<tr><td>Pode mudar</td><td>Sim</td><td>Não</td><td>Sim (acrescentar e remover)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. Criando um conjunto</h2>
+
+<pre class="file" data-file="c_criar.py">numeros = {3, 1, 2}
+print(numeros)
+print(type(numeros))
+repetidos = {1, 2, 2, 3, 3, 3}
+print(repetidos)
+print(len(repetidos))
+</pre>
+
+<dl class="anatomy">
+  <dt>{ … }</dt><dd>Chaves envolvem os itens do conjunto (lista usa colchetes; tupla, parênteses).</dd>
+  <dt>3, 1, 2</dt><dd>Os itens, separados por vírgula.</dd>
+  <dt>type(numeros)</dt><dd>O tipo se chama <code>set</code>.</dd>
+  <dt>{1, 2, 2, 3, 3, 3}</dt><dd>Você escreveu seis valores, mas só três são diferentes. O conjunto guarda cada um <strong>uma vez</strong>.</dd>
+</dl>
+
+<pre class="term">$ python3 c_criar.py
+{1, 2, 3}
+&lt;class 'set'&gt;
+{1, 2, 3}
+3
+</pre>
+
+<p>Os repetidos sumiram sem aviso nenhum: não é erro escrever um valor duas vezes, o conjunto simplesmente ignora a cópia. E o <code>len</code> conta só os diferentes: 3.</p>
+
+<hr>
+
+<h2>2. O conjunto não tem ordem</h2>
+<p>Repare que <code>{3, 1, 2}</code> foi mostrado como <code>{1, 2, 3}</code>. Não foi o Python "ordenando" para você: o conjunto guarda os itens do jeito que for mais rápido para <strong>achar</strong> cada um depois, e isso não tem nada a ver com a ordem em que você escreveu. Com números pequenos costuma parecer ordenado, mas é coincidência:</p>
+
+<pre class="file" data-file="c_ordem.py">numeros = {10, 3, 7, 1}
+print(numeros)
+</pre>
+
+<pre class="term">$ python3 c_ordem.py
+{1, 10, 3, 7}
+</pre>
+
+<p>Nem a ordem em que foi escrito, nem a ordem crescente. Com <strong>textos</strong> é ainda mais curioso: a Ana rodou o <strong>mesmo programa</strong> três vezes seguidas.</p>
+
+<pre class="file" data-file="c_textos.py">frutas = {"manga", "caju", "acerola", "goiaba"}
+print(frutas)
+</pre>
+
+<pre class="term">$ python3 c_textos.py
+{'manga', 'caju', 'goiaba', 'acerola'}
+$ python3 c_textos.py
+{'caju', 'goiaba', 'acerola', 'manga'}
+$ python3 c_textos.py
+{'manga', 'goiaba', 'acerola', 'caju'}
+</pre>
+
+<p>Três ordens diferentes, sem mudar uma letra do programa. Por quê? Para achar um texto rápido, o Python transforma cada texto num número (o <em>hash</em>, uma espécie de "impressão digital" do valor), e por segurança essa conta usa um <strong>sorteio novo a cada execução</strong>. Mudou o sorteio, mudou a arrumação, mudou a ordem do <code>print</code>. Os números inteiros não passam por esse sorteio, por isso <code>{10, 3, 7, 1}</code> sai sempre igual, mas mesmo assim fora de ordem.</p>
+
+<div class="warning">
+<strong>Nunca conte com a ordem de um conjunto</strong>
+<p>Se o seu programa precisa mostrar os itens numa ordem certa, use <code>sorted(conjunto)</code>: ele devolve uma <strong>lista</strong> com os itens em ordem crescente (ou alfabética), sempre igual. Se você precisa da ordem em que os itens chegaram, o conjunto não é a ferramenta certa: use uma lista.</p>
+</div>
+
+<hr>
+
+<h2>3. Tirando os repetidos de uma lista</h2>
+<p>O uso mais comum do conjunto no dia a dia: transformar uma lista com repetidos em um conjunto com <code>set(lista)</code>. Voltando às visitas da padaria:</p>
+
+<pre class="file" data-file="c_lista.py">visitas = [3, 1, 3, 2, 1, 3]
+unicos = set(visitas)
+print(unicos)
+print(len(visitas), "visitas,", len(unicos), "clientes diferentes")
+</pre>
+
+<pre class="term">$ python3 c_lista.py
+{1, 2, 3}
+6 visitas, 3 clientes diferentes
+</pre>
+
+<p>Com textos, junte o <code>set()</code> ao <code>sorted()</code> para ter um resultado arrumado. E o <code>in</code> pergunta se um valor está no conjunto:</p>
+
+<pre class="file" data-file="c_sorted.py">cidades = ["Teresina", "Parnaíba", "Teresina", "Picos", "Parnaíba"]
+diferentes = set(cidades)
+print(len(diferentes))
+print(sorted(diferentes))
+print("Picos" in diferentes)
+print("Floriano" in diferentes)
+</pre>
+
+<pre class="term">$ python3 c_sorted.py
+3
+['Parnaíba', 'Picos', 'Teresina']
+True
+False
+</pre>
+
+<dl class="anatomy">
+  <dt>set(cidades)</dt><dd>Cria um conjunto com os itens da lista: as repetições somem. A lista <code>cidades</code> continua igual.</dd>
+  <dt>len(diferentes)</dt><dd>Quantas cidades diferentes: 3.</dd>
+  <dt>sorted(diferentes)</dt><dd>Uma <strong>lista</strong> com os itens do conjunto em ordem alfabética. Essa linha sai igual em toda execução.</dd>
+  <dt>"Picos" in diferentes</dt><dd>Pergunta se o valor está no conjunto. É a especialidade dele: mesmo com milhões de itens, responde na hora.</dd>
+</dl>
+
+<p>Um texto também pode virar conjunto: <code>set("banana")</code> é o conjunto das letras <strong>diferentes</strong> da palavra.</p>
+
+<pre class="file" data-file="c_letras.py">print(sorted(set("banana")))
+print(len(set("banana")))
+</pre>
+
+<pre class="term">$ python3 c_letras.py
+['a', 'b', 'n']
+3
+</pre>
+
+<div class="trypy" data-goal="out:Convidados: 4;;src:set\(">
+<p class="try-task"><strong>Missão:</strong> a lista de convidados do aniversário tem nomes repetidos (gente que confirmou duas vezes). Use <code>set()</code> para contar quantas <strong>pessoas diferentes</strong> vêm. A resposta certa é 4.</p>
+<pre class="script" data-file="main.py">lista = ["Ana", "Bia", "Ana", "Caio", "Davi", "Bia"]
+print("Convidados:", len(lista))
+</pre>
+<pre class="solucao" data-file="main.py">lista = ["Ana", "Bia", "Ana", "Caio", "Davi", "Bia"]
+pessoas = set(lista)
+print("Convidados:", len(pessoas))
+</pre>
+</div>
+
+<hr>
+
+<h2>4. Acrescentando e removendo itens</h2>
+<p>O conjunto pode mudar: dá para pôr e tirar itens. Como ele não tem ordem, não existe "pôr no fim" (<code>append</code>) nem "pôr na posição 2" (<code>insert</code>); existe só <strong>pôr</strong>: <code>add</code>.</p>
+
+<pre class="file" data-file="c_add.py">vistos = {1, 2}
+vistos.add(3)
+vistos.add(2)
+print(vistos)
+vistos.remove(1)
+print(vistos)
+vistos.discard(10)
+print(vistos)
+vistos.clear()
+print(vistos)
+</pre>
+
+<pre class="term">$ python3 c_add.py
+{1, 2, 3}
+{2, 3}
+{2, 3}
+set()
+</pre>
+
+<dl class="anatomy">
+  <dt>vistos.add(3)</dt><dd>"Adicionar": põe o 3 no conjunto.</dd>
+  <dt>vistos.add(2)</dt><dd>O 2 já estava lá: não acontece nada, e não é erro.</dd>
+  <dt>vistos.remove(1)</dt><dd>"Remover": tira o 1. Se o item <strong>não</strong> estiver no conjunto, dá <code>KeyError</code> (veja <a href="#errado">Quando dá errado</a>).</dd>
+  <dt>vistos.discard(10)</dt><dd>"Descartar": tira o item <strong>se ele estiver lá</strong>; se não estiver, fica quieto. O 10 não estava, e nada aconteceu.</dd>
+  <dt>vistos.clear()</dt><dd>"Limpar": esvazia o conjunto.</dd>
+  <dt>set()</dt><dd>É assim que o Python mostra um conjunto vazio. Não é <code>{}</code>; a próxima seção explica por quê.</dd>
+</dl>
+
+<p>Existe também o <code>pop()</code>, que tira e devolve um item qualquer. "Qualquer" mesmo: como não há ordem, você não escolhe qual. Use quando tanto faz qual item sai.</p>
+
+<h3>Percorrendo com <code>for</code></h3>
+<p>Dá para passar por um conjunto com <code>for</code>, mas a ordem é a do conjunto (ou seja, nenhuma que você controle). Para uma ordem certa, percorra o <code>sorted()</code>:</p>
+
+<pre class="file" data-file="c_for.py">notas = {7, 9, 7, 10}
+for nota in sorted(notas):
+    print(nota)
+</pre>
+
+<pre class="term">$ python3 c_for.py
+7
+9
+10
+</pre>
+
+<hr>
+
+<h2>5. <code>{}</code> é dicionário, não conjunto</h2>
+<p>Esta pega muita gente. As chaves <code>{ }</code> são usadas por dois tipos do Python: o conjunto e o <a href="dicionarios.html">dicionário</a>. Com itens dentro, o Python sabe qual é qual. Mas <code>{}</code> vazio, sem nada, é um <strong>dicionário</strong>, porque o dicionário chegou primeiro na linguagem. Para um conjunto vazio, use <code>set()</code>.</p>
+
+<pre class="file" data-file="c_vazio.py">a = {}
+b = set()
+print(type(a))
+print(type(b))
+print(b)
+</pre>
+
+<pre class="term">$ python3 c_vazio.py
+&lt;class 'dict'&gt;
+&lt;class 'set'&gt;
+set()
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Tipo</th></tr>
+<tr><td><code>{1, 2, 3}</code></td><td>Conjunto (<code>set</code>)</td></tr>
+<tr><td><code>{"pão": 0.5}</code> (com dois-pontos)</td><td>Dicionário (<code>dict</code>)</td></tr>
+<tr><td><code>{}</code></td><td>Dicionário vazio</td></tr>
+<tr><td><code>set()</code></td><td>Conjunto vazio</td></tr>
+</table>
+</div>
+
+<div class="trypy" data-goal="out:['Bia', 'Caio'];;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa quer guardar os nomes de quem já foi atendido, sem repetir, mas dá <code>AttributeError: 'dict' object has no attribute 'add'</code>. Conserte a primeira linha.</p>
+<pre class="script" data-file="main.py">vistos = {}
+for nome in ["Caio", "Bia", "Caio"]:
+    vistos.add(nome)
+print(sorted(vistos))
+</pre>
+<pre class="solucao" data-file="main.py">vistos = set()
+for nome in ["Caio", "Bia", "Caio"]:
+    vistos.add(nome)
+print(sorted(vistos))
+</pre>
+</div>
+
+<hr>
+
+<h2>6. O que pode entrar num conjunto</h2>
+<p>Só valores que <strong>não mudam</strong> podem entrar num conjunto: números, textos, <code>True</code>/<code>False</code>, tuplas. Uma lista não pode, porque ela pode mudar depois de entrar, e o conjunto perderia a "impressão digital" dela. Uma tupla pode:</p>
+
+<pre class="file" data-file="c_tupla_dentro.py">pontos = {(1, 2), (3, 4), (1, 2)}
+print(len(pontos))
+print((1, 2) in pontos)
+</pre>
+
+<pre class="term">$ python3 c_tupla_dentro.py
+2
+True
+</pre>
+
+<p>A tupla <code>(1, 2)</code> repetida contou uma vez só. Com listas, o resultado está em <a href="#errado">Quando dá errado</a>.</p>
+
+<div class="note">
+<strong>E um conjunto que não muda?</strong>
+<p>Existe: o <code>frozenset</code> ("conjunto congelado"). É para o conjunto o que a tupla é para a lista: <code>frozenset({1, 2, 3})</code> funciona como um conjunto, mas não tem <code>add</code> nem <code>remove</code>. É raro no começo; basta saber que existe.</p>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de criar um conjunto</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Resultado</th><th>Quando usar</th></tr>
+<tr><td><code>{1, 2, 3}</code></td><td><code>{1, 2, 3}</code></td><td>Quando você já sabe os itens</td></tr>
+<tr><td><code>set([1, 2, 2, 3])</code></td><td><code>{1, 2, 3}</code></td><td>Para tirar os repetidos de uma lista (ou tupla)</td></tr>
+<tr><td><code>set("banana")</code></td><td>as letras <code>a</code>, <code>b</code>, <code>n</code></td><td>Para as letras diferentes de um texto</td></tr>
+<tr><td><code>set()</code></td><td><code>set()</code></td><td>Conjunto vazio, para encher com <code>add</code>. Nunca <code>{}</code></td></tr>
+</table>
+</div>
+
+<h3>Lista, tupla ou conjunto?</h3>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Situação</th><th>Use</th></tr>
+<tr><td>A ordem importa, ou os repetidos importam (cada visita conta)</td><td>Lista</td></tr>
+<tr><td>Valores fixos, que andam juntos</td><td>Tupla</td></tr>
+<tr><td>Só importa <strong>quais</strong> valores existem, sem repetir</td><td>Conjunto</td></tr>
+<tr><td>Você vai perguntar muitas vezes "isto está aqui?"</td><td>Conjunto</td></tr>
+</table>
+</div>
+
+<p>Conjuntos também sabem fazer contas de conjunto, como na escola: juntar dois, ver o que eles têm em comum, o que um tem e o outro não. É a próxima aula: <a href="conjuntos-operacoes.html">União, Interseção e Diferença</a>.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Pedir um item pelo índice</strong>
+<pre class="file" data-file="c_indice.py">numeros = {3, 1, 2}
+print(numeros[0])
+</pre>
+<pre class="term">$ python3 c_indice.py
+Traceback (most recent call last):
+  File "/home/ana/c_indice.py", line 2, in &lt;module&gt;
+    print(numeros[0])
+          ~~~~~~~^^^
+TypeError: 'set' object is not subscriptable
+</pre>
+<dl class="anatomy">
+  <dt>line 2</dt><dd>O erro está na linha 2, no <code>numeros[0]</code> (o pedaço marcado com <code>~~~^^^</code>).</dd>
+  <dt>TypeError</dt><dd>"Erro de tipo": essa operação não existe para esse tipo.</dd>
+  <dt>'set' object is not subscriptable</dt><dd>"Um objeto <code>set</code> não aceita índice" (os colchetes depois do nome). Sem ordem, não existe "o item 0".</dd>
+</dl>
+<p><strong>Como consertar:</strong> se você precisa de posições, converta: <code>sorted(numeros)[0]</code> dá o menor item. Para saber se um item está lá, use <code>in</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Remover um item que não está lá</strong>
+<pre class="file" data-file="c_remove_erro.py">vistos = {1, 2, 3}
+vistos.remove(10)
+</pre>
+<pre class="term">$ python3 c_remove_erro.py
+Traceback (most recent call last):
+  File "/home/ana/c_remove_erro.py", line 2, in &lt;module&gt;
+    vistos.remove(10)
+    ~~~~~~~~~~~~~^^^^
+KeyError: 10
+</pre>
+<p><code>KeyError: 10</code>: "erro de chave: 10". O 10 não está no conjunto, e o <code>remove</code> avisa com um erro. <strong>Como consertar:</strong> use <code>discard(10)</code>, que não reclama, ou pergunte antes: <code>if 10 in vistos: vistos.remove(10)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>{}</code> no lugar de <code>set()</code></strong>
+<pre class="file" data-file="c_vazio_erro.py">convidados = {}
+convidados.add("Ana")
+</pre>
+<pre class="term">$ python3 c_vazio_erro.py
+Traceback (most recent call last):
+  File "/home/ana/c_vazio_erro.py", line 2, in &lt;module&gt;
+    convidados.add("Ana")
+    ^^^^^^^^^^^^^^
+AttributeError: 'dict' object has no attribute 'add'
+</pre>
+<p>A mensagem fala de <code>'dict'</code>, e não de <code>set</code>: é a pista. <code>{}</code> criou um dicionário, e dicionário não tem <code>add</code>. <strong>Como consertar:</strong> <code>convidados = set()</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Lista dentro de um conjunto</strong>
+<pre class="file" data-file="c_lista_dentro.py">pares = {[1, 2], [3, 4]}
+</pre>
+<pre class="term">$ python3 c_lista_dentro.py
+Traceback (most recent call last):
+  File "/home/ana/c_lista_dentro.py", line 1, in &lt;module&gt;
+    pares = {[1, 2], [3, 4]}
+            ^^^^^^^^^^^^^^^^
+TypeError: cannot use 'list' as a set element (unhashable type: 'list')
+</pre>
+<p>"Não é possível usar <code>list</code> como item de um conjunto (tipo sem <em>hash</em>: <code>list</code>)". <em>Unhashable</em> quer dizer "não dá para tirar a impressão digital": como a lista pode mudar, ela não pode entrar no conjunto. <strong>Como consertar:</strong> use tuplas: <code>{(1, 2), (3, 4)}</code>.</p>
+<div class="note">
+<strong>Em versões mais antigas do Python</strong> <span class="versao">3.14</span>
+<p>A primeira parte da mensagem (<code>cannot use 'list' as a set element</code>) é novidade do Python 3.14. No Python 3.13 (o do Debian 13) aparece só <code>TypeError: unhashable type: 'list'</code>.</p>
+</div>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>s = {1, 2, 3}</code></td><td>Cria um conjunto</td></tr>
+<tr><td><code>s = set()</code></td><td>Conjunto vazio (<code>{}</code> é dicionário)</td></tr>
+<tr><td><code>set(lista)</code></td><td>Conjunto com os itens da lista, sem repetidos</td></tr>
+<tr><td><code>len(s)</code></td><td>Quantos itens diferentes</td></tr>
+<tr><td><code>x in s</code></td><td><code>True</code> se <code>x</code> está no conjunto</td></tr>
+<tr><td><code>s.add(x)</code></td><td>Põe <code>x</code> (se já estava, nada muda)</td></tr>
+<tr><td><code>s.remove(x)</code></td><td>Tira <code>x</code>; <code>KeyError</code> se não estiver</td></tr>
+<tr><td><code>s.discard(x)</code></td><td>Tira <code>x</code> se estiver; senão, nada</td></tr>
+<tr><td><code>s.pop()</code></td><td>Tira e devolve um item qualquer</td></tr>
+<tr><td><code>s.clear()</code></td><td>Esvazia</td></tr>
+<tr><td><code>sorted(s)</code></td><td>Lista com os itens em ordem (o jeito de mostrar sempre igual)</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>TypeError: 'set' object is not subscriptable</code></td><td>Usou índice (<code>s[0]</code>): conjunto não tem posição</td></tr>
+<tr><td><code>KeyError: 10</code></td><td><code>remove</code> de um item que não está lá</td></tr>
+<tr><td><code>AttributeError: 'dict' object has no attribute 'add'</code></td><td>Criou com <code>{}</code>, que é dicionário</td></tr>
+<tr><td><code>TypeError: cannot use 'list' as a set element (unhashable type: 'list')</code></td><td>Lista dentro do conjunto: use tupla</td></tr>
+<tr><td>A ordem do <code>print</code> muda a cada execução</td><td>Normal: conjunto não tem ordem. Use <code>sorted()</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Conjunto vazio</h3>
+<p>Complete para criar um conjunto vazio:</p>
+<div class="ex-code">pessoas = <input data-answer="set()" aria-label="conjunto vazio"></div>
+</div>
+
+<div class="exercise">
+<h3>2. Quantos diferentes?</h3>
+<p>Quanto vale <code>len({5, 5, 6, 5, 7})</code>?</p>
+<div class="ex-code"><input data-answer="3" aria-label="resposta"></div>
+</div>
+
+<div class="exercise">
+<h3>3. Sem reclamar</h3>
+<p>Complete o método que tira o 4 do conjunto <strong>sem dar erro</strong> se ele não estiver lá:</p>
+<div class="ex-code">numeros.<input data-answer="discard" aria-label="método">(4)</div>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">4. O que <code>type({})</code> mostra?</p>
+<label><input type="radio" name="q4"> <code>&lt;class 'set'&gt;</code></label>
+<label><input type="radio" name="q4"> <code>&lt;class 'list'&gt;</code></label>
+<label><input type="radio" name="q4"> <code>&lt;class 'tuple'&gt;</code></label>
+<label><input type="radio" name="q4"> <code>&lt;class 'dict'&gt;</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. A Ana rodou duas vezes <code>print({"pão", "leite", "café"})</code> e a ordem saiu diferente. O que aconteceu?</p>
+<label><input type="radio" name="q5"> Um erro no Python</label>
+<label><input type="radio" name="q5"> Nada de errado: conjunto não tem ordem, e com textos a arrumação muda a cada execução</label>
+<label><input type="radio" name="q5"> O conjunto ordena pelo tamanho do texto</label>
+<label><input type="radio" name="q5"> Ela esqueceu de usar <code>add</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Qual destes valores <strong>não</strong> pode ser item de um conjunto?</p>
+<label><input type="radio" name="q6"> <code>[1, 2]</code></label>
+<label><input type="radio" name="q6"> <code>(1, 2)</code></label>
+<label><input type="radio" name="q6"> <code>"pão"</code></label>
+<label><input type="radio" name="q6"> <code>42</code></label>
+</div>
+
+<h3>Missão final: as cidades dos clientes</h3>
+
+<div class="trypy" data-goal="out:Cidades diferentes: 3;;out:['Parnaíba', 'Picos', 'Teresina']">
+<p class="try-task"><strong>Missão:</strong> a lista tem a cidade de cada cliente, com repetições. Mostre quantas cidades diferentes são (<code>Cidades diferentes: 3</code>) e, na linha seguinte, a lista delas em ordem alfabética, que sai igual em toda execução.</p>
+<pre class="script" data-file="main.py">clientes = ["Teresina", "Picos", "Teresina", "Parnaíba", "Picos", "Teresina"]
+print(clientes)
+</pre>
+<pre class="solucao" data-file="main.py">clientes = ["Teresina", "Picos", "Teresina", "Parnaíba", "Picos", "Teresina"]
+cidades = set(clientes)
+print("Cidades diferentes:", len(cidades))
+print(sorted(cidades))
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>O conjunto (<code>set</code>) guarda valores <strong>sem repetir</strong>: <code>{1, 2, 2}</code> vira <code>{1, 2}</code>.</li>
+  <li>Ele <strong>não tem ordem</strong> nem índice. Com textos, a ordem do <code>print</code> muda de uma execução para outra; para mostrar em ordem, use <code>sorted()</code>.</li>
+  <li><code>set(lista)</code> tira os repetidos de uma lista; <code>len</code> conta os diferentes; <code>in</code> pergunta se um valor está lá.</li>
+  <li><code>add</code> põe; <code>remove</code> tira (com <code>KeyError</code> se não houver); <code>discard</code> tira sem reclamar; <code>clear</code> esvazia.</li>
+  <li><code>{}</code> é dicionário vazio; conjunto vazio é <code>set()</code>.</li>
+  <li>Só valores que não mudam entram num conjunto: tupla sim, lista não (<code>unhashable type: 'list'</code>).</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
