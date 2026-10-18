@@ -68,10 +68,15 @@ async function rodarCaixa(pg, i, qual, limite = 20000) {
   await pg.evaluate((i, qual) => { window.__res = window.__res || {}; window.__res[i] = null; PySim.caixas[i].testar(qual).then((r) => { window.__res[i] = r; }); }, i, qual);
   const t0 = Date.now();
   let ctrlD = 0;
+  // data-digitar: o que o testador digita quando o programa pede (sem data-stdin)
+  const dig = await pg.evaluate((i) => { const b = PySim.caixas[i].box; return b.hasAttribute("data-stdin") || !b.hasAttribute("data-digitar") ? null : PySim.decodificarAttr(b.getAttribute("data-digitar")).replace(/\n$/, "").split("\n"); }, i);
   while (Date.now() - t0 < limite) {
     const st = await pg.evaluate((i) => ({ r: window.__res[i], esp: PySim.caixas[i].esperando() }), i);
     if (st.r) return Object.assign(st.r, { ctrlD });
-    if (st.esp) { await pg.evaluate((i) => PySim.caixas[i].fimDaEntrada(), i); ctrlD++; }
+    if (st.esp) {
+      if (dig && dig.length) { const l = dig.shift(); await pg.evaluate((i, l) => PySim.caixas[i].digitar(l), i, l); }
+      else { await pg.evaluate((i) => PySim.caixas[i].fimDaEntrada(), i); ctrlD++; }
+    }
     await dormir(60);
   }
   await pg.evaluate((i) => PySim.caixas[i].parar(), i);
@@ -105,13 +110,14 @@ async function testarPagina(nav, base, pagina) {
 
     const interna = pagina === "simulador-teste-interno.html";
     for (let i = 0; i < info.montadas; i++) {
-      const c = await pg.evaluate((i) => { const c = PySim.caixas[i]; return { id: c.box.id || "", meta: c.meta, sol: !!c.box.querySelector("pre.solucao") }; }, i);
+      const c = await pg.evaluate((i) => { const c = PySim.caixas[i]; return { id: c.box.id || "", meta: c.meta, sol: !!c.box.querySelector("pre.solucao"), semFim: c.box.hasAttribute("data-sem-fim") }; }, i);
       const nome = "caixa " + (i + 1) + (c.id ? " #" + c.id : "");
       if (interna && (c.id === "cx-laco" || c.id === "cx-input" || c.id === "cx-laco-input")) continue; // a interface testa estas
+      if (c.semFim) { notas.push(nome + ": data-sem-fim (laço infinito de propósito), não rodada"); continue; }
       const ini = await rodarCaixa(pg, i, "inicial");
       if (ini.semResposta) { problemas.push(nome + ": o inicial não terminou em 20 s"); continue; }
       if (ini.interrompido) { problemas.push(nome + ": o inicial foi interrompido: " + (ini.motivo || "")); continue; }
-      if (ini.ctrlD) notas.push(nome + ": o inicial leu o teclado sem data-stdin (recebeu Ctrl+D " + ini.ctrlD + "×)");
+      if (ini.ctrlD && !(await pg.evaluate((i) => PySim.caixas[i].box.hasAttribute("data-digitar"), i))) notas.push(nome + ": o inicial leu o teclado sem data-stdin (recebeu Ctrl+D " + ini.ctrlD + "×)");
       if (c.meta) {
         if (ini.falhas && !ini.falhas.length) problemas.push(nome + ": o inicial já cumpre a meta");
         if (!c.sol) { problemas.push(nome + ": missão sem solução"); continue; }

@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python O Editor do Guia — como usar as caixas Experimente | Guia Python</title>
+<meta name="description" content="Como usar o editor Experimente do Guia Python: o Python 3.14 de verdade rodando no seu navegador, Rodar e Ctrl+Enter, Restaurar, Ver solução, as abas com vários arquivos, o input() digitado no terminal da caixa, o botão Parar, os tracebacks reais, as missões, o que o editor não faz e como rodar o mesmo programa no terminal com python3.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">O Editor do Guia</span></h1>
+
+<p class="intro">Em toda aula deste guia aparecem caixas <strong>Experimente</strong>: você escreve um programa em Python, clica em <strong>Rodar</strong> e vê, logo embaixo, o que o programa escreveu. Quem roda o seu código não é uma imitação: é o <strong>Python de verdade</strong>, o mesmo programa que você instala no computador, funcionando dentro do seu navegador. Não precisa instalar nada. Nesta página você conhece cada parte do editor, aprende a responder quando o programa pergunta alguma coisa, a parar um programa que não termina e vê o que muda quando você roda o mesmo programa no terminal.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>As partes de uma caixa Experimente: o código, <strong>Rodar</strong>, o terminal da caixa, <strong>Restaurar</strong> e <strong>Ver solução</strong>.</li>
+  <li>Por que cada Rodar começa do zero, com a pasta vazia.</li>
+  <li>Como responder ao <code>input()</code>: digitando no terminal da caixa ou pelo campo <strong>Entrada</strong>.</li>
+  <li>Como funcionam as <strong>abas</strong>, quando o programa tem mais de um arquivo.</li>
+  <li>Como aparecem os erros (o <em>traceback</em>) e como parar um programa que não termina.</li>
+  <li>O que o editor <strong>não</strong> faz, como funcionam as <strong>missões</strong> e como rodar o mesmo programa no terminal.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: uma cozinha de teste dentro da página</h2>
+<p>Pense numa escola de culinária. O professor explica a receita no quadro, mas a aula só vale a pena quando cada aluno vai para a sua bancada e faz o bolo com as próprias mãos. Se o bolo desanda, tudo bem: a bancada é de treino, e no dia seguinte ela está limpa de novo.</p>
+<p>O editor do guia é essa bancada. A receita é o seu programa, e quem "cozinha" é o Python. Cada vez que você clica em <strong>Rodar</strong>, o editor:</p>
+<ol class="passo">
+  <li>prepara uma pasta <strong>vazia</strong>, a <code>/home/ana</code> (a pasta pessoal da Ana, a usuária das aulas);</li>
+  <li>grava o seu código num arquivo, o <code>main.py</code> (e os outros arquivos da caixa, se houver);</li>
+  <li>roda o programa com o Python, como quem digita <code>python3 main.py</code> no terminal;</li>
+  <li>mostra tudo o que o programa escreveu, e no fim o <strong>código de saída</strong> (0 quer dizer "terminou bem").</li>
+</ol>
+<p>Tudo isso acontece no seu computador, dentro do navegador. O seu código não é enviado para lugar nenhum.</p>
+
+<hr>
+
+<h2>As partes da caixa</h2>
+<p>Esta é uma caixa livre, sem missão. Clique em <strong>▶ Rodar</strong>:</p>
+
+<div class="trypy">
+<pre class="script" data-file="main.py">nome = "Ana"
+print(f"Olá, {nome}!")
+print("Bem-vinda ao Python.")
+</pre>
+</div>
+
+<p>Na primeira vez, o editor avisa <strong>"Carregando o Python (~6 MB, só na primeira vez)…"</strong> e mostra uma barra de progresso: o navegador está baixando o Python. Isso leva alguns segundos e só acontece uma vez; depois, o navegador guarda o Python, e cada Rodar leva uma fração de segundo. Em seguida aparece o <strong>terminal da caixa</strong>, com a resposta. Repare nas partes:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<thead><tr><th>Parte</th><th>O que faz</th></tr></thead>
+<tbody>
+<tr><td>📄 <code>main.py</code></td><td>A aba com o nome do arquivo. Os programas em Python ficam em arquivos que terminam em <code>.py</code>.</td></tr>
+<tr><td>O código</td><td>A área onde você digita, com o número de cada linha do lado. Pode apagar, mudar e escrever o que quiser.</td></tr>
+<tr><td><strong>▶ Rodar</strong></td><td>Roda o programa. Enquanto ele roda, o botão vira <strong>■ Parar</strong>.</td></tr>
+<tr><td><strong>Restaurar</strong></td><td>Volta ao código original da caixa. Use quando se perder.</td></tr>
+<tr><td><strong>Ver solução</strong></td><td>Só aparece nas missões. Pergunta antes ("Trocar o seu código pela solução?") e, se você confirmar, põe a resposta no editor.</td></tr>
+<tr><td><code>ana@notebook:~$ python3 main.py</code></td><td>A primeira linha do terminal: o comando que rodaria este programa num computador de verdade (a usuária <code>ana</code>, no computador <code>notebook</code>).</td></tr>
+<tr><td><code>Olá, Ana!</code></td><td>O que o programa escreveu com o <code>print</code> ("imprimir", mostrar na tela).</td></tr>
+<tr><td><code>[código de saída: 0]</code></td><td>Como o programa terminou: <strong>0</strong> = tudo certo; <strong>1</strong> = terminou com um erro.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Atalhos do teclado</h3>
+<div class="table-wrap">
+<table class="ref">
+<thead><tr><th>Tecla</th><th>O que faz</th></tr></thead>
+<tbody>
+<tr><td><kbd>Ctrl</kbd>+<kbd>Enter</kbd></td><td>Roda o programa, igual ao botão Rodar (no Mac, <kbd>⌘</kbd>+<kbd>Enter</kbd>).</td></tr>
+<tr><td><kbd>Enter</kbd></td><td>Nova linha, já com o mesmo recuo da linha de cima. Depois de uma linha que termina em <code>:</code> (um <code>if</code>, um <code>for</code>, um <code>def</code>), o editor recua mais 4 espaços sozinho.</td></tr>
+<tr><td><kbd>Tab</kbd> / <kbd>Shift</kbd>+<kbd>Tab</kbd></td><td>Põe / tira 4 espaços de recuo (com várias linhas selecionadas, em todas).</td></tr>
+<tr><td><kbd>Backspace</kbd> no recuo</td><td>Apaga os 4 espaços de uma vez.</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Sai do editor (o <kbd>Tab</kbd> volta a andar pela página).</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Experimente agora na caixa de cima: troque <code>"Ana"</code> pelo seu nome e aperte <kbd>Ctrl</kbd>+<kbd>Enter</kbd>. Depois clique em <strong>Restaurar</strong>.</p>
+
+<hr>
+
+<h2>Cada Rodar começa do zero</h2>
+<p>O programa abaixo procura o arquivo <code>diario.txt</code>. Se ele já existe, avisa; senão, cria o arquivo e escreve uma linha nele. Por fim, mostra o que tem na pasta (<code>os.listdir(".")</code>, "liste a pasta atual"). Rode duas ou três vezes:</p>
+
+<div class="trypy">
+<pre class="script" data-file="main.py">import os
+
+if os.path.exists("diario.txt"):
+    print("O diário já existia!")
+else:
+    print("Diário novo.")
+
+with open("diario.txt", "a", encoding="utf-8") as arquivo:
+    arquivo.write("Hoje estudei Python.\n")
+
+print(os.listdir("."))
+</pre>
+</div>
+
+<p>Todas as vezes ele responde <strong>Diário novo.</strong> e a pasta tem só <code>['main.py', 'diario.txt']</code>. Num computador de verdade, a segunda vez diria "O diário já existia!", porque o arquivo ficaria gravado no disco. No editor, cada Rodar ganha uma pasta <strong>nova e vazia</strong>: os arquivos que o programa criou e as variáveis da vez anterior somem. Não se preocupe com o <code>open</code> e o <code>with</code> agora; eles têm aula própria: <a href="arquivos.html">Abrindo Arquivos</a>.</p>
+
+<div class="tip">
+<strong>Por que isso é bom</strong>
+<p>Você pode criar, mudar e apagar arquivos à vontade: nada "estraga" os exemplos das outras aulas, e o resultado é sempre o que o texto da aula descreve. A contrapartida é que nada fica guardado entre um Rodar e outro: o programa que grava e o que lê precisam estar <strong>no mesmo Rodar</strong>.</p>
+</div>
+
+<hr>
+
+<h2>Quando o programa pergunta: o <code>input()</code></h2>
+<p>A função <code>input()</code> ("entrada") faz o programa <strong>parar e esperar</strong> você digitar uma resposta (aula <a href="input.html">input(): Lendo o Teclado</a>). Rode a caixa abaixo: o terminal mostra a pergunta e, do lado, um campo piscando. Digite o seu nome e tecle <kbd>Enter</kbd>:</p>
+
+<div class="trypy" data-digitar="Ana">
+<pre class="script" data-file="main.py">nome = input("Qual é o seu nome? ")
+print(f"Prazer, {nome}!")
+</pre>
+</div>
+
+<p>O que você digitou aparece em branco, depois da pergunta, como num terminal de verdade. No campo de digitação valem estas teclas:</p>
+<div class="table-wrap">
+<table class="ref">
+<thead><tr><th>Tecla</th><th>O que faz</th></tr></thead>
+<tbody>
+<tr><td><kbd>Enter</kbd></td><td>Envia a linha para o programa.</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>D</kbd></td><td>Avisa "acabou a entrada" (no Python, o <code>input()</code> dá <code>EOFError</code>). Serve para programas que leem até o fim.</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd></td><td>Para o programa, como o botão <strong>■ Parar</strong>.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Caixas com o campo Entrada</h3>
+<p>Em algumas caixas a resposta já vem pronta, num campo <strong>Entrada</strong> ao lado do botão Rodar: uma linha para cada <code>input()</code>. O programa lê dali sem parar, e o terminal mostra cada linha lida logo depois da pergunta. Mude as notas no campo Entrada e rode de novo:</p>
+
+<div class="trypy" data-stdin="Bia\n8\n9.5">
+<pre class="script" data-file="main.py">nome = input("Aluna: ")
+nota1 = float(input("Nota 1: "))
+nota2 = float(input("Nota 2: "))
+media = (nota1 + nota2) / 2
+print(f"Média de {nome}: {media}")
+</pre>
+</div>
+
+<div class="note">
+<strong>Por que algumas caixas usam o campo Entrada</strong>
+<p>Numa missão, o guia precisa rodar o seu programa e conferir a resposta sozinho. Com as respostas no campo Entrada, ele sabe exatamente o que o programa vai ler. Nas caixas sem esse campo, quem responde é você, digitando.</p>
+</div>
+
+<hr>
+
+<h2>Vários arquivos: as abas</h2>
+<p>Programas maiores se dividem em vários arquivos. Numa caixa com várias <strong>abas</strong>, clique no nome de cada uma para ver o arquivo. A primeira aba é a que roda (<code>python3 main.py</code>); as outras ficam <strong>na mesma pasta</strong>, prontas para o programa usar:</p>
+
+<div class="trypy">
+<pre class="script" data-file="main.py">import saudacoes
+
+with open("clientes.txt", encoding="utf-8") as arquivo:
+    for linha in arquivo:
+        print(saudacoes.bom_dia(linha.strip()))
+</pre>
+<pre class="script" data-file="saudacoes.py">def bom_dia(nome):
+    return f"Bom dia, {nome}! O pão saiu agora."
+</pre>
+<pre class="script" data-file="clientes.txt">Ana
+Bia
+Caio
+</pre>
+</div>
+
+<p>O <code>main.py</code> usa uma função escrita no <code>saudacoes.py</code> (o <code>import saudacoes</code> traz esse arquivo para o programa; aula <a href="modulos-proprios.html">Criando seu Módulo</a>) e lê os nomes do <code>clientes.txt</code>. Acrescente um nome na aba <code>clientes.txt</code>, ou mude a frase em <code>saudacoes.py</code>, e rode de novo. O botão <strong>Restaurar</strong> volta todas as abas ao original.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+<p>Errar faz parte. Quando o Python não consegue continuar, ele para e escreve um <strong>traceback</strong> (em inglês, "rastro"): o caminho até o erro, a linha culpada e, na última linha, o nome do erro com uma explicação. No editor ele aparece em <strong>vermelho</strong>, e o código de saída vira <strong>1</strong>. A mensagem é a <strong>real</strong> do Python e vem em inglês; as aulas traduzem e explicam cada uma. A aula <a href="erros.html">Lendo uma Mensagem de Erro</a> ensina a ler um traceback do começo ao fim.</p>
+
+<div class="cenario">
+<strong>Um nome escrito errado</strong>
+<p>Rode a caixa:</p>
+<div class="trypy">
+<pre class="script" data-file="main.py">produtos = ["pão", "leite"]
+print("Lista da padaria:")
+print(produto)
+</pre>
+</div>
+<p>No terminal da Ana, o mesmo programa (salvo como <code>erro.py</code>) dá a mesma mensagem:</p>
+<pre class="term">$ python3 erro.py
+Lista da padaria:
+Traceback (most recent call last):
+  File "/home/ana/erro.py", line 3, in &lt;module&gt;
+    print(produto)
+          ^^^^^^^
+NameError: name 'produto' is not defined. Did you mean: 'produtos'?
+</pre>
+<p><strong>O que aconteceu:</strong> a linha 2 rodou (apareceu "Lista da padaria:"); na linha 3 (<code>line 3</code>), o Python não conhece nenhum <code>produto</code>. <code>NameError: name 'produto' is not defined</code> quer dizer "o nome <code>produto</code> não foi definido", e o Python ainda sugere: <code>Did you mean: 'produtos'?</code> ("você quis dizer <code>produtos</code>?"). As setinhas <code>^^^^^^^</code> marcam o pedaço com problema.</p>
+<p><strong>Como consertar:</strong> use o nome exato da variável: <code>print(produtos)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Um parêntese sem fechar</strong>
+<pre class="file" data-file="sintaxe.py">print("Olá, Ana!"
+</pre>
+<pre class="term">$ python3 sintaxe.py
+  File "/home/ana/sintaxe.py", line 1
+    print("Olá, Ana!"
+         ^
+SyntaxError: '(' was never closed
+</pre>
+<p><strong>O que aconteceu:</strong> este erro é diferente: o programa <strong>nem começou</strong>. Antes de rodar, o Python lê o arquivo inteiro, e aqui ele achou um parêntese aberto (<code>'('</code>) que nunca foi fechado (<code>was never closed</code>). <code>SyntaxError</code> é "erro de escrita": o Python não entendeu o que está escrito. O editor mostra exatamente a mesma mensagem.</p>
+<p><strong>Como consertar:</strong> feche o parêntese: <code>print("Olá, Ana!")</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Um programa que não termina nunca</strong>
+<p>O laço abaixo soma 1 no contador para sempre (o <code>while True</code>, "enquanto verdadeiro", você aprende na aula <a href="while.html">while</a>). Rode e, depois de uns segundos, clique em <strong>■ Parar</strong>:</p>
+<div class="trypy" data-sem-fim>
+<pre class="script" data-file="main.py">contador = 0
+print("Contando…")
+while True:
+    contador += 1
+</pre>
+</div>
+<p><strong>O que aconteceu:</strong> o editor parou o programa na hora e mostrou <code>^C</code> e <code>[programa interrompido]</code>. Se você não clicar em Parar, o editor para sozinho depois de <strong>10 segundos</strong> rodando, com o aviso <em>"o editor parou o programa: ele rodou mais de 10 segundos sem terminar — laço infinito?"</em>. Enquanto isso, a página continua funcionando normalmente: o Python roda separado dela.</p>
+<p>No terminal, quem para um programa assim é você, com <kbd>Ctrl</kbd>+<kbd>C</kbd>. O Python mostra onde estava quando foi interrompido (<code>KeyboardInterrupt</code>, "interrupção pelo teclado"), e o código de saída é 130:</p>
+<pre class="term">$ python3 laco.py
+Contando…
+^C
+Traceback (most recent call last):
+  File "/home/ana/laco.py", line 4, in &lt;module&gt;
+    contador += 1
+    ^^^^^^^^
+KeyboardInterrupt
+$ echo $?
+130
+</pre>
+<p><strong>Como consertar:</strong> todo laço precisa de um jeito de terminar, por exemplo <code>while contador &lt; 1000:</code>.</p>
+</div>
+
+<hr>
+
+<h2>O que o editor não faz</h2>
+<p>O editor roda o Python de verdade, mas ele vive dentro de uma página da internet, e o navegador, por segurança, não deixa uma página mexer no seu computador. Algumas coisas ficam de fora:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<thead><tr><th>No editor</th><th>Por quê, e onde fazer</th></tr></thead>
+<tbody>
+<tr><td>Nada fica salvo entre um Rodar e outro</td><td>Cada Rodar ganha uma pasta nova. Para guardar arquivos de verdade, rode no seu computador.</td></tr>
+<tr><td>Sem internet: <code>urllib.request.urlopen(...)</code> dá erro</td><td>A página não abre conexões por conta própria.</td></tr>
+<tr><td>Sem outros programas: <code>subprocess.run(["ls"])</code> dá <code>OSError: [Errno 138] emscripten does not support processes.</code>, e <code>os.system("ls")</code> não roda nada</td><td>Dentro do navegador não existe um sistema com outros programas. A aula <a href="subprocess.html">Rodando Outros Programas</a> usa o terminal.</td></tr>
+<tr><td>Sem <em>threads</em> ("linhas de execução" paralelas): <code>RuntimeError: can't start new thread</code></td><td>O <code>asyncio</code> funciona (aula <a href="asyncio.html">Programação Assíncrona</a>); o que precisa de threads, não.</td></tr>
+<tr><td>Sem <code>pip</code>, <code>venv</code>, <code>tkinter</code> nem <code>turtle</code> (<code>ModuleNotFoundError</code>)</td><td>Instalar pacotes e abrir janelas só no computador: aulas <a href="pip.html">pip</a> e <a href="venv.html">Ambientes Virtuais</a>.</td></tr>
+<tr><td>Não tem o modo interativo <code>&gt;&gt;&gt;</code></td><td>O editor roda arquivos inteiros. O <code>&gt;&gt;&gt;</code> está na aula <a href="repl.html">O Modo Interativo</a>.</td></tr>
+<tr><td>Programa que roda mais de 10 segundos é parado; saída com mais de 2 milhões de letras também</td><td>Para a página não travar. Nenhum exemplo do guia chega perto disso.</td></tr>
+<tr><td>A hora é a do seu computador; <code>random</code> sorteia outro número a cada Rodar</td><td>É o que eles fazem também no terminal: leem o relógio e sorteiam de novo.</td></tr>
+</tbody>
+</table>
+</div>
+
+<hr>
+
+<h2>As missões</h2>
+<p>Muitas caixas têm uma <strong>Missão</strong>: uma tarefa escrita em cima do código. Embaixo da caixa fica uma linha de status que confere a sua resposta a cada Rodar:</p>
+<ul>
+  <li><strong>Missão em andamento…</strong> enquanto ainda não está certo, com uma pista entre parênteses (por exemplo, "a saída ainda não é a esperada" ou "o programa ainda termina com erro");</li>
+  <li><strong>✔ Missão cumprida!</strong>, em verde, quando você acerta. Depois de cumprida, ela fica cumprida.</li>
+</ul>
+<p>O guia não compara o seu código letra por letra com a resposta: ele <strong>roda</strong> o seu programa e confere o que ele escreveu. Por isso, quase sempre existe mais de um jeito certo. Às vezes a missão também pede um recurso (como "use um <code>for</code>"), ou um arquivo criado pelo programa, ou até um erro de propósito, para você aprender a reconhecê-lo. Faça a primeira:</p>
+
+<div class="trypy" data-goal="out:Total: R$ 23.50;;semerro">
+<p class="try-task"><strong>Missão:</strong> a Ana comprou 3 pães de R$ 1,50 e 2 litros de leite de R$ 9,50. O programa tem um erro: rode, leia a última linha do traceback e conserte. A saída deve terminar com <code>Total: R$ 23.50</code>.</p>
+<pre class="script" data-file="main.py">paes = 3 * 1.50
+leite = 2 * 9.50
+total = paes + leites
+print(f"Total: R$ {total:.2f}")
+</pre>
+<pre class="solucao" data-file="main.py">paes = 3 * 1.50
+leite = 2 * 9.50
+total = paes + leite
+print(f"Total: R$ {total:.2f}")
+</pre>
+</div>
+
+<p>Rodou antes de consertar? Então viu <code>NameError: name 'leites' is not defined. Did you mean: 'leite'?</code>: a variável se chama <code>leite</code>, sem o "s". As missões são feitas para você errar, ler a mensagem e consertar. Se travar de vez, use <strong>Ver solução</strong>; mas tente antes, e depois de ver a solução, digite-a você mesmo.</p>
+
+<hr>
+
+<h2 id="terminal">O mesmo programa no terminal</h2>
+<p>O editor é ótimo para aprender, mas no dia a dia o Python roda como um programa no seu computador: o <strong><code>python3</code></strong>, que você usa no <strong>terminal</strong> (a janela de texto onde se digitam comandos). A aula <a href="instalar.html">Instalar o Python</a> mostra como instalá-lo, e <a href="executar.html">Rodando um Programa (.py)</a> ensina o caminho completo. Em resumo:</p>
+<ol class="passo">
+  <li>copie o código da caixa para um editor de texto e salve com um nome terminado em <code>.py</code>, na sua pasta pessoal: por exemplo, <code>ola.py</code>;</li>
+  <li>abra o terminal e digite <code>python3</code>, um espaço e o nome do arquivo;</li>
+  <li>o que o programa escreve aparece logo embaixo, como no terminal da caixa.</li>
+</ol>
+<p>Nas aulas, o terminal aparece assim, com a usuária <code>ana</code> no computador <code>notebook</code>. O primeiro programa desta página, salvo como <code>ola.py</code>:</p>
+
+<pre class="term">$ python3 --version
+Python 3.14.4
+$ python3 ola.py
+Olá, Ana!
+Bem-vinda ao Python.
+</pre>
+
+<p>E o programa do <code>input()</code>, salvo como <code>nome.py</code>: no terminal, você digita a resposta na mesma linha da pergunta e tecla <kbd>Enter</kbd>:</p>
+
+<pre class="term">$ python3 nome.py
+Qual é o seu nome? Ana
+Prazer, Ana!
+</pre>
+
+<p>O Python é o mesmo nos dois lugares, então o que você aprende no editor vale no terminal. O que muda é o lugar onde ele roda:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<thead><tr><th>Assunto</th><th>No editor do guia</th><th>No terminal (<code>python3 arquivo.py</code>)</th></tr></thead>
+<tbody>
+<tr><td>Versão</td><td>Python 3.14 (3.14.2)</td><td>A do seu computador (nas aulas, 3.14.4, a do Ubuntu 26.04)</td></tr>
+<tr><td>Arquivos que o programa cria</td><td>Somem no próximo Rodar</td><td>Ficam gravados no disco</td></tr>
+<tr><td>Traceback</td><td>O mesmo, em vermelho</td><td>O mesmo (no Ubuntu, também colorido)</td></tr>
+<tr><td>Parar um programa</td><td>Botão <strong>■ Parar</strong> (ou o limite de 10 s); não mostra traceback</td><td><kbd>Ctrl</kbd>+<kbd>C</kbd>: mostra o <code>KeyboardInterrupt</code> e sai com código 130</td></tr>
+<tr><td><code>sys.platform</code> ("em que sistema estou?")</td><td><code>emscripten</code> (o "sistema" do navegador)</td><td><code>linux</code> (ou <code>win32</code>, <code>darwin</code> no Windows e no Mac)</td></tr>
+<tr><td>Internet, outros programas, <code>pip</code>, janelas</td><td>Não</td><td>Sim</td></tr>
+<tr><td>Velocidade</td><td>Umas 3 ou 4 vezes mais lento (nada que se perceba nos exemplos)</td><td>A velocidade normal do computador</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="warning">
+<strong>No terminal, apagar é para valer</strong>
+<p>No editor, um arquivo apagado ou sobrescrito volta no próximo Rodar. No terminal, o programa mexe nos <strong>seus</strong> arquivos de verdade, e não há botão Restaurar. Antes de rodar no seu computador um programa que grava ou apaga arquivos, confira o nome dos arquivos que ele usa.</p>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A tecla</h3>
+<p>Além do botão Rodar, qual combinação de teclas roda o programa da caixa? Escreva no formato <code>Tecla+Tecla</code>.</p>
+<div class="ex-code"><input data-answer="Ctrl+Enter|ctrl+enter|CTRL+ENTER|Ctrl + Enter|ctrl + enter" aria-label="atalho"></div>
+</div>
+
+<div class="exercise">
+<h3>2. O código de saída</h3>
+<p>O programa terminou sem nenhum erro. Qual número aparece em <code>[código de saída: ?]</code>?</p>
+<div class="ex-code"><input data-answer="0" aria-label="código de saída"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">3. Você rodou um programa que criou o arquivo <code>notas.txt</code>. Depois, rodou de novo um programa que lê <code>notas.txt</code>. O que acontece no editor?</p>
+<label><input type="radio" name="q3"> Ele lê o arquivo criado na vez anterior</label>
+<label><input type="radio" name="q3"> O editor pergunta se você quer guardar o arquivo</label>
+<label><input type="radio" name="q3"> O arquivo não existe mais: cada Rodar começa com a pasta vazia</label>
+<label><input type="radio" name="q3"> O navegador grava o arquivo na sua pasta Downloads</label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. O programa ficou rodando sem parar e não escreve mais nada. O que fazer no editor?</p>
+<label><input type="radio" name="q4"> Fechar o navegador, porque a página travou</label>
+<label><input type="radio" name="q4"> Clicar em ■ Parar (ou esperar o editor parar sozinho em 10 segundos)</label>
+<label><input type="radio" name="q4"> Clicar em Restaurar</label>
+<label><input type="radio" name="q4"> Esperar: o programa termina um dia</label>
+</div>
+
+<div class="trypy" data-goal="erro:ZeroDivisionError">
+<p class="try-task"><strong>Missão final:</strong> desta vez, a missão é <strong>errar de propósito</strong>. Faça o Python responder <code>ZeroDivisionError</code> ("erro de divisão por zero"): troque o número de pessoas para <code>0</code> e rode. Leia a última linha do traceback.</p>
+<pre class="script" data-file="main.py">conta = 120.00
+pessoas = 4
+print(f"Cada um paga R$ {conta / pessoas:.2f}")
+</pre>
+<pre class="solucao" data-file="main.py">conta = 120.00
+pessoas = 0
+print(f"Cada um paga R$ {conta / pessoas:.2f}")
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>As caixas <strong>Experimente</strong> rodam o <strong>Python 3.14 de verdade</strong> no seu navegador. Escreva e clique em <strong>▶ Rodar</strong> (ou <kbd>Ctrl</kbd>+<kbd>Enter</kbd>). Na primeira vez, o editor baixa o Python (~6 MB).</li>
+  <li>O terminal da caixa mostra o comando (<code>python3 main.py</code>), o que o programa escreveu e o <strong>código de saída</strong> (0 = terminou bem, 1 = erro).</li>
+  <li>Cada Rodar começa do zero: pasta vazia, variáveis novas. Nada fica guardado.</li>
+  <li>O <code>input()</code> espera você digitar no terminal da caixa; nas caixas com o campo <strong>Entrada</strong>, as respostas já vêm prontas, uma por linha.</li>
+  <li>Caixas com várias <strong>abas</strong> têm vários arquivos na mesma pasta; a primeira aba é a que roda.</li>
+  <li>Os erros aparecem em vermelho, com o traceback real do Python, em inglês. <strong>■ Parar</strong> interrompe um programa; depois de 10 segundos, o editor para sozinho.</li>
+  <li>O editor não tem internet, outros programas, threads, <code>pip</code> nem janelas: isso fica para o terminal, onde o mesmo programa roda com <code>python3 arquivo.py</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>

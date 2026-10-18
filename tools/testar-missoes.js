@@ -233,16 +233,22 @@ async function testarPagina(arq, motor, lab) {
       conferir: cx.goal ? PySim.arquivosDaMeta(cx.goal) : [],
     };
     let pediu = false;
-    const r = await motor.rodar(req, { tempo: PySim.TEMPO_MAX, aoEspera: () => { pediu = true; } });
+    const semFim = "data-sem-fim" in cx.at;
+    const dig = stdinAttr === undefined && cx.at["data-digitar"] !== undefined ? PySim.decodificarAttr(cx.at["data-digitar"]).replace(/\n$/, "").split("\n") : null;
+    const r = await motor.rodar(req, { tempo: semFim ? 3000 : PySim.TEMPO_MAX, digitar: dig, aoEspera: () => { pediu = true; } });
     r.pediuTeclado = pediu;
-    if (r.interrompido) {
+    if (semFim) {
+      if (!r.interrompido) itens.push({ grav: "FALHA", linha: onde.linha, msg: onde.nome + ": tem data-sem-fim (laço infinito de propósito) mas terminou (código de saída " + r.exit + ")" });
+      else if (r.motivo !== "tempo") itens.push({ grav: "FALHA", linha: onde.linha, msg: onde.nome + ": tem data-sem-fim mas foi interrompido por outro motivo: " + r.motivo });
+      r.semFimOk = r.interrompido && r.motivo === "tempo";
+    } else if (r.interrompido) {
       itens.push({ grav: "FALHA", linha: onde.linha, msg: onde.nome + ": " + (r.motivo === "tempo" ? "não terminou em " + PySim.TEMPO_MAX / 1000 + " s (laço infinito? o editor para o programa)" : r.motivo === "limite" ? "escreveu mais de 2 milhões de caracteres (o editor para o programa)" : "o motor falhou: " + String(r.msg || "").split("\n")[0]) });
     } else if (r.ms > 3000) itens.push({ grav: "aviso", linha: onde.linha, msg: onde.nome + ": levou " + r.ms + " ms (o editor para em " + PySim.TEMPO_MAX / 1000 + " s; o navegador do leitor pode ser mais lento)" });
-    if (pediu && stdinAttr === undefined)
+    if (pediu && stdinAttr === undefined && !dig)
       itens.push({ grav: "aviso", linha: onde.linha, msg: onde.nome + ": lê o teclado (input) e a caixa não tem data-stdin: no editor o leitor digita; aqui o testador mandou fim de entrada" + (r.tipo === "EOFError" ? " (deu EOFError)" : "") });
     if (lab && !r.interrompido) {
       nComparados++;
-      const n = lab.rodar(req.arquivos, { args: req.args, stdin: req.stdin !== null ? req.stdin : "" });
+      const n = lab.rodar(req.arquivos, { args: req.args, stdin: req.stdin !== null ? req.stdin : dig ? dig.join("\n") + "\n" : "" });
       const d = lab.comparar(r, n, req.arquivos.map((a) => a.codigo).join("\n"));
       if (d) {
         difs.push({ onde: onde.nome + " (linha " + onde.linha + ")", codigo: req.arquivos[0].codigo.replace(/\n$/, ""), editor: { saida: r.saida, exit: r.exit }, lab: n, motivo: d.motivo, esperado: d.esperado });
@@ -273,6 +279,7 @@ async function testarPagina(arq, motor, lab) {
     if (goal === undefined || goal.trim() === "") {
       if (goal !== undefined) avi("data-goal vazio (tire o atributo para uma caixa livre)");
       const r = await rodar(cx, abas, { nome: nome + ", código inicial", linha: L });
+      if (r.semFimOk) { itens.push({ grav: "ok", linha: L, msg: nome + " (livre, data-sem-fim): não termina, como esperado (o editor para em " + PySim.TEMPO_MAX / 1000 + " s)" }); continue; }
       if (r.interrompido) continue;
       if (sols.length) {
         const rs = await rodar(cx, abasSol, { nome: nome + ", solução", linha: sols[0].linha });
