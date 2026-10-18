@@ -491,6 +491,18 @@ var NIVEIS = [
         ultimoCmd = false;
         return;
       }
+      // prompt com ambiente virtual ativo: "(.venv) ana@notebook:~/loja$ pip list" ou só "(.venv) $ pip list"
+      var mv = /^\(([^()\s]+)\) (?:([a-z_][a-z0-9_-]*)@([a-z0-9-]+):([^$\s]*))?\$(?: (.*)|())$/.exec(l);
+      if (mv) {
+        var cv = mv[5] || "", nv = "", iv = cv.indexOf("«");
+        if (iv !== -1) { nv = '<span class="t-a">← ' + esc(cv.slice(iv + 1).trim()) + "</span>"; cv = cv.slice(0, iv).replace(/\s+$/, ""); }
+        var dirv = mv[4] != null ? mv[4] : curto(cwd, homeUser);
+        html.push('<span class="t-p">(' + esc(mv[1]) + ') <span class="t-u">' + esc(mv[2] || user) + "@" + esc(mv[3] || host) + '</span>:<span class="t-d">' + esc(dirv) + "</span>$ </span>" + '<span class="t-c">' + esc(cv) + "</span>" + (nv ? "   " + nv : ""));
+        cmds.push(cv);
+        if (mv[4] == null) cwd = acompanharCd(cv, cwd, homeUser, sessao, saidaDepois(linhas, idx));
+        ultimoCmd = true;
+        return;
+      }
       var m = /^(\$|#>)(?: (.*)|())$/.exec(l);
       if (m && m[2] == null) m[2] = "";
       ultimoCmd = !!m;
