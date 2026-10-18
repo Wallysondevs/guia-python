@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Funções Embutidas — len, sum, min, max, round, sorted, any e all | Guia Python</title>
+<meta name="description" content="As funções embutidas do Python para quem está começando: len, sum, min e max (com key), abs, round (e o arredondamento do 2.5), sorted, any e all, com as notas da turma e os preços da feira, as saídas reais e os erros reais: len de um número, max de lista vazia, misturar texto e número e o perigo de dar a uma variável o nome sum.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Funções Embutidas</span></h1>
+
+<p class="intro">Desde a primeira aula você usa funções que não escreveu: <code>print()</code>, <code>input()</code>, <code>type()</code>. Elas já vêm <strong>embutidas</strong> no Python (em inglês, <em>built-in functions</em>): funcionam em qualquer programa, sem <code>import</code> nem <code>def</code>. Nesta aula você vai conhecer as que mais aparecem no dia a dia, para contar, somar, achar o menor e o maior, arredondar, ordenar e testar uma lista inteira de uma vez. Com elas, muitos laços que você escreveria viram uma linha só.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é uma função embutida e por que ela não precisa de <code>import</code>.</li>
+  <li><code>len()</code> para contar, <code>sum()</code> para somar e a média com as duas juntas.</li>
+  <li><code>min()</code> e <code>max()</code>, inclusive com a opção <code>key</code> ("o maior pelo tamanho", "o mais caro").</li>
+  <li><code>abs()</code> e <code>round()</code>, e a surpresa do <code>round(8.5)</code>.</li>
+  <li><code>sorted()</code> para ordenar sem mexer na lista original.</li>
+  <li><code>any()</code> e <code>all()</code>: "alguém?" e "todos?".</li>
+  <li>Os erros reais: <code>len(5)</code>, <code>max([])</code>, misturar texto com número e a variável chamada <code>sum</code>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a caixa de ferramentas que vem com a casa</h2>
+<p>Quando a Ana se mudou, o apartamento já tinha, na gaveta da cozinha, uma caixa com martelo, chave de fenda e trena. Ela não precisou comprar nem fabricar nada: era só abrir a gaveta e usar. As funções embutidas são essa caixa. Você não precisa escrever um laço para contar os itens de uma lista, nem para achar a maior nota da turma: o Python já traz uma ferramenta pronta, testada e rápida para isso.</p>
+
+<p>Você já conhece algumas delas, cada uma com aula própria:</p>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Função</th><th>O que faz</th><th>Aula</th></tr>
+<tr><td><code>print()</code></td><td>Mostra valores na tela</td><td><a href="print.html">print()</a></td></tr>
+<tr><td><code>input()</code></td><td>Lê o que a pessoa digita</td><td><a href="input.html">input()</a></td></tr>
+<tr><td><code>type()</code></td><td>Diz o tipo de um valor</td><td><a href="type.html">Descobrindo o Tipo</a></td></tr>
+<tr><td><code>int()</code>, <code>float()</code>, <code>str()</code></td><td>Convertem de um tipo para outro</td><td><a href="conversao.html">Conversão de Tipos</a></td></tr>
+<tr><td><code>range()</code></td><td>Gera uma sequência de números</td><td><a href="range.html">range()</a></td></tr>
+</table>
+</div>
+<p>Agora vêm as novas. Os exemplos usam o modo interativo (<code>&gt;&gt;&gt;</code>, aula <a href="repl.html">O Modo Interativo</a>), que mostra a resposta de cada linha na hora.</p>
+
+<hr>
+
+<h2>1. <code>len()</code>: quantos itens?</h2>
+<p><code>len</code> vem de <em>length</em>, "comprimento". Ela conta quantos itens há dentro de alguma coisa: letras num texto, itens numa lista, chaves num dicionário.</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; len("Ana")
+3
+&gt;&gt;&gt; len("pão de queijo")
+13
+&gt;&gt;&gt; len([7.5, 8.0, 6.5])
+3
+&gt;&gt;&gt; len({"arroz": 3, "feijão": 2})
+2
+&gt;&gt;&gt; len([])
+0
+</pre>
+
+<dl class="anatomy">
+  <dt>len("pão de queijo")</dt><dd>13: as 11 letras e os <strong>2 espaços</strong>. Num texto, tudo conta, inclusive espaço e pontuação. O <code>ã</code> conta como uma letra só.</dd>
+  <dt>len([7.5, 8.0, 6.5])</dt><dd>3: numa lista, conta os itens, não importa o tamanho de cada um.</dd>
+  <dt>len({"arroz": 3, "feijão": 2})</dt><dd>2: num dicionário, conta os pares chave-valor (aula <a href="dicionarios.html">Dicionários</a>).</dd>
+  <dt>len([])</dt><dd>0: uma lista vazia tem zero itens. Não é erro.</dd>
+</dl>
+
+<hr>
+
+<h2>2. <code>sum()</code>: a soma, e a média</h2>
+<p><code>sum</code> quer dizer "soma". Ela recebe uma lista de números e devolve o total. Junto com o <code>len()</code>, dá a média:</p>
+
+<pre class="term">&gt;&gt;&gt; notas = [7.5, 8.0, 6.5, 9.0]
+&gt;&gt;&gt; sum(notas)
+31.0
+&gt;&gt;&gt; sum(notas) / len(notas)
+7.75
+&gt;&gt;&gt; sum([])
+0
+</pre>
+
+<dl class="anatomy">
+  <dt>sum(notas)</dt><dd>7.5 + 8.0 + 6.5 + 9.0 = 31.0. Como as notas são <code>float</code> (números com casa decimal), a soma também é.</dd>
+  <dt>sum(notas) / len(notas)</dt><dd>A média: o total dividido pela quantidade. 31.0 / 4 = 7.75.</dd>
+  <dt>sum([])</dt><dd>A soma de nenhum número é 0.</dd>
+</dl>
+
+<p>Sem o <code>sum()</code>, você precisaria de um laço com um acumulador, como na aula <a href="for.html">for</a>:</p>
+<pre class="file" data-file="soma_com_laco.py">total = 0
+for nota in notas:
+    total = total + nota
+</pre>
+<p>O <code>sum(notas)</code> faz exatamente isso, numa linha.</p>
+
+<hr>
+
+<h2>3. <code>min()</code> e <code>max()</code>: o menor e o maior</h2>
+<p><code>min</code> é "mínimo" e <code>max</code> é "máximo". Elas aceitam uma lista <strong>ou</strong> vários valores separados por vírgula:</p>
+
+<pre class="term">&gt;&gt;&gt; min(notas)
+6.5
+&gt;&gt;&gt; max(notas)
+9.0
+&gt;&gt;&gt; max(3, 9, 4)
+9
+&gt;&gt;&gt; min("banana", "abacate", "caju")
+'abacate'
+</pre>
+
+<p>Com textos, "menor" quer dizer "vem primeiro na ordem alfabética": <code>'abacate'</code> vem antes de <code>'banana'</code> e de <code>'caju'</code>. (Cuidado: para o Python, as maiúsculas vêm antes das minúsculas, e as letras com acento vêm depois de todas; a aula <a href="listas-ordenar.html">Ordenando Listas</a> mostra os detalhes.)</p>
+
+<h3>A opção <code>key</code>: "o maior segundo qual critério?"</h3>
+<p>Às vezes você não quer o maior <strong>valor</strong>, e sim o maior segundo um <strong>critério</strong>: o nome mais comprido, o produto mais caro. Para isso existe a opção <code>key</code> ("chave"). Você passa uma <strong>função</strong>, e o <code>max()</code> compara o resultado dela em vez do item:</p>
+
+<pre class="term">&gt;&gt;&gt; nomes = ["Ana", "Bruno", "Clara", "Jo"]
+&gt;&gt;&gt; max(nomes, key=len)
+'Bruno'
+&gt;&gt;&gt; min(nomes, key=len)
+'Jo'
+</pre>
+
+<dl class="anatomy">
+  <dt>key=len</dt><dd>"Compare pelo <code>len</code> de cada nome." Repare: é <code>len</code> sem parênteses. Você não está chamando a função, está <strong>entregando</strong> a função para o <code>max()</code>, que vai chamá-la em cada item: <code>len("Ana")</code> = 3, <code>len("Bruno")</code> = 5, <code>len("Clara")</code> = 5, <code>len("Jo")</code> = 2.</dd>
+  <dt>'Bruno'</dt><dd>O maior tamanho é 5, e há dois nomes com 5 letras. No empate, o <code>max()</code> devolve o <strong>primeiro</strong> que encontrou.</dd>
+  <dt>'Jo'</dt><dd>O menor tamanho: 2 letras.</dd>
+</dl>
+
+<p>Com uma função <code>lambda</code> (aula <a href="lambda.html">lambda</a>), você escolhe qualquer critério. Aqui, cada produto é uma tupla <code>(nome, preço)</code>, e o critério é a posição 1, o preço:</p>
+
+<pre class="file" data-file="mais_caro.py">produtos = [("arroz", 25.9), ("café", 18.5), ("azeite", 39.9), ("sal", 3.2)]
+
+mais_caro = max(produtos, key=lambda produto: produto[1])
+mais_barato = min(produtos, key=lambda produto: produto[1])
+
+print("Mais caro:", mais_caro)
+print("Mais barato:", mais_barato)
+print("Do mais barato ao mais caro:")
+for nome, preco in sorted(produtos, key=lambda produto: produto[1]):
+    print(f"  {nome}: R$ {preco:.2f}")
+</pre>
+
+<pre class="term">$ python3 mais_caro.py
+Mais caro: ('azeite', 39.9)
+Mais barato: ('sal', 3.2)
+Do mais barato ao mais caro:
+  sal: R$ 3.20
+  café: R$ 18.50
+  arroz: R$ 25.90
+  azeite: R$ 39.90
+</pre>
+
+<p>O <code>max()</code> devolveu a tupla <strong>inteira</strong> do azeite, não só o preço: o <code>key</code> só muda o critério de comparação, e o resultado continua sendo um dos itens da lista. O <code>sorted()</code> do fim, com o mesmo <code>key</code>, é o assunto da seção 6.</p>
+
+<div class="trypy" data-goal="out:Média: 7.3;;src:\bsum\(;;src:\blen\(">
+<p class="try-task"><strong>Missão:</strong> calcule a média da turma com <code>sum()</code> e <code>len()</code> e arredonde para <strong>1 casa</strong> com <code>round(valor, 1)</code> (a seção 4 explica o <code>round</code>). A saída deve ser <code>Média: 7.3</code>.</p>
+<pre class="script" data-file="main.py">notas = [7.5, 8.0, 6.5, 9.0, 5.5]
+
+media = 0
+print("Média:", media)
+</pre>
+<pre class="solucao" data-file="main.py">notas = [7.5, 8.0, 6.5, 9.0, 5.5]
+
+media = round(sum(notas) / len(notas), 1)
+print("Média:", media)
+</pre>
+</div>
+
+<hr>
+
+<h2>4. <code>abs()</code> e <code>round()</code>: mexendo com números</h2>
+
+<h3><code>abs()</code>: o valor sem o sinal</h3>
+<p><code>abs</code> vem de "absoluto". Ela tira o sinal de menos: devolve a distância do número até o zero. Serve, por exemplo, para saber a <strong>diferença</strong> entre dois valores sem se importar com qual é o maior.</p>
+
+<pre class="term">&gt;&gt;&gt; abs(-5)
+5
+&gt;&gt;&gt; abs(-2.75)
+2.75
+&gt;&gt;&gt; abs(3)
+3
+</pre>
+
+<h3><code>round()</code>: arredondar</h3>
+<p><code>round</code> quer dizer "arredondar". Com um número só, arredonda para inteiro. Com um segundo número, diz quantas casas decimais manter:</p>
+
+<pre class="term">&gt;&gt;&gt; round(3.14159, 2)
+3.14
+&gt;&gt;&gt; round(7.456)
+7
+&gt;&gt;&gt; round(1234.5678, -2)
+1200.0
+</pre>
+
+<dl class="anatomy">
+  <dt>round(3.14159, 2)</dt><dd>Duas casas depois do ponto: 3.14.</dd>
+  <dt>round(7.456)</dt><dd>Sem o segundo número: o inteiro mais perto, 7 (e o resultado é um <code>int</code>).</dd>
+  <dt>round(1234.5678, -2)</dt><dd>Com casas <strong>negativas</strong>, arredonda para a esquerda do ponto: -2 é "para a centena mais próxima", 1200.0.</dd>
+</dl>
+
+<div class="warning">
+<strong>A surpresa do meio: <code>round(8.5)</code> dá 8</strong>
+<pre class="term">&gt;&gt;&gt; round(7.5)
+8
+&gt;&gt;&gt; round(8.5)
+8
+&gt;&gt;&gt; round(2.675, 2)
+2.67
+</pre>
+<p>Na escola, aprendemos que 8.5 arredonda para 9. O Python não faz assim. Quando o número está <strong>exatamente no meio</strong>, ele arredonda para o vizinho <strong>par</strong>: 7.5 vai para 8 (par) e 8.5 também vai para 8 (par). Esse jeito se chama "arredondamento do banqueiro": numa lista grande de valores, os arredondamentos para cima e para baixo se compensam, e a soma não fica "puxada" para cima.</p>
+<p>O <code>round(2.675, 2)</code> dar 2.67 é outra história: o número <code>2.675</code> não pode ser guardado exatamente no computador, e o que fica guardado é um pouquinho <strong>menor</strong> que 2.675. A aula <a href="numeros.html">Números</a> conta por que isso acontece com os <code>float</code>.</p>
+<p>Para <strong>mostrar</strong> um preço com duas casas, use a formatação da f-string, <code>f"{preco:.2f}"</code> (aula <a href="f-strings.html">f-strings</a>); o <code>round()</code> é para quando você precisa do número arredondado para fazer contas.</p>
+</div>
+
+<hr>
+
+<h2>5. <code>any()</code> e <code>all()</code>: "alguém?" e "todos?"</h2>
+<p>Duas perguntas aparecem o tempo todo: "<strong>algum</strong> aluno tirou menos de 7?" e "<strong>todos</strong> passaram?". As funções <code>any</code> ("algum") e <code>all</code> ("todos") respondem com <code>True</code> ou <code>False</code> (aula <a href="booleanos.html">Booleanos</a>):</p>
+
+<pre class="term">&gt;&gt;&gt; any([False, False, True])
+True
+&gt;&gt;&gt; all([True, True, False])
+False
+</pre>
+
+<dl class="anatomy">
+  <dt>any([…])</dt><dd><code>True</code> se <strong>pelo menos um</strong> item for verdadeiro. Basta um.</dd>
+  <dt>all([…])</dt><dd><code>True</code> só se <strong>todos</strong> os itens forem verdadeiros. Basta um falso para dar <code>False</code>.</dd>
+</dl>
+
+<p>Na prática, você monta a lista de <code>True</code>/<code>False</code> com uma list comprehension (aula <a href="list-comprehension.html">List Comprehension</a>), fazendo a mesma pergunta para cada item:</p>
+
+<pre class="term">&gt;&gt;&gt; notas
+[7.5, 8.0, 6.5, 9.0]
+&gt;&gt;&gt; any([nota &lt; 7 for nota in notas])
+True
+&gt;&gt;&gt; all([nota &gt;= 6 for nota in notas])
+True
+</pre>
+
+<p>A primeira pergunta é "alguma nota abaixo de 7?": sim, o 6.5. A segunda é "todas as notas são 6 ou mais?": sim. E com uma lista vazia?</p>
+
+<pre class="term">&gt;&gt;&gt; any([])
+False
+&gt;&gt;&gt; all([])
+True
+</pre>
+
+<p>Parece estranho, mas faz sentido: numa sala vazia, "algum aluno reprovou?" é falso (não há ninguém), e "todos passaram?" é verdadeiro, porque ninguém deixou de passar. Lembre disso se a sua lista puder chegar vazia.</p>
+
+<hr>
+
+<h2>6. <code>sorted()</code>: uma cópia em ordem</h2>
+<p><code>sorted</code> quer dizer "ordenado". Ela devolve uma <strong>lista nova</strong>, em ordem, e não mexe na original:</p>
+
+<pre class="term">&gt;&gt;&gt; sorted([30, 4, 12, 8])
+[4, 8, 12, 30]
+&gt;&gt;&gt; sorted([30, 4, 12, 8], reverse=True)
+[30, 12, 8, 4]
+&gt;&gt;&gt; sorted(nomes, key=len)
+['Jo', 'Ana', 'Bruno', 'Clara']
+&gt;&gt;&gt; sorted("Ana")
+['A', 'a', 'n']
+</pre>
+
+<dl class="anatomy">
+  <dt>reverse=True</dt><dd>"Ao contrário": do maior para o menor.</dd>
+  <dt>key=len</dt><dd>O mesmo <code>key</code> do <code>max()</code>: ordena pelo tamanho. Bruno e Clara empataram com 5 letras e ficaram na ordem em que já estavam.</dd>
+  <dt>sorted("Ana")</dt><dd>Funciona com qualquer coisa que tenha itens, até um texto, mas o resultado é sempre uma <strong>lista</strong>. O <code>'A'</code> maiúsculo veio antes das minúsculas.</dd>
+</dl>
+
+<p>A diferença entre <code>sorted(lista)</code> e o método <code>lista.sort()</code> (que muda a própria lista) é o assunto da aula <a href="listas-ordenar.html">Ordenando Listas</a>.</p>
+
+<hr>
+
+<h2>Tudo junto: o boletim da turma</h2>
+<pre class="file" data-file="boletim.py">notas = [7.5, 8.0, 6.5, 9.0, 5.5]
+
+print("Quantidade de notas:", len(notas))
+print("Soma:", sum(notas))
+print("Média:", round(sum(notas) / len(notas), 1))
+print("Menor nota:", min(notas))
+print("Maior nota:", max(notas))
+print("Em ordem:", sorted(notas))
+print("Alguém abaixo de 6?", any([nota &lt; 6 for nota in notas]))
+print("Todos acima de 5?", all([nota &gt; 5 for nota in notas]))
+</pre>
+
+<pre class="term">$ python3 boletim.py
+Quantidade de notas: 5
+Soma: 36.5
+Média: 7.3
+Menor nota: 5.5
+Maior nota: 9.0
+Em ordem: [5.5, 6.5, 7.5, 8.0, 9.0]
+Alguém abaixo de 6? True
+Todos acima de 5? True
+</pre>
+
+<p>Oito perguntas sobre a turma, nenhum laço escrito à mão.</p>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+<p>Achar a maior nota, de três jeitos:</p>
+
+<pre class="file" data-file="maior_laco.py">maior = notas[0]
+for nota in notas:
+    if nota &gt; maior:
+        maior = nota
+</pre>
+<pre class="file" data-file="maior_ordenando.py">maior = sorted(notas)[-1]
+</pre>
+<pre class="file" data-file="maior_max.py">maior = max(notas)
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>max(notas)</code></td><td>Sempre que você quer só o maior. Curto, claro e rápido</td></tr>
+<tr><td><code>sorted(notas)[-1]</code></td><td>Evite só para achar o maior: ordena a lista inteira à toa. Faz sentido quando você também precisa da lista ordenada</td></tr>
+<tr><td>Laço <code>for</code> com <code>if</code></td><td>Para aprender como funciona por dentro, ou quando a regra é complicada demais para um <code>key</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Uma variável chamada <code>sum</code></strong>
+<p>A Ana somou as notas com um laço e, sem pensar, chamou o total de <code>sum</code>. Depois, quis usar a função <code>sum()</code>:</p>
+<pre class="file" data-file="sombra.py">notas = [7.5, 8.0, 6.5]
+sum = 0
+for nota in notas:
+    sum = sum + nota
+print("Total:", sum)
+
+media = sum(notas) / len(notas)
+print("Média:", media)
+</pre>
+<pre class="term">$ python3 sombra.py
+Total: 22.0
+Traceback (most recent call last):
+  File "/home/ana/sombra.py", line 7, in &lt;module&gt;
+    media = sum(notas) / len(notas)
+            ~~~^^^^^^^
+TypeError: 'float' object is not callable
+</pre>
+<dl class="anatomy">
+  <dt>Total: 22.0</dt><dd>A primeira parte funcionou: o programa só quebra na linha 7.</dd>
+  <dt>File "/home/ana/sombra.py", line 7, in &lt;module&gt;</dt><dd>O erro está na linha 7, no corpo do programa.</dd>
+  <dt>~~~^^^^^^^</dt><dd>As marcas apontam para <code>sum(notas)</code>, a chamada que falhou.</dd>
+  <dt>TypeError: 'float' object is not callable</dt><dd>"Um objeto <code>float</code> não pode ser chamado." Na linha 2, <code>sum = 0</code> fez o nome <code>sum</code> passar a apontar para um número. A função embutida continua existindo, mas ficou <strong>escondida</strong> atrás da variável. Na linha 7, <code>sum</code> vale 22.0, e <code>22.0(notas)</code> não faz sentido: um número não é uma função.</dd>
+</dl>
+<p><strong>Como consertar:</strong> nunca use o nome de uma função embutida para uma variável. Chame o total de <code>total</code>. O mesmo vale para <code>list</code>, <code>max</code>, <code>min</code>, <code>len</code>, <code>input</code>, <code>type</code>, <code>str</code>… (No editor do guia, cada Rodar começa do zero, e o problema some quando você renomeia. No modo interativo <code>&gt;&gt;&gt;</code>, o nome fica estragado até você sair e entrar de novo, ou apagar a variável com <code>del sum</code>.)</p>
+</div>
+
+<div class="trypy" data-goal="out:Média: 7.33;;semerro">
+<p class="try-task"><strong>Missão:</strong> rode o programa da Ana e veja o <code>TypeError</code>. Depois conserte, trocando o nome da variável <code>sum</code> por <code>total</code> (nas três linhas em que ela aparece como variável).</p>
+<pre class="script" data-file="main.py">notas = [7.5, 8.0, 6.5]
+sum = 0
+for nota in notas:
+    sum = sum + nota
+print("Total:", sum)
+
+media = sum(notas) / len(notas)
+print("Média:", media)
+</pre>
+<pre class="solucao" data-file="main.py">notas = [7.5, 8.0, 6.5]
+total = 0
+for nota in notas:
+    total = total + nota
+print("Total:", total)
+
+media = sum(notas) / len(notas)
+print("Média:", media)
+</pre>
+</div>
+
+<div class="cenario">
+<strong><code>len()</code> de um número</strong>
+<pre class="term">&gt;&gt;&gt; len(5)
+Traceback (most recent call last):
+  File "&lt;python-input-0&gt;", line 1, in &lt;module&gt;
+    len(5)
+    ~~~^^^
+TypeError: object of type 'int' has no len()
+</pre>
+<p>"Um objeto do tipo <code>int</code> não tem <code>len()</code>." Um número não é uma coleção de itens; não há o que contar. (No modo interativo, o "arquivo" se chama <code>&lt;python-input-0&gt;</code>: é a primeira linha que você digitou.) Se você queria a quantidade de <strong>algarismos</strong>, converta para texto antes: <code>len(str(5))</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>min()</code> ou <code>max()</code> de uma lista vazia</strong>
+<pre class="term">&gt;&gt;&gt; max([])
+Traceback (most recent call last):
+  File "&lt;python-input-2&gt;", line 1, in &lt;module&gt;
+    max([])
+    ~~~^^^^
+ValueError: max() iterable argument is empty
+&gt;&gt;&gt; max([], default=0)
+0
+</pre>
+<p>"O argumento de <code>max()</code> está vazio." O <code>sum([])</code> e o <code>len([])</code> sabem responder (0), mas qual seria o maior item de uma lista sem itens? O Python prefere avisar a inventar uma resposta. (<em>Iterable</em>, "iterável", é qualquer coisa que dá para percorrer com <code>for</code>.) <strong>Como consertar:</strong> confira se a lista tem itens antes (<code>if notas:</code>), ou diga o que devolver nesse caso com a opção <code>default</code> ("padrão").</p>
+</div>
+
+<div class="cenario">
+<strong>Misturar textos e números</strong>
+<pre class="term">&gt;&gt;&gt; sum(["pão", "leite"])
+Traceback (most recent call last):
+  File "&lt;python-input-1&gt;", line 1, in &lt;module&gt;
+    sum(["pão", "leite"])
+    ~~~^^^^^^^^^^^^^^^^^^
+TypeError: unsupported operand type(s) for +: 'int' and 'str'
+&gt;&gt;&gt; max(3, "10")
+Traceback (most recent call last):
+  File "&lt;python-input-4&gt;", line 1, in &lt;module&gt;
+    max(3, "10")
+    ~~~^^^^^^^^^
+TypeError: '&gt;' not supported between instances of 'str' and 'int'
+</pre>
+<p>No primeiro, o <code>sum()</code> começa a conta do zero (um <code>int</code>) e tenta fazer <code>0 + "pão"</code>: "tipos não suportados para <code>+</code>: <code>'int'</code> e <code>'str'</code>". O <code>sum()</code> é só para números. No segundo, o <code>max()</code> precisa saber se <code>"10"</code> é maior que <code>3</code>, e o Python não compara texto com número: "<code>&gt;</code> não é suportado entre <code>'str'</code> e <code>'int'</code>". Isso acontece muito com o que vem do <code>input()</code>, que é sempre texto. <strong>Como consertar:</strong> converta antes, com <code>int()</code> ou <code>float()</code> (aula <a href="conversao.html">Conversão de Tipos</a>).</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Função</th><th>O que devolve</th><th>Exemplo</th><th>Resultado</th></tr>
+<tr><td><code>len(x)</code></td><td>Quantos itens <code>x</code> tem</td><td><code>len("Ana")</code></td><td><code>3</code></td></tr>
+<tr><td><code>sum(lista)</code></td><td>A soma dos números</td><td><code>sum([7.5, 8.0])</code></td><td><code>15.5</code></td></tr>
+<tr><td><code>min(…)</code> / <code>max(…)</code></td><td>O menor / o maior (de uma lista ou de vários valores)</td><td><code>max(3, 9, 4)</code></td><td><code>9</code></td></tr>
+<tr><td><code>max(…, key=f)</code></td><td>O maior segundo o critério <code>f</code></td><td><code>max(["Ana", "Jo"], key=len)</code></td><td><code>'Ana'</code></td></tr>
+<tr><td><code>max(…, default=v)</code></td><td>O maior, ou <code>v</code> se a lista estiver vazia</td><td><code>max([], default=0)</code></td><td><code>0</code></td></tr>
+<tr><td><code>abs(n)</code></td><td>O número sem o sinal</td><td><code>abs(-2.75)</code></td><td><code>2.75</code></td></tr>
+<tr><td><code>round(n)</code></td><td>O inteiro mais próximo (no meio, o par)</td><td><code>round(8.5)</code></td><td><code>8</code></td></tr>
+<tr><td><code>round(n, casas)</code></td><td>Arredondado com tantas casas decimais</td><td><code>round(3.14159, 2)</code></td><td><code>3.14</code></td></tr>
+<tr><td><code>sorted(x)</code></td><td>Uma lista nova, em ordem (aceita <code>reverse</code> e <code>key</code>)</td><td><code>sorted([30, 4, 12])</code></td><td><code>[4, 12, 30]</code></td></tr>
+<tr><td><code>any(lista)</code></td><td><code>True</code> se algum item for verdadeiro</td><td><code>any([False, True])</code></td><td><code>True</code></td></tr>
+<tr><td><code>all(lista)</code></td><td><code>True</code> se todos forem verdadeiros</td><td><code>all([True, False])</code></td><td><code>False</code></td></tr>
+</table>
+</div>
+<p>O Python tem muitas outras funções embutidas: <code>enumerate()</code> e <code>zip()</code> (aula <a href="enumerate-zip.html">enumerate() e zip()</a>), <code>map()</code> e <code>filter()</code> (aula <a href="map-filter.html">map() e filter()</a>) e dezenas de outras. A lista completa, para consulta, está em <a href="ref-funcoes-embutidas.html">Referência: Funções Embutidas</a>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>TypeError: 'float' object is not callable</code> (ou <code>'int'</code>, <code>'list'</code>…)</td><td>Uma variável com o nome de uma função embutida (<code>sum = 0</code>, <code>list = […]</code>)</td></tr>
+<tr><td><code>TypeError: object of type 'int' has no len()</code></td><td><code>len()</code> de um número</td></tr>
+<tr><td><code>ValueError: max() iterable argument is empty</code></td><td><code>max()</code>/<code>min()</code> de uma lista vazia: use <code>default=</code></td></tr>
+<tr><td><code>TypeError: unsupported operand type(s) for +: 'int' and 'str'</code> no <code>sum()</code></td><td>A lista tem textos</td></tr>
+<tr><td><code>TypeError: '&gt;' not supported between instances of 'str' and 'int'</code></td><td><code>max()</code>/<code>min()</code>/<code>sorted()</code> com texto e número misturados</td></tr>
+<tr><td><code>round(8.5)</code> deu 8</td><td>Não é erro: no meio, o Python arredonda para o par</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Quantas letras?</h3>
+<p>Quanto vale <code>len("feijão")</code>?</p>
+<div class="ex-code">len("feijão") == <input data-answer="6" aria-label="tamanho"></div>
+</div>
+
+<div class="exercise">
+<h3>2. A média</h3>
+<p>Complete para calcular a média da lista <code>precos</code>:</p>
+<div class="ex-code">media = <input data-answer="sum" aria-label="função 1">(precos) / <input data-answer="len" aria-label="função 2">(precos)</div>
+</div>
+
+<div class="exercise">
+<h3>3. O nome mais comprido</h3>
+<p>Complete para achar o nome com mais letras:</p>
+<div class="ex-code">max(nomes, <input data-answer="key=len|key = len" aria-label="opção">)</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Quanto vale <code>round(8.5)</code> no Python?</p>
+<label><input type="radio" name="q4"> <code>9</code></label>
+<label><input type="radio" name="q4"> <code>8</code></label>
+<label><input type="radio" name="q4"> <code>8.5</code></label>
+<label><input type="radio" name="q4"> Dá erro</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. A lista <code>notas</code> está vazia. Qual destas linhas dá <strong>erro</strong>?</p>
+<label><input type="radio" name="q5"> <code>len(notas)</code></label>
+<label><input type="radio" name="q5"> <code>sum(notas)</code></label>
+<label><input type="radio" name="q5"> <code>max(notas)</code></label>
+<label><input type="radio" name="q5"> <code>all(notas)</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. O que <code>any([nota &lt; 5 for nota in notas])</code> responde?</p>
+<label><input type="radio" name="q6"> Se pelo menos uma nota é menor que 5</label>
+<label><input type="radio" name="q6"> Se todas as notas são menores que 5</label>
+<label><input type="radio" name="q6"> Quantas notas são menores que 5</label>
+<label><input type="radio" name="q6"> A menor nota da lista</label>
+</div>
+
+<h3>Missão final: o item de nome mais comprido</h3>
+
+<div class="trypy" data-goal="out:Mais comprido: macarrão;;src:\bmax\(">
+<p class="try-task"><strong>Missão:</strong> a Ana vai escrever a lista de compras num papelzinho estreito e quer saber qual item tem o nome mais comprido. Use <code>max()</code> com <code>key</code> para mostrar <code>Mais comprido: macarrão</code>.</p>
+<pre class="script" data-file="main.py">itens = ["arroz", "sal", "macarrão", "feijão", "café"]
+
+mais_comprido = itens[0]
+print("Mais comprido:", mais_comprido)
+</pre>
+<pre class="solucao" data-file="main.py">itens = ["arroz", "sal", "macarrão", "feijão", "café"]
+
+mais_comprido = max(itens, key=len)
+print("Mais comprido:", mais_comprido)
+</pre>
+</div>
+
+<p>Agora troque o <code>max</code> por <code>min</code>: qual item aparece? E se você tirar o <code>key=len</code> e deixar só <code>max(itens)</code>? Repare que aí a resposta é o último item em ordem alfabética.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Funções <strong>embutidas</strong> já vêm com o Python: nada de <code>import</code> nem <code>def</code>.</li>
+  <li><code>len()</code> conta itens; <code>sum()</code> soma números; <code>sum(x) / len(x)</code> é a média.</li>
+  <li><code>min()</code> e <code>max()</code> acham o menor e o maior; com <code>key=</code>, segundo um critério (<code>key=len</code>, sem parênteses); com <code>default=</code>, não quebram com lista vazia.</li>
+  <li><code>abs()</code> tira o sinal; <code>round()</code> arredonda, e no meio vai para o par (<code>round(8.5)</code> é 8).</li>
+  <li><code>sorted()</code> devolve uma lista nova em ordem, sem mexer na original.</li>
+  <li><code>any()</code> = "algum é verdadeiro?"; <code>all()</code> = "todos são verdadeiros?".</li>
+  <li>Nunca dê a uma variável o nome de uma função embutida (<code>sum</code>, <code>list</code>, <code>max</code>): a função fica escondida e aparece <code>… object is not callable</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
