@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Parâmetros e Argumentos — passando informações para a função | Guia Python</title>
+<meta name="description" content="Parâmetros e argumentos em Python para quem está começando: o espaço em branco da receita, a diferença entre parâmetro e argumento, um e vários parâmetros, por que a ordem importa, e os erros reais: missing 1 required positional argument, takes 1 positional argument but 2 were given, a ordem trocada.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Parâmetros e Argumentos</span></h1>
+
+<p class="intro">Na aula <a href="funcoes.html">Funções (def)</a>, a função <code>bom_dia()</code> fazia sempre a mesma coisa: "Bom dia, Ana!", e só. Mas a padaria tem muitos clientes, e escrever uma função para cada nome não faz sentido. O que você quer é <strong>uma</strong> função de saudação que receba o nome na hora da chamada: <code>saudar("Ana")</code>, <code>saudar("Bruno")</code>. Para isso, a função ganha <strong>parâmetros</strong>: espaços que são preenchidos a cada chamada.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A criar uma função que recebe informações, com um ou mais <strong>parâmetros</strong>.</li>
+  <li>A diferença entre <strong>parâmetro</strong> (o nome, no <code>def</code>) e <strong>argumento</strong> (o valor, na chamada).</li>
+  <li>O que o Python faz, por dentro, quando você chama <code>saudar("Ana")</code>.</li>
+  <li>Por que a <strong>ordem</strong> dos argumentos importa.</li>
+  <li>A passar como argumento um texto, um número, uma variável, uma conta ou o que o <code>input()</code> leu.</li>
+  <li>Os erros reais: argumento faltando, argumento sobrando, ordem trocada, nome sem aspas.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: o espaço em branco da ficha</h2>
+<p>Na padaria, a Ana tem um bloco de cartões de aniversário já impressos: "Parabéns, ________! Um abraço da Padaria Pão Quente." Ela não manda imprimir um cartão diferente para cada cliente; ela preenche o <strong>espaço em branco</strong> com o nome de quem vai receber.</p>
+
+<p>A função com parâmetro é esse cartão. O <strong>parâmetro</strong> é o espaço em branco, que tem um nome (<code>nome</code>). O <strong>argumento</strong> é o que você escreve no espaço quando usa o cartão (<code>"Ana"</code>, <code>"Bruno"</code>).</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th>Parâmetro</th><th>Argumento</th></tr>
+<tr><td>No cartão</td><td>O espaço em branco "________"</td><td>O nome escrito no espaço</td></tr>
+<tr><td>Onde aparece</td><td>No <code>def</code>, entre os parênteses</td><td>Na chamada, entre os parênteses</td></tr>
+<tr><td>Exemplo</td><td><code>def saudar(<strong>nome</strong>):</code></td><td><code>saudar(<strong>"Ana"</strong>)</code></td></tr>
+<tr><td>O que é</td><td>Um <strong>nome</strong> de variável</td><td>Um <strong>valor</strong></td></tr>
+</table>
+</div>
+
+<p>Muita gente (inclusive programadores experientes) usa as duas palavras como se fossem a mesma coisa, e o mundo não acaba. Mas as mensagens de erro do Python usam <em>argument</em> (argumento), e saber a diferença ajuda a lê-las.</p>
+
+<hr>
+
+<h2>1. Uma função com um parâmetro</h2>
+
+<pre class="file" data-file="saudar.py">def saudar(nome):
+    print(f"Bom dia, {nome}!")
+
+
+saudar("Ana")
+saudar("Bruno")
+saudar("Dona Rosa")
+</pre>
+
+<pre class="term">$ python3 saudar.py
+Bom dia, Ana!
+Bom dia, Bruno!
+Bom dia, Dona Rosa!
+</pre>
+
+<dl class="anatomy">
+  <dt>def saudar(nome):</dt><dd>A função <code>saudar</code> tem <strong>um parâmetro</strong>, chamado <code>nome</code>. É o espaço em branco do cartão.</dd>
+  <dt>print(f"Bom dia, {nome}!")</dt><dd>Dentro do corpo, <code>nome</code> é usado como uma variável qualquer. Aqui, dentro de uma f-string (aula <a href="f-strings.html">f-strings</a>).</dd>
+  <dt>saudar("Ana")</dt><dd>A chamada com o <strong>argumento</strong> <code>"Ana"</code>: o valor que vai preencher o espaço.</dd>
+</dl>
+
+<p>Uma função, três saídas diferentes. O corpo é sempre o mesmo; o que muda é o valor que chega em <code>nome</code>.</p>
+
+<h3>O que acontece por dentro</h3>
+<p>Quando o Python executa <code>saudar("Ana")</code>, ele faz, escondido, uma atribuição antes de começar o corpo:</p>
+
+<ol class="passo">
+  <li>Cria a variável <code>nome</code> e guarda nela o argumento: é como se executasse <code>nome = "Ana"</code>.</li>
+  <li>Executa o corpo: <code>print(f"Bom dia, {nome}!")</code> mostra "Bom dia, Ana!".</li>
+  <li>Termina a função. A variável <code>nome</code> deixa de existir (você vai ver isso em <a href="#errado">Quando dá errado</a>).</li>
+  <li>Na chamada seguinte, <code>saudar("Bruno")</code>, tudo recomeça: <code>nome = "Bruno"</code>, e assim por diante.</li>
+</ol>
+
+<hr>
+
+<h2>2. O argumento pode ser qualquer valor</h2>
+<p>Entre os parênteses da chamada vai qualquer coisa que produza um valor: um texto escrito ali mesmo, uma variável, uma conta.</p>
+
+<pre class="file" data-file="argumento_variavel.py">def saudar(nome):
+    print(f"Bom dia, {nome}!")
+
+
+cliente = "Carla"
+saudar(cliente)
+saudar("Seu " + "Joaquim")
+</pre>
+
+<pre class="term">$ python3 argumento_variavel.py
+Bom dia, Carla!
+Bom dia, Seu Joaquim!
+</pre>
+
+<p>Na primeira chamada, o argumento é a variável <code>cliente</code>: o Python pega o <strong>valor</strong> dela, <code>"Carla"</code>, e o entrega ao parâmetro <code>nome</code>. Os nomes não precisam combinar: lá fora a variável se chama <code>cliente</code>, lá dentro o parâmetro se chama <code>nome</code>. Na segunda, o Python primeiro faz a conta <code>"Seu " + "Joaquim"</code> e só depois entrega o resultado à função.</p>
+
+<p>Pode até ser o que o leitor digitou. Aqui, o valor que o <code>input()</code> devolve (aula <a href="input.html">input()</a>) vai direto para a função:</p>
+
+<pre class="file" data-file="com_input.py">def saudar(nome):
+    print(f"Bom dia, {nome}!")
+
+
+saudar(input("Qual é o seu nome? "))
+</pre>
+
+<pre class="term">$ python3 com_input.py
+Qual é o seu nome? Ana                             « a Ana digitou "Ana" e apertou Enter
+Bom dia, Ana!
+</pre>
+
+<p>E dentro de um laço, a mesma função é chamada para cada item de uma lista (aula <a href="for.html">for</a>):</p>
+
+<pre class="file" data-file="lista_nomes.py">def saudar(nome):
+    print(f"Bom dia, {nome}!")
+
+
+turma = ["Ana", "Bruno", "Carla"]
+for aluno in turma:
+    saudar(aluno)
+</pre>
+
+<pre class="term">$ python3 lista_nomes.py
+Bom dia, Ana!
+Bom dia, Bruno!
+Bom dia, Carla!
+</pre>
+
+<div class="trypy" data-goal="src:def parabens\(\s*\w+\s*\):;;out:Parabéns, Carla!;;out:Parabéns, Bruno!;;semerro">
+<p class="try-task"><strong>Missão:</strong> a função <code>parabens</code> só sabe dizer "Parabéns!". Dê a ela um parâmetro, para que mostre <code>Parabéns, Carla!</code> e <code>Parabéns, Bruno!</code>, e chame-a uma vez para cada um.</p>
+<pre class="script" data-file="main.py">def parabens():
+    print("Parabéns!")
+
+
+parabens()
+</pre>
+<pre class="solucao" data-file="main.py">def parabens(nome):
+    print(f"Parabéns, {nome}!")
+
+
+parabens("Carla")
+parabens("Bruno")
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Dois ou mais parâmetros</h2>
+<p>Uma função pode ter quantos parâmetros precisar. No <code>def</code>, eles são separados por vírgula; na chamada, os argumentos também:</p>
+
+<pre class="file" data-file="dois_parametros.py">def apresentar(nome, idade):
+    print(f"{nome} tem {idade} anos.")
+
+
+apresentar("Ana", 30)
+apresentar("Bruno", 8)
+</pre>
+
+<pre class="term">$ python3 dois_parametros.py
+Ana tem 30 anos.
+Bruno tem 8 anos.
+</pre>
+
+<p>Os argumentos são entregues <strong>pela posição</strong>: o primeiro argumento vai para o primeiro parâmetro, o segundo para o segundo. Em <code>apresentar("Ana", 30)</code>, o Python faz <code>nome = "Ana"</code> e <code>idade = 30</code>. Por isso o Python chama esses argumentos de <em>positional arguments</em>, "argumentos posicionais".</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Posição</th><th>Parâmetro (no <code>def</code>)</th><th>Argumento (na chamada)</th></tr>
+<tr><td>1ª</td><td><code>nome</code></td><td><code>"Ana"</code></td></tr>
+<tr><td>2ª</td><td><code>idade</code></td><td><code>30</code></td></tr>
+</table>
+</div>
+
+<h3>A ordem importa</h3>
+<p>O Python não sabe que <code>"Ana"</code> "parece" um nome e <code>30</code> "parece" uma idade. Ele só olha as posições. Troque a ordem e veja:</p>
+
+<pre class="file" data-file="ordem_trocada.py">def apresentar(nome, idade):
+    print(f"{nome} tem {idade} anos.")
+
+
+apresentar(30, "Ana")
+</pre>
+
+<pre class="term">$ python3 ordem_trocada.py
+30 tem Ana anos.
+</pre>
+
+<p>Nenhum erro: <code>nome</code> recebeu <code>30</code> e <code>idade</code> recebeu <code>"Ana"</code>, e a f-string mostrou o que recebeu. O resultado é absurdo, mas o Python não tem como saber. Existe um jeito de dizer explicitamente quem é quem, <code>apresentar(idade=30, nome="Ana")</code>, que você vai ver na aula <a href="argumentos-padrao.html">Valores Padrão e Argumentos Nomeados</a>.</p>
+
+<h3>Uma conta dentro da função</h3>
+<p>A nota da padaria precisa do produto, da quantidade e do preço de cada unidade. A função faz a conta e mostra a linha:</p>
+
+<pre class="file" data-file="nota.py">def linha_da_nota(produto, quantidade, preco):
+    total = quantidade * preco
+    print(f"{produto}: {quantidade} x R$ {preco:.2f} = R$ {total:.2f}")
+
+
+linha_da_nota("Pão francês", 10, 0.80)
+linha_da_nota("Leite", 2, 5.50)
+linha_da_nota("Bolo de milho", 1, 18)
+</pre>
+
+<pre class="term">$ python3 nota.py
+Pão francês: 10 x R$ 0.80 = R$ 8.00
+Leite: 2 x R$ 5.50 = R$ 11.00
+Bolo de milho: 1 x R$ 18.00 = R$ 18.00
+</pre>
+
+<dl class="anatomy">
+  <dt>produto, quantidade, preco</dt><dd>Três parâmetros, três espaços para preencher. Cada chamada precisa de três argumentos, nessa ordem.</dd>
+  <dt>total = quantidade * preco</dt><dd>Os parâmetros entram em contas como qualquer variável. A variável <code>total</code> foi criada dentro da função.</dd>
+  <dt>{preco:.2f}</dt><dd>Mostra o número com 2 casas decimais (aula <a href="f-strings.html">f-strings</a>). Repare que o Python usa <strong>ponto</strong> como separador decimal, e não vírgula.</dd>
+</dl>
+
+<hr>
+
+<h2>Formas diferentes de passar o argumento</h2>
+<p>Todas as chamadas abaixo entregam um valor ao parâmetro <code>nome</code> da mesma função <code>saudar</code>:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Chamada</th><th>O argumento é…</th><th>Quando usar</th></tr>
+<tr><td><code>saudar("Ana")</code></td><td>Um valor escrito ali mesmo</td><td>Quando o valor é fixo e conhecido</td></tr>
+<tr><td><code>saudar(cliente)</code></td><td>O valor de uma variável</td><td>O mais comum: o valor veio de outro lugar do programa</td></tr>
+<tr><td><code>saudar("Seu " + "Joaquim")</code></td><td>O resultado de uma conta</td><td>Quando a conta é curta; se for longa, guarde-a antes numa variável com bom nome</td></tr>
+<tr><td><code>saudar(input("Nome? "))</code></td><td>O valor que outra função devolveu</td><td>Quando o valor só é usado ali; senão, guarde numa variável</td></tr>
+<tr><td><code>for aluno in turma: saudar(aluno)</code></td><td>Um item da lista por vez</td><td>Para fazer a mesma coisa com cada item</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Faltou o argumento</strong>
+<pre class="file" data-file="faltou.py">def saudar(nome):
+    print(f"Bom dia, {nome}!")
+
+
+saudar()
+</pre>
+<pre class="term">$ python3 faltou.py
+Traceback (most recent call last):
+  File "/home/ana/faltou.py", line 5, in &lt;module&gt;
+    saudar()
+    ~~~~~~^^
+TypeError: saudar() missing 1 required positional argument: 'nome'
+</pre>
+<p>Linha por linha:</p>
+<dl class="anatomy">
+  <dt>File "/home/ana/faltou.py", line 5, in &lt;module&gt;</dt><dd>O erro foi na linha 5, no programa principal.</dd>
+  <dt>saudar()</dt><dd>A linha culpada. Os sinais embaixo mostram as partes: <code>~~~~~~</code> embaixo do nome da função, e <code>^^</code> embaixo dos parênteses, onde está o problema.</dd>
+  <dt>TypeError</dt><dd>"Erro de tipo": é o nome que o Python dá a vários erros de "usar uma coisa do jeito errado", inclusive chamar uma função com o número errado de argumentos.</dd>
+  <dt>saudar() missing 1 required positional argument: 'nome'</dt><dd>"Falta 1 argumento posicional obrigatório na <code>saudar()</code>: o <code>'nome'</code>". O cartão tem um espaço em branco, e você não escreveu nada nele. O Python até diz o nome do parâmetro que ficou vazio.</dd>
+</dl>
+<p><strong>Como consertar:</strong> passe um valor para cada parâmetro: <code>saudar("Ana")</code>.</p>
+<p>Quando faltam vários, a mensagem lista todos:</p>
+<pre class="file" data-file="faltaram_dois.py">def linha_da_nota(produto, quantidade, preco):
+    total = quantidade * preco
+    print(f"{produto}: {quantidade} x R$ {preco:.2f} = R$ {total:.2f}")
+
+
+linha_da_nota(10)
+</pre>
+<pre class="term">$ python3 faltaram_dois.py
+Traceback (most recent call last):
+  File "/home/ana/faltaram_dois.py", line 6, in &lt;module&gt;
+    linha_da_nota(10)
+    ~~~~~~~~~~~~~^^^^
+TypeError: linha_da_nota() missing 2 required positional arguments: 'quantidade' and 'preco'
+</pre>
+<p>Repare: a Ana quis passar a quantidade, <code>10</code>, mas ela foi parar no <strong>primeiro</strong> parâmetro, <code>produto</code>. Por isso o Python reclama da falta de <code>'quantidade'</code> e <code>'preco'</code>, e não de <code>'produto'</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Sobrou argumento</strong>
+<pre class="file" data-file="sobrou.py">def saudar(nome):
+    print(f"Bom dia, {nome}!")
+
+
+saudar("Ana", "Bruno")
+</pre>
+<pre class="term">$ python3 sobrou.py
+Traceback (most recent call last):
+  File "/home/ana/sobrou.py", line 5, in &lt;module&gt;
+    saudar("Ana", "Bruno")
+    ~~~~~~^^^^^^^^^^^^^^^^
+TypeError: saudar() takes 1 positional argument but 2 were given
+</pre>
+<p>"<code>saudar()</code> recebe 1 argumento posicional, mas foram dados 2". Um espaço em branco, dois nomes: não cabe. <strong>Como consertar:</strong> chame a função uma vez para cada nome (<code>saudar("Ana")</code> e <code>saudar("Bruno")</code>) ou, se a função precisa mesmo de dois valores, acrescente um parâmetro no <code>def</code>.</p>
+<p>O mesmo acontece com uma função <strong>sem</strong> parâmetros que recebe um argumento:</p>
+<pre class="file" data-file="sem_parametro.py">def bom_dia():
+    print("Bom dia!")
+
+
+bom_dia("Ana")
+</pre>
+<pre class="term">$ python3 sem_parametro.py
+Traceback (most recent call last):
+  File "/home/ana/sem_parametro.py", line 5, in &lt;module&gt;
+    bom_dia("Ana")
+    ~~~~~~~^^^^^^^
+TypeError: bom_dia() takes 0 positional arguments but 1 was given
+</pre>
+<p>"<code>bom_dia()</code> recebe 0 argumentos, mas foi dado 1". O <code>def bom_dia():</code> não tem espaço para o nome.</p>
+</div>
+
+<div class="cenario">
+<strong>Ordem trocada: às vezes calado, às vezes com erro lá dentro</strong>
+<pre class="file" data-file="trocado_conta.py">def total(quantidade, preco):
+    print(quantidade * preco)
+
+
+total(3, 2.5)
+total("Pão", 3)
+total(2.5, "Pão")
+</pre>
+<pre class="term">$ python3 trocado_conta.py
+7.5
+PãoPãoPão
+Traceback (most recent call last):
+  File "/home/ana/trocado_conta.py", line 7, in &lt;module&gt;
+    total(2.5, "Pão")
+    ~~~~~^^^^^^^^^^^^
+  File "/home/ana/trocado_conta.py", line 2, in total
+    print(quantidade * preco)
+          ~~~~~~~~~~~^~~~~~~
+TypeError: can't multiply sequence by non-int of type 'float'
+</pre>
+<ul>
+  <li><code>total(3, 2.5)</code> está certo: 3 unidades de R$ 2,50 dão 7.5.</li>
+  <li><code>total("Pão", 3)</code> passou o nome do produto no lugar da quantidade. Não deu erro: <code>"Pão" * 3</code> repete o texto 3 vezes (aula <a href="strings-juntar.html">Juntar e Repetir Textos</a>), e saiu <code>PãoPãoPão</code>. Um resultado errado e silencioso.</li>
+  <li><code>total(2.5, "Pão")</code> deu erro, e o traceback agora tem <strong>dois</strong> trechos <code>File</code>. Leia de cima para baixo, como um caminho: o programa principal (<code>&lt;module&gt;</code>), na linha 7, chamou <code>total</code>; dentro de <code>total</code> (<code>in total</code>), na linha 2, a conta falhou. O último trecho é onde o erro aconteceu de fato; o de cima mostra quem chamou.</li>
+  <li><code>TypeError: can't multiply sequence by non-int of type 'float'</code>: "não dá para multiplicar uma sequência (o texto) por um número que não é inteiro, do tipo <code>float</code>". Repetir "Pão" 2,5 vezes não faz sentido.</li>
+</ul>
+<p>O erro aparece dentro da função, mas a culpa é da chamada. <strong>Como consertar:</strong> confira a ordem dos parâmetros no <code>def</code> e passe os argumentos na mesma ordem.</p>
+</div>
+
+<div class="cenario">
+<strong>Esquecer as aspas no argumento</strong>
+<pre class="file" data-file="sem_aspas.py">def saudar(nome):
+    print(f"Bom dia, {nome}!")
+
+
+saudar(Ana)
+</pre>
+<pre class="term">$ python3 sem_aspas.py
+Traceback (most recent call last):
+  File "/home/ana/sem_aspas.py", line 5, in &lt;module&gt;
+    saudar(Ana)
+           ^^^
+NameError: name 'Ana' is not defined. Did you mean: 'any'?
+</pre>
+<p>Sem aspas, <code>Ana</code> parece o nome de uma variável, e não existe variável <code>Ana</code>. A dica <code>Did you mean: 'any'?</code> sugere uma função embutida de nome parecido (<code>any</code>), que não tem nada a ver: não siga a dica às cegas. <strong>Como consertar:</strong> texto vai entre aspas: <code>saudar("Ana")</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Usar o parâmetro fora da função</strong>
+<pre class="file" data-file="fora.py">def saudar(nome):
+    print(f"Bom dia, {nome}!")
+
+
+saudar("Ana")
+print(nome)
+</pre>
+<pre class="term">$ python3 fora.py
+Bom dia, Ana!
+Traceback (most recent call last):
+  File "/home/ana/fora.py", line 6, in &lt;module&gt;
+    print(nome)
+          ^^^^
+NameError: name 'nome' is not defined. Did you mean: 'None'?
+</pre>
+<p>A saudação funcionou, mas o <code>print(nome)</code> da linha 6 falhou. O parâmetro <code>nome</code> só existe <strong>enquanto a função está rodando</strong>; quando ela termina, ele some. Fora da função, ninguém conhece esse nome. Isso tem aula própria: <a href="escopo.html">Escopo (global e local)</a>. Para levar um valor de dentro da função para fora, existe o <code>return</code>, da próxima aula.</p>
+</div>
+
+<div class="trypy" data-goal="out:Ana tirou 8.;;out:Bruno tirou 7.5.;;out:Carla tirou 9.;;semerro">
+<p class="try-task"><strong>Missão:</strong> as notas são: Ana 8, Bruno 7.5, Carla 9. Cada chamada da função <code>boletim</code> tem um erro diferente. Rode, leia cada mensagem e conserte as três chamadas (o <code>def</code> está certo).</p>
+<pre class="script" data-file="main.py">def boletim(aluno, nota):
+    print(f"{aluno} tirou {nota}.")
+
+
+boletim("Ana")
+boletim(7.5, "Bruno")
+boletim("Carla", 9, 10)
+</pre>
+<pre class="solucao" data-file="main.py">def boletim(aluno, nota):
+    print(f"{aluno} tirou {nota}.")
+
+
+boletim("Ana", 8)
+boletim("Bruno", 7.5)
+boletim("Carla", 9)
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>def f(a):</code></td><td>Função com um parâmetro, <code>a</code></td></tr>
+<tr><td><code>def f(a, b, c):</code></td><td>Função com três parâmetros, separados por vírgula</td></tr>
+<tr><td><code>f(10)</code></td><td>Chama <code>f</code> com o argumento <code>10</code>: antes do corpo, o Python faz <code>a = 10</code></td></tr>
+<tr><td><code>f(x, y, z)</code></td><td>Argumentos posicionais: o 1º vai para o 1º parâmetro, o 2º para o 2º…</td></tr>
+<tr><td><code>f(variavel)</code></td><td>Entrega o <strong>valor</strong> da variável; o nome dela não precisa ser igual ao do parâmetro</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>missing 1 required positional argument: 'x'</code></td><td>Faltou argumento na chamada</td></tr>
+<tr><td><code>takes 1 positional argument but 2 were given</code></td><td>Sobrou argumento (ou faltou parâmetro no <code>def</code>)</td></tr>
+<tr><td><code>takes 0 positional arguments but 1 was given</code></td><td>A função não tem parâmetros, e a chamada passou um valor</td></tr>
+<tr><td>Resultado absurdo, sem erro</td><td>Argumentos na ordem errada</td></tr>
+<tr><td><code>NameError: name 'Ana' is not defined</code></td><td>Texto sem aspas no argumento</td></tr>
+<tr><td><code>NameError</code> com o nome do parâmetro, fora da função</td><td>O parâmetro só existe dentro da função</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O espaço em branco</h3>
+<p>Complete o parâmetro para que a função funcione:</p>
+<div class="ex-code">def dobro(<input data-answer="numero" aria-label="parâmetro">):<br>&nbsp;&nbsp;&nbsp;&nbsp;print(numero * 2)</div>
+</div>
+
+<div class="exercise">
+<h3>2. Quantos argumentos?</h3>
+<p>A função começa com <code>def pedido(cliente, produto, quantidade):</code>. Quantos argumentos a chamada precisa ter?</p>
+<div class="ex-code"><input data-answer="3|três|tres" aria-label="quantidade"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. Em <code>def saudar(nome):</code> e <code>saudar("Ana")</code>, quem é o parâmetro e quem é o argumento?</p>
+<label><input type="radio" name="q3"> <code>"Ana"</code> é o parâmetro e <code>nome</code> é o argumento</label>
+<label><input type="radio" name="q3"> <code>nome</code> é o parâmetro e <code>"Ana"</code> é o argumento</label>
+<label><input type="radio" name="q3"> Os dois são parâmetros</label>
+<label><input type="radio" name="q3"> <code>saudar</code> é o parâmetro</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. O que mostra <code>apresentar(8, "Bruno")</code>, se a função é <code>def apresentar(nome, idade): print(f"{nome} tem {idade} anos.")</code>?</p>
+<label><input type="radio" name="q4"> <code>Bruno tem 8 anos.</code>, porque o Python percebe a troca</label>
+<label><input type="radio" name="q4"> Um <code>TypeError</code></label>
+<label><input type="radio" name="q4"> <code>8 tem Bruno anos.</code></label>
+<label><input type="radio" name="q4"> Um <code>NameError</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Qual chamada causa <code>TypeError: saudar() missing 1 required positional argument: 'nome'</code>?</p>
+<label><input type="radio" name="q5"> <code>saudar()</code></label>
+<label><input type="radio" name="q5"> <code>saudar("Ana")</code></label>
+<label><input type="radio" name="q5"> <code>saudar("Ana", "Bruno")</code></label>
+<label><input type="radio" name="q5"> <code>saudar(Ana)</code></label>
+</div>
+
+<h3>Missão final: a etiqueta de preço</h3>
+
+<div class="trypy" data-goal="src:def etiqueta\(\s*\w+\s*,\s*\w+\s*\):;;out:Café - R$ 4.00;;out:Pão de queijo - R$ 3.50;;semerro">
+<p class="try-task"><strong>Missão:</strong> crie uma função <code>etiqueta</code> com <strong>dois</strong> parâmetros, o produto e o preço, que mostre a etiqueta no formato <code>Café - R$ 4.00</code> (preço com 2 casas). Chame-a para o Café (4) e para o Pão de queijo (3.5).</p>
+<pre class="script" data-file="main.py"># crie a função etiqueta aqui
+
+
+# e chame-a duas vezes aqui
+</pre>
+<pre class="solucao" data-file="main.py">def etiqueta(produto, preco):
+    print(f"{produto} - R$ {preco:.2f}")
+
+
+etiqueta("Café", 4)
+etiqueta("Pão de queijo", 3.5)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>O <strong>parâmetro</strong> é o nome entre os parênteses do <code>def</code>: o espaço em branco. O <strong>argumento</strong> é o valor entre os parênteses da chamada.</li>
+  <li>Na chamada, o Python faz <code>parametro = argumento</code> e só então executa o corpo.</li>
+  <li>O argumento pode ser um valor, uma variável, uma conta, o resultado de outra função.</li>
+  <li>Vários parâmetros se separam por vírgula, e os argumentos posicionais são entregues <strong>na ordem</strong>. Ordem trocada não dá erro: dá resultado errado (ou um erro lá dentro da função).</li>
+  <li>Argumento a menos: <code>missing … required positional argument</code>. A mais: <code>takes N positional argument but M were given</code>.</li>
+  <li>O parâmetro só existe dentro da função. Para trazer um resultado de dentro para fora, use o <a href="return.html">return</a>, a próxima aula.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
