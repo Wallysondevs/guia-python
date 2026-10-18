@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Tuplas — sequências que não mudam | Guia Python</title>
+<meta name="description" content="Tuplas em Python para quem está começando: como criar, acessar itens e fatias, a tupla de um item só com a vírgula (1,), por que a tupla não muda (o TypeError real), count e index, como converter de e para lista e quando usar tupla em vez de lista, com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Tuplas</span></h1>
+
+<p class="intro">Você já conhece as <a href="listas.html">listas</a>: uma fila de valores que pode crescer, encolher e mudar. Só que alguns grupos de valores <strong>nunca deveriam mudar</strong>: os sete dias da semana, os meses do ano, a data em que a Ana nasceu, a localização da padaria no mapa. Para esses casos o Python tem a <strong>tupla</strong> (em inglês, <em>tuple</em>): uma sequência de valores, na ordem, que depois de criada <strong>não muda mais</strong>.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A criar uma tupla com parênteses e vírgulas, e a reconhecer uma pelo <code>type()</code>.</li>
+  <li>A ler os itens com índices, fatias, <code>len()</code>, <code>in</code> e <code>for</code>, igual às listas.</li>
+  <li>O detalhe que pega todo mundo: a tupla de <strong>um item só</strong> precisa de vírgula, <code>(5,)</code>.</li>
+  <li>Por que a tupla não muda, e as mensagens reais do Python quando você tenta mudar.</li>
+  <li>Os dois métodos da tupla, <code>count()</code> e <code>index()</code>.</li>
+  <li>A converter tupla em lista e lista em tupla, e quando usar cada uma.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: uma lista escrita a caneta</h2>
+<p>Pense na lista de compras da Ana, escrita a <strong>lápis</strong>: ela apaga um item, acrescenta outro, troca a ordem. Isso é uma lista do Python. Agora pense no calendário pendurado na cozinha, <strong>impresso</strong>: os dias da semana estão lá, sempre os mesmos sete, sempre na mesma ordem. Ninguém apaga a "quarta-feira". Isso é uma tupla.</p>
+
+<p>As duas guardam vários valores em ordem e você lê os itens do mesmo jeito. A diferença é só uma: <strong>a lista pode ser alterada, a tupla não</strong>. Em Python se diz que a lista é <strong>mutável</strong> (pode mudar) e a tupla é <strong>imutável</strong> (não pode mudar).</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th>Lista</th><th>Tupla</th></tr>
+<tr><td>Como se escreve</td><td>Colchetes: <code>["seg", "ter"]</code></td><td>Parênteses: <code>("seg", "ter")</code></td></tr>
+<tr><td>Itens em ordem, com índice</td><td>Sim</td><td>Sim</td></tr>
+<tr><td>Pode trocar, acrescentar, remover itens</td><td>Sim</td><td><strong>Não</strong></td></tr>
+<tr><td>Comparação do dia a dia</td><td>Lista de compras a lápis</td><td>Calendário impresso</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. Criando uma tupla</h2>
+
+<pre class="file" data-file="dias.py">dias = ("seg", "ter", "qua", "qui", "sex", "sáb", "dom")
+print(dias)
+print(type(dias))
+print(len(dias))
+</pre>
+
+<dl class="anatomy">
+  <dt>dias</dt><dd>O nome da variável que vai guardar a tupla.</dd>
+  <dt>( … )</dt><dd>Os parênteses envolvem os itens. Na lista são colchetes; na tupla, parênteses.</dd>
+  <dt>"seg", "ter", …</dt><dd>Os itens, separados por <strong>vírgula</strong>. Podem ser de qualquer tipo: textos, números, até outras tuplas.</dd>
+  <dt>type(dias)</dt><dd>Mostra o tipo do valor (aula <a href="type.html">Descobrindo o Tipo</a>). Para uma tupla, o tipo se chama <code>tuple</code>.</dd>
+  <dt>len(dias)</dt><dd>Quantos itens a tupla tem.</dd>
+</dl>
+
+<pre class="term">$ python3 dias.py
+('seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom')
+&lt;class 'tuple'&gt;
+7
+</pre>
+
+<p>Repare que o <code>print</code> mostra a tupla com parênteses e com aspas <strong>simples</strong>, mesmo que você tenha escrito aspas duplas. É só o jeito de o Python mostrar textos dentro de uma tupla ou lista; o valor é o mesmo.</p>
+
+<hr>
+
+<h2>2. Lendo os itens: igual à lista</h2>
+<p>Tudo o que serve para <strong>ler</strong> uma lista serve para ler uma tupla: índice começando do zero, índice negativo contando do fim, fatias, <code>in</code> e o laço <code>for</code>.</p>
+
+<pre class="file" data-file="acessar.py">dias = ("seg", "ter", "qua", "qui", "sex", "sáb", "dom")
+print(dias[0])
+print(dias[-1])
+print(dias[1:5])
+print("sáb" in dias)
+for dia in dias:
+    print("Hoje é", dia)
+</pre>
+
+<pre class="term">$ python3 acessar.py
+seg
+dom
+('ter', 'qua', 'qui', 'sex')
+True
+Hoje é seg
+Hoje é ter
+Hoje é qua
+Hoje é qui
+Hoje é sex
+Hoje é sáb
+Hoje é dom
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Resultado aqui</th></tr>
+<tr><td><code>dias[0]</code></td><td>O primeiro item (o índice começa em 0)</td><td><code>'seg'</code></td></tr>
+<tr><td><code>dias[-1]</code></td><td>O último item</td><td><code>'dom'</code></td></tr>
+<tr><td><code>dias[1:5]</code></td><td>Uma fatia: do índice 1 até antes do 5. A fatia de uma tupla também é uma tupla</td><td><code>('ter', 'qua', 'qui', 'sex')</code></td></tr>
+<tr><td><code>"sáb" in dias</code></td><td>Pergunta se o item está na tupla</td><td><code>True</code></td></tr>
+<tr><td><code>for dia in dias:</code></td><td>Passa por cada item, em ordem</td><td>sete linhas</td></tr>
+</table>
+</div>
+
+<p>Se índices e fatias ainda são novidade, a aula <a href="listas-acessar.html">Acessando Itens</a> explica cada um com calma: lá é com listas, mas funciona igualzinho.</p>
+
+<hr>
+
+<h2>3. Tuplas guardam coisas que andam juntas</h2>
+<p>O uso mais comum da tupla não é guardar uma fila comprida de coisas iguais, e sim juntar <strong>poucos valores que formam uma coisa só</strong>: a latitude e a longitude de um lugar, o dia, o mês e o ano de uma data.</p>
+
+<pre class="file" data-file="coordenada.py">padaria = (-5.0892, -42.8019)
+print("Latitude:", padaria[0])
+print("Longitude:", padaria[1])
+aniversario = (12, 3, 1990)
+print(f"Nasci em {aniversario[0]}/{aniversario[1]}/{aniversario[2]}")
+</pre>
+
+<pre class="term">$ python3 coordenada.py
+Latitude: -5.0892
+Longitude: -42.8019
+Nasci em 12/3/1990
+</pre>
+
+<p>Uma coordenada sempre tem dois números; uma data, três. Não faz sentido "acrescentar um item" a uma data. A tupla deixa isso claro para quem lê o código: esses valores <strong>andam juntos e ficam como estão</strong>. Na próxima aula, <a href="desempacotamento.html">Desempacotamento</a>, você vai ver um jeito mais bonito de tirar cada valor da tupla em vez de usar <code>[0]</code>, <code>[1]</code>, <code>[2]</code>.</p>
+
+<hr>
+
+<h2>4. A tupla de um item só: a vírgula é que manda</h2>
+<p>Aqui está a pegadinha mais famosa das tuplas. Quem faz a tupla <strong>não são os parênteses, é a vírgula</strong>. Os parênteses também servem para outra coisa em Python: agrupar contas, como em <code>(2 + 3) * 4</code>. Então, quando há um item só, o Python precisa de uma pista para saber que você quer uma tupla.</p>
+
+<pre class="file" data-file="um_item.py">sem_virgula = ("arroz")
+com_virgula = ("arroz",)
+print(sem_virgula, type(sem_virgula))
+print(com_virgula, type(com_virgula))
+numero = (5)
+tupla = (5,)
+print(numero, type(numero))
+print(tupla, type(tupla))
+</pre>
+
+<pre class="term">$ python3 um_item.py
+arroz &lt;class 'str'&gt;
+('arroz',) &lt;class 'tuple'&gt;
+5 &lt;class 'int'&gt;
+(5,) &lt;class 'tuple'&gt;
+</pre>
+
+<dl class="anatomy">
+  <dt>("arroz")</dt><dd>Parênteses em volta de um texto, só isso. O Python trata como se fosse <code>"arroz"</code> sozinho: o tipo é <code>str</code> (texto).</dd>
+  <dt>("arroz",)</dt><dd>Com a vírgula depois do item, agora sim é uma tupla de um item. O próprio Python, ao mostrar, escreve a vírgula: <code>('arroz',)</code>.</dd>
+  <dt>(5)</dt><dd>É só o número 5 entre parênteses, como numa conta: tipo <code>int</code>.</dd>
+  <dt>(5,)</dt><dd>Uma tupla com um item, o número 5.</dd>
+</dl>
+
+<p>No modo interativo dá para ver isso rapidinho. Cada linha com <code>&gt;&gt;&gt;</code> é o que a Ana digitou; a linha de baixo é a resposta do Python:</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; (5)
+5
+&gt;&gt;&gt; (5,)
+(5,)
+&gt;&gt;&gt; type((5,))
+&lt;class 'tuple'&gt;
+&gt;&gt;&gt; 5,
+(5,)
+&gt;&gt;&gt; exit()
+</pre>
+
+<p>A última linha mostra que, com a vírgula, nem os parênteses são necessários: <code>5,</code> já é uma tupla.</p>
+
+<div class="trypy" data-goal="out:('manga',);;out:&lt;class 'tuple'&gt;">
+<p class="try-task"><strong>Missão:</strong> a Ana queria uma tupla com uma fruta só, mas o programa mostra <code>&lt;class 'str'&gt;</code>. Conserte a primeira linha para que <code>frutas</code> seja uma tupla.</p>
+<pre class="script" data-file="main.py">frutas = ("manga")
+print(frutas, type(frutas))
+</pre>
+<pre class="solucao" data-file="main.py">frutas = ("manga",)
+print(frutas, type(frutas))
+</pre>
+</div>
+
+<hr>
+
+<h2>5. Sem parênteses e vazia</h2>
+<p>Como é a vírgula que faz a tupla, você pode criar uma sem parênteses nenhum. E para uma tupla <strong>vazia</strong>, sem itens, há duas formas: <code>()</code> ou <code>tuple()</code>.</p>
+
+<pre class="file" data-file="sem_parenteses.py">ponto = 3, 4
+print(ponto)
+print(type(ponto))
+um = "café",
+print(um)
+vazia = ()
+tambem_vazia = tuple()
+print(vazia, len(vazia))
+print(tambem_vazia, len(tambem_vazia))
+</pre>
+
+<pre class="term">$ python3 sem_parenteses.py
+(3, 4)
+&lt;class 'tuple'&gt;
+('café',)
+() 0
+() 0
+</pre>
+
+<div class="tip">
+<strong>Boa prática: use os parênteses</strong>
+<p>Funcionar sem parênteses funciona, mas <code>um = "café",</code> é fácil de não ver: aquela vírgula no fim parece um erro de digitação. Escreva <code>um = ("café",)</code>: quem ler o seu código entende na hora que é uma tupla. Sem parênteses, a tupla aparece mais em <code>return a, b</code> e na troca <code>a, b = b, a</code>, que você vai ver em <a href="desempacotamento.html">Desempacotamento</a>.</p>
+</div>
+
+<hr>
+
+<h2>6. A tupla não muda</h2>
+<p>Agora a característica principal. A Ana resolve escrever o nome completo do primeiro dia e tenta trocar o item, como faria numa lista:</p>
+
+<pre class="file" data-file="mudar.py">dias = ("seg", "ter", "qua", "qui", "sex", "sáb", "dom")
+dias[0] = "segunda"
+print(dias)
+</pre>
+
+<pre class="term">$ python3 mudar.py
+Traceback (most recent call last):
+  File "/home/ana/mudar.py", line 2, in &lt;module&gt;
+    dias[0] = "segunda"
+    ~~~~^^^
+TypeError: 'tuple' object does not support item assignment
+</pre>
+
+<p>É a primeira vez que este erro aparece no guia; vamos ler linha por linha:</p>
+<dl class="anatomy">
+  <dt>Traceback (most recent call last):</dt><dd>"Rastro (a chamada mais recente por último)". O Python avisa que deu erro e vai mostrar onde.</dd>
+  <dt>File "/home/ana/mudar.py", line 2, in &lt;module&gt;</dt><dd>O erro está no arquivo <code>mudar.py</code>, na <strong>linha 2</strong>, no corpo principal do programa (<code>&lt;module&gt;</code>).</dd>
+  <dt>dias[0] = "segunda"</dt><dd>A linha que deu problema.</dd>
+  <dt>~~~~^^^</dt><dd>Os tils e acentos circunflexos apontam o pedaço exato: <code>dias[0]</code>, o lugar onde você tentou guardar um valor.</dd>
+  <dt>TypeError: 'tuple' object does not support item assignment</dt><dd>"Erro de tipo: um objeto do tipo tupla não aceita atribuição de item". Em português claro: <strong>você não pode trocar um item de uma tupla</strong>. O <code>print</code> da linha 3 nem chegou a rodar: o programa parou no erro.</dd>
+</dl>
+
+<p>Pela mesma razão, a tupla não tem <code>append()</code>, <code>remove()</code>, <code>sort()</code> nem nenhum outro método que mude a lista no lugar. Se você tentar:</p>
+
+<pre class="file" data-file="append.py">dias = ("seg", "ter", "qua")
+dias.append("qui")
+</pre>
+
+<pre class="term">$ python3 append.py
+Traceback (most recent call last):
+  File "/home/ana/append.py", line 2, in &lt;module&gt;
+    dias.append("qui")
+    ^^^^^^^^^^^
+AttributeError: 'tuple' object has no attribute 'append'
+</pre>
+
+<p><code>AttributeError</code> quer dizer "erro de atributo": a tupla <strong>não tem</strong> nada chamado <code>append</code>. Não é que o <code>append</code> falhou; ele nem existe para tuplas.</p>
+
+<h3>Então para que serve algo que não muda?</h3>
+<ul>
+  <li><strong>Segurança:</strong> se um valor não deveria mudar (os dias da semana, uma data), guardá-lo numa tupla impede que um pedaço do programa o altere por engano. Se alguém tentar, o Python reclama na hora, em vez de deixar o erro escondido.</li>
+  <li><strong>Clareza:</strong> quem lê <code>(12, 3, 1990)</code> entende que é um registro fixo, não uma fila que vai crescer.</li>
+  <li><strong>Chave de dicionário:</strong> só valores que não mudam podem ser chave de um dicionário. Uma tupla pode; uma lista não. Você vai ver isso em <a href="dicionarios.html">Dicionários</a>.</li>
+</ul>
+
+<div class="note">
+<strong>A variável pode mudar, a tupla não</strong>
+<p>A tupla não muda, mas a <strong>variável</strong> pode passar a guardar outra tupla: <code>dias = ("segunda", "terça")</code> funciona. Você não alterou a tupla antiga; jogou ela fora e colocou uma nova no lugar. A diferença entre mudar o valor e trocar o valor da variável é o assunto da aula <a href="mutabilidade.html">Mutável × Imutável</a>.</p>
+</div>
+
+<hr>
+
+<h2>7. Os dois métodos da tupla: <code>count()</code> e <code>index()</code></h2>
+<p>Como a tupla não muda, sobram só dois métodos, os dois de consulta. E as funções que só <strong>leem</strong> (<code>min</code>, <code>max</code>, <code>sum</code>, <code>sorted</code>) funcionam normalmente.</p>
+
+<pre class="file" data-file="metodos.py">notas = (7, 9, 7, 10, 7, 8)
+print(notas.count(7))
+print(notas.index(10))
+print(notas.index(7))
+print(min(notas), max(notas), sum(notas))
+print(sorted(notas))
+</pre>
+
+<pre class="term">$ python3 metodos.py
+3
+3
+0
+7 10 48
+[7, 7, 7, 8, 9, 10]
+</pre>
+
+<dl class="anatomy">
+  <dt>notas.count(7)</dt><dd>"Contar": quantas vezes o 7 aparece. Três vezes.</dd>
+  <dt>notas.index(10)</dt><dd>"Índice": em que posição está o 10. Na posição 3 (lembre: começa do 0).</dd>
+  <dt>notas.index(7)</dt><dd>Quando o item aparece mais de uma vez, <code>index</code> devolve a posição da <strong>primeira</strong> vez: 0.</dd>
+  <dt>min, max, sum</dt><dd>Menor, maior e soma. Funcionam com tuplas porque só leem os itens.</dd>
+  <dt>sorted(notas)</dt><dd>Devolve os itens em ordem, mas numa <strong>lista nova</strong> (repare nos colchetes). A tupla <code>notas</code> continua como estava.</dd>
+</dl>
+
+<hr>
+
+<h2>8. Convertendo: tupla ⇄ lista</h2>
+<p>E se você realmente precisar mudar? Converta a tupla em lista com <code>list()</code>, mude a lista, e converta de volta com <code>tuple()</code>:</p>
+
+<pre class="file" data-file="converter.py">cores = ("vermelho", "verde", "azul")
+lista = list(cores)
+lista.append("amarelo")
+cores = tuple(lista)
+print(cores)
+</pre>
+
+<pre class="term">$ python3 converter.py
+('vermelho', 'verde', 'azul', 'amarelo')
+</pre>
+
+<ol class="passo">
+  <li><code>list(cores)</code> cria uma <strong>lista nova</strong> com os mesmos itens da tupla.</li>
+  <li>A lista aceita <code>append</code>: agora ela tem quatro cores.</li>
+  <li><code>tuple(lista)</code> cria uma <strong>tupla nova</strong> com os itens da lista, e a variável <code>cores</code> passa a guardá-la.</li>
+</ol>
+
+<p>Outro jeito de "aumentar" uma tupla é juntar duas com <code>+</code>. O resultado é uma tupla nova; as originais ficam como estavam. O <code>*</code> repete:</p>
+
+<pre class="file" data-file="juntar.py">manha = ("café", "pão")
+tarde = ("bolo",)
+lanches = manha + tarde
+print(lanches)
+print(manha)
+print(("oi",) * 3)
+</pre>
+
+<pre class="term">$ python3 juntar.py
+('café', 'pão', 'bolo')
+('café', 'pão')
+('oi', 'oi', 'oi')
+</pre>
+
+<div class="trypy" data-goal="out:('segunda', 'ter', 'qua');;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa quer trocar <code>"seg"</code> por <code>"segunda"</code>, mas dá <code>TypeError</code>. Sem mudar a primeira linha, conserte: converta a tupla em lista, troque o item e converta de volta.</p>
+<pre class="script" data-file="main.py">dias = ("seg", "ter", "qua")
+dias[0] = "segunda"
+print(dias)
+</pre>
+<pre class="solucao" data-file="main.py">dias = ("seg", "ter", "qua")
+lista = list(dias)
+lista[0] = "segunda"
+dias = tuple(lista)
+print(dias)
+</pre>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de criar a mesma tupla</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Resultado</th><th>Quando usar</th></tr>
+<tr><td><code>("seg", "ter")</code></td><td><code>('seg', 'ter')</code></td><td>Quase sempre. É a forma mais clara</td></tr>
+<tr><td><code>"seg", "ter"</code></td><td><code>('seg', 'ter')</code></td><td>Em <code>return a, b</code> e em trocas <code>a, b = b, a</code>; no resto, prefira os parênteses</td></tr>
+<tr><td><code>tuple(["seg", "ter"])</code></td><td><code>('seg', 'ter')</code></td><td>Quando os itens já estão em outra coisa (uma lista, um texto) e você quer congelá-los</td></tr>
+<tr><td><code>("seg",)</code></td><td><code>('seg',)</code></td><td>Tupla de um item: a vírgula é obrigatória</td></tr>
+<tr><td><code>()</code> ou <code>tuple()</code></td><td><code>()</code></td><td>Tupla vazia; as duas formas valem o mesmo</td></tr>
+</table>
+</div>
+
+<h3>Lista ou tupla?</h3>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Situação</th><th>Use</th></tr>
+<tr><td>Os itens vão mudar: lista de compras, tarefas do dia, carrinho da loja</td><td>Lista</td></tr>
+<tr><td>Os itens são fixos: dias da semana, meses, as opções de um menu</td><td>Tupla</td></tr>
+<tr><td>Poucos valores que formam uma coisa só: coordenada, data, cor RGB</td><td>Tupla</td></tr>
+<tr><td>Precisa ser chave de dicionário</td><td>Tupla (lista não pode)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Trocar um item da tupla</strong>
+<p>Já visto acima: <code>dias[0] = "segunda"</code> dá <code>TypeError: 'tuple' object does not support item assignment</code>. <strong>Como consertar:</strong> se os itens precisam mudar, use uma lista desde o começo. Se a mudança é rara, converta com <code>list()</code>, mude e volte com <code>tuple()</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Esquecer a vírgula da tupla de um item</strong>
+<p>A Ana queria uma tupla com um item só e passar por ela num <code>for</code>:</p>
+<pre class="file" data-file="len_int.py">compras = ("arroz")
+print(len(compras))
+for item in compras:
+    print(item)
+</pre>
+<pre class="term">$ python3 len_int.py
+5
+a
+r
+r
+o
+z
+</pre>
+<p>Nenhum erro, mas o resultado está errado: o tamanho deu <strong>5</strong> e o <code>for</code> passou letra por letra. Sem a vírgula, <code>compras</code> é o <strong>texto</strong> <code>"arroz"</code>, e o texto tem 5 letras. Esse é o tipo de erro mais traiçoeiro: o programa roda e entrega uma coisa errada. <strong>Como consertar:</strong> <code>compras = ("arroz",)</code>. Na dúvida, um <code>print(type(compras))</code> tira a dúvida.</p>
+</div>
+
+<div class="cenario">
+<strong>Índice que não existe</strong>
+<pre class="file" data-file="fora.py">dias = ("seg", "ter", "qua", "qui", "sex", "sáb", "dom")
+print(dias[7])
+</pre>
+<pre class="term">$ python3 fora.py
+Traceback (most recent call last):
+  File "/home/ana/fora.py", line 2, in &lt;module&gt;
+    print(dias[7])
+          ~~~~^^^
+IndexError: tuple index out of range
+</pre>
+<p><code>IndexError: tuple index out of range</code>: "erro de índice: índice da tupla fora do intervalo". São 7 dias, então os índices vão de 0 a 6; o 7 não existe. <strong>Como consertar:</strong> o último item é <code>dias[6]</code>, ou, sem fazer conta, <code>dias[-1]</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Procurar com <code>index()</code> um item que não está lá</strong>
+<pre class="file" data-file="index_erro.py">notas = (7, 9, 7, 10, 7, 8)
+print(notas.index(5))
+</pre>
+<pre class="term">$ python3 index_erro.py
+Traceback (most recent call last):
+  File "/home/ana/index_erro.py", line 2, in &lt;module&gt;
+    print(notas.index(5))
+          ~~~~~~~~~~~^^^
+ValueError: tuple.index(x): x not in tuple
+</pre>
+<p><code>ValueError: tuple.index(x): x not in tuple</code>: "erro de valor: o x procurado não está na tupla". Ninguém tirou 5. <strong>Como consertar:</strong> pergunte antes com <code>in</code>: <code>if 5 in notas: print(notas.index(5))</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Juntar tupla com texto</strong>
+<pre class="file" data-file="juntar_erro.py">manha = ("café", "pão")
+lanches = manha + "bolo"
+</pre>
+<pre class="term">$ python3 juntar_erro.py
+Traceback (most recent call last):
+  File "/home/ana/juntar_erro.py", line 2, in &lt;module&gt;
+    lanches = manha + "bolo"
+              ~~~~~~^~~~~~~~
+TypeError: can only concatenate tuple (not "str") to tuple
+</pre>
+<p>"Só dá para concatenar (juntar) tupla com tupla, não com <code>str</code>". O <code>+</code> só junta duas tuplas. <strong>Como consertar:</strong> transforme o item numa tupla de um item: <code>manha + ("bolo",)</code>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>t = (1, 2, 3)</code></td><td>Cria uma tupla</td></tr>
+<tr><td><code>t = (1,)</code></td><td>Tupla de um item (a vírgula é obrigatória)</td></tr>
+<tr><td><code>t = ()</code> / <code>tuple()</code></td><td>Tupla vazia</td></tr>
+<tr><td><code>t[0]</code>, <code>t[-1]</code>, <code>t[1:3]</code></td><td>Item, último item, fatia (uma tupla nova)</td></tr>
+<tr><td><code>len(t)</code></td><td>Quantos itens</td></tr>
+<tr><td><code>x in t</code></td><td><code>True</code> se <code>x</code> está na tupla</td></tr>
+<tr><td><code>t.count(x)</code></td><td>Quantas vezes <code>x</code> aparece</td></tr>
+<tr><td><code>t.index(x)</code></td><td>Posição da primeira vez que <code>x</code> aparece (<code>ValueError</code> se não estiver)</td></tr>
+<tr><td><code>t1 + t2</code>, <code>t * 3</code></td><td>Nova tupla juntando / repetindo</td></tr>
+<tr><td><code>list(t)</code>, <code>tuple(lista)</code></td><td>Converte tupla em lista e lista em tupla</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>TypeError: 'tuple' object does not support item assignment</code></td><td>Tentou trocar um item: a tupla não muda</td></tr>
+<tr><td><code>AttributeError: 'tuple' object has no attribute 'append'</code></td><td>Tupla não tem <code>append</code>, <code>remove</code>, <code>sort</code>…</td></tr>
+<tr><td><code>IndexError: tuple index out of range</code></td><td>Índice maior que o último</td></tr>
+<tr><td><code>ValueError: tuple.index(x): x not in tuple</code></td><td><code>index()</code> de um item que não está na tupla</td></tr>
+<tr><td><code>TypeError: can only concatenate tuple (not "str") to tuple</code></td><td><code>+</code> entre tupla e outra coisa</td></tr>
+<tr><td>Sem erro, mas <code>len</code> conta letras</td><td>Faltou a vírgula: <code>("arroz")</code> é texto, não tupla</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A tupla de um item</h3>
+<p>Complete para que <code>t</code> seja uma tupla com um item, o número 10:</p>
+<div class="ex-code">t = (10<input data-answer="," aria-label="o que falta">)</div>
+</div>
+
+<div class="exercise">
+<h3>2. O último dia</h3>
+<p>Com <code>dias = ("seg", "ter", "qua", "qui", "sex", "sáb", "dom")</code>, complete o índice negativo que mostra <code>'dom'</code>:</p>
+<div class="ex-code">print(dias[<input data-answer="-1" aria-label="índice">])</div>
+</div>
+
+<div class="exercise">
+<h3>3. Contando</h3>
+<p>Complete o método que conta quantas vezes o 7 aparece em <code>notas</code>:</p>
+<div class="ex-code">print(notas.<input data-answer="count" aria-label="método">(7))</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. O que <code>print(type(("pão")))</code> mostra?</p>
+<label><input type="radio" name="q4"> <code>&lt;class 'tuple'&gt;</code></label>
+<label><input type="radio" name="q4"> <code>&lt;class 'str'&gt;</code></label>
+<label><input type="radio" name="q4"> <code>&lt;class 'list'&gt;</code></label>
+<label><input type="radio" name="q4"> Dá erro</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. Qual destas operações dá erro numa tupla <code>t = (1, 2, 3)</code>?</p>
+<label><input type="radio" name="q5"> <code>t[0]</code></label>
+<label><input type="radio" name="q5"> <code>len(t)</code></label>
+<label><input type="radio" name="q5"> <code>t[0] = 9</code></label>
+<label><input type="radio" name="q5"> <code>t + (4,)</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Para guardar a data de nascimento de uma pessoa (dia, mês e ano), o mais adequado é:</p>
+<label><input type="radio" name="q6"> Uma tupla, porque são valores fixos que andam juntos</label>
+<label><input type="radio" name="q6"> Uma lista, porque a data vai crescer</label>
+<label><input type="radio" name="q6"> Três tuplas de um item</label>
+<label><input type="radio" name="q6"> Tanto faz, porque a tupla também tem <code>append</code></label>
+</div>
+
+<h3>Missão final: o boletim do bimestre</h3>
+
+<div class="trypy" data-goal="out:Notas 10: 2;;out:Maior nota: 10;;out:Primeira nota: 8">
+<p class="try-task"><strong>Missão:</strong> as notas do bimestre da Ana estão numa tupla. Troque cada <code>?</code> pelo que falta, usando o que você aprendeu: quantas vezes ela tirou 10, a maior nota e a primeira nota.</p>
+<pre class="script" data-file="main.py">notas = (8, 10, 6, 10, 9)
+print("Notas 10:", "?")
+print("Maior nota:", "?")
+print("Primeira nota:", "?")
+</pre>
+<pre class="solucao" data-file="main.py">notas = (8, 10, 6, 10, 9)
+print("Notas 10:", notas.count(10))
+print("Maior nota:", max(notas))
+print("Primeira nota:", notas[0])
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>A tupla é uma sequência em ordem, escrita com parênteses: <code>("seg", "ter")</code>. O tipo dela é <code>tuple</code>.</li>
+  <li>Lê-se igual à lista: <code>t[0]</code>, <code>t[-1]</code>, fatias, <code>len</code>, <code>in</code>, <code>for</code>.</li>
+  <li>Quem faz a tupla é a <strong>vírgula</strong>: <code>(5)</code> é o número 5; <code>(5,)</code> é uma tupla.</li>
+  <li>A tupla é <strong>imutável</strong>: trocar um item dá <code>TypeError</code>, e não existem <code>append</code>, <code>remove</code> nem <code>sort</code>.</li>
+  <li>Os únicos métodos são <code>count()</code> e <code>index()</code>.</li>
+  <li>Para mudar, converta: <code>list(t)</code>, mude, <code>tuple(lista)</code>. Ou junte com <code>+</code>, que cria uma tupla nova.</li>
+  <li>Use tupla para valores fixos ou que formam uma coisa só (data, coordenada); use lista para o que vai mudar.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
