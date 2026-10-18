@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Escrevendo Arquivos — os modos w, a e x, write e print(file=) | Guia Python</title>
+<meta name="description" content="Escrever em arquivos para quem está começando: o modo w (que apaga o que havia), o modo a (que acrescenta) e o modo x (que só cria arquivo novo, com o FileExistsError real), write sem quebra de linha, writelines, print(file=...), encoding utf-8, e os erros reais: escrever um número, escrever num arquivo aberto para leitura, pasta que não existe, arquivo fechado.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Escrevendo Arquivos</span></h1>
+
+<p class="intro">Tudo o que um programa guarda em variáveis some quando ele termina. Para a lista de compras, as vendas do dia ou a tabela de preços da padaria sobreviverem até amanhã, o programa precisa <strong>escrever num arquivo</strong>. Você já sabe abrir um arquivo com <code>open</code> e <code>with</code> (aula <a href="arquivos.html">Abrindo Arquivos</a>) e ler o que tem nele (aula <a href="arquivos-ler.html">Lendo Arquivos</a>). Nesta aula, o caminho contrário: gravar. E o ponto mais importante é um aviso: um dos modos de escrever <strong>apaga o que havia</strong>, sem perguntar.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>Os três modos de escrita: <code>"w"</code> (apaga e escreve), <code>"a"</code> (acrescenta no fim) e <code>"x"</code> (só cria arquivo novo).</li>
+  <li>A escrever com <code>write</code>, e por que ele <strong>não</strong> põe a quebra de linha sozinho.</li>
+  <li>A escrever uma lista de uma vez com <code>writelines</code>.</li>
+  <li>A usar o <code>print</code> que você já conhece para escrever num arquivo: <code>print(..., file=arquivo)</code>.</li>
+  <li>Por que sempre <code>encoding="utf-8"</code>.</li>
+  <li>Os erros reais: <code>FileExistsError</code>, <code>TypeError</code>, <code>not writable</code>, a pasta que não existe e o arquivo já fechado.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: o caderno, a borracha e a página nova</h2>
+<p>A Ana anota a lista de compras num caderno. Ela tem três jeitos de escrever nele:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>No caderno</th><th>Modo</th><th>O que acontece com o arquivo</th></tr>
+<tr><td>Apagar a página inteira com a borracha e escrever de novo</td><td><code>"w"</code> (<em>write</em>, "escrever")</td><td>Se existe, o conteúdo é <strong>apagado</strong>. Se não existe, é criado</td></tr>
+<tr><td>Continuar escrevendo depois da última linha</td><td><code>"a"</code> (<em>append</em>, "acrescentar")</td><td>O que havia fica; o novo vai para o <strong>fim</strong>. Se não existe, é criado</td></tr>
+<tr><td>Só escrever numa página <strong>em branco</strong>; se já tiver algo, não mexe</td><td><code>"x"</code> (<em>exclusive</em>, "exclusivo")</td><td>Se não existe, é criado. Se <strong>já existe</strong>, dá erro e nada é tocado</td></tr>
+</table>
+</div>
+
+<p>O modo é o segundo argumento do <code>open</code>. Sem ele, o modo é <code>"r"</code> (<em>read</em>, "ler"), que só lê.</p>
+
+<hr>
+
+<h2>1. Modo <code>"w"</code> e <code>write</code></h2>
+<p>O primeiro programa grava a lista de compras da padaria:</p>
+
+<pre class="file" data-file="lista.py">with open("compras.txt", "w", encoding="utf-8") as arquivo:
+    arquivo.write("farinha")
+    arquivo.write("ovos")
+    arquivo.write("leite")
+</pre>
+
+<dl class="anatomy">
+  <dt>open("compras.txt", "w", encoding="utf-8")</dt><dd>Abre (ou cria) o arquivo <code>compras.txt</code> para <strong>escrever</strong>, em UTF-8 (a seção 5 explica o porquê).</dd>
+  <dt>as arquivo</dt><dd>O arquivo aberto fica na variável <code>arquivo</code>. O <code>with</code> fecha o arquivo sozinho no fim do bloco.</dd>
+  <dt>arquivo.write("farinha")</dt><dd>"Escreva": grava o texto no arquivo, exatamente como está.</dd>
+</dl>
+
+<p>O programa roda calado (não tem <code>print</code>). Para ver o que ficou no arquivo, o <code>cat</code> do terminal mostra o conteúdo (o <code>; echo</code> só pula uma linha no fim, já você vai ver por quê):</p>
+
+<pre class="term" data-cwd="~/padaria">$ python3 lista.py
+$ cat compras.txt; echo
+farinhaovosleite
+</pre>
+
+<p>Tudo grudado! O <code>write</code> grava <strong>só</strong> o que você mandou, sem espaço, sem pular linha. Diferente do <code>print</code>, que pula a linha sozinho no fim, o <code>write</code> não acrescenta nada. Quem quer uma linha por item precisa escrever a quebra de linha, o <code>\n</code> (aula <a href="strings-escape.html">Caracteres de Escape</a>):</p>
+
+<pre class="file" data-file="lista2.py">with open("compras.txt", "w", encoding="utf-8") as arquivo:
+    arquivo.write("farinha\n")
+    arquivo.write("ovos\n")
+    arquivo.write("leite\n")
+print("Lista gravada.")
+</pre>
+
+<pre class="term" data-cwd="~/padaria">$ python3 lista2.py
+Lista gravada.
+$ cat compras.txt
+farinha
+ovos
+leite
+</pre>
+
+<p>Agora sim: uma linha por item. O costume é terminar <strong>toda</strong> linha com <code>\n</code>, inclusive a última; os programas do terminal (e o próprio Python, ao ler) esperam isso. O <code>cat -A</code> mostra cada final de linha como um <code>$</code> (aqui, no <code>comquebra.txt</code> da seção 6, que tem as mesmas três linhas):</p>
+
+<pre class="term" data-cwd="~/padaria">$ cat -A comquebra.txt
+farinha$
+ovos$
+leite$
+</pre>
+
+<h3>O <code>write</code> devolve um número</h3>
+<p>No modo interativo dá para ver um detalhe: o <code>write</code> devolve quantos caracteres escreveu.</p>
+
+<pre class="term" data-cwd="~/padaria">$ python3 -q
+&gt;&gt;&gt; arquivo = open("teste.txt", "w", encoding="utf-8")
+&gt;&gt;&gt; arquivo.write("farinha\n")
+8
+&gt;&gt;&gt; arquivo.write("pão de queijo\n")
+14
+&gt;&gt;&gt; arquivo.closed
+False
+&gt;&gt;&gt; arquivo.close()
+&gt;&gt;&gt; arquivo.closed
+True
+</pre>
+
+<p><code>"farinha\n"</code> tem 8 caracteres (o <code>\n</code> conta como um). Num programa em arquivo, esse número aparece só se você der <code>print</code> nele, e quase ninguém usa. Aqui, sem <code>with</code>, o arquivo teve de ser fechado à mão com <code>close()</code> ("fechar"); <code>arquivo.closed</code> diz se ele já está fechado. Com <code>with</code>, você não precisa lembrar disso.</p>
+
+<div class="trypy" data-goal="out:Linhas no arquivo: 3;;arquivo:compras.txt~leite">
+<p class="try-task"><strong>Missão:</strong> o programa grava três itens, mas eles saem grudados numa linha só. Acrescente o <code>\n</code> no fim de cada <code>write</code> para o arquivo ficar com 3 linhas. (A segunda parte do programa lê o arquivo de volta e conta as linhas.)</p>
+<pre class="script" data-file="main.py">with open("compras.txt", "w", encoding="utf-8") as arquivo:
+    arquivo.write("farinha")
+    arquivo.write("ovos")
+    arquivo.write("leite")
+
+with open("compras.txt", encoding="utf-8") as arquivo:
+    linhas = arquivo.readlines()
+print("Linhas no arquivo:", len(linhas))
+print(linhas)
+</pre>
+<pre class="solucao" data-file="main.py">with open("compras.txt", "w", encoding="utf-8") as arquivo:
+    arquivo.write("farinha\n")
+    arquivo.write("ovos\n")
+    arquivo.write("leite\n")
+
+with open("compras.txt", encoding="utf-8") as arquivo:
+    linhas = arquivo.readlines()
+print("Linhas no arquivo:", len(linhas))
+print(linhas)
+</pre>
+</div>
+
+<hr>
+
+<h2>2. Cuidado: o <code>"w"</code> apaga o que havia</h2>
+<p>O <code>compras.txt</code> tem três itens. A Ana roda outro programa, que grava só o açúcar, também com <code>"w"</code>:</p>
+
+<pre class="file" data-file="apaga.py">with open("compras.txt", "w", encoding="utf-8") as arquivo:
+    arquivo.write("açúcar\n")
+</pre>
+
+<pre class="term" data-cwd="~/padaria">$ python3 apaga.py
+$ cat compras.txt
+açúcar
+</pre>
+
+<p>A farinha, os ovos e o leite <strong>sumiram</strong>. No instante em que o <code>open</code> com <code>"w"</code> abre um arquivo que existe, ele o esvazia, antes mesmo do primeiro <code>write</code>. Não há aviso, não há lixeira, não há "desfazer". Use <code>"w"</code> quando a ideia for mesmo <strong>substituir</strong> o arquivo inteiro (um relatório refeito do zero, uma tabela de preços nova). Para guardar o que havia, use <code>"a"</code>.</p>
+
+<hr>
+
+<h2>3. Modo <code>"a"</code>: acrescentar no fim</h2>
+
+<pre class="file" data-file="acrescenta.py">with open("compras.txt", "a", encoding="utf-8") as arquivo:
+    arquivo.write("fermento\n")
+</pre>
+
+<pre class="term" data-cwd="~/padaria">$ python3 acrescenta.py
+$ python3 acrescenta.py
+$ cat compras.txt
+açúcar
+fermento
+fermento
+</pre>
+
+<p>O açúcar ficou, e cada execução acrescentou um fermento no fim. O <code>"a"</code> nunca apaga: é o modo dos <strong>históricos</strong>, como o registro de vendas do dia ou um arquivo de log (aula <a href="logging.html">logging</a>). Repare no lado ruim: rodou duas vezes, gravou duas vezes. O <code>"a"</code> não confere se a linha já estava lá.</p>
+
+<div class="trypy" data-goal="arquivo:vendas.txt~bolo de cenoura,3;;arquivo:vendas.txt~bolo de milho,2;;semerro">
+<p class="try-task"><strong>Missão:</strong> o <code>vendas.txt</code> (veja a aba) já tem as vendas da manhã. O programa deveria <strong>acrescentar</strong> a venda nova, mas está apagando as antigas. Troque o modo para que, no fim, o arquivo tenha as três vendas.</p>
+<pre class="script" data-file="main.py">with open("vendas.txt", "w", encoding="utf-8") as arquivo:
+    arquivo.write("bolo de milho,2\n")
+
+with open("vendas.txt", encoding="utf-8") as arquivo:
+    print(arquivo.read())
+</pre>
+<pre class="script" data-file="vendas.txt">pão de queijo,12
+bolo de cenoura,3
+</pre>
+<pre class="solucao" data-file="main.py">with open("vendas.txt", "a", encoding="utf-8") as arquivo:
+    arquivo.write("bolo de milho,2\n")
+
+with open("vendas.txt", encoding="utf-8") as arquivo:
+    print(arquivo.read())
+</pre>
+</div>
+
+<hr>
+
+<h2>4. Modo <code>"x"</code>: só se ainda não existir</h2>
+<p>E quando o arquivo <strong>não pode</strong> ser apagado de jeito nenhum? O relatório de outubro, depois de pronto, não deve ser sobrescrito por engano. O modo <code>"x"</code> cria o arquivo, mas se recusa a abrir um que já existe:</p>
+
+<pre class="file" data-file="novo.py">with open("relatorio.txt", "x", encoding="utf-8") as arquivo:
+    arquivo.write("Relatório de outubro\n")
+print("Relatório criado.")
+</pre>
+
+<pre class="term" data-cwd="~/padaria">$ python3 novo.py
+Relatório criado.
+$ python3 novo.py
+Traceback (most recent call last):
+  File "/home/ana/padaria/novo.py", line 1, in &lt;module&gt;
+    with open("relatorio.txt", "x", encoding="utf-8") as arquivo:
+         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileExistsError: [Errno 17] File exists: 'relatorio.txt'
+</pre>
+
+<dl class="anatomy">
+  <dt>File "/home/ana/padaria/novo.py", line 1</dt><dd>O erro foi na linha 1, no <code>open</code> (as marcas <code>~~~~^^^^</code> apontam para ele).</dd>
+  <dt>FileExistsError</dt><dd>"O arquivo já existe".</dd>
+  <dt>[Errno 17] File exists: 'relatorio.txt'</dt><dd>O código 17 é o que o próprio sistema deu para "já existe", e o nome do arquivo vem no fim.</dd>
+</dl>
+
+<p>Na primeira vez, criou. Na segunda, o erro protegeu o relatório: o programa parou <strong>antes</strong> de escrever, e o arquivo ficou como estava. É um erro bom. Com <code>try</code> e <code>except FileExistsError</code> (aula <a href="try-except.html">try e except</a>), o programa pode avisar com calma em vez de mostrar o traceback; é a missão final desta aula.</p>
+
+<hr>
+
+<h2>5. Sempre <code>encoding="utf-8"</code></h2>
+<p>Um arquivo de texto guarda <strong>bytes</strong>, e a <strong>codificação</strong> (<em>encoding</em>) é a regra que transforma letras em bytes. Para <code>a</code> ou <code>b</code>, quase todas as regras concordam; para <code>ç</code>, <code>ã</code>, <code>é</code>, não. Veja o que acontece quando um arquivo é gravado numa codificação (a <code>cp1252</code>, comum em programas antigos do Windows) e lido em outra:</p>
+
+<pre class="file" data-file="latin.py">with open("windows.txt", "w", encoding="cp1252") as arquivo:
+    arquivo.write("açúcar e café\n")
+with open("windows.txt", encoding="utf-8") as arquivo:
+    print(arquivo.read())
+</pre>
+
+<pre class="term" data-cwd="~/padaria">$ python3 latin.py
+Traceback (most recent call last):
+  File "/home/ana/padaria/latin.py", line 4, in &lt;module&gt;
+    print(arquivo.read())
+          ~~~~~~~~~~~~^^
+  File "&lt;frozen codecs&gt;", line 325, in decode
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe7 in position 1: invalid continuation byte
+</pre>
+
+<p>"O decodificador UTF-8 não consegue ler o byte <code>0xe7</code> na posição 1". A posição 1 é o <code>ç</code> de "açúcar": na <code>cp1252</code>, ele virou um byte (<code>0xe7</code>) que não faz sentido em UTF-8. Escrever e ler com <strong>a mesma</strong> codificação resolve, e a UTF-8 é a que funciona em todo lugar: Linux, macOS, Windows, navegadores. Por isso o guia escreve <code>encoding="utf-8"</code> em <strong>todo</strong> <code>open</code>.</p>
+
+<div class="note">
+<strong>E se eu não escrever o <code>encoding</code>?</strong>
+<p>Sem ele, o Python usa a codificação padrão do sistema. No Ubuntu da Ana, é UTF-8, e tudo funciona; no Windows, até o Python 3.14, costuma ser outra, e o mesmo programa grava acentos diferentes. A partir do Python 3.15, o padrão passa a ser UTF-8 em todo lugar (PEP 686). Escrever <code>encoding="utf-8"</code> deixa o programa certo em qualquer versão e em qualquer computador.</p>
+</div>
+
+<hr>
+
+<h2>6. Uma lista de uma vez: <code>writelines</code></h2>
+<p><code>writelines</code> ("escrever linhas") grava todos os textos de uma lista, um depois do outro. O nome engana:</p>
+
+<pre class="file" data-file="linhas.py">itens = ["farinha", "ovos", "leite"]
+with open("semquebra.txt", "w", encoding="utf-8") as arquivo:
+    arquivo.writelines(itens)
+with open("comquebra.txt", "w", encoding="utf-8") as arquivo:
+    arquivo.writelines(item + "\n" for item in itens)
+</pre>
+
+<pre class="term" data-cwd="~/padaria">$ python3 linhas.py
+$ cat semquebra.txt; echo
+farinhaovosleite
+$ cat comquebra.txt
+farinha
+ovos
+leite
+</pre>
+
+<dl class="anatomy">
+  <dt>arquivo.writelines(itens)</dt><dd>Grava os três textos grudados: apesar do nome, o <code>writelines</code> <strong>também não</strong> põe <code>\n</code>. É o mesmo que um <code>write</code> para cada item.</dd>
+  <dt>item + "\n" for item in itens</dt><dd>Monta cada item já com a quebra de linha, como numa list comprehension sem os colchetes (aula <a href="list-comprehension.html">List Comprehension</a>).</dd>
+</dl>
+
+<p>Outra forma, bem comum, é juntar tudo num texto só antes: <code>arquivo.write("\n".join(itens) + "\n")</code> (o <code>join</code> está na aula <a href="strings-metodos.html">Métodos de Texto</a>).</p>
+
+<hr>
+
+<h2>7. <code>print(..., file=arquivo)</code>: o <code>print</code> que você já conhece</h2>
+<p>O <code>print</code> sabe escrever num arquivo: basta dizer <code>file=</code>. E ele faz tudo o que faz na tela: pula a linha no fim, separa os valores com espaço, converte números em texto.</p>
+
+<pre class="file" data-file="com_print.py">precos = {"bolo de cenoura": 35.0, "pão de queijo": 2.5, "café": 4.0}
+with open("precos.txt", "w", encoding="utf-8") as arquivo:
+    print("Tabela de preços", file=arquivo)
+    for produto, preco in precos.items():
+        print(f"{produto}: R$ {preco:.2f}", file=arquivo)
+print("Tabela gravada.")
+</pre>
+
+<pre class="term" data-cwd="~/padaria">$ python3 com_print.py
+Tabela gravada.
+$ cat precos.txt
+Tabela de preços
+bolo de cenoura: R$ 35.00
+pão de queijo: R$ 2.50
+café: R$ 4.00
+</pre>
+
+<p>Só o último <code>print</code>, sem <code>file=</code>, apareceu na tela; os outros foram para o arquivo, cada um na sua linha, sem nenhum <code>\n</code> escrito à mão. O <code>:.2f</code> deixa duas casas decimais (aula <a href="f-strings.html">f-strings</a>).</p>
+
+<div class="trypy" data-goal="arquivo:recibo.txt~Total: R$ 72.50;;src:file\s*=">
+<p class="try-task"><strong>Missão:</strong> o recibo está saindo na tela. Faça cada linha ir para o arquivo <code>recibo.txt</code>: acrescente <code>file=arquivo</code> nos três <code>print</code> de dentro do <code>with</code>. (O programa mostra o arquivo no fim.)</p>
+<pre class="script" data-file="main.py">pedido = {"bolo de cenoura": 2, "pão de queijo": 1}
+precos = {"bolo de cenoura": 35.0, "pão de queijo": 2.5}
+
+with open("recibo.txt", "w", encoding="utf-8") as arquivo:
+    total = 0
+    for produto, quantidade in pedido.items():
+        subtotal = quantidade * precos[produto]
+        total += subtotal
+        print(f"{quantidade} x {produto}: R$ {subtotal:.2f}")
+    print("-" * 20)
+    print(f"Total: R$ {total:.2f}")
+
+with open("recibo.txt", encoding="utf-8") as arquivo:
+    print("No recibo.txt:")
+    print(arquivo.read())
+</pre>
+<pre class="solucao" data-file="main.py">pedido = {"bolo de cenoura": 2, "pão de queijo": 1}
+precos = {"bolo de cenoura": 35.0, "pão de queijo": 2.5}
+
+with open("recibo.txt", "w", encoding="utf-8") as arquivo:
+    total = 0
+    for produto, quantidade in pedido.items():
+        subtotal = quantidade * precos[produto]
+        total += subtotal
+        print(f"{quantidade} x {produto}: R$ {subtotal:.2f}", file=arquivo)
+    print("-" * 20, file=arquivo)
+    print(f"Total: R$ {total:.2f}", file=arquivo)
+
+with open("recibo.txt", encoding="utf-8") as arquivo:
+    print("No recibo.txt:")
+    print(arquivo.read())
+</pre>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de escrever</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Jeito</th><th>Exemplo</th><th>Quando usar</th></tr>
+<tr><td><code>write</code></td><td><code>arquivo.write("ovos\n")</code></td><td>Você controla cada caractere. Lembre do <code>\n</code></td></tr>
+<tr><td><code>writelines</code></td><td><code>arquivo.writelines(linhas)</code></td><td>Os textos já estão numa lista, cada um já com o seu <code>\n</code></td></tr>
+<tr><td><code>write</code> + <code>join</code></td><td><code>arquivo.write("\n".join(itens) + "\n")</code></td><td>Uma lista de textos sem <code>\n</code>, numa linha de código</td></tr>
+<tr><td><code>print(file=)</code></td><td><code>print(produto, preco, file=arquivo)</code></td><td>Relatórios e recibos: pula linha, separa com espaço e aceita números</td></tr>
+<tr><td>Módulos próprios</td><td><code>csv</code>, <code>json</code></td><td>Planilhas e dados estruturados (aulas <a href="csv.html">CSV</a> e <a href="json.html">JSON</a>)</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Modo</th><th>Arquivo não existe</th><th>Arquivo existe</th><th>Use para</th></tr>
+<tr><td><code>"w"</code></td><td>Cria</td><td><strong>Apaga</strong> e escreve do zero</td><td>Refazer o arquivo inteiro</td></tr>
+<tr><td><code>"a"</code></td><td>Cria</td><td>Acrescenta no fim</td><td>Históricos, registros, logs</td></tr>
+<tr><td><code>"x"</code></td><td>Cria</td><td><code>FileExistsError</code>, não mexe</td><td>Nunca sobrescrever por engano</td></tr>
+<tr><td><code>"r"</code> (padrão)</td><td><code>FileNotFoundError</code></td><td>Só lê</td><td>Ler (aula <a href="arquivos-ler.html">Lendo Arquivos</a>)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Escrever um número: <code>TypeError</code></strong>
+<pre class="file" data-file="numero.py">total = 42
+with open("total.txt", "w", encoding="utf-8") as arquivo:
+    arquivo.write(total)
+</pre>
+<pre class="term" data-cwd="~/padaria">$ python3 numero.py
+Traceback (most recent call last):
+  File "/home/ana/padaria/numero.py", line 3, in &lt;module&gt;
+    arquivo.write(total)
+    ~~~~~~~~~~~~~^^^^^^^
+TypeError: write() argument must be str, not int
+</pre>
+<p>"O argumento do <code>write()</code> tem de ser <code>str</code> (texto), não <code>int</code> (número inteiro)". O <code>print</code> converte sozinho; o <code>write</code>, não. <strong>Como consertar:</strong> converta antes, com <code>arquivo.write(str(total) + "\n")</code> ou <code>arquivo.write(f"{total}\n")</code>, ou use <code>print(total, file=arquivo)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Escrever num arquivo aberto para ler: <code>not writable</code></strong>
+<pre class="file" data-file="leitura.py">with open("compras.txt", encoding="utf-8") as arquivo:
+    arquivo.write("manteiga\n")
+</pre>
+<pre class="term" data-cwd="~/padaria">$ python3 leitura.py
+Traceback (most recent call last):
+  File "/home/ana/padaria/leitura.py", line 2, in &lt;module&gt;
+    arquivo.write("manteiga\n")
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^
+io.UnsupportedOperation: not writable
+</pre>
+<p>"Operação não suportada: não dá para escrever". Faltou o modo no <code>open</code>, e sem ele o arquivo abre só para <strong>leitura</strong> (<code>"r"</code>). <code>io</code> é o módulo do Python que cuida de arquivos, por isso o nome completo do erro é <code>io.UnsupportedOperation</code>. <strong>Como consertar:</strong> <code>open("compras.txt", "a", encoding="utf-8")</code> (ou <code>"w"</code>, se a ideia for substituir).</p>
+</div>
+
+<div class="cenario">
+<strong>A pasta não existe: <code>FileNotFoundError</code> ao escrever</strong>
+<pre class="file" data-file="pasta.py">with open("relatorios/outubro.txt", "w", encoding="utf-8") as arquivo:
+    arquivo.write("Vendas de outubro\n")
+</pre>
+<pre class="term" data-cwd="~/padaria">$ python3 pasta.py
+Traceback (most recent call last):
+  File "/home/ana/padaria/pasta.py", line 1, in &lt;module&gt;
+    with open("relatorios/outubro.txt", "w", encoding="utf-8") as arquivo:
+         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'relatorios/outubro.txt'
+</pre>
+<p>Estranho: "arquivo não encontrado", ao <strong>criar</strong> um arquivo? O <code>"w"</code> cria o arquivo, mas não cria <strong>pastas</strong>, e a pasta <code>relatorios</code> não existe. <strong>Como consertar:</strong> crie a pasta antes, com <code>os.makedirs("relatorios", exist_ok=True)</code> (aula <a href="os-sys.html">os e sys</a>) ou com o <code>pathlib</code> (aula <a href="pathlib.html">Pastas e Caminhos</a>).</p>
+</div>
+
+<div class="cenario">
+<strong>Um modo que não existe</strong>
+<pre class="term" data-cwd="~/padaria">$ python3 modo.py
+Traceback (most recent call last):
+  File "/home/ana/padaria/modo.py", line 1, in &lt;module&gt;
+    with open("compras.txt", "escrever", encoding="utf-8") as arquivo:
+         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: invalid mode: 'escrever'
+</pre>
+<p>"Modo inválido". O modo é uma letra, em inglês: <code>"w"</code>, <code>"a"</code>, <code>"x"</code> ou <code>"r"</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Escrever depois de fechar</strong>
+<p>Continuando a sessão do <code>&gt;&gt;&gt;</code> da seção 1, depois do <code>close()</code>:</p>
+<pre class="term" data-cwd="~/padaria">&gt;&gt;&gt; arquivo.write("ovos\n")
+Traceback (most recent call last):
+  File "&lt;python-input-6&gt;", line 1, in &lt;module&gt;
+    arquivo.write("ovos\n")
+    ~~~~~~~~~~~~~^^^^^^^^^^
+ValueError: I/O operation on closed file.
+</pre>
+<p>"Operação de entrada/saída num arquivo fechado". Com <code>with</code>, acontece o mesmo se o <code>write</code> ficar <strong>fora</strong> do bloco (sem os 4 espaços): o arquivo já foi fechado quando o bloco terminou. <strong>Como consertar:</strong> deixe todos os <code>write</code> indentados dentro do <code>with</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O <code>"w"</code> que apagou o que não devia</strong>
+<p>Não tem traceback, e por isso é o mais perigoso: você viu na seção 2. Se o arquivo guarda algo que não pode se perder, abra com <code>"a"</code> (para acrescentar) ou com <code>"x"</code> (para só criar). E guarde cópias dos arquivos importantes.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Código</th><th>O que faz</th></tr>
+<tr><td><code>with open("x.txt", "w", encoding="utf-8") as arquivo:</code></td><td>Abre para escrever, apagando o que havia (cria se não existir)</td></tr>
+<tr><td><code>open("x.txt", "a", encoding="utf-8")</code></td><td>Abre para acrescentar no fim</td></tr>
+<tr><td><code>open("x.txt", "x", encoding="utf-8")</code></td><td>Cria; <code>FileExistsError</code> se já existir</td></tr>
+<tr><td><code>arquivo.write("texto\n")</code></td><td>Escreve o texto, sem acrescentar nada (devolve quantos caracteres)</td></tr>
+<tr><td><code>arquivo.writelines(lista)</code></td><td>Escreve cada texto da lista, grudados</td></tr>
+<tr><td><code>print(..., file=arquivo)</code></td><td>Escreve como o <code>print</code>: com espaço entre os valores e <code>\n</code> no fim</td></tr>
+<tr><td><code>arquivo.close()</code> / <code>arquivo.closed</code></td><td>Fecha o arquivo / diz se está fechado (com <code>with</code>, é automático)</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>FileExistsError: [Errno 17] File exists</code></td><td>Modo <code>"x"</code> e o arquivo já existe</td></tr>
+<tr><td><code>TypeError: write() argument must be str, not int</code></td><td><code>write</code> de um número: converta com <code>str()</code> ou f-string</td></tr>
+<tr><td><code>io.UnsupportedOperation: not writable</code></td><td>Faltou o modo <code>"w"</code>/<code>"a"</code>/<code>"x"</code> no <code>open</code></td></tr>
+<tr><td><code>FileNotFoundError</code> ao escrever</td><td>A pasta do caminho não existe</td></tr>
+<tr><td><code>ValueError: invalid mode</code></td><td>Modo escrito errado</td></tr>
+<tr><td><code>ValueError: I/O operation on closed file.</code></td><td><code>write</code> depois do <code>close()</code> ou fora do bloco <code>with</code></td></tr>
+<tr><td><code>UnicodeDecodeError: 'utf-8' codec can't decode…</code></td><td>Gravado numa codificação, lido em outra: use UTF-8 nos dois</td></tr>
+<tr><td>Tudo numa linha só, sem erro</td><td>Faltou o <code>\n</code> no <code>write</code>/<code>writelines</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Acrescentar sem apagar</h3>
+<p>Complete o modo que acrescenta no fim do arquivo:</p>
+<div class="ex-code">open("vendas.txt", "<input data-answer="a" aria-label="modo">", encoding="utf-8")</div>
+</div>
+
+<div class="exercise">
+<h3>2. A quebra de linha</h3>
+<p>Complete para gravar "ovos" numa linha própria:</p>
+<div class="ex-code">arquivo.write("ovos<input data-answer="\n" aria-label="quebra de linha">")</div>
+</div>
+
+<div class="exercise">
+<h3>3. O <code>print</code> no arquivo</h3>
+<p>Complete o argumento que manda o <code>print</code> para o arquivo:</p>
+<div class="ex-code">print("Total: R$ 72.50", <input data-answer="file" aria-label="argumento">=arquivo)</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. O <code>compras.txt</code> tem 10 itens. O que sobra depois de <code>open("compras.txt", "w", encoding="utf-8")</code> com um <code>write("sal\n")</code>?</p>
+<label><input type="radio" name="q4"> Os 10 itens e o sal no fim</label>
+<label><input type="radio" name="q4"> Só o sal</label>
+<label><input type="radio" name="q4"> Os 10 itens; o sal não entra</label>
+<label><input type="radio" name="q4"> Dá <code>FileExistsError</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. <code>arquivo.writelines(["farinha", "ovos"])</code> grava o quê?</p>
+<label><input type="radio" name="q5"> <code>farinha</code> e <code>ovos</code> em duas linhas</label>
+<label><input type="radio" name="q5"> <code>['farinha', 'ovos']</code></label>
+<label><input type="radio" name="q5"> <code>farinhaovos</code>, grudado</label>
+<label><input type="radio" name="q5"> Dá erro, porque é uma lista</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. Qual modo protege um arquivo que já existe de ser sobrescrito?</p>
+<label><input type="radio" name="q6"> <code>"w"</code></label>
+<label><input type="radio" name="q6"> <code>"r"</code></label>
+<label><input type="radio" name="q6"> <code>"a"</code></label>
+<label><input type="radio" name="q6"> <code>"x"</code></label>
+</div>
+
+<h3>Missão final: não apague o relatório antigo</h3>
+
+<div class="trypy" data-goal="out:O relatório já existe; nada foi apagado.;;arquivo:relatorio.txt~Relatório antigo;;src:&quot;x&quot;;;semerro">
+<p class="try-task"><strong>Missão:</strong> o <code>relatorio.txt</code> (veja a aba) já existe, e o programa está apagando o conteúdo dele. Abra com o modo <code>"x"</code> e, num <code>try</code>/<code>except FileExistsError:</code>, mostre <code>O relatório já existe; nada foi apagado.</code> No fim, o arquivo deve continuar com o texto antigo.</p>
+<pre class="script" data-file="main.py">with open("relatorio.txt", "w", encoding="utf-8") as arquivo:
+    arquivo.write("Relatório novo\n")
+print("Relatório gravado.")
+
+with open("relatorio.txt", encoding="utf-8") as arquivo:
+    print("Conteúdo:", arquivo.read())
+</pre>
+<pre class="script" data-file="relatorio.txt">Relatório antigo: vendas de setembro
+</pre>
+<pre class="solucao" data-file="main.py">try:
+    with open("relatorio.txt", "x", encoding="utf-8") as arquivo:
+        arquivo.write("Relatório novo\n")
+    print("Relatório gravado.")
+except FileExistsError:
+    print("O relatório já existe; nada foi apagado.")
+
+with open("relatorio.txt", encoding="utf-8") as arquivo:
+    print("Conteúdo:", arquivo.read())
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Para escrever, o <code>open</code> recebe um modo: <code>"w"</code> apaga e escreve, <code>"a"</code> acrescenta no fim, <code>"x"</code> só cria arquivo novo (senão, <code>FileExistsError</code>).</li>
+  <li>O <code>"w"</code> esvazia o arquivo no momento do <code>open</code>, sem aviso.</li>
+  <li><code>write</code> e <code>writelines</code> gravam o texto exatamente como está: a quebra de linha <code>\n</code> é por sua conta. E só aceitam texto (<code>str</code>).</li>
+  <li><code>print(..., file=arquivo)</code> escreve como na tela: separa com espaço, converte números e pula a linha.</li>
+  <li>Sempre <code>encoding="utf-8"</code>, e sempre <code>with</code>, que fecha o arquivo sozinho.</li>
+  <li>O <code>"w"</code> cria arquivos, mas não pastas: crie a pasta antes.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
