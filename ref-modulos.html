@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Módulos da Biblioteca Padrão — referência dos mais úteis | Guia Python</title>
+<meta name="description" content="Referência dos módulos mais úteis da biblioteca padrão do Python 3.14, agrupados por assunto (números, textos, datas, coleções, arquivos, formatos de dados, sistema, internet, testes e as novidades da 3.14), com uma linha de explicação, um exemplo com o resultado real, o link para a aula e o que não funciona no editor do guia.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Módulos da Biblioteca Padrão</span></h1>
+
+<p class="intro">O Python vem com "pilhas incluídas": junto com ele, chegam centenas de <strong>módulos</strong> prontos, a chamada <strong>biblioteca padrão</strong> (em inglês, <em>standard library</em>). Para usar um deles basta um <code>import</code>, sem instalar nada (aula <a href="modulos.html">Módulos e import</a>). Esta página reúne os mais úteis no dia a dia, agrupados por assunto, com uma linha sobre o que cada um faz, um exemplo com o resultado de verdade e o link para a aula, quando há uma. A lista completa está na <a href="https://docs.python.org/3/library/index.html">documentação oficial</a>.</p>
+
+<div class="note">
+<strong>Como ler as tabelas</strong>
+<ul>
+  <li>Cada <strong>exemplo</strong> supõe que o módulo já foi importado: o exemplo <code>math.sqrt(16)</code> vem depois de um <code>import math</code>.</li>
+  <li>O <strong>resultado</strong> é o que o Python 3.14.4 respondeu no computador da Ana, escrito como o <a href="repl.html">modo interativo</a> mostra (textos entre aspas).</li>
+  <li>Quando o resultado muda a cada execução (sorteios, hora, nomes de pasta temporária), a tabela avisa.</li>
+  <li>A marca <strong>(não no editor)</strong> quer dizer que aquilo não funciona no editor do guia, que roda o Python dentro do navegador. No terminal, funciona.</li>
+</ul>
+</div>
+
+<p>Pule direto para o grupo:</p>
+<ul>
+  <li><a href="#numeros">Números e contas</a>: <code>math</code>, <code>random</code>, <code>statistics</code>, <code>decimal</code>, <code>fractions</code></li>
+  <li><a href="#textos">Textos</a>: <code>string</code>, <code>re</code>, <code>textwrap</code>, <code>unicodedata</code>, <code>difflib</code></li>
+  <li><a href="#datas">Datas e tempo</a>: <code>datetime</code>, <code>time</code>, <code>calendar</code>, <code>zoneinfo</code></li>
+  <li><a href="#colecoes">Coleções e funções</a>: <code>collections</code>, <code>itertools</code>, <code>functools</code>, <code>operator</code>, <code>heapq</code>, <code>bisect</code>, <code>copy</code>, <code>dataclasses</code>, <code>enum</code>, <code>typing</code></li>
+  <li><a href="#arquivos">Arquivos e pastas</a>: <code>pathlib</code>, <code>os</code>, <code>shutil</code>, <code>glob</code>, <code>tempfile</code>, <code>zipfile</code>, <code>gzip</code></li>
+  <li><a href="#dados">Formatos de dados</a>: <code>json</code>, <code>csv</code>, <code>sqlite3</code>, <code>tomllib</code>, <code>base64</code></li>
+  <li><a href="#sistema">Sistema e programas</a>: <code>sys</code>, <code>os</code>, <code>subprocess</code>, <code>argparse</code>, <code>logging</code>, <code>platform</code>, <code>shlex</code>, <code>threading</code>, <code>asyncio</code></li>
+  <li><a href="#internet">Internet e segurança</a>: <code>urllib</code>, <code>html</code>, <code>http.server</code>, <code>hashlib</code>, <code>secrets</code>, <code>uuid</code></li>
+  <li><a href="#qualidade">Testes e depuração</a>: <code>unittest</code>, <code>doctest</code>, <code>pdb</code>, <code>timeit</code>, <code>keyword</code></li>
+  <li><a href="#novos">Novidades do Python 3.14</a>: <code>compression.zstd</code>, <code>annotationlib</code>, <code>string.templatelib</code></li>
+</ul>
+
+<hr>
+
+<h2 id="numeros">Números e contas</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Módulo</th><th>Para que serve</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>math</code></td><td>Funções matemáticas: raiz, arredondar para cima e para baixo, π, fatorial…</td><td><code>math.sqrt(16)</code></td><td><code>4.0</code></td><td><a href="math.html">O Módulo math</a></td></tr>
+<tr><td></td><td></td><td><code>math.ceil(4.1)</code>, <code>math.floor(4.9)</code></td><td><code>5</code>, <code>4</code></td><td></td></tr>
+<tr><td></td><td></td><td><code>math.pi</code></td><td><code>3.141592653589793</code></td><td></td></tr>
+<tr><td></td><td>Comparar <code>float</code> sem cair no problema do <code>0.1 + 0.2</code></td><td><code>math.isclose(0.1 + 0.2, 0.3)</code></td><td><code>True</code></td><td><a href="numeros.html">Números</a></td></tr>
+<tr><td><code>random</code></td><td>Sorteios: números, itens de uma lista, embaralhar</td><td><code>random.randint(1, 6)</code></td><td>um número de 1 a 6 (muda a cada vez)</td><td><a href="random.html">O Módulo random</a></td></tr>
+<tr><td></td><td></td><td><code>random.choice(["arroz", "feijão", "café"])</code></td><td>um dos três (muda a cada vez)</td><td></td></tr>
+<tr><td><code>statistics</code></td><td>Média, mediana, moda, desvio padrão</td><td><code>statistics.mean([7.5, 8.0, 6.5, 9.0])</code></td><td><code>7.75</code></td><td>—</td></tr>
+<tr><td></td><td></td><td><code>statistics.median([7.5, 8.0, 6.5, 9.0])</code></td><td><code>7.75</code></td><td></td></tr>
+<tr><td></td><td></td><td><code>statistics.mode(["P", "M", "M", "G"])</code></td><td><code>'M'</code></td><td></td></tr>
+<tr><td><code>decimal</code></td><td>Números decimais exatos, para dinheiro (<code>0.1 + 0.2</code> dá <code>0.30000000000000004</code> com <code>float</code>)</td><td><code>Decimal("0.1") + Decimal("0.2")</code></td><td><code>Decimal('0.3')</code></td><td>—</td></tr>
+<tr><td><code>fractions</code></td><td>Frações exatas</td><td><code>Fraction(1, 3) + Fraction(1, 6)</code></td><td><code>Fraction(1, 2)</code></td><td>—</td></tr>
+</table>
+</div>
+<p>(<code>Decimal</code> e <code>Fraction</code> vêm de <code>from decimal import Decimal</code> e <code>from fractions import Fraction</code>.)</p>
+
+<hr>
+
+<h2 id="textos">Textos</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Módulo</th><th>Para que serve</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>string</code></td><td>Constantes com letras, dígitos e pontuação; o <code>Template</code> com <code>$nome</code></td><td><code>string.ascii_uppercase</code></td><td><code>'ABCDEFGHIJKLMNOPQRSTUVWXYZ'</code></td><td><a href="ref-metodos-string.html">Métodos de String</a></td></tr>
+<tr><td></td><td></td><td><code>string.Template("Olá, $nome!").substitute(nome="Ana")</code></td><td><code>'Olá, Ana!'</code></td><td></td></tr>
+<tr><td><code>re</code></td><td>Expressões regulares: procurar padrões num texto</td><td><code>re.findall(r"\d+", "Rua 7, casa 42, CEP 64000")</code></td><td><code>['7', '42', '64000']</code></td><td><a href="regex.html">Expressões Regulares</a></td></tr>
+<tr><td><code>textwrap</code></td><td>Quebrar um texto longo em linhas, ou encurtá-lo</td><td><code>textwrap.wrap("A padaria do bairro abre cedo todos os dias", width=15)</code></td><td><code>['A padaria do', 'bairro abre', 'cedo todos os', 'dias']</code></td><td>—</td></tr>
+<tr><td></td><td></td><td><code>textwrap.shorten("A padaria do bairro abre cedo todos os dias", width=25)</code></td><td><code>'A padaria do bairro [...]'</code></td><td></td></tr>
+<tr><td><code>unicodedata</code></td><td>Informações sobre cada caractere; tirar acentos</td><td><code>unicodedata.normalize("NFD", "ação").encode("ascii", "ignore").decode()</code></td><td><code>'acao'</code></td><td><a href="strings-escape.html">Caracteres de Escape</a></td></tr>
+<tr><td><code>difflib</code></td><td>Comparar textos; achar a palavra "mais parecida" (para um "você quis dizer…?")</td><td><code>difflib.get_close_matches("feijao", ["feijão", "arroz", "macarrão"])</code></td><td><code>['feijão']</code></td><td>—</td></tr>
+</table>
+</div>
+<p>Para formatar números e datas dentro de textos, você não precisa de módulo: veja a <a href="ref-formatacao.html">Referência de Formatação</a>.</p>
+
+<hr>
+
+<h2 id="datas">Datas e tempo</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Módulo</th><th>Para que serve</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>datetime</code></td><td>Datas, horas, contas com datas</td><td><code>datetime.date(2026, 12, 25) - datetime.date(2026, 10, 18)</code></td><td><code>datetime.timedelta(days=68)</code> (68 dias até o Natal)</td><td><a href="datetime.html">Datas e Horas</a></td></tr>
+<tr><td></td><td></td><td><code>datetime.datetime(2026, 10, 18, 14, 30) + datetime.timedelta(hours=3)</code></td><td><code>datetime.datetime(2026, 10, 18, 17, 30)</code></td><td></td></tr>
+<tr><td></td><td>Dia da semana (0 = segunda, 6 = domingo)</td><td><code>datetime.date(2026, 10, 18).weekday()</code></td><td><code>6</code></td><td></td></tr>
+<tr><td></td><td>A data de hoje, a hora de agora</td><td><code>datetime.date.today()</code>, <code>datetime.datetime.now()</code></td><td>muda a cada dia (e a cada segundo)</td><td></td></tr>
+<tr><td><code>time</code></td><td>Esperar alguns segundos; medir tempo</td><td><code>time.sleep(2)</code></td><td>o programa para 2 segundos</td><td>—</td></tr>
+<tr><td></td><td></td><td><code>time.time()</code></td><td>os segundos desde 1/1/1970, um <code>float</code> (muda sempre)</td><td></td></tr>
+<tr><td><code>calendar</code></td><td>Calendários: ano bissexto, dias do mês</td><td><code>calendar.isleap(2028)</code></td><td><code>True</code></td><td>—</td></tr>
+<tr><td></td><td>Em que dia da semana o mês começa e quantos dias tem</td><td><code>calendar.monthrange(2026, 2)</code></td><td><code>(calendar.SUNDAY, 28)</code></td><td></td></tr>
+<tr><td><code>zoneinfo</code></td><td>Fusos horários</td><td><code>datetime.datetime(2026, 10, 18, 14, 30, tzinfo=zoneinfo.ZoneInfo("America/Sao_Paulo")).isoformat()</code></td><td><code>'2026-10-18T14:30:00-03:00'</code></td><td><a href="datetime.html">Datas e Horas</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="colecoes">Coleções e funções</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Módulo</th><th>Para que serve</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>collections</code></td><td>Coleções especiais. <code>Counter</code> conta quantas vezes cada item aparece</td><td><code>collections.Counter("banana")</code></td><td><code>Counter({'a': 3, 'n': 2, 'b': 1})</code></td><td><a href="collections.html">O Módulo collections</a></td></tr>
+<tr><td></td><td></td><td><code>collections.Counter(["P", "M", "M", "G"]).most_common(1)</code></td><td><code>[('M', 2)]</code></td><td></td></tr>
+<tr><td></td><td><code>defaultdict</code>: um dicionário que cria a chave sozinho; também <code>deque</code>, <code>namedtuple</code></td><td><code>collections.defaultdict(int)</code></td><td><code>defaultdict(&lt;class 'int'&gt;, {})</code></td><td></td></tr>
+<tr><td><code>itertools</code></td><td>Ferramentas para laços: combinações, permutações, juntar, acumular</td><td><code>list(itertools.combinations([1, 2, 3], 2))</code></td><td><code>[(1, 2), (1, 3), (2, 3)]</code></td><td><a href="itertools.html">O Módulo itertools</a></td></tr>
+<tr><td></td><td></td><td><code>list(itertools.permutations("ABC", 2))</code></td><td><code>[('A', 'B'), ('A', 'C'), ('B', 'A'), ('B', 'C'), ('C', 'A'), ('C', 'B')]</code></td><td></td></tr>
+<tr><td></td><td></td><td><code>list(itertools.accumulate([10, 20, 30]))</code></td><td><code>[10, 30, 60]</code></td><td></td></tr>
+<tr><td><code>functools</code></td><td>Ferramentas para funções: <code>reduce</code>, <code>lru_cache</code> (guardar resultados), <code>partial</code></td><td><code>functools.reduce(operator.mul, [1, 2, 3, 4])</code></td><td><code>24</code></td><td><a href="decoradores.html">Decoradores</a></td></tr>
+<tr><td><code>operator</code></td><td>Os operadores (<code>+</code>, <code>*</code>, <code>[]</code>) como funções, bons para <code>key=</code></td><td><code>sorted([("Ana", 9), ("Bia", 7)], key=operator.itemgetter(1))</code></td><td><code>[('Bia', 7), ('Ana', 9)]</code></td><td><a href="listas-ordenar.html">Ordenando Listas</a></td></tr>
+<tr><td><code>heapq</code></td><td>Os menores (ou maiores) itens, sem ordenar tudo</td><td><code>heapq.nsmallest(2, [30, 4, 12, 8])</code></td><td><code>[4, 8]</code></td><td>—</td></tr>
+<tr><td><code>bisect</code></td><td>Em que posição um valor entra numa lista já ordenada</td><td><code>bisect.bisect([0, 5, 7, 9], 8)</code></td><td><code>3</code></td><td>—</td></tr>
+<tr><td><code>copy</code></td><td>Cópia rasa (<code>copy</code>) e cópia profunda (<code>deepcopy</code>)</td><td><code>copy.deepcopy([[1, 2], [3]])</code></td><td><code>[[1, 2], [3]]</code> (uma lista nova, com listas novas dentro)</td><td><a href="copias.html">Cópia Rasa e Profunda</a></td></tr>
+<tr><td><code>dataclasses</code></td><td>Classes que só guardam dados, sem escrever o <code>__init__</code></td><td><code>@dataclasses.dataclass</code> numa classe <code>Produto</code></td><td><code>Produto(nome='café', preco=18.5)</code></td><td><a href="dataclasses.html">Dataclasses</a></td></tr>
+<tr><td><code>enum</code></td><td>Uma lista fixa de opções com nome (cores, estados)</td><td><code>class Cor(enum.Enum): VERDE = 1</code> e <code>Cor(1)</code></td><td><code>Cor.VERDE</code></td><td><a href="enum.html">Enum</a></td></tr>
+<tr><td><code>typing</code></td><td>Tipos extras para as dicas de tipo (<code>Any</code>, <code>Callable</code>, <code>Literal</code>…)</td><td><code>def f(x: typing.Any) -&gt; None:</code></td><td>(só uma dica; não muda o que o programa faz)</td><td><a href="type-hints.html">Dicas de Tipo</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="arquivos">Arquivos e pastas</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Módulo</th><th>Para que serve</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>pathlib</code></td><td>Caminhos de arquivos e pastas, do jeito moderno</td><td><code>pathlib.Path("/home/ana/fotos/praia.jpg").name</code></td><td><code>'praia.jpg'</code></td><td><a href="pathlib.html">Pastas e Caminhos</a></td></tr>
+<tr><td></td><td></td><td><code>pathlib.Path("/home/ana/fotos/praia.jpg").parent</code></td><td><code>PosixPath('/home/ana/fotos')</code></td><td></td></tr>
+<tr><td></td><td></td><td><code>pathlib.Path("notas.txt").suffix</code></td><td><code>'.txt'</code></td><td></td></tr>
+<tr><td></td><td>A pasta pessoal</td><td><code>pathlib.Path.home()</code></td><td><code>PosixPath('/home/ana')</code></td><td></td></tr>
+<tr><td><code>os</code> / <code>os.path</code></td><td>O jeito antigo de lidar com caminhos; a pasta atual</td><td><code>os.path.join("fotos", "praia.jpg")</code></td><td><code>'fotos/praia.jpg'</code></td><td><a href="os-sys.html">Os Módulos os e sys</a></td></tr>
+<tr><td></td><td></td><td><code>os.getcwd()</code></td><td><code>'/home/ana'</code></td><td></td></tr>
+<tr><td><code>shutil</code></td><td>Copiar, mover e apagar arquivos e pastas inteiras</td><td><code>shutil.copy("notas.txt", "copia.txt")</code></td><td>cria <code>copia.txt</code> igual ao original</td><td>—</td></tr>
+<tr><td><code>glob</code></td><td>Listar arquivos com curinga (<code>*.txt</code>)</td><td><code>sorted(glob.glob("*.toml"))</code></td><td><code>[]</code> (não havia nenhum <code>.toml</code> na pasta)</td><td><a href="pathlib.html">Pastas e Caminhos</a></td></tr>
+<tr><td><code>tempfile</code></td><td>Arquivos e pastas temporários, que somem no fim</td><td><code>with tempfile.TemporaryDirectory() as pasta:</code></td><td>uma pasta em <code>/tmp/</code> com nome sorteado (muda sempre)</td><td>—</td></tr>
+<tr><td><code>zipfile</code></td><td>Criar e ler arquivos <code>.zip</code></td><td><code>zipfile.ZipFile("pacote.zip").namelist()</code></td><td><code>['notas.txt']</code></td><td>—</td></tr>
+<tr><td><code>gzip</code></td><td>Compactar e descompactar no formato <code>.gz</code></td><td><code>gzip.decompress(gzip.compress(b"oi"))</code></td><td><code>b'oi'</code></td><td>—</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="dados">Formatos de dados</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Módulo</th><th>Para que serve</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>json</code></td><td>Ler e escrever JSON, o formato de dados da web</td><td><code>json.dumps({"nome": "Ana", "idade": 30})</code></td><td><code>'{"nome": "Ana", "idade": 30}'</code></td><td><a href="json.html">JSON</a></td></tr>
+<tr><td></td><td>Acentos legíveis no arquivo</td><td><code>json.dumps({"nome": "Conceição"}, ensure_ascii=False)</code></td><td><code>'{"nome": "Conceição"}'</code></td><td></td></tr>
+<tr><td></td><td>De texto para dicionário</td><td><code>json.loads('{"preco": 5.5}')["preco"]</code></td><td><code>5.5</code></td><td></td></tr>
+<tr><td><code>csv</code></td><td>Planilhas em texto, separadas por vírgula</td><td><code>list(csv.reader(["nome,nota", "Ana,9"]))</code></td><td><code>[['nome', 'nota'], ['Ana', '9']]</code></td><td><a href="csv.html">Arquivos CSV</a></td></tr>
+<tr><td><code>sqlite3</code></td><td>Um banco de dados SQL completo, num arquivo só</td><td><code>sqlite3.connect(":memory:").execute("SELECT 2 + 3").fetchone()</code></td><td><code>(5,)</code></td><td><a href="sqlite3.html">Python com Banco de Dados</a></td></tr>
+<tr><td></td><td>A versão do SQLite que veio junto</td><td><code>sqlite3.sqlite_version</code></td><td><code>'3.46.1'</code> no Ubuntu da Ana (no editor do guia, outra)</td><td></td></tr>
+<tr><td><code>tomllib</code></td><td>Ler arquivos de configuração <code>.toml</code></td><td><code>tomllib.loads('nome = "Ana"\nidade = 30')</code></td><td><code>{'nome': 'Ana', 'idade': 30}</code></td><td>—</td></tr>
+<tr><td><code>base64</code></td><td>Transformar bytes em texto "seguro" (para e-mail, web) e voltar</td><td><code>base64.b64encode(b"Ana")</code></td><td><code>b'QW5h'</code></td><td>—</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="sistema">Sistema e programas</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Módulo</th><th>Para que serve</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>sys</code></td><td>O próprio Python: versão, argumentos do programa (<code>sys.argv</code>), sair (<code>sys.exit</code>)</td><td><code>sys.version_info[:2]</code></td><td><code>(3, 14)</code></td><td><a href="os-sys.html">Os Módulos os e sys</a></td></tr>
+<tr><td><code>os</code></td><td>O sistema operacional: variáveis de ambiente, pastas, processos</td><td><code>os.environ["HOME"]</code></td><td><code>'/home/ana'</code></td><td><a href="os-sys.html">Os Módulos os e sys</a></td></tr>
+<tr><td><code>subprocess</code></td><td>Rodar outros programas do computador <strong>(não no editor)</strong></td><td><code>subprocess.run(["echo", "oi"], capture_output=True, text=True).stdout</code></td><td><code>'oi\n'</code></td><td><a href="subprocess.html">Rodando Outros Programas</a></td></tr>
+<tr><td><code>argparse</code></td><td>Opções de linha de comando (<code>--ajuda</code>, <code>-v</code>…)</td><td><code>p.add_argument("nome")</code> e <code>p.parse_args(["Ana"])</code></td><td><code>Namespace(nome='Ana')</code></td><td><a href="argparse.html">argparse</a></td></tr>
+<tr><td><code>logging</code></td><td>Mensagens de registro (avisos, erros), melhores que <code>print</code></td><td><code>logging.warning("estoque baixo: %s", "café")</code></td><td>mostra <code>WARNING:root:estoque baixo: café</code></td><td><a href="logging.html">logging</a></td></tr>
+<tr><td><code>platform</code></td><td>Informações sobre a máquina e o Python</td><td><code>platform.python_version()</code></td><td><code>'3.14.4'</code></td><td>—</td></tr>
+<tr><td><code>shlex</code></td><td>Dividir uma linha de comando como o terminal divide</td><td><code>shlex.split('cp "minhas fotos" backup')</code></td><td><code>['cp', 'minhas fotos', 'backup']</code></td><td>—</td></tr>
+<tr><td><code>threading</code></td><td>Fazer coisas "ao mesmo tempo", com threads <strong>(não no editor)</strong></td><td><code>threading.Thread(target=print, args=("da thread",)).start()</code></td><td>mostra <code>da thread</code></td><td>—</td></tr>
+<tr><td><code>asyncio</code></td><td>Programação assíncrona: esperar várias coisas sem travar (<code>async</code>/<code>await</code>)</td><td><code>asyncio.run(dizer())</code>, com <code>dizer</code> uma <code>async def</code> que devolve <code>"pronto"</code></td><td><code>'pronto'</code></td><td><a href="asyncio.html">Programação Assíncrona</a></td></tr>
+<tr><td><code>venv</code></td><td>Ambientes virtuais, usado pelo terminal: <code>python3 -m venv .venv</code> <strong>(não no editor)</strong></td><td>—</td><td>cria a pasta <code>.venv</code></td><td><a href="venv.html">Ambientes Virtuais</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="internet">Internet e segurança</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Módulo</th><th>Para que serve</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>urllib.parse</code></td><td>Montar e desmontar endereços da web</td><td><code>urllib.parse.quote("pão de queijo")</code></td><td><code>'p%C3%A3o%20de%20queijo'</code></td><td>—</td></tr>
+<tr><td></td><td></td><td><code>urllib.parse.urlparse("https://exemplo.com/busca?q=pão").query</code></td><td><code>'q=pão'</code></td><td></td></tr>
+<tr><td><code>urllib.request</code></td><td>Baixar páginas e arquivos da internet <strong>(não no editor: sem rede)</strong></td><td><code>urllib.request.urlopen("https://…")</code></td><td>a resposta do site</td><td>—</td></tr>
+<tr><td><code>html</code></td><td>Escapar textos para pôr numa página HTML</td><td><code>html.escape("&lt;b&gt;Ana &amp; Bia&lt;/b&gt;")</code></td><td><code>'&amp;lt;b&amp;gt;Ana &amp;amp; Bia&amp;lt;/b&amp;gt;'</code></td><td>—</td></tr>
+<tr><td><code>http.server</code></td><td>Um servidor web simples, pelo terminal: <code>python3 -m http.server</code></td><td>—</td><td>serve os arquivos da pasta em <code>http://localhost:8000</code></td><td>—</td></tr>
+<tr><td><code>hashlib</code></td><td>Resumos criptográficos (SHA-256, MD5): conferir se um arquivo mudou</td><td><code>hashlib.sha256(b"Ana").hexdigest()[:16]</code></td><td><code>'dea210f058b407db'</code> (os 16 primeiros caracteres)</td><td>—</td></tr>
+<tr><td><code>secrets</code></td><td>Sorteios seguros, para senhas e códigos (o <code>random</code> não serve para isso)</td><td><code>secrets.token_hex(8)</code></td><td>16 caracteres hexadecimais sorteados (muda sempre)</td><td><a href="random.html">O Módulo random</a></td></tr>
+<tr><td><code>uuid</code></td><td>Identificadores únicos</td><td><code>uuid.uuid5(uuid.NAMESPACE_DNS, "exemplo.com")</code></td><td><code>UUID('3d47b575-50ba-5ea3-80b4-5f4b1f98bec0')</code></td><td>—</td></tr>
+<tr><td></td><td></td><td><code>uuid.uuid4()</code></td><td>um identificador sorteado (muda sempre)</td><td></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="qualidade">Testes e depuração</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Módulo</th><th>Para que serve</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>unittest</code></td><td>Testes automáticos, em classes</td><td><code>python3 -m unittest</code></td><td>roda os testes e mostra <code>OK</code> ou as falhas</td><td><a href="testes.html">Testes</a></td></tr>
+<tr><td><code>doctest</code></td><td>Testa os exemplos <code>&gt;&gt;&gt;</code> escritos nas docstrings</td><td><code>python3 -m doctest arquivo.py</code></td><td>sem saída quando tudo passa</td><td><a href="testes.html">Testes</a>, <a href="docstrings.html">Docstrings</a></td></tr>
+<tr><td><code>pdb</code></td><td>O depurador: parar o programa e examinar as variáveis</td><td><code>breakpoint()</code> no meio do código</td><td>abre o prompt <code>(Pdb)</code></td><td><a href="depuracao.html">Depurando com pdb</a></td></tr>
+<tr><td><code>timeit</code></td><td>Medir quanto tempo um trecho leva</td><td><code>python3 -m timeit "sum(range(1000))"</code></td><td>o tempo médio (muda de computador para computador)</td><td>—</td></tr>
+<tr><td><code>keyword</code></td><td>As palavras reservadas do Python</td><td><code>keyword.iskeyword("for")</code></td><td><code>True</code></td><td><a href="ref-palavras-chave.html">Palavras-chave</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="novos">Novidades do Python 3.14 <span class="versao">3.14</span></h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Módulo</th><th>Para que serve</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>compression.zstd</code></td><td>Compactação no formato Zstandard (<code>.zst</code>), rápida e moderna. O novo pacote <code>compression</code> também reúne <code>gzip</code>, <code>bz2</code>, <code>lzma</code> e <code>zlib</code></td><td><code>zstd.decompress(zstd.compress(b"oi"))</code>, com <code>import compression.zstd as zstd</code></td><td><code>b'oi'</code></td><td><a href="novidades.html">Novidades</a></td></tr>
+<tr><td><code>annotationlib</code></td><td>Examinar as dicas de tipo, agora calculadas só quando alguém pede</td><td><code>annotationlib.get_annotations(funcao)</code></td><td>o dicionário com as dicas</td><td><a href="type-hints.html">Dicas de Tipo</a></td></tr>
+<tr><td><code>string.templatelib</code></td><td>As <em>template strings</em>: <code>t"…"</code> em vez de <code>f"…"</code> guarda as partes separadas, para outro código montar o texto com segurança</td><td><code>t = t"Olá, {nome}"</code> e <code>t.strings</code>, <code>t.values</code></td><td><code>('Olá, ', '')</code>, <code>('Ana',)</code></td><td><a href="novidades.html">Novidades</a></td></tr>
+</table>
+</div>
+<div class="note">
+<strong>Se você tem o Python 3.13 (o do Debian 13)</strong>
+<p>Estes três módulos não existem antes do 3.14: <code>import compression.zstd</code> dá <code>ModuleNotFoundError</code>. Todos os outros desta página funcionam no 3.13.</p>
+</div>
+
+<hr>
+
+<h2>O que não vem instalado (ou não funciona no editor)</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Módulo</th><th>No Ubuntu da Ana</th><th>No editor do guia</th></tr>
+<tr><td><code>tkinter</code>, <code>turtle</code> (janelas e desenho)</td><td>Fazem parte da biblioteca padrão, mas o Ubuntu os separa num pacote à parte: sem ele, <code>import turtle</code> termina em <code>ImportError: No module named 'tkinter', please install the python3-tk package</code></td><td><code>ModuleNotFoundError</code>: não existem no navegador</td></tr>
+<tr><td><code>subprocess</code>, <code>threading</code></td><td>Funcionam</td><td>Importam, mas dão erro ao usar: <code>OSError: [Errno 138] emscripten does not support processes.</code> e <code>RuntimeError: can't start new thread</code></td></tr>
+<tr><td><code>urllib.request</code> (internet)</td><td>Funciona, se houver conexão</td><td>Sem rede: <code>URLError: &lt;urlopen error [Errno 23] Host is unreachable&gt;</code></td></tr>
+<tr><td><code>venv</code>, <code>readline</code>, <code>curses</code></td><td>Funcionam</td><td><code>ModuleNotFoundError</code></td></tr>
+</table>
+</div>
+<p>E os pacotes que <strong>não</strong> são da biblioteca padrão, como <code>requests</code> e <code>numpy</code>? Esses se instalam com o <code>pip</code>, dentro de um ambiente virtual: veja as aulas <a href="pip.html">pip</a> e <a href="venv.html">venv</a>.</p>
+
+<hr>
+
+<h2>Experimente</h2>
+
+<div class="trypy" data-goal="out:Média: 7.75;;out:Mais pedido: M;;src:\bstatistics\b;;src:\bCounter\b">
+<p class="try-task"><strong>Missão:</strong> use o <code>statistics</code> para mostrar a média das notas (<code>Média: 7.75</code>) e o <code>Counter</code> do <code>collections</code> para mostrar o tamanho de camiseta mais pedido (<code>Mais pedido: M</code>). Não esqueça os <code>import</code>.</p>
+<pre class="script" data-file="main.py">notas = [7.5, 8.0, 6.5, 9.0]
+tamanhos = ["P", "M", "M", "G"]
+
+print("Média:", 0)
+print("Mais pedido:", "?")
+</pre>
+<pre class="solucao" data-file="main.py">import statistics
+from collections import Counter
+
+notas = [7.5, 8.0, 6.5, 9.0]
+tamanhos = ["P", "M", "M", "G"]
+
+print("Média:", statistics.mean(notas))
+print("Mais pedido:", Counter(tamanhos).most_common(1)[0][0])
+</pre>
+</div>
+
+<div class="trypy">
+<p class="try-task"><strong>Experimente à vontade:</strong> troque os exemplos, importe outros módulos desta página e veja os resultados no editor.</p>
+<pre class="script" data-file="main.py">import math
+import datetime
+import textwrap
+import difflib
+
+print(math.sqrt(16))
+print(datetime.date(2026, 12, 25) - datetime.date(2026, 10, 18))
+print(textwrap.wrap("A padaria do bairro abre cedo todos os dias", width=15))
+print(difflib.get_close_matches("feijao", ["feijão", "arroz", "macarrão"]))
+</pre>
+</div>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
