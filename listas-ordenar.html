@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Ordenando Listas — sort(), sorted(), reverse e key | Guia Python</title>
+<meta name="description" content="Como pôr uma lista em ordem em Python: sort() muda a lista e sorted() cria outra, reverse=True para a ordem decrescente, reverse() e reversed() para inverter, key=str.lower para ignorar maiúsculas, key=len, números guardados como texto, por que o Álvaro vai para o fim da lista, e os erros reais do Python 3.14 (lista = lista.sort(), tipos misturados).">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Ordenando Listas</span></h1>
+
+<p class="intro">A professora quer a chamada em ordem alfabética. A Ana quer ver as notas da maior para a menor. O caixa quer os preços do mais barato ao mais caro. Pôr uma lista em ordem (em inglês, <em>sort</em>, "ordenar") é uma das coisas mais úteis que o Python faz, e ele faz em uma linha. Mas há detalhes que pegam todo mundo: a diferença entre <code>sort()</code> e <code>sorted()</code>, as maiúsculas que vêm antes das minúsculas e os nomes com acento que vão parar no fim da lista.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A ordenar a própria lista com <code>sort()</code>, e a criar uma lista nova ordenada com <code>sorted()</code>.</li>
+  <li>A ordem decrescente com <code>reverse=True</code>, e a inverter uma lista com <code>reverse()</code>, <code>reversed()</code> e <code>[::-1]</code>.</li>
+  <li>Como o Python compara textos, e por que <code>"Zé"</code> vem antes de <code>"ana"</code> e o <code>"Álvaro"</code> vai para o fim.</li>
+  <li>A escolher o critério com <code>key</code>: <code>key=str.lower</code>, <code>key=len</code>, <code>key=int</code>.</li>
+  <li>Os erros reais: <code>lista = lista.sort()</code> (a lista vira <code>None</code>) e a lista com números e textos misturados.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: arrumar as fichas, ou tirar uma cópia arrumada</h2>
+<p>A professora tem as fichas dos alunos numa caixa, fora de ordem. Ela pode fazer duas coisas:</p>
+<ul>
+  <li><strong>Arrumar as fichas na própria caixa.</strong> Depois disso, a ordem antiga se perdeu. É o <code>lista.sort()</code>.</li>
+  <li><strong>Deixar a caixa como está e escrever uma folha nova</strong>, com os nomes em ordem. A caixa original continua igual. É o <code>sorted(lista)</code>.</li>
+</ul>
+<p>Os dois põem em ordem do mesmo jeito; a diferença é <strong>o que acontece com a lista original</strong>.</p>
+
+<hr>
+
+<h2>1. <code>sort()</code>: ordena a própria lista</h2>
+
+<pre class="file" data-file="sort.py">notas = [7.0, 9.5, 6.5, 10.0, 8.0]
+notas.sort()
+print(notas)
+notas.sort(reverse=True)
+print(notas)
+</pre>
+
+<pre class="term">$ python3 sort.py
+[6.5, 7.0, 8.0, 9.5, 10.0]
+[10.0, 9.5, 8.0, 7.0, 6.5]
+</pre>
+
+<dl class="anatomy">
+  <dt>notas.sort()</dt><dd>O método <code>sort</code> ("ordenar") põe os itens da lista <code>notas</code> em ordem <strong>crescente</strong>, do menor para o maior. Ele muda a própria lista e, como o <code>append</code>, devolve <code>None</code>: a linha não tem <code>=</code>.</dd>
+  <dt>reverse=True</dt><dd>"Ao contrário = verdadeiro": a ordem fica <strong>decrescente</strong>, do maior para o menor. É um <strong>argumento nomeado</strong>: você escreve o nome (<code>reverse</code>), o <code>=</code> e o valor (aula <a href="argumentos-padrao.html">Valores Padrão e Argumentos Nomeados</a>).</dd>
+</dl>
+
+<div class="trypy" data-goal="out:[10.0, 9.5, 8.0, 7.0, 6.5];;src:reverse\s*=\s*True">
+<p class="try-task"><strong>Missão:</strong> o programa mostra as notas da menor para a maior. Faça-o mostrar da <strong>maior para a menor</strong>, usando <code>reverse=True</code>.</p>
+<pre class="script" data-file="main.py">notas = [7.0, 9.5, 6.5, 10.0, 8.0]
+notas.sort()
+print(notas)
+</pre>
+<pre class="solucao" data-file="main.py">notas = [7.0, 9.5, 6.5, 10.0, 8.0]
+notas.sort(reverse=True)
+print(notas)
+</pre>
+</div>
+
+<hr>
+
+<h2>2. <code>sorted()</code>: cria uma lista nova, ordenada</h2>
+
+<pre class="file" data-file="sorted.py">turma = ["Davi", "Ana", "Carla", "Bruno"]
+em_ordem = sorted(turma)
+print("Ordenada:", em_ordem)
+print("Original:", turma)
+print("Ao contrário:", sorted(turma, reverse=True))
+</pre>
+
+<pre class="term">$ python3 sorted.py
+Ordenada: ['Ana', 'Bruno', 'Carla', 'Davi']
+Original: ['Davi', 'Ana', 'Carla', 'Bruno']
+Ao contrário: ['Davi', 'Carla', 'Bruno', 'Ana']
+</pre>
+
+<dl class="anatomy">
+  <dt>sorted(turma)</dt><dd>Uma <strong>função</strong> (não um método: vem antes, com a lista entre parênteses). Ela <strong>devolve</strong> uma lista nova, em ordem, e não toca na original.</dd>
+  <dt>em_ordem = …</dt><dd>Aqui o <code>=</code> está certo: o <code>sorted</code> devolve a lista nova, e você a guarda.</dd>
+  <dt>Original</dt><dd>A <code>turma</code> continua na ordem em que foi escrita.</dd>
+  <dt>sorted(turma, reverse=True)</dt><dd>O <code>reverse=True</code> funciona igual no <code>sorted</code>.</dd>
+</dl>
+
+<p>O <code>sorted</code> também ordena coisas que não são listas (um texto, uma tupla, as chaves de um dicionário) e sempre devolve uma <strong>lista</strong>. O <code>sort()</code> só existe nas listas.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th><code>lista.sort()</code></th><th><code>sorted(lista)</code></th></tr>
+<tr><td>O que é</td><td>Método da lista</td><td>Função</td></tr>
+<tr><td>A lista original</td><td><strong>Muda</strong> (a ordem antiga se perde)</td><td>Fica <strong>como estava</strong></td></tr>
+<tr><td>Devolve</td><td><code>None</code></td><td>Uma lista nova, ordenada</td></tr>
+<tr><td>Como escrever</td><td><code>notas.sort()</code>, sozinho na linha</td><td><code>em_ordem = sorted(notas)</code> ou dentro de um <code>print</code>, <code>for</code>…</td></tr>
+<tr><td>Use quando</td><td>Você não precisa mais da ordem antiga</td><td>Você quer as duas ordens, ou só vai mostrar em ordem</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>3. Como o Python compara textos</h2>
+<p>Com números, "em ordem" é óbvio. Com textos, o Python compara <strong>letra por letra</strong>, da esquerda para a direita, como no dicionário. Só que ele não usa o alfabeto que você aprendeu na escola: cada caractere tem um <strong>número</strong> (o código Unicode), e a ordem é a desses números. A função <code>ord()</code> mostra o número de um caractere:</p>
+
+<pre class="term">&gt;&gt;&gt; ord("A")
+65
+&gt;&gt;&gt; ord("Z")
+90
+&gt;&gt;&gt; ord("a")
+97
+&gt;&gt;&gt; ord("Á")
+193
+&gt;&gt;&gt; "Zé" &lt; "ana"
+True
+&gt;&gt;&gt; "Álvaro" &lt; "Bruno"
+False
+</pre>
+
+<p>Todas as maiúsculas sem acento (65 a 90) vêm antes de todas as minúsculas (97 a 122), e as letras com acento vêm <strong>depois de todas elas</strong> (o Á é o 193). Por isso <code>"Zé"</code> é "menor" que <code>"ana"</code>, e <code>"Álvaro"</code> é "maior" que <code>"Bruno"</code>. Duas consequências que você precisa conhecer:</p>
+
+<h3>Maiúsculas antes das minúsculas</h3>
+
+<pre class="file" data-file="maiusculas.py">nomes = ["bruno", "Davi", "ana", "Carla"]
+print(sorted(nomes))
+print(sorted(nomes, key=str.lower))
+</pre>
+
+<pre class="term">$ python3 maiusculas.py
+['Carla', 'Davi', 'ana', 'bruno']
+['ana', 'bruno', 'Carla', 'Davi']
+</pre>
+
+<p>Na primeira linha, os nomes com maiúscula vieram antes, e os com minúscula depois: não é a ordem que uma pessoa espera. A segunda linha resolve com o <code>key</code>, que você vai ver na seção 4: <code>key=str.lower</code> quer dizer "compare como se tudo estivesse em minúsculas". Repare que os nomes <strong>continuam escritos como estavam</strong>; só a comparação ignora as maiúsculas.</p>
+
+<h3>O Álvaro vai para o fim</h3>
+
+<pre class="file" data-file="acentos.py">nomes = ["Bruno", "Álvaro", "Ana", "Carla", "Érica", "Eduardo"]
+print(sorted(nomes))
+</pre>
+
+<pre class="term">$ python3 acentos.py
+['Ana', 'Bruno', 'Carla', 'Eduardo', 'Álvaro', 'Érica']
+</pre>
+
+<p>O Álvaro, que deveria ser o primeiro da chamada, foi para depois do Eduardo, junto com a Érica. Não é um erro do Python: é a regra dos números dos caracteres. O <code>Á</code> (193) vem depois de qualquer letra sem acento.</p>
+
+<div class="note">
+<strong>Para ordenar como no dicionário: <code>locale</code></strong>
+<p>O Python tem um jeito de comparar textos pelas regras de um idioma: o módulo <code>locale</code> (aula <a href="modulos.html">Módulos e import</a>) e a função <code>locale.strxfrm</code>, usada como <code>key</code>. No terminal da Ana, com o português do Brasil instalado:</p>
+<pre class="file" data-file="acentos_locale.py">import locale
+
+locale.setlocale(locale.LC_COLLATE, "pt_BR.UTF-8")
+nomes = ["Bruno", "Álvaro", "Ana", "Carla", "Érica", "Eduardo"]
+print(sorted(nomes, key=locale.strxfrm))
+</pre>
+<pre class="term">$ python3 acentos_locale.py
+['Álvaro', 'Ana', 'Bruno', 'Carla', 'Eduardo', 'Érica']
+</pre>
+<p>Agora o Álvaro abre a chamada. Mas esse resultado depende dos idiomas instalados no computador: se o <code>pt_BR.UTF-8</code> não estiver instalado, o <code>setlocale</code> para o programa com <code>locale.Error: unsupported locale setting</code> ("configuração de idioma não suportada"). E no editor do guia, que roda no navegador, o mesmo programa roda sem erro, mas sai na ordem do <code>sorted</code> comum, com o Álvaro no fim. Por isso, neste guia, fica só como nota.</p>
+</div>
+
+<hr>
+
+<h2>4. Escolhendo o critério: <code>key</code></h2>
+<p>O <code>key</code> ("chave") diz ao Python: "antes de comparar, passe cada item por esta função, e compare o <strong>resultado</strong>". Os itens em si não mudam; só a régua usada para comparar.</p>
+
+<dl class="anatomy">
+  <dt>key=str.lower</dt><dd>Compara pela versão em minúsculas de cada texto: <code>"Davi"</code> é comparado como <code>"davi"</code>.</dd>
+  <dt>key=len</dt><dd>Compara pelo <strong>tamanho</strong> de cada item.</dd>
+  <dt>key=int</dt><dd>Compara pelo <strong>número</strong> que o texto representa.</dd>
+</dl>
+
+<p>Repare que depois do <code>key=</code> vai o <strong>nome</strong> da função, <strong>sem parênteses</strong>: <code>key=len</code>, e não <code>key=len()</code>. Você não está chamando a função; está dizendo ao <code>sort</code> qual função ele deve chamar, item por item.</p>
+
+<h3>Pelo tamanho</h3>
+
+<pre class="file" data-file="tamanho.py">compras = ["café", "arroz", "pão", "feijão", "sal"]
+print(sorted(compras, key=len))
+</pre>
+
+<pre class="term">$ python3 tamanho.py
+['pão', 'sal', 'café', 'arroz', 'feijão']
+</pre>
+
+<p>Do item mais curto (3 letras) para o mais longo (6). O pão e o sal têm o mesmo tamanho, e ficaram na ordem em que já estavam na lista: quando dois itens "empatam", o Python mantém a ordem original entre eles.</p>
+
+<h3>Números guardados como texto</h3>
+<p>As senhas da fila do banco chegaram como texto. Ordenadas assim, o resultado é estranho:</p>
+
+<pre class="file" data-file="texto_numero.py">senhas = ["10", "9", "2", "100"]
+print(sorted(senhas))
+print(sorted(senhas, key=int))
+</pre>
+
+<pre class="term">$ python3 texto_numero.py
+['10', '100', '2', '9']
+['2', '9', '10', '100']
+</pre>
+
+<p>Como textos, eles são comparados <strong>caractere por caractere</strong>: <code>"10"</code> começa com <code>"1"</code>, que vem antes de <code>"2"</code>, então <code>"10"</code> e <code>"100"</code> ficam antes do <code>"2"</code>. Com <code>key=int</code>, cada texto é comparado como o número que representa, e a ordem fica certa. (Os itens continuam sendo textos: repare nas aspas.)</p>
+
+<h3>Listas dentro de listas</h3>
+<p>Quando os itens são listas, o Python compara o primeiro item de cada uma; se empatar, o segundo, e assim por diante:</p>
+
+<pre class="term">&gt;&gt;&gt; turma = [["Davi", 7.0], ["Ana", 9.5], ["Carla", 8.0]]
+&gt;&gt;&gt; sorted(turma)
+[['Ana', 9.5], ['Carla', 8.0], ['Davi', 7.0]]
+</pre>
+
+<p>Ficou em ordem de <strong>nome</strong>. Para ordenar pela <strong>nota</strong> (o segundo item), o <code>key</code> precisa de uma função que pegue o item 1 de cada par. Você vai aprender a escrever essas funções nas aulas <a href="funcoes.html">Funções</a> e <a href="lambda.html">lambda</a>.</p>
+
+<div class="trypy" data-goal="out:['ana', 'Bruno', 'carla', 'Davi'];;src:key\s*=">
+<p class="try-task"><strong>Missão:</strong> alguns nomes foram digitados em minúsculas e a chamada saiu fora de ordem. Use o <code>key</code> para ordenar <strong>sem ligar para maiúsculas</strong>.</p>
+<pre class="script" data-file="main.py">chamada = ["carla", "Davi", "ana", "Bruno"]
+print(sorted(chamada))
+</pre>
+<pre class="solucao" data-file="main.py">chamada = ["carla", "Davi", "ana", "Bruno"]
+print(sorted(chamada, key=str.lower))
+</pre>
+</div>
+
+<hr>
+
+<h2>5. Invertendo a ordem (sem ordenar)</h2>
+<p>Às vezes você não quer ordenar: quer só a lista <strong>de trás para frente</strong>, como ela está. Há três jeitos:</p>
+
+<pre class="file" data-file="inverter.py">fila = ["Ana", "Bruno", "Carla"]
+fila.reverse()
+print(fila)
+fila = ["Ana", "Bruno", "Carla"]
+print(fila[::-1])
+print(list(reversed(fila)))
+for nome in reversed(fila):
+    print(nome)
+print(fila)
+</pre>
+
+<pre class="term">$ python3 inverter.py
+['Carla', 'Bruno', 'Ana']
+['Carla', 'Bruno', 'Ana']
+['Carla', 'Bruno', 'Ana']
+Carla
+Bruno
+Ana
+['Ana', 'Bruno', 'Carla']
+</pre>
+
+<dl class="anatomy">
+  <dt>fila.reverse()</dt><dd>Método: inverte <strong>a própria lista</strong> e devolve <code>None</code>, como o <code>sort()</code>.</dd>
+  <dt>fila[::-1]</dt><dd>Uma fatia com passo -1 (aula <a href="listas-acessar.html">Acessando Itens</a>): uma lista <strong>nova</strong>, invertida.</dd>
+  <dt>reversed(fila)</dt><dd>Uma função que entrega os itens de trás para frente, sem criar uma lista. É perfeita no <code>for</code>. Para ter uma lista, ponha num <code>list()</code>.</dd>
+  <dt>print(fila)</dt><dd>A última linha prova: <code>[::-1]</code> e <code>reversed</code> não mudaram a fila.</dd>
+</dl>
+
+<p>Se você mostrar o <code>reversed(fila)</code> direto, não aparece uma lista, e sim um objeto que entrega os itens quando alguém pede (o número no fim é um endereço da memória, e muda a cada execução):</p>
+
+<pre class="term">&gt;&gt;&gt; fila = ["Ana", "Bruno", "Carla"]
+&gt;&gt;&gt; reversed(fila)
+&lt;list_reverseiterator object at 0x7f78566ef070&gt;
+</pre>
+
+<div class="warning">
+<strong><code>reverse()</code> não é "ordem decrescente"</strong>
+<p><code>notas.reverse()</code> só vira a lista de cabeça para baixo: <code>[7, 10, 8]</code> vira <code>[8, 10, 7]</code>, que não está em ordem nenhuma. Para a ordem decrescente, é <code>notas.sort(reverse=True)</code>.</p>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de ordenar: qual usar</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Você quer</th><th>Escreva</th><th>A lista original</th></tr>
+<tr><td>Ordenar a lista e esquecer a ordem antiga</td><td><code>lista.sort()</code></td><td>Muda</td></tr>
+<tr><td>Uma cópia ordenada</td><td><code>nova = sorted(lista)</code></td><td>Fica igual</td></tr>
+<tr><td>Do maior para o menor</td><td><code>lista.sort(reverse=True)</code> ou <code>sorted(lista, reverse=True)</code></td><td>Muda / fica igual</td></tr>
+<tr><td>Textos sem ligar para maiúsculas</td><td><code>sorted(lista, key=str.lower)</code></td><td>Fica igual</td></tr>
+<tr><td>Pelo tamanho</td><td><code>sorted(lista, key=len)</code></td><td>Fica igual</td></tr>
+<tr><td>Números que estão em texto</td><td><code>sorted(lista, key=int)</code></td><td>Fica igual</td></tr>
+<tr><td>Só inverter a ordem atual</td><td><code>lista.reverse()</code>, <code>lista[::-1]</code> ou <code>reversed(lista)</code></td><td>Muda / igual / igual</td></tr>
+<tr><td>Mostrar em ordem, uma vez</td><td><code>for x in sorted(lista):</code></td><td>Fica igual</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong><code>lista = lista.sort()</code>: a lista vira <code>None</code></strong>
+<p>O mesmo erro do <code>append</code>, com outro método:</p>
+<pre class="file" data-file="sort_none.py">compras = ["leite", "arroz", "feijão", "café"]
+compras = compras.sort()
+print(compras)
+print(compras[0])
+</pre>
+<pre class="term">$ python3 sort_none.py
+None
+Traceback (most recent call last):
+  File "/home/ana/sort_none.py", line 4, in &lt;module&gt;
+    print(compras[0])
+          ~~~~~~~^^^
+TypeError: 'NoneType' object is not subscriptable
+</pre>
+<p>Linha por linha:</p>
+<ul>
+  <li><strong>Linha 2:</strong> o <code>sort()</code> ordenou a lista e devolveu <code>None</code>; o <code>=</code> guardou esse <code>None</code> em <code>compras</code>. A lista ordenada ficou sem nome e se perdeu.</li>
+  <li><strong>Linha 3:</strong> o <code>print</code> mostrou <code>None</code>.</li>
+  <li><strong>Linha 4:</strong> <code>TypeError: 'NoneType' object is not subscriptable</code>, "o objeto <code>NoneType</code> não aceita colchetes". <em>Subscriptable</em> é "que aceita índice". O <code>None</code> não tem itens, então <code>compras[0]</code> não faz sentido.</li>
+</ul>
+<p>Você pode ver o <code>None</code> direto:</p>
+<pre class="term">&gt;&gt;&gt; fila = ["Ana", "Bruno", "Carla"]
+&gt;&gt;&gt; print(fila.sort())
+None
+</pre>
+<p><strong>Como consertar:</strong> ou <code>compras.sort()</code> sozinho na linha, ou <code>compras = sorted(compras)</code>. Nunca os dois misturados. O <code>reverse()</code> tem o mesmo comportamento.</p>
+</div>
+
+<div class="cenario">
+<strong>Números e textos misturados</strong>
+<pre class="file" data-file="mistura.py">coisas = [3, "2", 1]
+coisas.sort()
+print(coisas)
+</pre>
+<pre class="term">$ python3 mistura.py
+Traceback (most recent call last):
+  File "/home/ana/mistura.py", line 2, in &lt;module&gt;
+    coisas.sort()
+    ~~~~~~~~~~~^^
+TypeError: '&lt;' not supported between instances of 'str' and 'int'
+</pre>
+<p>"O <code>&lt;</code> não funciona entre um <code>str</code> e um <code>int</code>". Para ordenar, o Python precisa perguntar "este é menor que aquele?" (com o <code>&lt;</code>), e ele não sabe dizer se o texto <code>"2"</code> é menor que o número 3. Quase sempre, isso acontece quando alguns números vieram do <code>input()</code> como texto. <strong>Como consertar:</strong> converta tudo para o mesmo tipo antes (<code>int()</code>, aula <a href="conversao.html">Conversão de Tipos</a>), ou ordene com <code>key=int</code> se todos forem números escritos como texto.</p>
+</div>
+
+<div class="cenario">
+<strong>A ordem "errada" que não é erro</strong>
+<p>Três surpresas que não dão mensagem nenhuma, só um resultado esquisito:</p>
+<ul>
+  <li><strong>Minúsculas depois das maiúsculas:</strong> <code>['Carla', 'Davi', 'ana', 'bruno']</code>. Use <code>key=str.lower</code>.</li>
+  <li><strong>Acentos no fim:</strong> o Álvaro depois do Eduardo. É a ordem dos códigos dos caracteres; veja a nota sobre <code>locale</code> na seção 3.</li>
+  <li><strong>Números em texto:</strong> <code>['10', '100', '2', '9']</code>. Use <code>key=int</code>, ou guarde os números como números.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Devolve</th></tr>
+<tr><td><code>lista.sort()</code></td><td>Ordena a própria lista, do menor para o maior</td><td><code>None</code></td></tr>
+<tr><td><code>lista.sort(reverse=True)</code></td><td>…do maior para o menor</td><td><code>None</code></td></tr>
+<tr><td><code>lista.sort(key=função)</code></td><td>…comparando <code>função(item)</code></td><td><code>None</code></td></tr>
+<tr><td><code>sorted(lista)</code></td><td>Cria uma lista nova ordenada (aceita <code>reverse</code> e <code>key</code>)</td><td>A lista nova</td></tr>
+<tr><td><code>lista.reverse()</code></td><td>Inverte a própria lista</td><td><code>None</code></td></tr>
+<tr><td><code>reversed(lista)</code></td><td>Entrega os itens de trás para frente (para o <code>for</code> ou o <code>list()</code>)</td><td>Um iterador</td></tr>
+<tr><td><code>lista[::-1]</code></td><td>Cria uma lista nova invertida</td><td>A lista nova</td></tr>
+<tr><td><code>key=str.lower</code> / <code>key=len</code> / <code>key=int</code></td><td>Ignorar maiúsculas / pelo tamanho / pelo número do texto</td><td>—</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td>A lista virou <code>None</code></td><td><code>lista = lista.sort()</code> ou <code>lista = lista.reverse()</code></td></tr>
+<tr><td><code>TypeError: 'NoneType' object is not subscriptable</code></td><td>A variável recebeu <code>None</code> antes (quase sempre pelo motivo acima)</td></tr>
+<tr><td><code>TypeError: '&lt;' not supported between instances of 'str' and 'int'</code></td><td>Lista com números e textos misturados</td></tr>
+<tr><td>Minúsculas depois das maiúsculas</td><td>A ordem é a dos códigos: use <code>key=str.lower</code></td></tr>
+<tr><td>Nomes com acento no fim</td><td>A ordem é a dos códigos (Á = 193)</td></tr>
+<tr><td><code>'10'</code> antes de <code>'2'</code></td><td>Números guardados como texto: <code>key=int</code></td></tr>
+<tr><td>A lista "ao contrário" não está em ordem</td><td>Usou <code>reverse()</code> em vez de <code>sort(reverse=True)</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Do maior para o menor</h3>
+<p>Complete para ordenar os preços do mais caro para o mais barato:</p>
+<div class="ex-code">precos.sort(<input data-answer="reverse=True" aria-label="argumento" size="14">)</div>
+</div>
+
+<div class="exercise">
+<h3>2. Uma cópia em ordem</h3>
+<p>Complete com a função que devolve uma lista nova, ordenada, sem mudar <code>turma</code>:</p>
+<div class="ex-code">chamada = <input data-answer="sorted" aria-label="função" size="8">(turma)</div>
+</div>
+
+<div class="exercise">
+<h3>3. Sem ligar para maiúsculas</h3>
+<p>Complete o critério:</p>
+<div class="ex-code">sorted(nomes, key=<input data-answer="str.lower" aria-label="critério" size="10">)</div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Depois de <code>a = [3, 1, 2]</code> e <code>b = sorted(a)</code>, quanto vale <code>a</code>?</p>
+<label><input type="radio" name="q4"> <code>[1, 2, 3]</code></label>
+<label><input type="radio" name="q4"> <code>None</code></label>
+<label><input type="radio" name="q4"> <code>[3, 1, 2]</code></label>
+<label><input type="radio" name="q4"> <code>[2, 1, 3]</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. O que mostra <code>print(sorted(["bia", "Ana", "Caio"]))</code>?</p>
+<label><input type="radio" name="q5"> <code>['Ana', 'Caio', 'bia']</code></label>
+<label><input type="radio" name="q5"> <code>['Ana', 'bia', 'Caio']</code></label>
+<label><input type="radio" name="q5"> <code>['bia', 'Ana', 'Caio']</code></label>
+<label><input type="radio" name="q5"> <code>['Caio', 'bia', 'Ana']</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">6. Qual linha deixa <code>notas</code> igual a <code>None</code>?</p>
+<label><input type="radio" name="q6"> <code>notas.sort()</code></label>
+<label><input type="radio" name="q6"> <code>notas = notas.sort()</code></label>
+<label><input type="radio" name="q6"> <code>notas = sorted(notas)</code></label>
+<label><input type="radio" name="q6"> <code>notas = notas[::-1]</code></label>
+</div>
+
+<h3>Missão final: a lista em ordem</h3>
+
+<div class="trypy" data-goal="out:['arroz', 'café', 'feijão', 'leite'];;semerro">
+<p class="try-task"><strong>Missão:</strong> a Ana quer a lista de compras em ordem alfabética e o primeiro item, mas o programa mostra <code>None</code> e quebra. Conserte a linha do <code>sort</code>.</p>
+<pre class="script" data-file="main.py">compras = ["leite", "arroz", "feijão", "café"]
+compras = compras.sort()
+print(compras)
+print(f"Primeiro: {compras[0]}")
+</pre>
+<pre class="solucao" data-file="main.py">compras = ["leite", "arroz", "feijão", "café"]
+compras.sort()
+print(compras)
+print(f"Primeiro: {compras[0]}")
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>lista.sort()</code> ordena a <strong>própria lista</strong> e devolve <code>None</code>; <code>sorted(lista)</code> devolve uma <strong>lista nova</strong> e não mexe na original.</li>
+  <li><code>reverse=True</code> dá a ordem decrescente, nos dois.</li>
+  <li><code>key=função</code> escolhe o critério: <code>str.lower</code> (ignorar maiúsculas), <code>len</code> (tamanho), <code>int</code> (números em texto). Sem parênteses depois do nome.</li>
+  <li>Textos são comparados pelos códigos dos caracteres: maiúsculas antes das minúsculas, e letras com acento depois de todas (o Álvaro vai para o fim).</li>
+  <li><code>reverse()</code>, <code>reversed()</code> e <code>[::-1]</code> só invertem a ordem atual; não ordenam.</li>
+  <li>Nunca <code>lista = lista.sort()</code>. E não dá para ordenar números misturados com textos.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
