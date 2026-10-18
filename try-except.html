@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python try e except — tratando erros sem o programa parar | Guia Python</title>
+<meta name="description" content="try e except no Python para quem nunca programou: como tratar um erro para o programa continuar, o caminho que o Python faz dentro do try, except específico × genérico e por que evitar o except nu (ele engole até o Ctrl+C), o as e para ler a mensagem, vários except, pedir um número até a pessoa acertar, e os erros reais do Python 3.14.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">try e except</span></h1>
+
+<p class="intro">Na aula <a href="erros.html">Lendo uma Mensagem de Erro</a>, todo erro terminava do mesmo jeito: o Python mostrava o traceback e <strong>parava o programa</strong>. Muitas vezes é isso mesmo que você quer. Mas tem erro que você <strong>sabe</strong> que pode acontecer: a pessoa vai digitar "trinta" em vez de 30, vai dividir a conta por zero pessoas. Para esses casos, o Python tem o <code>try</code> (em inglês, "tente") e o <code>except</code> ("exceto", "a não ser que"): <strong>tente</strong> fazer isto; <strong>se der</strong> tal erro, faça aquilo, e siga em frente.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A escrever um <code>try</code> com <code>except</code> e o caminho que o Python faz quando dá erro e quando não dá.</li>
+  <li>Por que dizer <strong>qual</strong> erro tratar (<code>except ValueError</code>) e por que evitar o <code>except:</code> sozinho, que engole até o <kbd>Ctrl</kbd>+<kbd>C</kbd>.</li>
+  <li>A ler a mensagem do erro com <code>as e</code>.</li>
+  <li>A tratar erros diferentes de jeitos diferentes, com vários <code>except</code>.</li>
+  <li>A pedir um número de novo, quantas vezes for preciso, até a pessoa acertar.</li>
+  <li>Os erros reais de quem está aprendendo <code>try</code>.</li>
+</ul>
+</div>
+
+<p>Todos os programas desta aula rodaram no <strong>Python 3.14</strong> da máquina da Ana (usuária <code>ana</code>, computador <code>notebook</code>), salvos na pasta pessoal dela e executados com <code>python3 arquivo.py</code>. O que aparece depois de cada pergunta (<code>Sua idade: 30</code>) é o que a Ana digitou.</p>
+
+<hr>
+
+<h2>A ideia: o plano B da receita</h2>
+<p>A Ana vai fazer um bolo. A receita diz: "bata 3 ovos". Ela abre a geladeira e… tem ovo? Na maioria das vezes, tem, e ela segue a receita. Mas ela já combinou consigo mesma um <strong>plano B</strong>: "se não tiver ovo, faço o bolo de banana, que não leva". O plano B fica guardado e só é usado se o problema acontecer.</p>
+<p>É assim que o <code>try</code> funciona:</p>
+<ul>
+  <li>no <code>try</code> vai o <strong>plano A</strong>, o que você quer fazer (e que pode dar errado);</li>
+  <li>no <code>except</code> vai o <strong>plano B</strong>, para um problema <strong>específico</strong> ("se não tiver ovo");</li>
+  <li>depois dos dois, a vida segue: o programa continua na linha de baixo, nos dois casos.</li>
+</ul>
+<p>Repare que o plano B da Ana é para <strong>um</strong> problema: falta de ovo. Se o forno quebrar, o bolo de banana não resolve. Guarde essa ideia; ela é a seção 3 inteira.</p>
+
+<hr>
+
+<h2>1. O primeiro <code>try</code></h2>
+<p>Um programa sem <code>try</code>, que pergunta a idade:</p>
+
+<pre class="file" data-file="idade_sem.py">idade = int(input("Sua idade: "))
+print(f"Ano que vem você terá {idade + 1} anos.")
+print("Obrigado!")
+</pre>
+
+<p>Com um número, tudo bem. Com uma palavra, o <code>int()</code> não consegue converter, e o programa para com um <code>ValueError</code> (o "erro de valor" da aula <a href="erros.html">Lendo uma Mensagem de Erro</a>):</p>
+
+<pre class="term">$ python3 idade_sem.py
+Sua idade: 30
+Ano que vem você terá 31 anos.
+Obrigado!
+$ python3 idade_sem.py
+Sua idade: trinta
+Traceback (most recent call last):
+  File "/home/ana/idade_sem.py", line 1, in &lt;module&gt;
+    idade = int(input("Sua idade: "))
+ValueError: invalid literal for int() with base 10: 'trinta'
+$ echo $?
+1</pre>
+
+<p>Nem o <code>Obrigado!</code> apareceu. Agora com <code>try</code> e <code>except</code>:</p>
+
+<pre class="file" data-file="idade_try.py">try:
+    idade = int(input("Sua idade: "))
+    print(f"Ano que vem você terá {idade + 1} anos.")
+except ValueError:
+    print("Isso não é um número inteiro.")
+print("Obrigado!")
+</pre>
+
+<dl class="anatomy">
+  <dt>try:</dt><dd>"Tente". Começa o bloco do plano A. Os dois-pontos e a indentação funcionam como no <a href="if.html">if</a>: as linhas de dentro ficam 4 espaços para a direita.</dd>
+  <dt>idade = int(input(…))</dt><dd>A linha que <strong>pode</strong> dar erro: a conversão do que a pessoa digitou.</dd>
+  <dt>print(f"Ano que vem…")</dt><dd>Também está dentro do <code>try</code>: só faz sentido se a conversão deu certo.</dd>
+  <dt>except ValueError:</dt><dd>"A não ser que dê <code>ValueError</code>". Fica na mesma coluna do <code>try</code>. O nome depois do <code>except</code> é o <strong>tipo</strong> de erro que este bloco trata, exatamente como aparece na última linha do traceback.</dd>
+  <dt>print("Isso não é…")</dt><dd>O plano B. Só roda se, dentro do <code>try</code>, acontecer um <code>ValueError</code>.</dd>
+  <dt>print("Obrigado!")</dt><dd>Fora dos dois blocos (na margem esquerda). Roda sempre, depois de tudo.</dd>
+</dl>
+
+<pre class="term">$ python3 idade_try.py
+Sua idade: 30
+Ano que vem você terá 31 anos.
+Obrigado!
+$ python3 idade_try.py
+Sua idade: trinta
+Isso não é um número inteiro.
+Obrigado!</pre>
+
+<p>Com <code>30</code>, o programa fez exatamente o mesmo que antes: o <code>except</code> nem foi usado. Com <code>trinta</code>, em vez do traceback veio a mensagem do plano B, e o programa <strong>continuou</strong> até o <code>Obrigado!</code>. Quando um erro é pego por um <code>except</code>, os programadores dizem que ele foi <strong>tratado</strong> (ou "capturado").</p>
+
+<div class="trypy" data-stdin="trinta" data-goal="out:Isso não é um número inteiro.;;out:Obrigado!;;semerro">
+<p class="try-task"><strong>Missão:</strong> a caixa vai "digitar" <code>trinta</code>. Rode uma vez para ver o <code>ValueError</code>. Depois coloque as duas primeiras linhas dentro de um <code>try</code> e acrescente um <code>except ValueError:</code> que mostre <code>Isso não é um número inteiro.</code>, para o programa chegar até o <code>Obrigado!</code>.</p>
+<pre class="script" data-file="main.py">idade = int(input("Sua idade: "))
+print(f"Ano que vem você terá {idade + 1} anos.")
+print("Obrigado!")
+</pre>
+<pre class="solucao" data-file="main.py">try:
+    idade = int(input("Sua idade: "))
+    print(f"Ano que vem você terá {idade + 1} anos.")
+except ValueError:
+    print("Isso não é um número inteiro.")
+print("Obrigado!")
+</pre>
+</div>
+
+<hr>
+
+<h2>2. O caminho do Python dentro do <code>try</code></h2>
+<p>Para ver exatamente o que roda e o que é pulado, um programa que só anuncia cada passo:</p>
+
+<pre class="file" data-file="fluxo.py">print("1. Antes do try")
+try:
+    print("2. Começou o try")
+    numero = int("dez")
+    print("3. Depois da conversão")
+except ValueError:
+    print("4. Dentro do except")
+print("5. Depois de tudo")
+</pre>
+
+<pre class="term">$ python3 fluxo.py
+1. Antes do try
+2. Começou o try
+4. Dentro do except
+5. Depois de tudo</pre>
+
+<p>O passo <strong>3 sumiu</strong>. Quando o erro acontece numa linha do <code>try</code>, o Python <strong>abandona o resto do <code>try</code> na hora</strong> e pula para o <code>except</code>. Agora com <code>int("10")</code>, que dá certo:</p>
+
+<pre class="file" data-file="fluxo_ok.py">print("1. Antes do try")
+try:
+    print("2. Começou o try")
+    numero = int("10")
+    print("3. Depois da conversão")
+except ValueError:
+    print("4. Dentro do except")
+print("5. Depois de tudo")
+</pre>
+
+<pre class="term">$ python3 fluxo_ok.py
+1. Antes do try
+2. Começou o try
+3. Depois da conversão
+5. Depois de tudo</pre>
+
+<p>Sem erro, o <code>try</code> roda inteiro e o <code>except</code> é <strong>pulado</strong>: o passo 4 não aparece.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th>Sem erro</th><th>Com <code>ValueError</code> na linha do meio</th></tr>
+<tr><td>Linhas do <code>try</code> antes do erro</td><td>Rodam</td><td>Rodam</td></tr>
+<tr><td>A linha que deu erro</td><td>—</td><td>Para no meio</td></tr>
+<tr><td>Linhas do <code>try</code> depois do erro</td><td>Rodam</td><td><strong>Não rodam</strong></td></tr>
+<tr><td>O bloco <code>except</code></td><td><strong>Não roda</strong></td><td>Roda</td></tr>
+<tr><td>Depois do <code>try</code>/<code>except</code></td><td>Roda</td><td>Roda</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>3. Diga qual erro você está esperando</h2>
+<p>O <code>except ValueError</code> trata <strong>só</strong> o <code>ValueError</code>. Se dentro do <code>try</code> acontecer outro erro, ele passa direto, como se o <code>try</code> nem existisse:</p>
+
+<pre class="file" data-file="tipo_errado.py">try:
+    total = 120
+    pessoas = 0
+    print(total / pessoas)
+except ValueError:
+    print("Valor inválido.")
+print("Fim")
+</pre>
+
+<pre class="term">$ python3 tipo_errado.py
+Traceback (most recent call last):
+  File "/home/ana/tipo_errado.py", line 4, in &lt;module&gt;
+    print(total / pessoas)
+          ~~~~~~^~~~~~~~~
+ZeroDivisionError: division by zero</pre>
+
+<p>O erro foi um <code>ZeroDivisionError</code>, e o plano B era para <code>ValueError</code>. É o forno quebrado da receita: o bolo de banana não resolve. Isso <strong>não é um defeito do Python, é uma qualidade</strong>: o <code>except</code> trata só o problema que você previu e sabe resolver, e os outros continuam aparecendo, para você ver.</p>
+
+<h3>O <code>except:</code> sozinho (o "except nu")</h3>
+<p>O Python aceita um <code>except</code> sem nenhum tipo: <code>except:</code>. Ele pega <strong>qualquer</strong> erro. Parece prático, mas esconde problemas. Olhe este programa, com um nome digitado errado (<code>txto</code> em vez de <code>texto</code>):</p>
+
+<pre class="file" data-file="nu_nome.py">texto = input("Quantidade: ")
+try:
+    quantidade = int(txto)
+    print(f"Anotado: {quantidade}")
+except:
+    print("Isso não é um número!")
+</pre>
+
+<pre class="term">$ python3 nu_nome.py
+Quantidade: 7
+Isso não é um número!</pre>
+
+<p>A Ana digitou <code>7</code>, um número perfeito, e o programa disse que não era. O erro de verdade foi um <code>NameError</code> (<code>txto</code> não existe), mas o <code>except:</code> pegou esse erro também e mostrou a mensagem errada. Sem o traceback, a Ana não tem a menor pista: o <code>Did you mean: 'texto'?</code> que resolveria tudo nunca apareceu.</p>
+
+<p>E piora. O <kbd>Ctrl</kbd>+<kbd>C</kbd>, que serve para interromper um programa (veja <a href="while.html">while</a>), também chega ao Python como uma exceção, o <code>KeyboardInterrupt</code>. O <code>except:</code> pega até ele:</p>
+
+<pre class="file" data-file="nu_ctrlc.py">while True:
+    try:
+        idade = int(input("Sua idade: "))
+        break
+    except:
+        print("Isso não é um número. Tente de novo.")
+print(f"Idade registrada: {idade}")
+</pre>
+
+<pre class="term">$ python3 nu_ctrlc.py
+Sua idade: ^C                                       « a Ana apertou Ctrl+C para sair…
+Isso não é um número. Tente de novo.                « …e o programa não deixou
+Sua idade: ^C
+Isso não é um número. Tente de novo.
+Sua idade: 30
+Idade registrada: 30</pre>
+
+<p>A Ana apertou <kbd>Ctrl</kbd>+<kbd>C</kbd> duas vezes e o programa não parou: só saiu quando ela digitou um número. (Esse laço que pede de novo é a seção 6.)</p>
+
+<h3>Do mais específico ao mais genérico</h3>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Pega</th><th>Quando usar</th></tr>
+<tr><td><code>except ValueError:</code></td><td>Só o <code>ValueError</code></td><td><strong>Quase sempre.</strong> Você diz qual problema previu</td></tr>
+<tr><td><code>except (ValueError, ZeroDivisionError):</code></td><td>Os tipos da lista</td><td>Quando vários erros têm o mesmo plano B (seção 5)</td></tr>
+<tr><td><code>except Exception:</code></td><td>Quase todos os erros (mas não o <kbd>Ctrl</kbd>+<kbd>C</kbd>)</td><td>Raramente: na "última linha de defesa" de um programa grande, e mostrando qual foi o erro</td></tr>
+<tr><td><code>except:</code></td><td>Tudo, até <kbd>Ctrl</kbd>+<kbd>C</kbd></td><td><strong>Evite.</strong> Esconde erros de digitação e não deixa interromper o programa</td></tr>
+</table>
+</div>
+
+<p>O <code>except Exception</code> pega quase tudo, mas deixa passar o <kbd>Ctrl</kbd>+<kbd>C</kbd>. O mesmo laço de cima, com <code>except Exception:</code> no lugar de <code>except:</code>:</p>
+<pre class="term">$ python3 exc_ctrlc.py
+Sua idade: ^C
+Traceback (most recent call last):
+  File "/home/ana/exc_ctrlc.py", line 3, in &lt;module&gt;
+    idade = int(input("Sua idade: "))
+                ~~~~~^^^^^^^^^^^^^^^
+KeyboardInterrupt</pre>
+<p>Ainda assim, ele esconderia o <code>NameError</code> do <code>txto</code>. Se um dia precisar dele, pelo menos mostre qual foi o erro, como na próxima seção.</p>
+
+<hr>
+
+<h2>4. <code>as e</code>: a mensagem do erro</h2>
+<p>Às vezes você quer tratar o erro <strong>e</strong> saber o que o Python disse. Escreva <code>as</code> ("como") e um nome depois do tipo; o erro fica guardado nessa variável dentro do <code>except</code>:</p>
+
+<pre class="file" data-file="as_e.py">texto = "12,5"
+try:
+    quantidade = int(texto)
+except ValueError as e:
+    print("Não deu para converter.")
+    print(f"Mensagem do Python: {e}")
+    print(f"Tipo do erro: {type(e).__name__}")
+</pre>
+
+<pre class="term">$ python3 as_e.py
+Não deu para converter.
+Mensagem do Python: invalid literal for int() with base 10: '12,5'
+Tipo do erro: ValueError</pre>
+
+<dl class="anatomy">
+  <dt>as e</dt><dd>Guarda o erro na variável <code>e</code> (de "erro"; também se vê <code>err</code> ou <code>erro</code>). Ela só existe dentro do bloco <code>except</code>.</dd>
+  <dt>{e}</dt><dd>Numa f-string (ou num <code>print(e)</code>), o erro vira a <strong>mensagem</strong>: o que vem depois dos dois-pontos na última linha do traceback.</dd>
+  <dt>type(e).__name__</dt><dd>O nome do tipo do erro, como texto (<code>ValueError</code>). O <code>type()</code> você conhece da aula <a href="type.html">Descobrindo o Tipo</a>; o <code>__name__</code> (com dois sublinhados de cada lado) é o nome dele.</dd>
+</dl>
+
+<p>Com <code>except Exception as e</code>, aquele programa do <code>txto</code> pelo menos conta o que aconteceu:</p>
+
+<pre class="file" data-file="exception.py">texto = input("Quantidade: ")
+try:
+    quantidade = int(txto)
+    print(f"Anotado: {quantidade}")
+except Exception as e:
+    print(f"Deu erro: {type(e).__name__}: {e}")
+</pre>
+
+<pre class="term">$ python3 exception.py
+Quantidade: 7
+Deu erro: NameError: name 'txto' is not defined</pre>
+
+<p>Ainda é pior que o traceback (sumiram a linha e a dica <code>Did you mean</code>), mas já dá uma pista. O melhor continua sendo <code>except ValueError</code>: aí o <code>NameError</code> aparece completo.</p>
+
+<hr>
+
+<h2>5. Vários <code>except</code></h2>
+<p>A Ana e os amigos vão dividir a conta de R$ 120 da pizzaria. Duas coisas podem dar errado: alguém digitar a quantidade por extenso (<code>ValueError</code>) ou digitar <code>0</code> (<code>ZeroDivisionError</code>). Cada problema merece uma resposta diferente, então cada um ganha o seu <code>except</code>:</p>
+
+<pre class="file" data-file="conta.py">total = 120.0
+try:
+    pessoas = int(input("Quantas pessoas vão dividir a conta? "))
+    parte = total / pessoas
+    print(f"Cada um paga R$ {parte:.2f}")
+except ValueError:
+    print("Digite a quantidade em algarismos, como 4.")
+except ZeroDivisionError:
+    print("Ninguém para dividir? Então a conta é toda sua!")
+</pre>
+
+<pre class="term">$ python3 conta.py
+Quantas pessoas vão dividir a conta? 4
+Cada um paga R$ 30.00
+$ python3 conta.py
+Quantas pessoas vão dividir a conta? quatro
+Digite a quantidade em algarismos, como 4.
+$ python3 conta.py
+Quantas pessoas vão dividir a conta? 0
+Ninguém para dividir? Então a conta é toda sua!</pre>
+
+<p>O Python olha os <code>except</code> <strong>de cima para baixo</strong> e usa o <strong>primeiro</strong> cujo tipo combina com o erro. Só um deles roda.</p>
+
+<h3>Um plano B para vários erros</h3>
+<p>Quando o plano B é o mesmo, junte os tipos entre parênteses (uma <a href="tuplas.html">tupla</a>):</p>
+
+<pre class="file" data-file="conta_tupla.py">total = 120.0
+try:
+    pessoas = int(input("Quantas pessoas vão dividir a conta? "))
+    parte = total / pessoas
+    print(f"Cada um paga R$ {parte:.2f}")
+except (ValueError, ZeroDivisionError) as e:
+    print(f"Não deu para dividir: {e}")
+</pre>
+
+<pre class="term">$ python3 conta_tupla.py
+Quantas pessoas vão dividir a conta? 0
+Não deu para dividir: division by zero
+$ python3 conta_tupla.py
+Quantas pessoas vão dividir a conta? 4,5
+Não deu para dividir: invalid literal for int() with base 10: '4,5'</pre>
+
+<div class="trypy" data-stdin="0" data-goal="out:Ninguém para dividir? Então a conta é toda sua!;;semerro">
+<p class="try-task"><strong>Missão:</strong> a caixa vai "digitar" <code>0</code>. O programa já trata o <code>ValueError</code>, mas não o <code>ZeroDivisionError</code>. Acrescente um segundo <code>except</code> que mostre <code>Ninguém para dividir? Então a conta é toda sua!</code>.</p>
+<pre class="script" data-file="main.py">total = 120.0
+try:
+    pessoas = int(input("Quantas pessoas vão dividir a conta? "))
+    parte = total / pessoas
+    print(f"Cada um paga R$ {parte:.2f}")
+except ValueError:
+    print("Digite a quantidade em algarismos, como 4.")
+</pre>
+<pre class="solucao" data-file="main.py">total = 120.0
+try:
+    pessoas = int(input("Quantas pessoas vão dividir a conta? "))
+    parte = total / pessoas
+    print(f"Cada um paga R$ {parte:.2f}")
+except ValueError:
+    print("Digite a quantidade em algarismos, como 4.")
+except ZeroDivisionError:
+    print("Ninguém para dividir? Então a conta é toda sua!")
+</pre>
+</div>
+
+<p>Mais um exemplo, com a lista de compras: o <code>IndexError</code> (posição que não existe) também se trata assim.</p>
+
+<pre class="file" data-file="lista_ex.py">compras = ["arroz", "feijão", "café"]
+try:
+    posicao = int(input("Qual item (0, 1, 2...)? "))
+    print(f"Item: {compras[posicao]}")
+except ValueError:
+    print("Digite um número.")
+except IndexError:
+    print(f"A lista só tem {len(compras)} itens.")
+</pre>
+
+<pre class="term">$ python3 lista_ex.py
+Qual item (0, 1, 2...)? 1
+Item: feijão
+$ python3 lista_ex.py
+Qual item (0, 1, 2...)? 5
+A lista só tem 3 itens.</pre>
+
+<hr>
+
+<h2>6. Pedir de novo até a pessoa acertar</h2>
+<p>Até aqui, quando a pessoa errava, o programa avisava e terminava. Muito melhor é <strong>perguntar de novo</strong>. Junte o <code>try</code> com um <code>while True</code> (o laço "para sempre" da aula <a href="while.html">while</a>) e um <code>break</code> (veja <a href="break-continue.html">break e continue</a>):</p>
+
+<pre class="file" data-file="laco.py">while True:
+    try:
+        idade = int(input("Sua idade: "))
+        break
+    except ValueError:
+        print("Isso não é um número. Tente de novo.")
+print(f"Idade registrada: {idade}")
+</pre>
+
+<dl class="anatomy">
+  <dt>while True:</dt><dd>Repete para sempre… até um <code>break</code>.</dd>
+  <dt>idade = int(input(…))</dt><dd>Tenta ler e converter.</dd>
+  <dt>break</dt><dd>Só chega aqui se a conversão deu certo (se der erro, o resto do <code>try</code> é pulado, lembra da seção 2?). O <code>break</code> sai do laço.</dd>
+  <dt>except ValueError:</dt><dd>Se a conversão falhou: avisa. Depois do <code>except</code> acaba a volta, e o <code>while</code> pergunta de novo.</dd>
+  <dt>print(f"Idade registrada…")</dt><dd>Fora do laço: só roda depois do <code>break</code>, com uma idade que com certeza é um número.</dd>
+</dl>
+
+<pre class="term">$ python3 laco.py
+Sua idade: dez
+Isso não é um número. Tente de novo.
+Sua idade: vinte e cinco
+Isso não é um número. Tente de novo.
+Sua idade: 25
+Idade registrada: 25</pre>
+
+<p>E como este laço usa <code>except ValueError</code>, e não <code>except:</code>, o <kbd>Ctrl</kbd>+<kbd>C</kbd> funciona:</p>
+
+<pre class="term">$ python3 laco.py
+Sua idade: ^C
+Traceback (most recent call last):
+  File "/home/ana/laco.py", line 3, in &lt;module&gt;
+    idade = int(input("Sua idade: "))
+                ~~~~~^^^^^^^^^^^^^^^
+KeyboardInterrupt
+
+$ echo $?
+130</pre>
+
+<p>O traceback do <code>KeyboardInterrupt</code> aqui é bem-vindo: é a Ana mandando parar, e o programa obedecendo. O código de saída 130 é o de quem foi interrompido com <kbd>Ctrl</kbd>+<kbd>C</kbd>.</p>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+<p>Para não deixar o <code>int()</code> quebrar, existem duas filosofias. A do <code>try</code>: <strong>tente, e trate se der errado</strong>. E a do <code>if</code>: <strong>confira antes, e só faça se estiver tudo certo</strong>. O método <code>isdigit()</code> diz se um texto só tem algarismos (veja <a href="strings-metodos.html">Métodos de Texto</a>):</p>
+
+<pre class="file" data-file="lbyl.py">texto = input("Sua idade: ")
+if texto.isdigit():
+    idade = int(texto)
+    print(f"Ano que vem você terá {idade + 1} anos.")
+else:
+    print("Isso não é um número inteiro.")
+</pre>
+
+<pre class="term">$ python3 lbyl.py
+Sua idade: 30
+Ano que vem você terá 31 anos.
+$ python3 lbyl.py
+Sua idade: -5
+Isso não é um número inteiro.</pre>
+
+<p>Funciona, mas repare no segundo caso: <code>-5</code> é um número inteiro, e o <code>isdigit()</code> recusou, porque o sinal de menos não é um algarismo. Conferir antes obriga você a prever <strong>todos</strong> os formatos válidos; o <code>try</code> deixa o próprio <code>int()</code> decidir, e ele aceita <code>-5</code>, <code>+5</code> e <code> 5 </code> com espaços. Para dicionários, a conferência tem um atalho pronto, o <code>get()</code> (veja <a href="dicionarios.html">Dicionários</a>):</p>
+
+<pre class="file" data-file="get.py">precos = {"pão": 0.75, "leite": 5.49}
+try:
+    print(precos["café"])
+except KeyError:
+    print("Café sem preço cadastrado.")
+print(precos.get("café", "sem preço"))
+</pre>
+
+<pre class="term">$ python3 get.py
+Café sem preço cadastrado.
+sem preço</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Situação</th><th>Qual usar</th></tr>
+<tr><td>Converter o que a pessoa digitou (<code>int()</code>, <code>float()</code>)</td><td><code>try</code>/<code>except ValueError</code>: o <code>int()</code> já sabe todas as regras</td></tr>
+<tr><td>Abrir um arquivo que pode não existir</td><td><code>try</code>/<code>except FileNotFoundError</code> (aula <a href="arquivos.html">Abrindo Arquivos</a>)</td></tr>
+<tr><td>Uma chave que pode faltar no dicionário</td><td><code>dicionario.get(chave, padrão)</code>; ou <code>if chave in dicionario</code></td></tr>
+<tr><td>Uma condição simples e fácil de testar (lista vazia, divisor zero)</td><td><code>if</code>: fica mais claro de ler</td></tr>
+<tr><td>Um erro que você não sabe consertar</td><td>Nenhum dos dois: deixe o traceback aparecer</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong><code>try</code> sem <code>except</code></strong>
+<pre class="file" data-file="sem_except.py">try:
+    idade = int(input("Sua idade: "))
+print("Obrigado!")
+</pre>
+<pre class="term">$ python3 sem_except.py
+  File "/home/ana/sem_except.py", line 3
+    print("Obrigado!")
+    ^^^^^
+SyntaxError: expected 'except' or 'finally' block</pre>
+<p>"Esperava um bloco <code>except</code> ou <code>finally</code>." Um <code>try</code> não pode ficar sozinho: logo depois do bloco dele tem de vir pelo menos um <code>except</code> (ou um <code>finally</code>, da próxima aula, <a href="else-finally.html">else e finally</a>). Como é erro de sintaxe, nada rodou, nem a pergunta. <strong>Como consertar:</strong> acrescente o <code>except</code> com o tipo de erro esperado.</p>
+</div>
+
+<div class="cenario">
+<strong>Faltam os dois-pontos</strong>
+<pre class="file" data-file="sem_doispontos.py">try:
+    idade = int(input("Sua idade: "))
+except ValueError
+    print("Isso não é um número.")
+</pre>
+<pre class="term">$ python3 sem_doispontos.py
+  File "/home/ana/sem_doispontos.py", line 3
+    except ValueError
+                     ^
+SyntaxError: expected ':'</pre>
+<p>"Esperava <code>:</code>." O <code>^</code> aponta o fim da linha, onde os dois-pontos deveriam estar. <code>try:</code> e <code>except …:</code> sempre terminam com dois-pontos.</p>
+</div>
+
+<div class="cenario">
+<strong>Um erro dentro do próprio <code>except</code></strong>
+<pre class="file" data-file="durante.py">try:
+    idade = int("trinta")
+except ValueError as e:
+    print("Erro: " + e)
+</pre>
+<pre class="term">$ python3 durante.py
+Traceback (most recent call last):
+  File "/home/ana/durante.py", line 2, in &lt;module&gt;
+    idade = int("trinta")
+ValueError: invalid literal for int() with base 10: 'trinta'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/ana/durante.py", line 4, in &lt;module&gt;
+    print("Erro: " + e)
+          ~~~~~~~~~^~~
+TypeError: can only concatenate str (not "ValueError") to str</pre>
+<p>Dois tracebacks! A frase do meio diz: "<strong>Durante o tratamento</strong> da exceção acima, <strong>outra</strong> exceção aconteceu." O primeiro (<code>ValueError</code>) foi tratado direitinho; o problema é o segundo, que estourou <strong>dentro do <code>except</code></strong>, na linha 4: <code>e</code> é um erro, não um texto, e o <code>+</code> não junta texto com erro. Leia o <strong>de baixo</strong> primeiro, como sempre. <strong>Como consertar:</strong> use uma f-string, <code>print(f"Erro: {e}")</code>, que converte o erro em texto sozinha.</p>
+</div>
+
+<div class="cenario">
+<strong>O genérico antes do específico</strong>
+<pre class="file" data-file="ordem.py">try:
+    pessoas = int("zero")
+except Exception:
+    print("Algum erro aconteceu.")
+except ValueError:
+    print("Digite em algarismos.")
+</pre>
+<pre class="term">$ python3 ordem.py
+Algum erro aconteceu.</pre>
+<p>Nenhuma mensagem de erro, mas o resultado está errado: a mensagem útil (<code>Digite em algarismos.</code>) nunca aparece. O Python usa o <strong>primeiro</strong> <code>except</code> que combina, e o <code>Exception</code> combina com o <code>ValueError</code> (e com quase tudo). <strong>Como consertar:</strong> os <code>except</code> mais específicos vêm primeiro; o genérico, se houver, por último.</p>
+</div>
+
+<div class="cenario">
+<strong>Um <code>try</code> grande demais</strong>
+<p>Quanto mais linhas dentro do <code>try</code>, maior a chance de o <code>except</code> pegar um erro que não era o previsto. Coloque no <code>try</code> só a linha que pode dar o erro esperado e o que depende dela, e deixe o resto de fora. A ferramenta para separar "o que só roda se deu certo" é o <code>else</code>, da próxima aula: <a href="else-finally.html">else e finally</a>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>except:</code> escondendo um erro de digitação</strong>
+<p>Você viu na seção 3: com <code>except:</code> (ou <code>except Exception:</code> sem mostrar o erro), um <code>NameError</code> vira "Isso não é um número!" e você perde o traceback. Se o seu programa diz que algo deu errado e você não entende por quê, procure um <code>except</code> genérico e troque pelo tipo certo: o traceback de verdade vai aparecer.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>try:</code></td><td>Começa o bloco que pode dar erro</td></tr>
+<tr><td><code>except ValueError:</code></td><td>Roda se acontecer um <code>ValueError</code> no <code>try</code></td></tr>
+<tr><td><code>except ValueError as e:</code></td><td>Idem, guardando o erro em <code>e</code> (<code>print(e)</code> mostra a mensagem)</td></tr>
+<tr><td><code>except (ValueError, KeyError):</code></td><td>Roda para qualquer um dos tipos da tupla</td></tr>
+<tr><td>vários <code>except</code> seguidos</td><td>O primeiro que combina é usado; só um roda</td></tr>
+<tr><td><code>except Exception as e:</code></td><td>Quase todos os erros; use pouco e mostre <code>e</code></td></tr>
+<tr><td><code>except:</code></td><td>Tudo, até <kbd>Ctrl</kbd>+<kbd>C</kbd>: evite</td></tr>
+<tr><td><code>type(e).__name__</code></td><td>O nome do tipo do erro, como texto</td></tr>
+<tr><td><code>while True:</code> + <code>try</code> + <code>break</code></td><td>Pergunta de novo até dar certo</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>SyntaxError: expected 'except' or 'finally' block</code></td><td><code>try</code> sem <code>except</code> (ou com o <code>except</code> indentado errado)</td></tr>
+<tr><td><code>SyntaxError: expected ':'</code></td><td>Faltaram os dois-pontos do <code>try</code> ou do <code>except</code></td></tr>
+<tr><td>O traceback aparece mesmo com <code>try</code></td><td>O erro foi de outro tipo, e não do que está no <code>except</code></td></tr>
+<tr><td><code>During handling of the above exception…</code></td><td>Deu erro dentro do bloco <code>except</code></td></tr>
+<tr><td>A mensagem do plano B aparece sem motivo</td><td><code>except:</code> ou <code>except Exception:</code> pegando um erro não previsto</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd> não para o programa</td><td><code>except:</code> sozinho, dentro de um laço</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Complete o tratamento</h3>
+<p>Complete para tratar o erro de um número mal digitado:</p>
+<div class="ex-code"><input data-answer="try" aria-label="palavra 1">:
+    preco = float(input("Preço: "))
+<input data-answer="except" aria-label="palavra 2"> <input data-answer="ValueError" aria-label="tipo">:
+    print("Use ponto nos centavos, como 4.50")</div>
+</div>
+
+<div class="exercise">
+<h3>2. O que aparece?</h3>
+<p>Quantas linhas este programa mostra?</p>
+<pre class="file" data-file="exercicio.py">try:
+    print("A")
+    x = int("oi")
+    print("B")
+except ValueError:
+    print("C")
+print("D")
+</pre>
+<div class="ex-code"><input data-answer="3|três" aria-label="quantidade de linhas"> linhas</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. Dentro de um <code>try</code> com <code>except ValueError:</code> acontece um <code>ZeroDivisionError</code>. O que acontece?</p>
+<label><input type="radio" name="q3"> O <code>except ValueError</code> roda mesmo assim</label>
+<label><input type="radio" name="q3"> O erro não é tratado: aparece o traceback e o programa para</label>
+<label><input type="radio" name="q3"> O Python ignora o erro e continua</label>
+<label><input type="radio" name="q3"> Dá <code>SyntaxError</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Por que evitar o <code>except:</code> sem tipo?</p>
+<label><input type="radio" name="q4"> Porque ele não existe no Python 3.14</label>
+<label><input type="radio" name="q4"> Porque ele deixa o programa mais lento</label>
+<label><input type="radio" name="q4"> Porque ele pega qualquer erro, até um nome digitado errado e o <kbd>Ctrl</kbd>+<kbd>C</kbd>, e esconde o problema real</label>
+<label><input type="radio" name="q4"> Porque ele só pega <code>ValueError</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Em <code>except ValueError as e:</code>, o que mostra <code>print(e)</code>?</p>
+<label><input type="radio" name="q5"> A mensagem do erro, como <code>invalid literal for int() with base 10: 'dez'</code></label>
+<label><input type="radio" name="q5"> O traceback inteiro</label>
+<label><input type="radio" name="q5"> Só a palavra <code>ValueError</code></label>
+<label><input type="radio" name="q5"> O número da linha do erro</label>
+</div>
+
+<h3>Missão final: insistir até vir um número</h3>
+
+<div class="trypy" data-stdin="dez\nvinte\n18" data-goal="out:Isso não é um número. Tente de novo.;;out:Idade registrada: 18;;semerro;;src:except\s+ValueError">
+<p class="try-task"><strong>Missão:</strong> a caixa vai "digitar" <code>dez</code>, <code>vinte</code> e <code>18</code>. Do jeito que está, o programa quebra logo no <code>dez</code>. Coloque a leitura e o <code>break</code> dentro de um <code>try</code>, com um <code>except ValueError:</code> que mostre <code>Isso não é um número. Tente de novo.</code>, para o programa insistir até chegar ao 18.</p>
+<pre class="script" data-file="main.py">while True:
+    idade = int(input("Sua idade: "))
+    break
+print(f"Idade registrada: {idade}")
+</pre>
+<pre class="solucao" data-file="main.py">while True:
+    try:
+        idade = int(input("Sua idade: "))
+        break
+    except ValueError:
+        print("Isso não é um número. Tente de novo.")
+print(f"Idade registrada: {idade}")
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>try:</code> guarda o código que pode dar erro; <code>except Tipo:</code> é o plano B para aquele tipo de erro. Depois dos dois, o programa continua.</li>
+  <li>Se o erro acontece no meio do <code>try</code>, o resto do <code>try</code> é pulado e o <code>except</code> roda. Sem erro, o <code>except</code> é pulado.</li>
+  <li>Diga o tipo: <code>except ValueError</code>. Erros de outros tipos continuam aparecendo, o que é bom.</li>
+  <li>Evite <code>except:</code> sozinho: ele esconde erros de digitação e engole o <kbd>Ctrl</kbd>+<kbd>C</kbd>. <code>except Exception</code> é o máximo de genérico aceitável, e mostrando o erro.</li>
+  <li><code>as e</code> guarda o erro: <code>print(f"{e}")</code> mostra a mensagem, <code>type(e).__name__</code> o tipo.</li>
+  <li>Vários <code>except</code>: o primeiro que combina é usado; do mais específico ao mais genérico. Vários tipos com o mesmo tratamento: <code>except (A, B):</code>.</li>
+  <li><code>while True</code> + <code>try</code> + <code>break</code> pergunta de novo até a pessoa acertar.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
