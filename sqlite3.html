@@ -1,0 +1,1027 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python sqlite3 — guardando dados num banco de dados | Guia Python</title>
+<meta name="description" content="O módulo sqlite3 para quem está começando: conectar a um banco, criar a tabela, gravar com execute e o marcador ?, commit, ler com fetchall e fetchone, sqlite3.Row, transações com with, por que nunca montar o SQL com f-string (SQL injection) e os erros reais do Python 3.14, com o estoque da lojinha da Ana.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">sqlite3</span></h1>
+
+<p class="intro">A Ana guarda o estoque da lojinha num arquivo de texto. Funciona enquanto são dez produtos. Mas quando ela quer saber "quais produtos custam menos de 10 reais?", "quantos itens tenho ao todo?" ou "tire o óleo da lista", o programa precisa ler o arquivo inteiro, procurar, mudar e escrever tudo de novo. Para isso existem os <strong>bancos de dados</strong>: um lugar feito para guardar muitos dados e responder perguntas sobre eles. E o Python já vem com um banco pronto para usar, o <strong>SQLite</strong>, pelo módulo <code>sqlite3</code>. Nada para instalar.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é um banco de dados, uma tabela e o SQL, sem precisar saber SQL antes.</li>
+  <li>A abrir (e criar) um banco com <code>sqlite3.connect()</code> e a criar uma tabela.</li>
+  <li>A gravar dados com <code>execute()</code> e o marcador <code>?</code>, e a confirmar com <code>commit()</code>.</li>
+  <li>A ler o que está gravado com <code>fetchall()</code>, <code>fetchone()</code> e com um <code>for</code>.</li>
+  <li>A mudar e apagar linhas, e a usar <code>with</code> para que tudo dê certo ou nada aconteça.</li>
+  <li>Por que <strong>nunca</strong> montar o SQL com f-string: o ataque chamado <strong>SQL injection</strong>.</li>
+  <li>Os erros reais: tabela que não existe, número errado de valores, nome repetido, banco fechado.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: um fichário que responde perguntas</h2>
+<p>Pense num fichário de cozinha com uma gaveta etiquetada "produtos". Cada ficha da gaveta tem os mesmos campos: nome, preço, quantidade. Um banco de dados é esse fichário, só que guardado num arquivo e com um atendente que entende pedidos como "me traga as fichas com preço menor que 10".</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>No fichário</th><th>No banco de dados</th><th>Na lojinha da Ana</th></tr>
+<tr><td>O fichário inteiro</td><td>O <strong>banco</strong> (no SQLite, um arquivo só)</td><td><code>loja.db</code></td></tr>
+<tr><td>Uma gaveta etiquetada</td><td>Uma <strong>tabela</strong></td><td><code>produtos</code></td></tr>
+<tr><td>Os campos de cada ficha</td><td>As <strong>colunas</strong></td><td><code>nome</code>, <code>preco</code>, <code>quantidade</code></td></tr>
+<tr><td>Uma ficha</td><td>Uma <strong>linha</strong> (ou registro)</td><td>Arroz 5 kg, 27,90, 12</td></tr>
+<tr><td>O pedido ao atendente</td><td>Um comando <strong>SQL</strong></td><td><code>SELECT nome FROM produtos WHERE preco &lt; 10</code></td></tr>
+</table>
+</div>
+
+<p>O <strong>SQL</strong> (diz-se "ésse-quê-éle") é a língua dos bancos de dados. Nesta aula você vai usar só cinco comandos dela, e cada um vem explicado quando aparece: <code>CREATE TABLE</code> (criar a gaveta), <code>INSERT</code> (pôr uma ficha), <code>SELECT</code> (buscar), <code>UPDATE</code> (mudar) e <code>DELETE</code> (apagar). O Python não entende SQL; quem entende é o SQLite. O papel do <code>sqlite3</code> é ser a ponte: o Python entrega o texto do comando, o SQLite executa e devolve as respostas como listas e tuplas do Python.</p>
+
+<div class="tip">
+<strong>Quer aprender SQL a fundo?</strong>
+<p>O guia irmão deste, o <a href="https://wallysondevs.github.io/guia-sql/">Guia SQL</a>, ensina a língua do zero, com o próprio SQLite (ele pode ainda não estar no ar quando você ler isto). Aqui o foco é o lado do Python: como conversar com o banco a partir de um programa.</p>
+</div>
+
+<hr>
+
+<h2>1. Abrindo o banco: <code>connect()</code></h2>
+
+<pre class="file" data-file="conectar.py">import sqlite3
+
+con = sqlite3.connect("loja.db")
+print("Conectei ao banco:", con)
+print("Versão do SQLite:", sqlite3.sqlite_version)
+con.close()
+</pre>
+
+<dl class="anatomy">
+  <dt>import sqlite3</dt><dd>Traz o módulo da biblioteca padrão (ele vem junto com o Python; veja <a href="modulos.html">Módulos e import</a>).</dd>
+  <dt>sqlite3.connect("loja.db")</dt><dd>"Conectar": abre o banco guardado no arquivo <code>loja.db</code>. <strong>Se o arquivo não existe, ele é criado</strong>, vazio.</dd>
+  <dt>con</dt><dd>A <strong>conexão</strong>: o objeto pelo qual você conversa com o banco. O nome <code>con</code> é o costume (também se vê <code>conexao</code> ou <code>conn</code>).</dd>
+  <dt>sqlite3.sqlite_version</dt><dd>A versão do SQLite que o seu Python está usando, como texto.</dd>
+  <dt>con.close()</dt><dd>"Fechar": encerra a conversa com o banco, como fechar um arquivo.</dd>
+</dl>
+
+<pre class="term">$ python3 conectar.py
+Conectei ao banco: &lt;sqlite3.Connection object at 0x7f21ea578130&gt;
+Versão do SQLite: 3.46.1
+$ ls -l loja.db
+-rw-r--r-- 1 ana ana 0 Oct 18 11:45 loja.db
+</pre>
+
+<p>O <code>print(con)</code> mostra só "um objeto de conexão" e um endereço na memória (o <code>0x7f…</code> muda a cada execução). E o <code>ls -l</code> mostra que o arquivo <code>loja.db</code> apareceu na pasta, com 0 bytes: o banco existe, mas ainda não tem nada dentro.</p>
+
+<div class="note">
+<strong>Um banco que vive só na memória</strong>
+<p>Em vez de um nome de arquivo, você pode passar o texto especial <code>":memory:"</code>: <code>sqlite3.connect(":memory:")</code>. O banco é criado na memória e some quando o programa termina. É ótimo para testes e exemplos; vários exemplos desta aula usam esse truque.</p>
+</div>
+
+<hr>
+
+<h2>2. Criando a tabela: <code>CREATE TABLE</code></h2>
+<p>Um banco novo é um fichário sem gavetas. Antes de guardar produtos, é preciso criar a tabela, dizendo o nome e o tipo de cada coluna. Para mandar um comando SQL, use <code>con.execute()</code> ("executar") com o comando num texto:</p>
+
+<pre class="file" data-file="criar.py">import sqlite3
+
+con = sqlite3.connect("loja.db")
+con.execute("""
+    CREATE TABLE IF NOT EXISTS produtos (
+        id         INTEGER PRIMARY KEY,
+        nome       TEXT NOT NULL UNIQUE,
+        preco      REAL NOT NULL,
+        quantidade INTEGER NOT NULL
+    )
+""")
+con.close()
+print("Tabela pronta.")
+</pre>
+
+<dl class="anatomy">
+  <dt>"""…"""</dt><dd>Um texto de várias linhas (aspas triplas). O SQL fica mais fácil de ler assim, uma coluna por linha.</dd>
+  <dt>CREATE TABLE IF NOT EXISTS produtos</dt><dd>"Crie a tabela <code>produtos</code>, se ela ainda não existir". Sem o <code>IF NOT EXISTS</code>, rodar o programa pela segunda vez daria erro (a tabela já existe).</dd>
+  <dt>id INTEGER PRIMARY KEY</dt><dd>Um número inteiro que identifica cada linha. Como é a "chave primária", o SQLite preenche sozinho: 1, 2, 3…</dd>
+  <dt>nome TEXT NOT NULL UNIQUE</dt><dd>Texto, obrigatório (<code>NOT NULL</code>: não pode ficar vazio) e sem repetição (<code>UNIQUE</code>: dois produtos não podem ter o mesmo nome).</dd>
+  <dt>preco REAL NOT NULL</dt><dd>Número com casas decimais (no Python, um <code>float</code>).</dd>
+  <dt>quantidade INTEGER NOT NULL</dt><dd>Número inteiro (no Python, um <code>int</code>).</dd>
+</dl>
+
+<pre class="term">$ python3 criar.py
+Tabela pronta.
+$ ls -l loja.db
+-rw-r--r-- 1 ana ana 12288 Oct 18 11:45 loja.db
+</pre>
+
+<p>O arquivo agora tem 12288 bytes: o SQLite escreveu nele a estrutura da tabela. Você não precisa (nem deve) abrir esse arquivo num editor de texto; ele não é texto, é um formato próprio do SQLite.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Tipo no SQLite</th><th>O que guarda</th><th>Volta para o Python como</th></tr>
+<tr><td><code>INTEGER</code></td><td>Números inteiros</td><td><code>int</code></td></tr>
+<tr><td><code>REAL</code></td><td>Números com casas decimais</td><td><code>float</code></td></tr>
+<tr><td><code>TEXT</code></td><td>Textos</td><td><code>str</code></td></tr>
+<tr><td><code>NULL</code></td><td>"Sem valor"</td><td><code>None</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>3. Gravando uma linha: <code>INSERT</code> e o marcador <code>?</code></h2>
+
+<pre class="file" data-file="inserir.py">import sqlite3
+
+con = sqlite3.connect("loja.db")
+con.execute("""
+    CREATE TABLE IF NOT EXISTS produtos (
+        id         INTEGER PRIMARY KEY,
+        nome       TEXT NOT NULL UNIQUE,
+        preco      REAL NOT NULL,
+        quantidade INTEGER NOT NULL
+    )
+""")
+
+cur = con.execute(
+    "INSERT INTO produtos (nome, preco, quantidade) VALUES (?, ?, ?)",
+    ("Arroz 5 kg", 27.90, 12),
+)
+print("Produto gravado com o id", cur.lastrowid)
+
+con.commit()
+con.close()
+</pre>
+
+<dl class="anatomy">
+  <dt>INSERT INTO produtos (nome, preco, quantidade)</dt><dd>"Insira na tabela <code>produtos</code>, nestas colunas". O <code>id</code> fica de fora: o SQLite escolhe.</dd>
+  <dt>VALUES (?, ?, ?)</dt><dd>Os valores. Cada <code>?</code> é um <strong>marcador</strong>: um lugar vazio que o <code>sqlite3</code> preenche com um valor seu.</dd>
+  <dt>("Arroz 5 kg", 27.90, 12)</dt><dd>Uma <a href="tuplas.html">tupla</a> com os valores, na mesma ordem dos <code>?</code>: o primeiro valor vai no primeiro <code>?</code>, e assim por diante.</dd>
+  <dt>cur</dt><dd>O <code>execute()</code> devolve um <strong>cursor</strong>, um objeto com o resultado do comando. Aqui você usa só o <code>cur.lastrowid</code>: o <code>id</code> que a linha nova recebeu.</dd>
+  <dt>con.commit()</dt><dd>"Confirmar": grava de verdade no arquivo. Sem ele, a mudança se perde quando a conexão fecha (você vai ver isso acontecer na seção 7).</dd>
+</dl>
+
+<pre class="term">$ python3 inserir.py
+Produto gravado com o id 1
+</pre>
+
+<p>Por que os <code>?</code> em vez de escrever os valores direto no texto? Porque é o <code>sqlite3</code> quem cuida de pôr cada valor no lugar certo: textos com acento, com apóstrofo (<code>Pão d'água</code>), números com ponto. E, principalmente, por <strong>segurança</strong>: a seção 9 mostra o que pode acontecer quando o programa cola no SQL um texto digitado pelo usuário.</p>
+
+<h3>Vários de uma vez: <code>executemany()</code></h3>
+<p>Para gravar uma lista inteira, use <code>executemany()</code> ("executar muitos"): o mesmo comando, uma vez para cada tupla da lista.</p>
+
+<pre class="file" data-file="varios.py">import sqlite3
+
+con = sqlite3.connect("loja.db")
+# (o mesmo CREATE TABLE IF NOT EXISTS de antes fica aqui)
+
+novos = [
+    ("Feijão 1 kg", 8.49, 30),
+    ("Café 500 g", 18.90, 0),
+    ("Açúcar 1 kg", 4.99, 25),
+    ("Óleo 900 ml", 7.75, 8),
+]
+cur = con.executemany(
+    "INSERT INTO produtos (nome, preco, quantidade) VALUES (?, ?, ?)",
+    novos,
+)
+print("Linhas gravadas:", cur.rowcount)
+con.commit()
+con.close()
+</pre>
+
+<pre class="term">$ python3 varios.py
+Linhas gravadas: 4
+</pre>
+
+<p>O <code>cur.rowcount</code> diz quantas linhas o comando afetou. Agora o estoque tem cinco produtos.</p>
+
+<hr>
+
+<h2>4. Lendo: <code>SELECT</code> e <code>fetchall()</code></h2>
+<p>Para buscar, o comando SQL é o <code>SELECT</code> ("selecionar"): quais colunas, de qual tabela. O resultado vem no cursor, e <code>fetchall()</code> ("buscar todas") entrega todas as linhas de uma vez.</p>
+
+<pre class="file" data-file="consultar.py">import sqlite3
+
+con = sqlite3.connect("loja.db")
+cur = con.execute("SELECT id, nome, preco, quantidade FROM produtos")
+linhas = cur.fetchall()
+print(linhas)
+print("Tipo:", type(linhas), "com", len(linhas), "linhas")
+print("Primeira linha:", linhas[0], type(linhas[0]))
+con.close()
+</pre>
+
+<pre class="term">$ python3 consultar.py
+[(1, 'Arroz 5 kg', 27.9, 12), (2, 'Feijão 1 kg', 8.49, 30), (3, 'Café 500 g', 18.9, 0), (4, 'Açúcar 1 kg', 4.99, 25), (5, 'Óleo 900 ml', 7.75, 8)]
+Tipo: &lt;class 'list'&gt; com 5 linhas
+Primeira linha: (1, 'Arroz 5 kg', 27.9, 12) &lt;class 'tuple'&gt;
+</pre>
+
+<p>Repare no formato: uma <strong>lista</strong> de <strong>tuplas</strong>. Cada tupla é uma linha da tabela, com os valores na ordem das colunas pedidas no <code>SELECT</code>. Os <code>id</code> de 1 a 5 foram preenchidos pelo SQLite. E o preço <code>27.90</code> voltou como <code>27.9</code>: é um <code>float</code>, e o Python não mostra o zero do fim.</p>
+
+<h3>Uma linha por vez, com <code>for</code></h3>
+<p>O cursor também pode ser percorrido direto num <code>for</code>, sem <code>fetchall()</code>. Cada volta entrega uma tupla, que dá para <a href="desempacotamento.html">desempacotar</a> em variáveis:</p>
+
+<pre class="file" data-file="percorrer.py">import sqlite3
+
+con = sqlite3.connect("loja.db")
+for id_, nome, preco, quantidade in con.execute(
+    "SELECT id, nome, preco, quantidade FROM produtos ORDER BY preco DESC"
+):
+    print(f"{id_:&gt;2}  {nome:&lt;14} R$ {preco:&gt;6.2f}  {quantidade:&gt;3} un.")
+con.close()
+</pre>
+
+<pre class="term">$ python3 percorrer.py
+ 1  Arroz 5 kg     R$  27.90   12 un.
+ 3  Café 500 g     R$  18.90    0 un.
+ 2  Feijão 1 kg    R$   8.49   30 un.
+ 5  Óleo 900 ml    R$   7.75    8 un.
+ 4  Açúcar 1 kg    R$   4.99   25 un.
+</pre>
+
+<p>O <code>ORDER BY preco DESC</code> pede ao banco as linhas em ordem de preço, do maior para o menor (<code>DESC</code> = decrescente). A formatação com <code>:&gt;6.2f</code> é das <a href="f-strings.html">f-strings</a>. O nome <code>id_</code> tem um sublinhado no fim porque <code>id</code> já é o nome de uma função embutida do Python; o sublinhado evita escondê-la.</p>
+
+<h3>Uma linha só: <code>fetchone()</code></h3>
+<p>Quando a resposta é uma linha só (uma conta, uma busca por <code>id</code>), <code>fetchone()</code> ("buscar uma") devolve a próxima linha, ou <code>None</code> quando não há mais nenhuma:</p>
+
+<pre class="file" data-file="fetchone.py">import sqlite3
+
+con = sqlite3.connect("loja.db")
+cur = con.execute("SELECT count(*), sum(quantidade) FROM produtos")
+print(cur.fetchone())
+
+cur = con.execute("SELECT nome FROM produtos WHERE quantidade = 0")
+print(cur.fetchone())
+print(cur.fetchone())
+con.close()
+</pre>
+
+<pre class="term">$ python3 fetchone.py
+(5, 75)
+('Café 500 g',)
+None
+</pre>
+
+<p><code>count(*)</code> conta as linhas e <code>sum(quantidade)</code> soma a coluna: 5 produtos, 75 unidades no total. Na segunda busca, o primeiro <code>fetchone()</code> trouxe o único produto sem estoque, numa tupla de um item só (a vírgula em <code>('Café 500 g',)</code> é o jeito do Python escrever uma tupla de um item). O segundo <code>fetchone()</code> não achou mais nada e devolveu <code>None</code>.</p>
+
+<div class="trypy" data-goal="out:Feijão 1 kg;;src:fetchall|for\b;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa cria um banco com três produtos, mas não mostra nada. Busque todos os nomes com um <code>SELECT</code> e mostre o resultado (com <code>fetchall()</code> ou com um <code>for</code>).</p>
+<pre class="script" data-file="main.py">import sqlite3
+
+con = sqlite3.connect(":memory:")
+con.execute("CREATE TABLE produtos (nome TEXT, preco REAL)")
+con.executemany(
+    "INSERT INTO produtos VALUES (?, ?)",
+    [("Arroz 5 kg", 27.90), ("Feijão 1 kg", 8.49), ("Café 500 g", 18.90)],
+)
+
+# escreva aqui o SELECT e mostre as linhas
+</pre>
+<pre class="solucao" data-file="main.py">import sqlite3
+
+con = sqlite3.connect(":memory:")
+con.execute("CREATE TABLE produtos (nome TEXT, preco REAL)")
+con.executemany(
+    "INSERT INTO produtos VALUES (?, ?)",
+    [("Arroz 5 kg", 27.90), ("Feijão 1 kg", 8.49), ("Café 500 g", 18.90)],
+)
+
+cur = con.execute("SELECT nome FROM produtos")
+print(cur.fetchall())
+</pre>
+</div>
+
+<hr>
+
+<h2>5. Filtrando: <code>WHERE</code> com <code>?</code></h2>
+<p>O <code>WHERE</code> ("onde") filtra as linhas: só vêm as que cumprem a condição. O valor da condição também entra por um <code>?</code>:</p>
+
+<pre class="file" data-file="filtro.py">import sqlite3
+
+con = sqlite3.connect("loja.db")
+limite = 10.00
+cur = con.execute(
+    "SELECT nome, preco FROM produtos WHERE preco &lt; ? ORDER BY preco",
+    (limite,),
+)
+for nome, preco in cur.fetchall():
+    print(nome, preco)
+con.close()
+</pre>
+
+<pre class="term">$ python3 filtro.py
+Açúcar 1 kg 4.99
+Óleo 900 ml 7.75
+Feijão 1 kg 8.49
+</pre>
+
+<div class="warning">
+<strong>A vírgula de <code>(limite,)</code> é obrigatória</strong>
+<p>Os valores vão sempre numa sequência (tupla ou lista), mesmo quando é um só. <code>(limite,)</code> é uma tupla de um item; <code>(limite)</code>, sem a vírgula, é só o valor entre parênteses. Com um número, isso dá erro; com um texto, dá um erro bem estranho, que a seção <a href="#errado">Quando dá errado</a> explica. Se preferir, use uma lista: <code>[limite]</code>.</p>
+</div>
+
+<h3>Marcadores com nome: <code>:nome</code></h3>
+<p>Com muitos valores, contar os <code>?</code> fica difícil. Existe outro estilo: marcadores com nome, escritos <code>:nome</code>, preenchidos por um <a href="dicionarios.html">dicionário</a>:</p>
+
+<pre class="file" data-file="nomeados.py">import sqlite3
+
+con = sqlite3.connect("loja.db")
+busca = {"minimo": 5, "maximo": 20}
+cur = con.execute(
+    "SELECT nome, quantidade FROM produtos"
+    " WHERE quantidade BETWEEN :minimo AND :maximo",
+    busca,
+)
+print(cur.fetchall())
+con.close()
+</pre>
+
+<pre class="term">$ python3 nomeados.py
+[('Arroz 5 kg', 12), ('Óleo 900 ml', 8)]
+</pre>
+
+<p><code>BETWEEN :minimo AND :maximo</code> quer dizer "entre 5 e 20". O <code>:minimo</code> recebe o valor da chave <code>"minimo"</code> do dicionário; a ordem das chaves não importa. (Os dois textos seguidos, sem nada entre eles, o Python junta num só: é um jeito de quebrar um texto comprido em duas linhas.)</p>
+
+<hr>
+
+<h2>6. Mudando e apagando: <code>UPDATE</code> e <code>DELETE</code></h2>
+
+<pre class="file" data-file="atualizar.py">import sqlite3
+
+con = sqlite3.connect("loja.db")
+cur = con.execute(
+    "UPDATE produtos SET quantidade = quantidade + ? WHERE nome = ?",
+    (20, "Café 500 g"),
+)
+print("Linhas alteradas:", cur.rowcount)
+
+cur = con.execute("DELETE FROM produtos WHERE nome = ?", ("Óleo 900 ml",))
+print("Linhas apagadas:", cur.rowcount)
+con.commit()
+
+print(con.execute("SELECT nome, quantidade FROM produtos").fetchall())
+con.close()
+</pre>
+
+<dl class="anatomy">
+  <dt>UPDATE produtos SET quantidade = quantidade + ?</dt><dd>"Atualize a tabela: a quantidade passa a ser a quantidade atual mais o valor do <code>?</code>". Chegaram 20 pacotes de café.</dd>
+  <dt>WHERE nome = ?</dt><dd>Só na linha do café. <strong>Sem o <code>WHERE</code>, o <code>UPDATE</code> muda todas as linhas da tabela.</strong></dd>
+  <dt>DELETE FROM produtos WHERE nome = ?</dt><dd>"Apague da tabela as linhas onde o nome é…". O mesmo cuidado: sem <code>WHERE</code>, apaga tudo.</dd>
+  <dt>cur.rowcount</dt><dd>Quantas linhas foram mudadas ou apagadas. Se der 0, nenhuma linha cumpriu o <code>WHERE</code> (um nome digitado errado, por exemplo), e isso <strong>não</strong> é erro.</dd>
+</dl>
+
+<pre class="term">$ python3 atualizar.py
+Linhas alteradas: 1
+Linhas apagadas: 1
+[('Arroz 5 kg', 12), ('Feijão 1 kg', 30), ('Café 500 g', 20), ('Açúcar 1 kg', 25)]
+</pre>
+
+<h3>Pegando as colunas pelo nome: <code>sqlite3.Row</code></h3>
+<p>Com tuplas, você precisa lembrar que o preço é o item 2. Se mudar <code>con.row_factory</code> ("fábrica de linhas") para <code>sqlite3.Row</code>, cada linha passa a aceitar também o nome da coluna:</p>
+
+<pre class="file" data-file="row.py">import sqlite3
+
+con = sqlite3.connect("loja.db")
+con.row_factory = sqlite3.Row
+linha = con.execute("SELECT * FROM produtos WHERE id = ?", (1,)).fetchone()
+print(linha)
+print(linha["nome"], linha["preco"])
+print(linha.keys())
+print(dict(linha))
+con.close()
+</pre>
+
+<pre class="term">$ python3 row.py
+&lt;sqlite3.Row object at 0x7f12bd3f89d0&gt;
+Arroz 5 kg 27.9
+['id', 'nome', 'preco', 'quantidade']
+{'id': 1, 'nome': 'Arroz 5 kg', 'preco': 27.9, 'quantidade': 12}
+</pre>
+
+<p>O <code>SELECT *</code> quer dizer "todas as colunas". A linha não se mostra bonita no <code>print</code>, mas aceita <code>linha["nome"]</code> (e também <code>linha[1]</code>, como uma tupla), sabe os nomes das colunas com <code>keys()</code> e vira um dicionário com <code>dict(linha)</code>.</p>
+
+<hr>
+
+<h2>7. <code>commit()</code>: o que acontece se você esquecer</h2>
+<p>Quando você muda alguma coisa (<code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>), o <code>sqlite3</code> abre uma <strong>transação</strong>: um pacote de mudanças que ainda está "a lápis". O <code>commit()</code> passa a caneta. Se a conexão fechar sem <code>commit()</code>, o pacote é jogado fora:</p>
+
+<pre class="file" data-file="sem_commit.py">import sqlite3
+
+con = sqlite3.connect("loja.db")
+con.execute(
+    "INSERT INTO produtos (nome, preco, quantidade) VALUES (?, ?, ?)",
+    ("Macarrão 500 g", 5.29, 40),
+)
+print("Antes de fechar:", con.execute("SELECT count(*) FROM produtos").fetchone())
+con.close()   # esqueci o commit!
+
+con = sqlite3.connect("loja.db")
+print("Depois de abrir de novo:", con.execute("SELECT count(*) FROM produtos").fetchone())
+con.close()
+</pre>
+
+<pre class="term">$ python3 sem_commit.py
+Antes de fechar: (5,)
+Depois de abrir de novo: (4,)
+</pre>
+
+<p>Dentro da mesma conexão, o macarrão aparecia (5 produtos). Depois de fechar e abrir de novo, sumiu (4 produtos). <strong>Nenhuma mensagem de erro</strong>: é o tipo de engano que só se descobre no dia seguinte. A regra: mudou alguma coisa, chame <code>commit()</code>. E existe o contrário do <code>commit()</code>: o <code>con.rollback()</code> ("voltar atrás") descarta de propósito as mudanças ainda não confirmadas.</p>
+
+<h3>O jeito mais seguro: <code>with con:</code></h3>
+<p>Usar a conexão num bloco <code>with</code> faz o trabalho por você: se o bloco termina bem, ele chama <code>commit()</code>; se acontece um erro no meio, ele chama <code>rollback()</code>, e <strong>nenhuma</strong> mudança do bloco fica gravada. Tudo ou nada.</p>
+
+<pre class="file" data-file="com_with.py">import sqlite3
+
+con = sqlite3.connect("loja.db")
+
+with con:
+    con.execute(
+        "INSERT INTO produtos (nome, preco, quantidade) VALUES (?, ?, ?)",
+        ("Macarrão 500 g", 5.29, 40),
+    )
+print("Gravado:", con.execute("SELECT count(*) FROM produtos").fetchone())
+
+try:
+    with con:
+        con.execute("UPDATE produtos SET quantidade = 0")
+        con.execute(
+            "INSERT INTO produtos (nome, preco, quantidade) VALUES (?, ?, ?)",
+            ("Arroz 5 kg", 29.90, 5),   # esse nome já existe: UNIQUE
+        )
+except sqlite3.IntegrityError as erro:
+    print("Deu erro:", erro)
+
+print(con.execute("SELECT sum(quantidade) FROM produtos").fetchone())
+con.close()
+</pre>
+
+<pre class="term">$ python3 com_with.py
+Gravado: (5,)
+Deu erro: UNIQUE constraint failed: produtos.nome
+(127,)
+</pre>
+
+<ol class="passo">
+  <li>O primeiro <code>with con:</code> gravou o macarrão e confirmou sozinho: agora são 5 produtos.</li>
+  <li>No segundo, o <code>UPDATE</code> sem <code>WHERE</code> zerou o estoque de <strong>todos</strong> os produtos (a lápis).</li>
+  <li>Logo depois, o <code>INSERT</code> falhou: já existe um "Arroz 5 kg" e a coluna <code>nome</code> é <code>UNIQUE</code>.</li>
+  <li>O <code>with</code> viu o erro e desfez o bloco inteiro, inclusive o <code>UPDATE</code>. O erro seguiu adiante e foi tratado pelo <a href="try-except.html"><code>try</code>/<code>except</code></a>.</li>
+  <li>A soma do estoque continua 127 (12 + 30 + 20 + 25 + 40): nada foi zerado.</li>
+</ol>
+
+<div class="warning">
+<strong>O <code>with con:</code> não fecha a conexão</strong>
+<p>Diferente do <code>with open(...)</code> dos <a href="arquivos.html">arquivos</a>, o <code>with</code> da conexão cuida só da transação (commit ou rollback). Depois do bloco, a conexão continua aberta:</p>
+<pre class="file" data-file="with_nao_fecha.py">import sqlite3
+
+with sqlite3.connect("loja.db") as con:
+    print(con.execute("SELECT count(*) FROM produtos").fetchone())
+
+print(con.execute("SELECT 'a conexão continua aberta'").fetchone())
+con.close()
+print(con.execute("SELECT 1").fetchone())
+</pre>
+<pre class="term">$ python3 with_nao_fecha.py
+(5,)
+('a conexão continua aberta',)
+Traceback (most recent call last):
+  File "/home/ana/with_nao_fecha.py", line 8, in &lt;module&gt;
+    print(con.execute("SELECT 1").fetchone())
+          ~~~~~~~~~~~^^^^^^^^^^^^
+sqlite3.ProgrammingError: Cannot operate on a closed database.
+</pre>
+<p>Só depois do <code>con.close()</code> ela fechou, e usar a conexão fechada deu <code>ProgrammingError</code>: "não dá para operar num banco fechado". Para fechar sozinho, há o <code>closing()</code>, logo abaixo.</p>
+</div>
+
+<hr>
+
+<h2>Formas de abrir, confirmar e fechar</h2>
+<p>As três formas abaixo gravam a mesma mudança. A diferença está no que acontece quando algo dá errado.</p>
+
+<pre class="file" data-file="forma1.py">con = sqlite3.connect("loja.db")
+con.execute("UPDATE produtos SET preco = ? WHERE nome = ?", (8.99, "Feijão 1 kg"))
+con.commit()
+con.close()
+</pre>
+
+<pre class="file" data-file="forma2.py">con = sqlite3.connect("loja.db")
+with con:
+    con.execute("UPDATE produtos SET preco = ? WHERE nome = ?", (8.99, "Feijão 1 kg"))
+con.close()
+</pre>
+
+<pre class="file" data-file="closing.py">import sqlite3
+from contextlib import closing
+
+with closing(sqlite3.connect("loja.db")) as con:
+    with con:
+        con.execute("UPDATE produtos SET preco = ? WHERE nome = ?", (8.99, "Feijão 1 kg"))
+    print(con.execute("SELECT nome, preco FROM produtos WHERE id = 2").fetchone())
+</pre>
+
+<pre class="term">$ python3 closing.py
+('Feijão 1 kg', 8.99)
+</pre>
+
+<p>O <code>closing()</code> ("fechando"), do módulo <code>contextlib</code>, chama <code>close()</code> no fim do bloco de fora, aconteça o que acontecer. O <code>with con:</code> de dentro cuida do commit. (Os dois tipos de <code>with</code> são explicados na aula <a href="gerenciadores-contexto.html">Gerenciadores de Contexto</a>.)</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Se der erro no meio</th><th>Quando usar</th></tr>
+<tr><td><code>commit()</code> e <code>close()</code> à mão</td><td>A conexão pode ficar aberta e a transação pela metade</td><td>Programas bem curtos, para aprender</td></tr>
+<tr><td><code>with con:</code> + <code>close()</code></td><td>Desfaz tudo do bloco (rollback)</td><td>O jeito do dia a dia para gravar</td></tr>
+<tr><td><code>closing(...)</code> + <code>with con:</code></td><td>Desfaz o bloco <strong>e</strong> fecha a conexão</td><td>Programas maiores, que não podem deixar nada aberto</td></tr>
+</table>
+</div>
+
+<div class="trypy" data-goal="out:Total em estoque: 67;;src:\?;;semerro">
+<p class="try-task"><strong>Missão:</strong> grave os três produtos da lista <code>chegaram</code> na tabela, com <code>executemany()</code> e marcadores <code>?</code>, dentro de um <code>with con:</code>. O programa já mostra o total no fim.</p>
+<pre class="script" data-file="main.py">import sqlite3
+
+con = sqlite3.connect("estoque.db")
+con.execute("CREATE TABLE IF NOT EXISTS produtos (nome TEXT, quantidade INTEGER)")
+
+chegaram = [("Leite 1 L", 24), ("Pão de forma", 15), ("Manteiga 200 g", 28)]
+
+# grave aqui os produtos da lista chegaram
+
+total = con.execute("SELECT sum(quantidade) FROM produtos").fetchone()[0]
+print("Total em estoque:", total)
+con.close()
+</pre>
+<pre class="solucao" data-file="main.py">import sqlite3
+
+con = sqlite3.connect("estoque.db")
+con.execute("CREATE TABLE IF NOT EXISTS produtos (nome TEXT, quantidade INTEGER)")
+
+chegaram = [("Leite 1 L", 24), ("Pão de forma", 15), ("Manteiga 200 g", 28)]
+
+with con:
+    con.executemany("INSERT INTO produtos VALUES (?, ?)", chegaram)
+
+total = con.execute("SELECT sum(quantidade) FROM produtos").fetchone()[0]
+print("Total em estoque:", total)
+con.close()
+</pre>
+</div>
+
+<p>Antes de gravar, o <code>sum()</code> de uma tabela vazia dá <code>None</code> ("Total em estoque: None"). O <code>[0]</code> depois do <code>fetchone()</code> pega o primeiro (e único) valor da tupla.</p>
+
+<hr>
+
+<h2>8. Onde ver o banco por fora</h2>
+<p>O Python traz também uma "linha de comando" do SQLite: <code>python3 -m sqlite3 arquivo.db</code> abre o banco e deixa você digitar SQL direto, sem escrever programa. Bom para espiar o que o seu programa gravou:</p>
+
+<pre class="term">$ python3 -m sqlite3 loja.db
+sqlite3 shell, running on SQLite version 3.46.1
+Connected to 'loja.db'
+
+Each command will be run using execute() on the cursor.
+Type ".help" for more information; type ".quit" or CTRL-D to quit.
+sqlite&gt; SELECT nome, quantidade FROM produtos;
+('Arroz 5 kg', 12)
+('Feijão 1 kg', 30)
+('Café 500 g', 20)
+('Açúcar 1 kg', 25)
+('Macarrão 500 g', 40)
+sqlite&gt; .quit
+</pre>
+
+<p>As respostas aparecem como tuplas do Python, porque é o próprio <code>sqlite3</code> quem roda cada comando. O <code>.quit</code> sai. (Essa linha de comando existe desde o Python 3.12. No 3.15, ela ganhou cores e passou a completar os comandos SQL com a tecla Tab; veja as <a href="novidades.html">Novidades</a>.)</p>
+
+<hr>
+
+<h2 id="injection">9. Nunca monte o SQL com f-string: SQL injection</h2>
+<p>Parece tão prático escrever <code>f"... WHERE nome = '{nome}'"</code>. O problema aparece quando o <code>nome</code> vem de fora do programa: de um <code>input()</code>, de um formulário, de um arquivo. Quem digita pode escrever, em vez de um nome, um <strong>pedaço de SQL</strong>, e o banco vai obedecer. Esse ataque se chama <strong>SQL injection</strong> ("injeção de SQL"). Veja com um banco de clientes, com senha e saldo:</p>
+
+<pre class="file" data-file="injecao.py">import sqlite3
+
+con = sqlite3.connect(":memory:")
+con.execute("CREATE TABLE clientes (nome TEXT, senha TEXT, saldo REAL)")
+con.executemany(
+    "INSERT INTO clientes VALUES (?, ?, ?)",
+    [("Ana", "gato123", 150.0), ("Bruno", "sol2026", 980.5), ("Carla", "abc", 40.0)],
+)
+
+def buscar_errado(nome):
+    sql = f"SELECT nome, saldo FROM clientes WHERE nome = '{nome}'"
+    print("SQL montado:", sql)
+    return con.execute(sql).fetchall()
+
+def buscar_certo(nome):
+    return con.execute(
+        "SELECT nome, saldo FROM clientes WHERE nome = ?", (nome,)
+    ).fetchall()
+
+print(buscar_errado("Ana"))
+print(buscar_errado("x' OR '1'='1"))
+print("---")
+print(buscar_certo("Ana"))
+print(buscar_certo("x' OR '1'='1"))
+</pre>
+
+<pre class="term">$ python3 injecao.py
+SQL montado: SELECT nome, saldo FROM clientes WHERE nome = 'Ana'
+[('Ana', 150.0)]
+SQL montado: SELECT nome, saldo FROM clientes WHERE nome = 'x' OR '1'='1'
+[('Ana', 150.0), ('Bruno', 980.5), ('Carla', 40.0)]
+---
+[('Ana', 150.0)]
+[]
+</pre>
+
+<ol class="passo">
+  <li>Com o nome <code>Ana</code>, a f-string montou um SQL normal, e veio só a Ana.</li>
+  <li>Com o "nome" <code>x' OR '1'='1</code>, o apóstrofo depois do <code>x</code> <strong>fechou o texto</strong> antes da hora, e o resto virou parte do comando: <code>WHERE nome = 'x' OR '1'='1'</code>, ou seja, "onde o nome é x <strong>ou</strong> 1 é igual a 1". Como 1 é sempre igual a 1, a condição vale para todas as linhas.</li>
+  <li>Resultado: o programa mostrou o saldo de <strong>todos</strong> os clientes para quem digitou aquilo.</li>
+  <li>Com o <code>?</code>, o mesmo texto foi tratado como <strong>um nome</strong>, letra por letra. Ninguém se chama <code>x' OR '1'='1</code>, então a busca não achou nada (<code>[]</code>). O valor nunca vira comando.</li>
+</ol>
+
+<div class="cenario">
+<strong>E o famoso <code>DROP TABLE</code>?</strong>
+<p>O ataque clássico tenta encaixar um segundo comando, que apaga a tabela inteira (<code>DROP TABLE</code> = "jogue fora a tabela"):</p>
+<pre class="file" data-file="injecao_drop.py">import sqlite3
+
+con = sqlite3.connect(":memory:")
+con.execute("CREATE TABLE clientes (nome TEXT)")
+nome = "Ana'; DROP TABLE clientes; --"
+con.execute(f"SELECT * FROM clientes WHERE nome = '{nome}'")
+</pre>
+<pre class="term">$ python3 injecao_drop.py
+Traceback (most recent call last):
+  File "/home/ana/injecao_drop.py", line 6, in &lt;module&gt;
+    con.execute(f"SELECT * FROM clientes WHERE nome = '{nome}'")
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.ProgrammingError: You can only execute one statement at a time.
+</pre>
+<p>"Você só pode executar um comando por vez." O <code>execute()</code> do <code>sqlite3</code> recusa dois comandos num texto só, e desta vez a tabela escapou. <strong>Não conte com isso</strong>: o ataque do <code>OR '1'='1'</code>, que é um comando só, passou sem erro nenhum, e outros bancos e bibliotecas aceitam vários comandos de uma vez. A proteção de verdade é uma só: <strong>valores sempre por <code>?</code></strong> (ou <code>:nome</code>).</p>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Pode</th><th>Nunca</th></tr>
+<tr><td><code>con.execute("... WHERE nome = ?", (nome,))</code></td><td><code>con.execute(f"... WHERE nome = '{nome}'")</code></td></tr>
+<tr><td><code>con.execute("... WHERE nome = :nome", {"nome": nome})</code></td><td><code>con.execute("... WHERE nome = '" + nome + "'")</code></td></tr>
+<tr><td></td><td><code>con.execute("... WHERE nome = '%s'" % nome)</code></td></tr>
+</table>
+</div>
+
+<p>O <code>?</code> serve para <strong>valores</strong> (um nome, um preço, uma data). Ele não serve para o nome de uma tabela ou de uma coluna; esses ficam escritos no próprio SQL do programa, nunca vindos do usuário. A aula <a href="https://wallysondevs.github.io/guia-sql/sql-injection.html">SQL Injection</a> do Guia SQL mostra o ataque com mais detalhes, e a aula <a href="https://wallysondevs.github.io/guia-sql/parametros.html">Parâmetros</a> mostra os marcadores do lado do banco.</p>
+
+<div class="trypy" data-goal="out:[];;src:nome = \?;;semerro" data-stdin="x' OR '1'='1">
+<p class="try-task"><strong>Missão:</strong> o programa busca o telefone pelo nome digitado, mas monta o SQL com f-string, e quem digita <code>x' OR '1'='1</code> (já está no teclado da caixa) vê a agenda inteira. Troque a f-string por um marcador <code>?</code>. Com o conserto, essa "busca" não acha ninguém: <code>[]</code>.</p>
+<pre class="script" data-file="main.py">import sqlite3
+
+con = sqlite3.connect(":memory:")
+con.execute("CREATE TABLE agenda (nome TEXT, telefone TEXT)")
+con.executemany(
+    "INSERT INTO agenda VALUES (?, ?)",
+    [("Ana", "86 99999-0001"), ("Bia", "86 99999-0002"), ("Caio", "86 99999-0003")],
+)
+
+procurado = input("Nome: ")
+cur = con.execute(f"SELECT nome, telefone FROM agenda WHERE nome = '{procurado}'")
+print(cur.fetchall())
+</pre>
+<pre class="solucao" data-file="main.py">import sqlite3
+
+con = sqlite3.connect(":memory:")
+con.execute("CREATE TABLE agenda (nome TEXT, telefone TEXT)")
+con.executemany(
+    "INSERT INTO agenda VALUES (?, ?)",
+    [("Ana", "86 99999-0001"), ("Bia", "86 99999-0002"), ("Caio", "86 99999-0003")],
+)
+
+procurado = input("Nome: ")
+cur = con.execute("SELECT nome, telefone FROM agenda WHERE nome = ?", (procurado,))
+print(cur.fetchall())
+</pre>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>A tabela que não existe (e o arquivo que apareceu do nada)</strong>
+<pre class="file" data-file="erro_tabela.py">import sqlite3
+
+con = sqlite3.connect("lojs.db")   # o nome certo era loja.db
+cur = con.execute("SELECT nome FROM produtos")
+</pre>
+<pre class="term">$ python3 erro_tabela.py
+Traceback (most recent call last):
+  File "/home/ana/erro_tabela.py", line 4, in &lt;module&gt;
+    cur = con.execute("SELECT nome FROM produtos")
+sqlite3.OperationalError: no such table: produtos
+$ ls *.db
+loja.db
+lojs.db
+</pre>
+<dl class="anatomy">
+  <dt>Traceback (most recent call last):</dt><dd>"Rastro (a chamada mais recente por último)": o caminho até o erro. Leia de baixo para cima.</dd>
+  <dt>File "/home/ana/erro_tabela.py", line 4</dt><dd>O arquivo e a linha onde o erro aconteceu: a linha do <code>SELECT</code>.</dd>
+  <dt>sqlite3.OperationalError</dt><dd>O tipo do erro: um erro de "operação" do banco. O nome começa com <code>sqlite3.</code> porque é uma exceção do módulo.</dd>
+  <dt>no such table: produtos</dt><dd>"Não existe a tabela <code>produtos</code>."</dd>
+</dl>
+<p>Mas a tabela existe… no <code>loja.db</code>! O nome do arquivo foi digitado errado (<code>lojs.db</code>), e o <code>connect()</code>, em vez de reclamar, <strong>criou</strong> um banco novo e vazio com esse nome. O <code>ls</code> mostra o intruso. <strong>Como consertar:</strong> confira o nome do arquivo (e apague o <code>lojs.db</code> que sobrou). Se o arquivo está certo, confira o nome da tabela, ou se o programa que a cria rodou antes.</p>
+</div>
+
+<div class="cenario">
+<strong>Número de <code>?</code> diferente do número de valores</strong>
+<pre class="file" data-file="erro_bindings.py">import sqlite3
+
+con = sqlite3.connect(":memory:")
+con.execute("CREATE TABLE produtos (nome TEXT, preco REAL, quantidade INTEGER)")
+con.execute(
+    "INSERT INTO produtos VALUES (?, ?, ?)",
+    ("Arroz 5 kg", 27.90),
+)
+</pre>
+<pre class="term">$ python3 erro_bindings.py
+Traceback (most recent call last):
+  File "/home/ana/erro_bindings.py", line 5, in &lt;module&gt;
+    con.execute(
+    ~~~~~~~~~~~^
+        "INSERT INTO produtos VALUES (?, ?, ?)",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        ("Arroz 5 kg", 27.90),
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+sqlite3.ProgrammingError: Incorrect number of bindings supplied. The current statement uses 3, and there are 2 supplied.
+</pre>
+<p>"Número incorreto de valores. O comando usa 3, e foram dados 2." Os <code>^^^^</code> marcam a chamada inteira, que ocupa várias linhas. Um <code>ProgrammingError</code> é um erro "de programação": o banco nem chegou a rodar o comando. <strong>Como consertar:</strong> um valor para cada <code>?</code>; aqui faltou a quantidade.</p>
+</div>
+
+<div class="cenario">
+<strong>Um valor só, sem a vírgula da tupla</strong>
+<pre class="file" data-file="erro_tupla.py">import sqlite3
+
+con = sqlite3.connect(":memory:")
+con.execute("CREATE TABLE produtos (nome TEXT)")
+con.execute("SELECT * FROM produtos WHERE nome = ?", ("Arroz"))
+</pre>
+<pre class="term">$ python3 erro_tupla.py
+Traceback (most recent call last):
+  File "/home/ana/erro_tupla.py", line 5, in &lt;module&gt;
+    con.execute("SELECT * FROM produtos WHERE nome = ?", ("Arroz"))
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.ProgrammingError: Incorrect number of bindings supplied. The current statement uses 1, and there are 5 supplied.
+</pre>
+<p>"O comando usa 1, e foram dados 5"? Cinco? Sem a vírgula, <code>("Arroz")</code> não é uma tupla, é só o texto <code>"Arroz"</code>. E um texto também é uma sequência: de letras. O <code>sqlite3</code> contou as letras A, r, r, o, z: cinco valores. <strong>Como consertar:</strong> <code>("Arroz",)</code>, com a vírgula, ou <code>["Arroz"]</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Gravar um nome que já existe</strong>
+<pre class="file" data-file="erro_unique.py">import sqlite3
+
+con = sqlite3.connect(":memory:")
+con.execute("CREATE TABLE produtos (nome TEXT UNIQUE, preco REAL)")
+con.execute("INSERT INTO produtos VALUES (?, ?)", ("Arroz 5 kg", 27.90))
+con.execute("INSERT INTO produtos VALUES (?, ?)", ("Arroz 5 kg", 29.90))
+</pre>
+<pre class="term">$ python3 erro_unique.py
+Traceback (most recent call last):
+  File "/home/ana/erro_unique.py", line 6, in &lt;module&gt;
+    con.execute("INSERT INTO produtos VALUES (?, ?)", ("Arroz 5 kg", 29.90))
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.IntegrityError: UNIQUE constraint failed: produtos.nome
+</pre>
+<p>"A regra UNIQUE falhou: <code>produtos.nome</code>." Um <code>IntegrityError</code> ("erro de integridade") quer dizer que o banco recusou o dado para proteger as regras da tabela. Esse erro é esperado num programa de verdade (alguém sempre tenta cadastrar duas vezes), então vale tratá-lo com <code>try</code>/<code>except sqlite3.IntegrityError</code>, como na seção 7. O mesmo acontece se você rodar o <code>inserir.py</code> da seção 3 pela segunda vez.</p>
+</div>
+
+<div class="cenario">
+<strong>SQL escrito errado</strong>
+<pre class="file" data-file="erro_sintaxe.py">import sqlite3
+
+con = sqlite3.connect(":memory:")
+con.execute("SELEC 1")
+</pre>
+<pre class="term">$ python3 erro_sintaxe.py
+Traceback (most recent call last):
+  File "/home/ana/erro_sintaxe.py", line 4, in &lt;module&gt;
+    con.execute("SELEC 1")
+    ~~~~~~~~~~~^^^^^^^^^^^
+sqlite3.OperationalError: near "SELEC": syntax error
+</pre>
+<p>"Perto de <code>SELEC</code>: erro de sintaxe." Repare: não é um <code>SyntaxError</code> do Python. Para o Python, <code>"SELEC 1"</code> é um texto como outro qualquer; quem não entendeu foi o SQLite, na hora de executar. O <code>near "…"</code> aponta o trecho onde o SQLite se perdeu.</p>
+</div>
+
+<div class="cenario">
+<strong>Marcadores com nome e uma tupla <span class="versao">3.14</span></strong>
+<pre class="file" data-file="erro_nomeado.py">import sqlite3
+
+con = sqlite3.connect(":memory:")
+con.execute("CREATE TABLE produtos (nome TEXT, preco REAL)")
+con.execute("INSERT INTO produtos VALUES (:nome, :preco)", ("Arroz 5 kg", 27.90))
+</pre>
+<pre class="term">$ python3 erro_nomeado.py
+Traceback (most recent call last):
+  File "/home/ana/erro_nomeado.py", line 5, in &lt;module&gt;
+    con.execute("INSERT INTO produtos VALUES (:nome, :preco)", ("Arroz 5 kg", 27.90))
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.ProgrammingError: Binding 1 (':nome') is a named parameter, but you supplied a sequence which requires nameless (qmark) placeholders.
+</pre>
+<p>"O valor 1 (<code>:nome</code>) é um marcador com nome, mas você deu uma sequência, que pede marcadores sem nome (<code>?</code>)." <strong>Como consertar:</strong> marcadores <code>:nome</code> pedem um dicionário (<code>{"nome": "Arroz 5 kg", "preco": 27.90}</code>); uma tupla pede <code>?</code>.</p>
+</div>
+
+<div class="note">
+<strong>Em Pythons mais antigos</strong>
+<p>Até o Python 3.13 (o do Debian 13, por exemplo), esse último caso só dava um aviso (<code>DeprecationWarning</code>) e o programa seguia; a partir do 3.14 virou erro. E o 3.14 tirou do módulo o <code>sqlite3.version</code>: para saber a versão, use <code>sqlite3.sqlite_version</code>, como na seção 1.</p>
+</div>
+
+<div class="trypy" data-goal="out:('86 99999-0002',);;semerro">
+<p class="try-task"><strong>Missão:</strong> a Ana quer o telefone da Bia, mas o programa dá erro. Leia a mensagem e conserte.</p>
+<pre class="script" data-file="main.py">import sqlite3
+
+con = sqlite3.connect(":memory:")
+con.execute("CREATE TABLE agenda (nome TEXT, telefone TEXT)")
+contatos = [("Ana", "86 99999-0001"), ("Bia", "86 99999-0002"), ("Caio", "86 99999-0003")]
+con.executemany("INSERT INTO agenda VALUES (?, ?)", contatos)
+procurado = "Bia"
+print(con.execute("SELECT telefone FROM agenda WHERE nome = ?", (procurado)).fetchone())
+</pre>
+<pre class="solucao" data-file="main.py">import sqlite3
+
+con = sqlite3.connect(":memory:")
+con.execute("CREATE TABLE agenda (nome TEXT, telefone TEXT)")
+contatos = [("Ana", "86 99999-0001"), ("Bia", "86 99999-0002"), ("Caio", "86 99999-0003")]
+con.executemany("INSERT INTO agenda VALUES (?, ?)", contatos)
+procurado = "Bia"
+print(con.execute("SELECT telefone FROM agenda WHERE nome = ?", (procurado,)).fetchone())
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>con = sqlite3.connect("loja.db")</code></td><td>Abre o banco do arquivo (cria se não existir)</td></tr>
+<tr><td><code>sqlite3.connect(":memory:")</code></td><td>Banco temporário, na memória</td></tr>
+<tr><td><code>con.execute(sql, valores)</code></td><td>Roda um comando SQL; devolve um cursor</td></tr>
+<tr><td><code>con.executemany(sql, lista)</code></td><td>Roda o mesmo comando para cada tupla da lista</td></tr>
+<tr><td><code>"... WHERE nome = ?", (nome,)</code></td><td>Marcador <code>?</code>: valores numa tupla ou lista, na ordem</td></tr>
+<tr><td><code>"... WHERE nome = :nome", {"nome": nome}</code></td><td>Marcador com nome: valores num dicionário</td></tr>
+<tr><td><code>cur.fetchall()</code></td><td>Todas as linhas (lista de tuplas)</td></tr>
+<tr><td><code>cur.fetchone()</code></td><td>A próxima linha (tupla), ou <code>None</code></td></tr>
+<tr><td><code>for linha in cur:</code></td><td>Percorre as linhas uma por uma</td></tr>
+<tr><td><code>cur.lastrowid</code> / <code>cur.rowcount</code></td><td>O <code>id</code> da última linha inserida / quantas linhas o comando afetou</td></tr>
+<tr><td><code>con.commit()</code> / <code>con.rollback()</code></td><td>Confirma / desfaz as mudanças pendentes</td></tr>
+<tr><td><code>with con:</code></td><td>Commit se o bloco der certo, rollback se der erro (não fecha)</td></tr>
+<tr><td><code>con.row_factory = sqlite3.Row</code></td><td>Linhas que aceitam <code>linha["coluna"]</code></td></tr>
+<tr><td><code>con.close()</code> / <code>closing(con)</code></td><td>Fecha a conexão / fecha no fim do <code>with</code></td></tr>
+<tr><td><code>python3 -m sqlite3 loja.db</code></td><td>Abre o banco para digitar SQL no terminal</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Erro</th><th>Causa provável</th></tr>
+<tr><td><code>OperationalError: no such table: …</code></td><td>Nome da tabela errado, tabela não criada, ou nome do arquivo do banco errado (o <code>connect</code> criou outro, vazio)</td></tr>
+<tr><td><code>OperationalError: near "…": syntax error</code></td><td>SQL escrito errado</td></tr>
+<tr><td><code>ProgrammingError: Incorrect number of bindings supplied</code></td><td>Número de <code>?</code> diferente do número de valores; ou faltou a vírgula de <code>(valor,)</code></td></tr>
+<tr><td><code>ProgrammingError: Binding 1 (':…') is a named parameter…</code></td><td>Marcadores <code>:nome</code> com uma tupla: use um dicionário</td></tr>
+<tr><td><code>ProgrammingError: You can only execute one statement at a time.</code></td><td>Dois comandos SQL num <code>execute()</code> (às vezes, sinal de SQL injection)</td></tr>
+<tr><td><code>ProgrammingError: Cannot operate on a closed database.</code></td><td>Usou a conexão depois do <code>close()</code></td></tr>
+<tr><td><code>IntegrityError: UNIQUE constraint failed: …</code></td><td>Valor repetido numa coluna <code>UNIQUE</code></td></tr>
+<tr><td>Os dados somem, sem erro</td><td>Faltou o <code>commit()</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Confirmando</h3>
+<p>Depois de um <code>INSERT</code>, qual método da conexão grava as mudanças de verdade no arquivo? Complete:</p>
+<div class="ex-code">con.<input data-answer="commit()|commit" aria-label="método">
+</div>
+</div>
+
+<div class="exercise">
+<h3>2. Um valor só</h3>
+<p>Complete a tupla de um valor só para buscar o produto de <code>id</code> 3:</p>
+<div class="ex-code">con.execute("SELECT nome FROM produtos WHERE id = ?", <input data-answer="(3,)|[3]" aria-label="valores">)</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. A Ana escreveu <code>con.execute(f"SELECT * FROM clientes WHERE nome = '{nome}'")</code>, com o <code>nome</code> vindo de um <code>input()</code>. Qual é o problema?</p>
+<label><input type="radio" name="q3"> Nenhum: f-strings são o jeito recomendado de formatar</label>
+<label><input type="radio" name="q3"> Quem digita pode mudar o comando SQL (SQL injection); o certo é <code>WHERE nome = ?</code> com <code>(nome,)</code></label>
+<label><input type="radio" name="q3"> O <code>sqlite3</code> não aceita f-strings</label>
+<label><input type="radio" name="q3"> Falta o <code>commit()</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. O que <code>cur.fetchall()</code> devolve para um <code>SELECT nome, preco</code> que encontrou duas linhas?</p>
+<label><input type="radio" name="q4"> Um dicionário <code>{"nome": …, "preco": …}</code></label>
+<label><input type="radio" name="q4"> Um texto com as duas linhas</label>
+<label><input type="radio" name="q4"> Uma lista com duas tuplas, como <code>[('Arroz 5 kg', 27.9), ('Café 500 g', 18.9)]</code></label>
+<label><input type="radio" name="q4"> Só a primeira linha</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Dentro de um <code>with con:</code>, o segundo de dois comandos dá erro. O que acontece com o primeiro?</p>
+<label><input type="radio" name="q5"> É desfeito: o <code>with</code> faz rollback do bloco inteiro</label>
+<label><input type="radio" name="q5"> Fica gravado; só o segundo é perdido</label>
+<label><input type="radio" name="q5"> A conexão é fechada e o primeiro é gravado</label>
+<label><input type="radio" name="q5"> O Python pergunta o que fazer</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. <code>sqlite3.connect("clientes.db")</code> numa pasta onde esse arquivo não existe:</p>
+<label><input type="radio" name="q6"> Dá <code>FileNotFoundError</code></label>
+<label><input type="radio" name="q6"> Dá <code>OperationalError: no such table</code></label>
+<label><input type="radio" name="q6"> Pergunta se deve criar o arquivo</label>
+<label><input type="radio" name="q6"> Cria um banco novo e vazio com esse nome, sem avisar</label>
+</div>
+
+<h3>Missão final: o caixa da padaria</h3>
+
+<div class="trypy" data-goal="out:Pão francês: 50;;out:Sonho: 0;;src:UPDATE;;src:\?;;semerro">
+<p class="try-task"><strong>Missão:</strong> a padaria do bairro guarda o estoque num banco. Hoje vendeu <strong>30</strong> pães franceses e <strong>12</strong> sonhos. Complete a função <code>vender()</code>: ela deve tirar a quantidade vendida do estoque do produto com um <code>UPDATE</code> e marcadores <code>?</code>, e confirmar a mudança. O programa mostra o estoque no fim.</p>
+<pre class="script" data-file="main.py">import sqlite3
+
+con = sqlite3.connect("padaria.db")
+with con:
+    con.execute("CREATE TABLE IF NOT EXISTS estoque (produto TEXT UNIQUE, quantidade INTEGER)")
+    con.executemany(
+        "INSERT OR IGNORE INTO estoque VALUES (?, ?)",
+        [("Pão francês", 80), ("Sonho", 12), ("Bolo de milho", 6)],
+    )
+
+def vender(produto, quantidade):
+    # tire a quantidade vendida do estoque desse produto
+    pass
+
+vender("Pão francês", 30)
+vender("Sonho", 12)
+
+for produto, quantidade in con.execute("SELECT produto, quantidade FROM estoque"):
+    print(f"{produto}: {quantidade}")
+con.close()
+</pre>
+<pre class="solucao" data-file="main.py">import sqlite3
+
+con = sqlite3.connect("padaria.db")
+with con:
+    con.execute("CREATE TABLE IF NOT EXISTS estoque (produto TEXT UNIQUE, quantidade INTEGER)")
+    con.executemany(
+        "INSERT OR IGNORE INTO estoque VALUES (?, ?)",
+        [("Pão francês", 80), ("Sonho", 12), ("Bolo de milho", 6)],
+    )
+
+def vender(produto, quantidade):
+    with con:
+        con.execute(
+            "UPDATE estoque SET quantidade = quantidade - ? WHERE produto = ?",
+            (quantidade, produto),
+        )
+
+vender("Pão francês", 30)
+vender("Sonho", 12)
+
+for produto, quantidade in con.execute("SELECT produto, quantidade FROM estoque"):
+    print(f"{produto}: {quantidade}")
+con.close()
+</pre>
+</div>
+
+<p>O <code>INSERT OR IGNORE</code> grava os produtos só se ainda não existirem (o <code>UNIQUE</code> faria o <code>INSERT</code> comum dar erro na segunda vez que o programa roda no seu computador). Quer ir além? Faça a <code>vender()</code> recusar a venda quando não houver estoque suficiente. O <a href="projeto-estoque.html">Projeto: Estoque com SQLite</a> monta um programa completo com essas peças.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>O <code>sqlite3</code> vem com o Python. <code>sqlite3.connect("arquivo.db")</code> abre o banco (e cria o arquivo se ele não existir, sem avisar).</li>
+  <li><code>con.execute("SQL", valores)</code> roda um comando; <code>executemany()</code> roda o mesmo comando para uma lista.</li>
+  <li>Valores entram <strong>sempre</strong> por marcadores: <code>?</code> com uma tupla (<code>(valor,)</code>, com a vírgula) ou <code>:nome</code> com um dicionário. <strong>Nunca</strong> com f-string, <code>+</code> ou <code>%</code>: é a porta do SQL injection.</li>
+  <li><code>fetchall()</code> devolve uma lista de tuplas; <code>fetchone()</code>, uma tupla ou <code>None</code>; o cursor também funciona num <code>for</code>. Com <code>sqlite3.Row</code>, a linha aceita o nome da coluna.</li>
+  <li>Mudou alguma coisa? <code>commit()</code>. Sem ele, os dados somem sem erro. O <code>with con:</code> confirma se tudo der certo e desfaz tudo se der erro, mas não fecha a conexão.</li>
+  <li>Os erros vêm do módulo: <code>OperationalError</code> (tabela inexistente, SQL errado), <code>ProgrammingError</code> (marcadores e valores não batem, conexão fechada), <code>IntegrityError</code> (regra da tabela, como <code>UNIQUE</code>).</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
