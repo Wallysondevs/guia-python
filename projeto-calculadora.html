@@ -446,7 +446,7 @@ Operação (+ - * /): ^CTraceback (most recent call last):
          ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
 KeyboardInterrupt
 </pre>
-<p>O <code>^C</code> é o terminal mostrando a tecla. O Python responde com <code>KeyboardInterrupt</code> ("interrupção pelo teclado") e o traceback mostra em que linha o programa estava esperando: a linha 5, a pergunta da operação. Não é defeito do programa: é o jeito normal de interromper. Mas assusta quem usa; a aula <a href="try-except.html">try e except</a> mostra como trocar esse traceback por um "Até logo!".</p>
+<p>O <code>^C</code> é o terminal mostrando a tecla. O Python responde com <code>KeyboardInterrupt</code> ("interrupção pelo teclado") e o traceback mostra em que linha o programa estava esperando: a linha 5, a pergunta da operação. Não é defeito do programa: é o jeito normal de interromper. Mas assusta quem usa; a aula <a href="try-except.html">try e except</a> mostra como trocar esse traceback por um "Até logo!". (Nas caixas "Experimente", o Ctrl+C também para o programa, mas sem traceback: aparece só <code>^C</code> e <code>[programa interrompido]</code>.)</p>
 </div>
 
 <div class="trypy" data-stdin="10\n+\n5\ns\n3\n*\n4\nn" data-goal="out:3.0 * 4.0 = 12.0;;out:Até logo!;;src:\bwhile\b">
