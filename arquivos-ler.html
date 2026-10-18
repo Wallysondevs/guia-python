@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Lendo Arquivos — read, readline, for e strip | Guia Python</title>
+<meta name="description" content="Ler arquivos de texto no Python para quem nunca programou: read() para ler tudo, readline() para uma linha de cada vez, for linha in arquivo para percorrer as linhas, o \n escondido no fim de cada linha e o strip() para tirá-lo, numerar linhas com enumerate, separar campos com split, calcular a média das notas de um arquivo, pular linhas vazias, e os erros reais do Python 3.14.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Lendo Arquivos</span></h1>
+
+<p class="intro">Na aula <a href="arquivos.html">Abrindo Arquivos</a>, você abriu um arquivo com <code>with open(…)</code> e leu tudo de uma vez com <code>read()</code>. Isso basta para mostrar um arquivo na tela. Mas, na maioria das vezes, um arquivo é uma <strong>lista de coisas</strong>, uma por linha: os itens da compra, as notas da turma, os contatos da agenda. E aí você quer trabalhar <strong>linha por linha</strong>: contar, somar, procurar. Esta aula mostra as formas de ler um arquivo e o detalhe que pega todo mundo no começo: o <code>\n</code> escondido no fim de cada linha.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>As três formas de ler: <code>read()</code> (tudo), <code>readline()</code> (uma linha) e <code>for linha in arquivo</code> (todas, uma por vez).</li>
+  <li>Que cada linha lida termina com <code>\n</code>, por que aparecem linhas em branco a mais e como o <code>strip()</code> resolve.</li>
+  <li>A numerar as linhas com <code>enumerate()</code> e a ler tudo numa lista com <code>splitlines()</code>.</li>
+  <li>A separar os campos de uma linha com <code>split()</code> e calcular a média das notas guardadas num arquivo.</li>
+  <li>A pular as linhas vazias e os erros reais de quem lê arquivos.</li>
+</ul>
+</div>
+
+<p>Todos os programas desta aula rodaram no <strong>Python 3.14</strong> da máquina da Ana (usuária <code>ana</code>, computador <code>notebook</code>), na pasta <code>/home/ana</code>, junto com os arquivos de texto que eles leem. Sempre com <code>encoding="utf-8"</code>, como explicado em <a href="arquivos.html">Abrindo Arquivos</a>.</p>
+
+<hr>
+
+<h2>A ideia: o marcador de página</h2>
+<p>Pense na lista de compras da Ana, escrita num bloco de papel, um item por linha. Ela pode:</p>
+<ul>
+  <li>olhar a folha <strong>inteira</strong> de uma vez;</li>
+  <li>ler <strong>uma linha</strong>, fazer alguma coisa, e depois ler a próxima;</li>
+  <li>passar o dedo pela lista, <strong>de linha em linha</strong>, até o fim.</li>
+</ul>
+<p>O arquivo aberto no Python tem um "dedo", um <strong>marcador de posição</strong>. Ele começa no início do arquivo e anda conforme você lê. Cada leitura continua de onde a anterior parou; quando o dedo chega ao fim, não há mais nada para ler. Guarde essa imagem, que ela explica quase tudo nesta aula.</p>
+
+<p>O arquivo dos exemplos é a lista de compras, <code>compras.txt</code>:</p>
+<pre class="term">$ cat compras.txt
+arroz
+feijão
+café
+leite</pre>
+
+<hr>
+
+<h2>1. <code>read()</code>: tudo de uma vez</h2>
+
+<pre class="file" data-file="ler_tudo.py">with open("compras.txt", encoding="utf-8") as arquivo:
+    conteudo = arquivo.read()
+print(conteudo)
+print(type(conteudo))
+print(len(conteudo))
+</pre>
+
+<pre class="term">$ python3 ler_tudo.py
+arroz
+feijão
+café
+leite
+
+&lt;class 'str'&gt;
+24</pre>
+
+<p>O <code>read()</code> devolve o arquivo inteiro como <strong>um único texto</strong> (<code>str</code>), com as quebras de linha dentro dele. São 24 caracteres: as 20 letras dos quatro itens e mais 4 quebras de linha, uma no fim de cada item. A linha em branco antes do <code>&lt;class 'str'&gt;</code> é a última quebra do arquivo somada à do <code>print</code>.</p>
+
+<h3>Vendo o <code>\n</code></h3>
+<p>No modo interativo (veja <a href="repl.html">O Modo Interativo</a>), quando você escreve só o nome de um valor, o Python mostra o texto <strong>com as aspas e os caracteres especiais</strong>. É o melhor jeito de ver o que o arquivo tem de verdade:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; arquivo = open("compras.txt", encoding="utf-8")
+&gt;&gt;&gt; arquivo.readline()
+'arroz\n'
+&gt;&gt;&gt; arquivo.readline()
+'feijão\n'
+&gt;&gt;&gt; arquivo.read()
+'café\nleite\n'
+&gt;&gt;&gt; arquivo.read()
+''
+&gt;&gt;&gt; arquivo.close()
+&gt;&gt;&gt; exit()</pre>
+
+<p>Agora o <code>\n</code> aparece: é a <strong>quebra de linha</strong> (veja <a href="strings-escape.html">Caracteres de Escape</a>), um caractere como qualquer outro, que fica no fim de cada linha do arquivo. E repare no dedo andando:</p>
+<ol class="passo">
+  <li>O primeiro <code>readline()</code> leu a primeira linha, <code>'arroz\n'</code>.</li>
+  <li>O segundo continuou de onde o primeiro parou: <code>'feijão\n'</code>.</li>
+  <li>O <code>read()</code> leu <strong>o que faltava</strong>: <code>'café\nleite\n'</code>, e não o arquivo todo.</li>
+  <li>O segundo <code>read()</code> devolveu <code>''</code>, um texto vazio: o dedo já estava no fim.</li>
+</ol>
+<p>(No modo interativo, aqui, o arquivo foi aberto sem <code>with</code>, para dar para ver passo a passo; por isso o <code>close()</code> no fim.)</p>
+
+<hr>
+
+<h2>2. <code>readline()</code>: uma linha de cada vez</h2>
+<p><code>readline()</code> ("ler linha") devolve a próxima linha do arquivo, <strong>com</strong> o <code>\n</code> do fim:</p>
+
+<pre class="file" data-file="readline.py">with open("compras.txt", encoding="utf-8") as arquivo:
+    primeira = arquivo.readline()
+    segunda = arquivo.readline()
+    print(f"Primeira: {primeira}")
+    print(f"Segunda: {segunda}")
+</pre>
+
+<pre class="term">$ python3 readline.py
+Primeira: arroz
+
+Segunda: feijão
+</pre>
+
+<p>Apareceu uma linha em branco depois de cada item. É o <code>\n</code> que veio do arquivo, dentro de <code>primeira</code>, somado à quebra de linha que o <code>print</code> sempre põe no fim. Duas quebras seguidas = uma linha em branco. A seção 4 resolve isso.</p>
+
+<p>Quando o arquivo acaba, <code>readline()</code> devolve um texto <strong>vazio</strong>, <code>''</code>. Como um texto vazio é "falso" num <code>while</code> (veja <a href="booleanos.html">Booleanos</a>), dá para ler até o fim assim:</p>
+
+<pre class="file" data-file="readline_fim.py">with open("compras.txt", encoding="utf-8") as arquivo:
+    linha = arquivo.readline()
+    while linha:
+        print(f"[{linha.strip()}]")
+        linha = arquivo.readline()
+    print(f"No fim, readline() devolve: [{arquivo.readline()}]")
+</pre>
+
+<pre class="term">$ python3 readline_fim.py
+[arroz]
+[feijão]
+[café]
+[leite]
+No fim, readline() devolve: []</pre>
+
+<p>Os colchetes mostram onde cada texto começa e termina: no fim, não havia nada entre eles. Funciona, mas é comprido. Para percorrer todas as linhas, há um jeito bem melhor.</p>
+
+<hr>
+
+<h2>3. <code>for linha in arquivo</code>: todas as linhas</h2>
+<p>Um arquivo aberto pode ser percorrido com <a href="for.html">for</a>, como uma lista: a cada volta, a variável recebe a <strong>próxima linha</strong>.</p>
+
+<pre class="file" data-file="for_linha.py">with open("compras.txt", encoding="utf-8") as arquivo:
+    for linha in arquivo:
+        print(linha)
+</pre>
+
+<dl class="anatomy">
+  <dt>for linha in arquivo:</dt><dd>"Para cada linha do arquivo." O <code>for</code> chama o equivalente a um <code>readline()</code> a cada volta e para sozinho quando o arquivo acaba. Sem contador, sem <code>while</code>.</dd>
+  <dt>linha</dt><dd>Um texto com a linha da vez, <strong>com o <code>\n</code> no fim</strong>. O nome é livre (<code>item</code> serviria), mas <code>linha</code> deixa claro o que é.</dd>
+  <dt>dentro do with</dt><dd>O <code>for</code> precisa estar dentro do bloco do <code>with</code>: fora dele, o arquivo já está fechado.</dd>
+</dl>
+
+<pre class="term">$ python3 for_linha.py
+arroz
+
+feijão
+
+café
+
+leite
+</pre>
+
+<p>Leu tudo, mas com as linhas em branco a mais, pelo mesmo motivo de antes: o <code>\n</code> da linha mais o <code>\n</code> do <code>print</code>.</p>
+
+<div class="tip">
+<strong>Por que o <code>for</code> é o preferido</strong>
+<p>O <code>read()</code> carrega o arquivo inteiro na memória de uma vez. Para uma lista de compras, tanto faz. Mas um arquivo de registros de um sistema pode ter milhões de linhas e vários gigabytes. O <code>for linha in arquivo</code> lê <strong>uma linha por vez</strong>, então funciona com arquivos de qualquer tamanho.</p>
+</div>
+
+<hr>
+
+<h2>4. <code>strip()</code>: tirando o <code>\n</code></h2>
+<p>O método <code>strip()</code> ("descascar", veja <a href="strings-metodos.html">Métodos de Texto</a>) devolve o texto sem os espaços, tabulações e quebras de linha das <strong>pontas</strong>:</p>
+
+<pre class="file" data-file="for_strip.py">with open("compras.txt", encoding="utf-8") as arquivo:
+    for linha in arquivo:
+        print(linha.strip())
+</pre>
+
+<pre class="term">$ python3 for_strip.py
+arroz
+feijão
+café
+leite</pre>
+
+<p>Agora sim. O <code>strip()</code> tira tudo o que é "branco" das duas pontas, o que costuma ser bom: um espaço esquecido no fim da linha também vai embora. Se você quiser tirar <strong>só</strong> a quebra de linha e manter os espaços do começo, existe o <code>rstrip("\n")</code> (o <code>r</code> é de <em>right</em>, "direita"):</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; linha = "  café\n"
+&gt;&gt;&gt; linha.strip()
+'café'
+&gt;&gt;&gt; linha.rstrip("\n")
+'  café'
+&gt;&gt;&gt; exit()</pre>
+
+<p>Outra forma: em vez de tirar o <code>\n</code> da linha, pedir ao <code>print</code> para não pôr o dele, com <code>end=""</code> (veja <a href="print-sep-end.html">As Opções sep e end</a>):</p>
+
+<pre class="file" data-file="for_end.py">with open("compras.txt", encoding="utf-8") as arquivo:
+    for linha in arquivo:
+        print(linha, end="")
+</pre>
+
+<pre class="term">$ python3 for_end.py
+arroz
+feijão
+café
+leite</pre>
+
+<p>A tela fica igual. A diferença é que aqui a variável <code>linha</code> continua com o <code>\n</code>; e isso importa quando você vai <strong>comparar</strong> ou <strong>converter</strong> a linha, como mostram a seção <a href="#errado">Quando dá errado</a> e a próxima.</p>
+
+<div class="trypy" data-goal="outre:^arroz\nfeijão\ncafé\nleite\n$">
+<p class="try-task"><strong>Missão:</strong> rode e veja as linhas em branco entre os itens. Conserte o <code>print</code> para a lista sair sem elas (com <code>strip()</code> ou com <code>end=""</code>).</p>
+<pre class="script" data-file="main.py">with open("compras.txt", encoding="utf-8") as arquivo:
+    for linha in arquivo:
+        print(linha)
+</pre>
+<pre class="script" data-file="compras.txt">arroz
+feijão
+café
+leite
+</pre>
+<pre class="solucao" data-file="main.py">with open("compras.txt", encoding="utf-8") as arquivo:
+    for linha in arquivo:
+        print(linha.strip())
+</pre>
+</div>
+
+<hr>
+
+<h2>5. Numerando as linhas: <code>enumerate()</code></h2>
+<p>Para mostrar o número de cada linha, o <code>enumerate()</code> (veja <a href="enumerate-zip.html">enumerate() e zip()</a>) entrega, a cada volta, o número e a linha. O <code>start=1</code> faz a contagem começar do 1, como as pessoas contam:</p>
+
+<pre class="file" data-file="numeradas.py">with open("compras.txt", encoding="utf-8") as arquivo:
+    for numero, linha in enumerate(arquivo, start=1):
+        print(f"{numero}. {linha.strip()}")
+</pre>
+
+<pre class="term">$ python3 numeradas.py
+1. arroz
+2. feijão
+3. café
+4. leite</pre>
+
+<div class="trypy" data-goal="out:3. café;;out:4. leite;;src:\benumerate\b">
+<p class="try-task"><strong>Missão:</strong> numere a lista de compras: troque o <code>for</code> por um com <code>enumerate(arquivo, start=1)</code> e mostre <code>1. arroz</code>, <code>2. feijão</code>…</p>
+<pre class="script" data-file="main.py">with open("compras.txt", encoding="utf-8") as arquivo:
+    for linha in arquivo:
+        print(linha.strip())
+</pre>
+<pre class="script" data-file="compras.txt">arroz
+feijão
+café
+leite
+</pre>
+<pre class="solucao" data-file="main.py">with open("compras.txt", encoding="utf-8") as arquivo:
+    for numero, linha in enumerate(arquivo, start=1):
+        print(f"{numero}. {linha.strip()}")
+</pre>
+</div>
+
+<hr>
+
+<h2>6. Todas as linhas numa lista</h2>
+<p>Às vezes você quer as linhas numa <a href="listas.html">lista</a>, para saber quantas são, pegar a última, ordenar. Há duas formas:</p>
+
+<pre class="file" data-file="readlines.py">with open("compras.txt", encoding="utf-8") as arquivo:
+    linhas = arquivo.readlines()
+print(linhas)
+with open("compras.txt", encoding="utf-8") as arquivo:
+    itens = arquivo.read().splitlines()
+print(itens)
+print(f"São {len(itens)} itens. O último é {itens[-1]}.")
+</pre>
+
+<pre class="term">$ python3 readlines.py
+['arroz\n', 'feijão\n', 'café\n', 'leite\n']
+['arroz', 'feijão', 'café', 'leite']
+São 4 itens. O último é leite.</pre>
+
+<dl class="anatomy">
+  <dt>arquivo.readlines()</dt><dd>"Ler as linhas": uma lista com todas as linhas, <strong>cada uma com o seu <code>\n</code></strong>.</dd>
+  <dt>arquivo.read().splitlines()</dt><dd>Lê tudo como texto e "parte nas linhas" (<code>splitlines</code>): uma lista <strong>sem</strong> os <code>\n</code>. Quase sempre é a que você quer.</dd>
+</dl>
+
+<hr>
+
+<h2>7. Separando os campos: a média da turma</h2>
+<p>Agora um arquivo com dados de verdade, as notas da turma, com o nome e a nota em cada linha, separados por <code>": "</code> (dois-pontos e espaço):</p>
+
+<pre class="term">$ cat notas.txt
+Ana: 9.0
+Bruno: 6.5
+Carla: 8.5
+Davi: 7.0</pre>
+
+<pre class="file" data-file="media.py">soma = 0
+quantidade = 0
+with open("notas.txt", encoding="utf-8") as arquivo:
+    for linha in arquivo:
+        nome, nota = linha.strip().split(": ")
+        print(f"{nome} tirou {nota}")
+        soma += float(nota)
+        quantidade += 1
+print(f"Média da turma: {soma / quantidade:.2f}")
+</pre>
+
+<dl class="anatomy">
+  <dt>linha.strip()</dt><dd><code>'Ana: 9.0\n'</code> vira <code>'Ana: 9.0'</code>.</dd>
+  <dt>.split(": ")</dt><dd>"Partir" o texto onde houver <code>": "</code>: <code>'Ana: 9.0'</code> vira a lista <code>['Ana', '9.0']</code>.</dd>
+  <dt>nome, nota = …</dt><dd>Desempacota a lista de dois itens em duas variáveis (veja <a href="desempacotamento.html">Desempacotamento</a>). As duas são <strong>textos</strong>: <code>nota</code> é <code>'9.0'</code>, e não <code>9.0</code>.</dd>
+  <dt>float(nota)</dt><dd>Converte o texto em número para poder somar. Tudo o que vem de um arquivo de texto é texto.</dd>
+  <dt>soma / quantidade</dt><dd>A média, depois do laço, com 2 casas (<code>:.2f</code>).</dd>
+</dl>
+
+<pre class="term">$ python3 media.py
+Ana tirou 9.0
+Bruno tirou 6.5
+Carla tirou 8.5
+Davi tirou 7.0
+Média da turma: 7.75</pre>
+
+<p>Separar campos com <code>split()</code> funciona para arquivos simples como este. Para planilhas com colunas separadas por vírgula, o Python tem um módulo próprio, que entende até vírgulas dentro de aspas: aula <a href="csv.html">Arquivos CSV</a>.</p>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Devolve</th><th>Quando usar</th></tr>
+<tr><td><code>arquivo.read()</code></td><td>Um texto com o arquivo todo</td><td>Mostrar o arquivo, procurar uma palavra no texto inteiro; arquivos pequenos</td></tr>
+<tr><td><code>arquivo.readline()</code></td><td>A próxima linha (com <code>\n</code>); <code>''</code> no fim</td><td>Ler só a primeira linha (um cabeçalho), ou poucas linhas</td></tr>
+<tr><td><code>for linha in arquivo:</code></td><td>Uma linha por volta (com <code>\n</code>)</td><td><strong>O normal</strong> para processar linha por linha; arquivos de qualquer tamanho</td></tr>
+<tr><td><code>arquivo.readlines()</code></td><td>Lista de linhas, com <code>\n</code></td><td>Raramente: quase sempre o <code>splitlines()</code> é melhor</td></tr>
+<tr><td><code>arquivo.read().splitlines()</code></td><td>Lista de linhas, sem <code>\n</code></td><td>Quando você precisa da lista inteira (contar, ordenar, pegar a última)</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Para tirar o <code>\n</code></th><th>Efeito</th></tr>
+<tr><td><code>linha.strip()</code></td><td>Tira espaços, tabulações e quebras das duas pontas. <strong>O mais usado</strong></td></tr>
+<tr><td><code>linha.rstrip("\n")</code></td><td>Tira só a quebra de linha do fim; mantém os espaços</td></tr>
+<tr><td><code>print(linha, end="")</code></td><td>Não tira nada: só evita a quebra extra na tela</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>A comparação que nunca dá certo</strong>
+<pre class="file" data-file="sem_strip_cmp.py">with open("compras.txt", encoding="utf-8") as arquivo:
+    for linha in arquivo:
+        if linha == "café":
+            print("Achei o café!")
+print("Fim da busca")
+</pre>
+<pre class="term">$ python3 sem_strip_cmp.py
+Fim da busca</pre>
+<p>O café está na lista, e o programa não achou. Nenhum erro. A linha lida é <code>'café\n'</code>, e <code>'café\n' == 'café'</code> é <code>False</code>: o <code>\n</code> conta. Com o <code>strip()</code>:</p>
+<pre class="file" data-file="com_strip_cmp.py">with open("compras.txt", encoding="utf-8") as arquivo:
+    for linha in arquivo:
+        if linha.strip() == "café":
+            print("Achei o café!")
+print("Fim da busca")
+</pre>
+<pre class="term">$ python3 com_strip_cmp.py
+Achei o café!
+Fim da busca</pre>
+<p><strong>Regra prática:</strong> quase toda linha lida de um arquivo merece um <code>strip()</code> antes de ser usada.</p>
+</div>
+
+<div class="cenario">
+<strong>Uma linha vazia no meio do arquivo</strong>
+<p>Alguém apertou <kbd>Enter</kbd> duas vezes ao digitar as notas:</p>
+<pre class="term">$ cat notas_buraco.txt
+Ana: 9.0
+Bruno: 6.5
+
+Carla: 8.5</pre>
+<pre class="file" data-file="buraco.py">soma = 0
+with open("notas_buraco.txt", encoding="utf-8") as arquivo:
+    for linha in arquivo:
+        nome, nota = linha.strip().split(": ")
+        soma += float(nota)
+print(soma)
+</pre>
+<pre class="term">$ python3 buraco.py
+Traceback (most recent call last):
+  File "/home/ana/buraco.py", line 4, in &lt;module&gt;
+    nome, nota = linha.strip().split(": ")
+    ^^^^^^^^^^
+ValueError: not enough values to unpack (expected 2, got 1)</pre>
+<p>"Valores insuficientes para desempacotar (esperava 2, veio 1)." Na linha vazia, <code>''.split(": ")</code> dá uma lista com <strong>um</strong> item só (<code>['']</code>), e não dá para repartir um item em duas variáveis. <strong>Como consertar:</strong> pule as linhas vazias com <code>continue</code> (veja <a href="break-continue.html">break e continue</a>):</p>
+<pre class="file" data-file="buraco_ok.py">soma = 0
+with open("notas_buraco.txt", encoding="utf-8") as arquivo:
+    for linha in arquivo:
+        linha = linha.strip()
+        if not linha:
+            continue
+        nome, nota = linha.split(": ")
+        soma += float(nota)
+print(soma)
+</pre>
+<pre class="term">$ python3 buraco_ok.py
+24.0</pre>
+<p>Depois do <code>strip()</code>, a linha vazia vira <code>''</code>, que é "falso": o <code>if not linha</code> pula para a próxima volta.</p>
+</div>
+
+<div class="cenario">
+<strong>Uma linha fora do formato</strong>
+<p>No <code>notas_sem2p.txt</code>, a segunda linha ficou <code>Bruno 6.5</code>, sem os dois-pontos:</p>
+<pre class="term">$ python3 sem2p.py
+Ana 9.0
+Traceback (most recent call last):
+  File "/home/ana/sem2p.py", line 3, in &lt;module&gt;
+    nome, nota = linha.strip().split(": ")
+    ^^^^^^^^^^
+ValueError: not enough values to unpack (expected 2, got 1)</pre>
+<p>A mesma mensagem: sem o <code>": "</code>, o <code>split</code> não tem onde partir e devolve a linha inteira num item só. O traceback não diz <strong>qual</strong> linha do arquivo estava ruim (ele fala da linha 3 do <strong>programa</strong>); a Ana só soube porque o <code>Ana 9.0</code> apareceu antes. Com <code>enumerate</code> e <code>try</code>/<code>except ValueError</code> (aula <a href="try-except.html">try e except</a>), o programa pode avisar "linha 2 do arquivo fora do formato" e seguir para as outras.</p>
+</div>
+
+<div class="cenario">
+<strong>Esquecer o <code>open()</code></strong>
+<pre class="file" data-file="nome_nao_arquivo.py">for linha in "compras.txt":
+    print(linha)
+</pre>
+<pre class="term">$ python3 nome_nao_arquivo.py
+c
+o
+m
+p
+r
+a
+s
+.
+t
+x
+t</pre>
+<p>Sem erro e sem sentido: o programa percorreu as <strong>letras do nome</strong> do arquivo. <code>"compras.txt"</code> é só um texto; um <code>for</code> num texto passa letra por letra. <strong>Como consertar:</strong> abrir primeiro, <code>with open("compras.txt", encoding="utf-8") as arquivo:</code>, e percorrer o <code>arquivo</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O <code>for</code> fora do <code>with</code></strong>
+<pre class="file" data-file="fechado_for.py">with open("compras.txt", encoding="utf-8") as arquivo:
+    print("Abri.")
+for linha in arquivo:
+    print(linha.strip())
+</pre>
+<pre class="term">$ python3 fechado_for.py
+Abri.
+Traceback (most recent call last):
+  File "/home/ana/fechado_for.py", line 3, in &lt;module&gt;
+    for linha in arquivo:
+                 ^^^^^^^
+ValueError: I/O operation on closed file.</pre>
+<p>O <code>for</code> está na margem esquerda, fora do bloco: o arquivo já foi fechado. <strong>Como consertar:</strong> indente o <code>for</code> (e o corpo dele) para dentro do <code>with</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Ler duas vezes</strong>
+<pre class="file" data-file="duas_vezes.py">with open("compras.txt", encoding="utf-8") as arquivo:
+    primeira_vez = arquivo.read()
+    segunda_vez = arquivo.read()
+print(f"Primeira leitura: {len(primeira_vez)} caracteres")
+print(f"Segunda leitura: {len(segunda_vez)} caracteres")
+</pre>
+<pre class="term">$ python3 duas_vezes.py
+Primeira leitura: 24 caracteres
+Segunda leitura: 0 caracteres</pre>
+<p>A segunda leitura veio vazia: o "dedo" já estava no fim. O mesmo vale para dois <code>for</code> seguidos no mesmo arquivo aberto: o segundo não dá nenhuma volta. <strong>Como consertar:</strong> guarde o que foi lido numa variável e use a variável quantas vezes quiser (ou abra o arquivo de novo).</p>
+</div>
+
+<div class="note">
+<strong>E o <code>float()</code> com o <code>\n</code>?</strong>
+<p>Uma boa notícia: <code>float()</code> e <code>int()</code> ignoram os espaços e a quebra de linha das pontas. <code>float(" 9.0\n")</code> dá <code>9.0</code> e <code>int("7\n")</code> dá <code>7</code> (conferido no lab). Mesmo assim, use o <code>strip()</code>: ele deixa claro o que você está fazendo e protege as comparações.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>arquivo.read()</code></td><td>Lê do ponto atual até o fim, como um texto (<code>''</code> se já está no fim)</td></tr>
+<tr><td><code>arquivo.readline()</code></td><td>Lê a próxima linha, com <code>\n</code> (<code>''</code> no fim)</td></tr>
+<tr><td><code>for linha in arquivo:</code></td><td>Percorre as linhas restantes, uma por volta, com <code>\n</code></td></tr>
+<tr><td><code>arquivo.readlines()</code></td><td>Lista das linhas, com <code>\n</code></td></tr>
+<tr><td><code>arquivo.read().splitlines()</code></td><td>Lista das linhas, sem <code>\n</code></td></tr>
+<tr><td><code>linha.strip()</code></td><td>Tira brancos e quebras das pontas</td></tr>
+<tr><td><code>linha.rstrip("\n")</code></td><td>Tira só a quebra do fim</td></tr>
+<tr><td><code>linha.split(": ")</code></td><td>Parte a linha nos campos</td></tr>
+<tr><td><code>enumerate(arquivo, start=1)</code></td><td>Número e linha, a cada volta</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td>Linhas em branco entre as linhas na tela</td><td>O <code>\n</code> da linha + o do <code>print</code>: use <code>strip()</code> ou <code>end=""</code></td></tr>
+<tr><td>Uma comparação com a linha nunca dá <code>True</code></td><td>Faltou o <code>strip()</code>: a linha tem <code>\n</code></td></tr>
+<tr><td><code>ValueError: not enough values to unpack</code></td><td>Linha vazia ou fora do formato no <code>split</code></td></tr>
+<tr><td><code>ValueError: I/O operation on closed file.</code></td><td>Leitura fora do bloco do <code>with</code></td></tr>
+<tr><td>A segunda leitura vem vazia</td><td>O arquivo já foi lido até o fim</td></tr>
+<tr><td>O <code>for</code> mostra letras soltas</td><td>Percorreu o nome do arquivo (faltou o <code>open</code>)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Complete o laço</h3>
+<p>Complete para mostrar cada linha sem a quebra do fim:</p>
+<div class="ex-code">with open("agenda.txt", encoding="utf-8") as arquivo:
+    <input data-answer="for" aria-label="palavra 1"> linha <input data-answer="in" aria-label="palavra 2"> arquivo:
+        print(linha.<input data-answer="strip()|rstrip()" aria-label="método">)</div>
+</div>
+
+<div class="exercise">
+<h3>2. O que tem na linha?</h3>
+<p>O arquivo tem a linha <code>pão</code> (seguida de outras). O que <code>arquivo.readline()</code> devolve na primeira chamada, como o modo interativo mostraria (com as aspas)?</p>
+<div class="ex-code"><input data-answer="'pão\n'" aria-label="valor devolvido"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. Por que <code>for linha in arquivo: print(linha)</code> mostra uma linha em branco entre os itens?</p>
+<label><input type="radio" name="q3"> Porque o arquivo tem linhas vazias entre os itens</label>
+<label><input type="radio" name="q3"> Porque cada linha lida termina com <code>\n</code>, e o <code>print</code> põe mais um</label>
+<label><input type="radio" name="q3"> Porque faltou o <code>encoding</code></label>
+<label><input type="radio" name="q3"> Porque o <code>for</code> pula uma linha a cada volta</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">4. Qual forma lê um arquivo de 5 GB sem precisar de 5 GB de memória?</p>
+<label><input type="radio" name="q4"> <code>arquivo.read()</code></label>
+<label><input type="radio" name="q4"> <code>arquivo.readlines()</code></label>
+<label><input type="radio" name="q4"> <code>arquivo.read().splitlines()</code></label>
+<label><input type="radio" name="q4"> <code>for linha in arquivo:</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Depois de um <code>arquivo.read()</code>, o que devolve um segundo <code>arquivo.read()</code> no mesmo arquivo aberto?</p>
+<label><input type="radio" name="q5"> <code>''</code>, um texto vazio</label>
+<label><input type="radio" name="q5"> O arquivo inteiro de novo</label>
+<label><input type="radio" name="q5"> <code>None</code></label>
+<label><input type="radio" name="q5"> Um <code>EOFError</code></label>
+</div>
+
+<h3>Missão final: a média com uma linha vazia</h3>
+
+<div class="trypy" data-goal="out:Média da turma: 7.75;;semerro">
+<p class="try-task"><strong>Missão:</strong> o arquivo <code>notas.txt</code> (na outra aba) tem uma linha vazia no meio, e o programa quebra nela. Faça o laço tirar o <code>\n</code> com <code>strip()</code> e <strong>pular</strong> as linhas vazias (<code>if not linha: continue</code>), para chegar à <code>Média da turma: 7.75</code>.</p>
+<pre class="script" data-file="main.py">soma = 0
+quantidade = 0
+with open("notas.txt", encoding="utf-8") as arquivo:
+    for linha in arquivo:
+        nome, nota = linha.split(": ")
+        soma += float(nota)
+        quantidade += 1
+print(f"Média da turma: {soma / quantidade:.2f}")
+</pre>
+<pre class="script" data-file="notas.txt">Ana: 9.0
+Bruno: 6.5
+
+Carla: 8.5
+Davi: 7.0
+</pre>
+<pre class="solucao" data-file="main.py">soma = 0
+quantidade = 0
+with open("notas.txt", encoding="utf-8") as arquivo:
+    for linha in arquivo:
+        linha = linha.strip()
+        if not linha:
+            continue
+        nome, nota = linha.split(": ")
+        soma += float(nota)
+        quantidade += 1
+print(f"Média da turma: {soma / quantidade:.2f}")
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>O arquivo aberto tem um marcador de posição: cada leitura continua de onde a anterior parou; no fim, as leituras devolvem <code>''</code>.</li>
+  <li><code>read()</code> lê tudo num texto; <code>readline()</code> lê uma linha; <code>for linha in arquivo:</code> percorre as linhas, uma por vez, e é a forma preferida.</li>
+  <li>Toda linha lida termina com <code>\n</code>: por isso as linhas em branco a mais no <code>print</code> e as comparações que falham. <code>linha.strip()</code> resolve.</li>
+  <li><code>enumerate(arquivo, start=1)</code> numera as linhas; <code>read().splitlines()</code> dá uma lista sem os <code>\n</code>.</li>
+  <li>Tudo o que vem de um arquivo de texto é texto: separe os campos com <code>split()</code> e converta com <code>float()</code>/<code>int()</code>.</li>
+  <li>Linhas vazias quebram o <code>split</code> (<code>not enough values to unpack</code>): pule-as com <code>if not linha: continue</code>.</li>
+  <li>Escrever em arquivos é a próxima aula: <a href="arquivos-escrever.html">Escrevendo Arquivos</a>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
