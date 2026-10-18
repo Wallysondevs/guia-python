@@ -470,7 +470,7 @@ ValueError: 9 is not a valid Status
 <p>Linha por linha:</p>
 <ul>
   <li><code>File "/home/ana/valor_errado.py", line 10</code>: no seu arquivo, a linha 10, <code>Status(9)</code>. É ela que você vai consertar.</li>
-  <li>As duas entradas de <code>/usr/lib/python3.14/enum.py</code> são o código do próprio módulo <code>enum</code>, por onde a busca passou. Não são o defeito.</li>
+  <li>As duas entradas de <code>/usr/lib/python3.14/enum.py</code> são o código do próprio módulo <code>enum</code>, por onde a busca passou. Não são o defeito. (No editor do guia, o caminho aparece como <code>/lib/python314.zip/enum.py</code>, e os números dessas linhas podem ser um pouco diferentes, porque a versão do Python de lá é outra: 3.14.2.)</li>
   <li><code>ValueError: 9 is not a valid Status</code>: "9 não é um <code>Status</code> válido". Nenhum membro vale 9.</li>
 </ul>
 <p><strong>Como consertar:</strong> se o número vem de fora (do teclado, de um arquivo), trate o erro com <code>try</code>/<code>except ValueError</code> (aula <a href="try-except.html">try e except</a>), como na missão final.</p>

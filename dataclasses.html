@@ -214,7 +214,7 @@ TypeError: non-default argument 'preco' follows default argument 'estoque'
 <p>Um traceback comprido assusta, mas o jeito de ler é sempre o mesmo:</p>
 <ul>
   <li><strong>A primeira parte</strong> é o <strong>seu</strong> arquivo: <code>File "/home/ana/ordem_padrao.py", line 4</code>, o <code>@dataclass</code>. Foi ali que o problema começou.</li>
-  <li><strong>O meio</strong> (<code>/usr/lib/python3.14/dataclasses.py</code>) é o código do próprio Python, por onde o erro passou. Você não precisa entender essas linhas; elas não são o defeito.</li>
+  <li><strong>O meio</strong> (<code>/usr/lib/python3.14/dataclasses.py</code>) é o código do próprio Python, por onde o erro passou. Você não precisa entender essas linhas; elas não são o defeito. (No editor do guia, o mesmo arquivo aparece com outro caminho, <code>/lib/python314.zip/dataclasses.py</code>, porque o Python de lá vive dentro do navegador.)</li>
   <li><strong>A última linha</strong> é a explicação: <code>TypeError: non-default argument 'preco' follows default argument 'estoque'</code>, "o argumento sem padrão <code>preco</code> vem depois do argumento com padrão <code>estoque</code>".</li>
 </ul>
 <p>O erro aparece no <code>@dataclass</code>, antes mesmo de criar qualquer produto: ao escrever o <code>__init__</code>, o Python teria de fazer <code>def __init__(self, nome, estoque=0, preco)</code>, o que não é permitido. <strong>Como consertar:</strong> passe os campos com padrão para o fim (<code>nome</code>, <code>preco</code>, <code>estoque = 0</code>).</p>
