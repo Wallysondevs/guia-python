@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Projeto: Conta Bancária — do dicionário às classes | Guia Python</title>
+<meta name="description" content="Projeto passo a passo em Python: a conta bancária da Ana em quatro versões. Versão 1 com dicionários e funções, versão 2 com uma classe e extrato, versão 3 com @property e validação (ValueError), versão 4 com herança (ContaPoupanca), polimorfismo e uma exceção própria (SaldoInsuficienteError), com as saídas reais e uma missão em cada passo.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Projeto: Conta Bancária</span></h1>
+
+<p class="intro">O banco do bairro pediu à Ana um programinha para controlar as contas dos clientes: abrir conta, depositar, sacar, ver o extrato e, para quem tem poupança, render os juros no fim do mês. Neste projeto você vai construir esse programa <strong>quatro vezes</strong>, cada vez melhor. A primeira versão usa só o que você aprendeu no Nível 2 (dicionários e funções); as outras vão trazendo, uma por vez, as ferramentas da <strong>Orientação a Objetos</strong>. No fim, você vai ter visto na prática por que cada uma delas existe.</p>
+
+<div class="note">
+<strong>Neste projeto você vai usar</strong>
+<ul>
+  <li><a href="dicionarios.html">Dicionários</a> e <a href="funcoes.html">funções</a>, na versão 1.</li>
+  <li><a href="classes.html">Classes e objetos</a>, <a href="init-self.html">__init__ e self</a> e <a href="atributos-metodos.html">métodos</a>, na versão 2.</li>
+  <li><a href="encapsulamento.html">Encapsulamento</a>, <a href="property.html">@property</a> e <a href="raise.html">raise</a>, na versão 3.</li>
+  <li><a href="heranca.html">Herança</a>, <a href="polimorfismo.html">polimorfismo</a>, <a href="excecoes-proprias.html">exceções próprias</a> e <a href="try-except.html">try e except</a>, na versão 4.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>O que vamos construir</h2>
+<p>Esta é a versão final rodando no computador da Ana. A Ana tem uma conta corrente; a Bia, uma poupança. O programa faz alguns depósitos e saques (um deles sem saldo), fecha o mês e mostra o extrato de cada uma:</p>
+
+<pre class="term" data-cwd="~/projetos/banco">$ python3 banco.py
+Bia: saque negado (saldo de R$ 1000.00, saque de R$ 2000.00)
+  faltaram R$ 1000.00
+--- ContaBancaria de Ana ---
+Depósito     +100.00
+Depósito      +50.00
+Saque         -30.00
+Saldo         120.00
+--- ContaPoupanca de Bia ---
+Depósito    +1000.00
+Saque        -200.00
+Juros          +8.00                « a poupança rendeu 1% no fim do mês
+Saldo         808.00</pre>
+
+<p>As quatro versões:</p>
+<ol class="passo">
+  <li><a href="#versao1">Dicionários e funções</a>: funciona, mas os dados ficam soltos.</li>
+  <li><a href="#versao2">Uma classe</a>: dados e ações juntos, com extrato.</li>
+  <li><a href="#versao3">@property e validação</a>: o saldo só muda pelos métodos, e valores absurdos são recusados.</li>
+  <li><a href="#versao4">Herança e uma exceção própria</a>: a poupança e o <code>SaldoInsuficienteError</code>.</li>
+</ol>
+
+<h3>Antes de começar</h3>
+<p>Crie a pasta do projeto. O arquivo vai se chamar <code>banco.py</code>, e cada versão substitui a anterior:</p>
+
+<pre class="term">$ mkdir -p projetos/banco
+$ cd projetos/banco</pre>
+
+<p>Em cada versão há uma caixa <strong>Experimente</strong>, que roda Python de verdade aqui na página. As missões usam uma versão enxuta da conta, só com o que aquele passo precisa.</p>
+
+<hr>
+
+<h2 id="versao1">Versão 1 · Dicionários e funções</h2>
+<p>Com o que você já sabe, uma conta pode ser um <strong>dicionário</strong> com o titular e o saldo, e as operações podem ser <strong>funções</strong> que recebem a conta:</p>
+
+<pre class="file" data-file="banco.py">def criar_conta(titular, saldo=0):
+    return {"titular": titular, "saldo": saldo}
+
+
+def depositar(conta, valor):
+    conta["saldo"] += valor
+
+
+def sacar(conta, valor):
+    if valor &gt; conta["saldo"]:
+        print(f"Saque de R$ {valor:.2f} negado: saldo insuficiente.")
+    else:
+        conta["saldo"] -= valor
+
+
+def mostrar(conta):
+    print(f"{conta['titular']}: R$ {conta['saldo']:.2f}")
+
+
+ana = criar_conta("Ana", 100)
+bia = criar_conta("Bia")
+
+depositar(ana, 50)
+sacar(ana, 30)
+depositar(bia, 80)
+sacar(bia, 200)
+
+mostrar(ana)
+mostrar(bia)
+</pre>
+
+<dl class="anatomy">
+  <dt>criar_conta(titular, saldo=0)</dt><dd>Monta e devolve o dicionário de uma conta. O saldo começa em 0 se ninguém disser nada.</dd>
+  <dt>conta["saldo"] += valor</dt><dd>As funções mudam o dicionário que receberam. Como dicionários são mutáveis, a mudança vale fora da função (aula <a href="mutabilidade.html">Mutável × Imutável</a>).</dd>
+  <dt>sacar(conta, valor)</dt><dd>A regra do banco: não se saca mais do que se tem.</dd>
+  <dt>conta['titular']</dt><dd>Dentro da f-string, aspas <strong>simples</strong>, porque a f-string já usa as duplas.</dd>
+</dl>
+
+<pre class="term" data-cwd="~/projetos/banco">$ python3 banco.py
+Saque de R$ 200.00 negado: saldo insuficiente.
+Ana: R$ 120.00
+Bia: R$ 80.00</pre>
+
+<p>Funciona. Mas repare em duas fraquezas. Os dados (o dicionário) e as ações (as funções) vivem separados: nada no dicionário diz que ele "sabe" sacar. E o dicionário aceita qualquer coisa, como você vai ver agora.</p>
+
+<h3>Quando dá errado na versão 1</h3>
+
+<div class="cenario">
+<strong>Uma chave digitada errado: <code>KeyError</code></strong>
+<pre class="file" data-file="banco.py">def criar_conta(titular, saldo=0):
+    return {"titular": titular, "saldo": saldo}
+
+
+def depositar(conta, valor):
+    conta["sado"] += valor
+
+
+ana = criar_conta("Ana", 100)
+depositar(ana, 50)
+</pre>
+<pre class="term" data-cwd="~/projetos/banco">$ python3 banco.py
+Traceback (most recent call last):
+  File "/home/ana/projetos/banco/banco.py", line 10, in &lt;module&gt;
+    depositar(ana, 50)
+    ~~~~~~~~~^^^^^^^^^
+  File "/home/ana/projetos/banco/banco.py", line 6, in depositar
+    conta["sado"] += valor
+    ~~~~~^^^^^^^^
+KeyError: 'sado'</pre>
+<p>Faltou um <strong>l</strong>: <code>"sado"</code>. O erro só aparece quando o programa roda aquela linha, e cada função que mexe na conta é um lugar a mais para errar o nome da chave.</p>
+</div>
+
+<div class="cenario">
+<strong>Qualquer um muda o saldo</strong>
+<pre class="file" data-file="banco.py">def criar_conta(titular, saldo=0):
+    return {"titular": titular, "saldo": saldo}
+
+
+def mostrar(conta):
+    print(f"{conta['titular']}: R$ {conta['saldo']:.2f}")
+
+
+ana = criar_conta("Ana", 100)
+ana["saldo"] = -1000
+mostrar(ana)
+</pre>
+<pre class="term" data-cwd="~/projetos/banco">$ python3 banco.py
+Ana: R$ -1000.00</pre>
+<p>Nenhum erro. A função <code>sacar</code> tem a regra do saldo, mas ninguém é obrigado a usá-la. Vamos resolver isso aos poucos: primeiro juntando dados e ações numa classe.</p>
+</div>
+
+<div class="trypy" data-goal="out:negado;;out:Ana: R$ 70.00;;src:def sacar\(;;semerro">
+<p class="try-task"><strong>Missão:</strong> falta a função <code>sacar(conta, valor)</code>. Escreva: se o valor for maior que o saldo, mostre uma mensagem com a palavra <code>negado</code>; se não, tire o valor do saldo. A Ana tem 100, tenta sacar 500 (negado) e depois 30: deve sobrar <code>Ana: R$ 70.00</code>.</p>
+<pre class="script" data-file="main.py">def criar_conta(titular, saldo=0):
+    return {"titular": titular, "saldo": saldo}
+
+
+def depositar(conta, valor):
+    conta["saldo"] += valor
+
+
+# escreva aqui a função sacar(conta, valor)
+
+
+def mostrar(conta):
+    print(f"{conta['titular']}: R$ {conta['saldo']:.2f}")
+
+
+ana = criar_conta("Ana", 100)
+sacar(ana, 500)
+sacar(ana, 30)
+mostrar(ana)
+</pre>
+<pre class="solucao" data-file="main.py">def criar_conta(titular, saldo=0):
+    return {"titular": titular, "saldo": saldo}
+
+
+def depositar(conta, valor):
+    conta["saldo"] += valor
+
+
+def sacar(conta, valor):
+    if valor &gt; conta["saldo"]:
+        print(f"Saque de R$ {valor:.2f} negado: saldo insuficiente.")
+    else:
+        conta["saldo"] -= valor
+
+
+def mostrar(conta):
+    print(f"{conta['titular']}: R$ {conta['saldo']:.2f}")
+
+
+ana = criar_conta("Ana", 100)
+sacar(ana, 500)
+sacar(ana, 30)
+mostrar(ana)
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao2">Versão 2 · Uma classe</h2>
+<p>Agora a conta vira uma <strong>classe</strong>. O que ela tem (titular, saldo, extrato) e o que ela faz (depositar, sacar, mostrar o extrato) ficam juntos:</p>
+
+<pre class="file" data-file="banco.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self.saldo = saldo
+        self.extrato = []
+
+    def depositar(self, valor):
+        self.saldo += valor
+        self.extrato.append(f"Depósito: +{valor:.2f}")
+
+    def sacar(self, valor):
+        if valor &gt; self.saldo:
+            self.extrato.append(f"Saque negado: {valor:.2f}")
+            return False
+        self.saldo -= valor
+        self.extrato.append(f"Saque: -{valor:.2f}")
+        return True
+
+    def mostrar_extrato(self):
+        print(f"--- Extrato de {self.titular} ---")
+        for linha in self.extrato:
+            print(linha)
+        print(f"Saldo: R$ {self.saldo:.2f}")
+
+
+ana = ContaBancaria("Ana", 100)
+bia = ContaBancaria("Bia")
+
+ana.depositar(50)
+ana.sacar(30)
+bia.depositar(80)
+if not bia.sacar(200):
+    print("A Bia não conseguiu sacar R$ 200.00")
+
+ana.mostrar_extrato()
+bia.mostrar_extrato()
+</pre>
+
+<dl class="anatomy">
+  <dt>self.extrato = []</dt><dd>Cada conta nasce com a <strong>sua</strong> lista de movimentos, criada no <code>__init__</code>. (Na classe, fora do <code>__init__</code>, a lista seria uma só para todas as contas: veja <a href="atributos-metodos.html">Atributos e Métodos</a>.)</dd>
+  <dt>self.extrato.append(…)</dt><dd>Todo depósito e todo saque deixam um registro. A lista guarda textos já formatados.</dd>
+  <dt>return False / return True</dt><dd>O <code>sacar</code> não imprime nada: ele <strong>responde</strong> se deu certo. Quem chamou decide o que fazer.</dd>
+  <dt>if not bia.sacar(200):</dt><dd>Chama o saque e, se ele devolveu <code>False</code>, avisa.</dd>
+</dl>
+
+<pre class="term" data-cwd="~/projetos/banco">$ python3 banco.py
+A Bia não conseguiu sacar R$ 200.00
+--- Extrato de Ana ---
+Depósito: +50.00
+Saque: -30.00
+Saldo: R$ 120.00
+--- Extrato de Bia ---
+Depósito: +80.00
+Saque negado: 200.00
+Saldo: R$ 80.00</pre>
+
+<p>Compare a chamada: <code>sacar(ana, 30)</code> virou <code>ana.sacar(30)</code>. A conta agora <strong>sabe</strong> sacar, e o nome <code>saldo</code> é escrito num lugar só (a classe), em vez de em cada função. Errar o nome de um atributo ainda dá erro, mas dentro de um arquivo só, perto de tudo o que a conta faz.</p>
+
+<h3>Quando dá errado na versão 2</h3>
+
+<div class="cenario">
+<strong>O saldo continua aberto</strong>
+<pre class="file" data-file="banco.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self.saldo = saldo
+        self.extrato = []
+
+    def depositar(self, valor):
+        self.saldo += valor
+        self.extrato.append(f"Depósito: +{valor:.2f}")
+
+
+ana = ContaBancaria("Ana", 100)
+ana.depositar(-500)
+ana.saldo = 1_000_000
+print(ana.saldo)
+print(ana.extrato)
+</pre>
+<pre class="term" data-cwd="~/projetos/banco">$ python3 banco.py
+1000000
+['Depósito: +-500.00']</pre>
+<p>Dois furos: o <code>depositar</code> aceitou um depósito <strong>negativo</strong> (repare no <code>+-500.00</code> do extrato), e o <code>ana.saldo = 1_000_000</code> mudou o saldo por fora, sem registro nenhum no extrato. A versão 3 fecha os dois.</p>
+</div>
+
+<div class="trypy" data-goal="out:Ana: R$ 70.00;;out:Bia: R$ 30.00;;src:def transferir\(self;;semerro">
+<p class="try-task"><strong>Missão:</strong> o banco quer transferências. Escreva o método <code>transferir(self, destino, valor)</code>: ele tenta <strong>sacar</strong> o valor desta conta e, só se o saque der certo, <strong>deposita</strong> na conta de destino. Use os métodos que já existem. A Ana transfere 30 para a Bia (dá certo) e depois 500 (não dá): deve ficar <code>Ana: R$ 70.00</code> e <code>Bia: R$ 30.00</code>.</p>
+<pre class="script" data-file="main.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self.saldo = saldo
+        self.extrato = []
+
+    def depositar(self, valor):
+        self.saldo += valor
+        self.extrato.append(f"Depósito: +{valor:.2f}")
+
+    def sacar(self, valor):
+        if valor &gt; self.saldo:
+            self.extrato.append(f"Saque negado: {valor:.2f}")
+            return False
+        self.saldo -= valor
+        self.extrato.append(f"Saque: -{valor:.2f}")
+        return True
+
+    # escreva aqui o método transferir(self, destino, valor)
+
+
+ana = ContaBancaria("Ana", 100)
+bia = ContaBancaria("Bia")
+
+ana.transferir(bia, 30)
+ana.transferir(bia, 500)
+
+print(f"Ana: R$ {ana.saldo:.2f}")
+print(f"Bia: R$ {bia.saldo:.2f}")
+</pre>
+<pre class="solucao" data-file="main.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self.saldo = saldo
+        self.extrato = []
+
+    def depositar(self, valor):
+        self.saldo += valor
+        self.extrato.append(f"Depósito: +{valor:.2f}")
+
+    def sacar(self, valor):
+        if valor &gt; self.saldo:
+            self.extrato.append(f"Saque negado: {valor:.2f}")
+            return False
+        self.saldo -= valor
+        self.extrato.append(f"Saque: -{valor:.2f}")
+        return True
+
+    def transferir(self, destino, valor):
+        if self.sacar(valor):
+            destino.depositar(valor)
+            return True
+        return False
+
+
+ana = ContaBancaria("Ana", 100)
+bia = ContaBancaria("Bia")
+
+ana.transferir(bia, 30)
+ana.transferir(bia, 500)
+
+print(f"Ana: R$ {ana.saldo:.2f}")
+print(f"Bia: R$ {bia.saldo:.2f}")
+</pre>
+</div>
+
+<p>Repare como o <code>transferir</code> ficou curto: ele não repete a regra do saldo, só usa o <code>sacar</code>. Se um dia a regra do saque mudar, a transferência acompanha sozinha.</p>
+
+<hr>
+
+<h2 id="versao3">Versão 3 · <code>@property</code> e validação</h2>
+<p>Agora o saldo passa a morar em <code>self._saldo</code> (com sublinhado: "uso interno", aula <a href="encapsulamento.html">Encapsulamento</a>), e quem está de fora o enxerga por uma <strong>propriedade só de leitura</strong> (aula <a href="property.html">@property</a>). Os métodos passam a <strong>recusar</strong> valores absurdos com <code>ValueError</code>:</p>
+
+<pre class="file" data-file="banco.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self._saldo = 0
+        self._extrato = []
+        if saldo:
+            self.depositar(saldo)
+
+    @property
+    def saldo(self):
+        return self._saldo
+
+    def depositar(self, valor):
+        if valor &lt;= 0:
+            raise ValueError(f"depósito precisa ser maior que zero (veio {valor})")
+        self._saldo += valor
+        self._extrato.append(f"Depósito: +{valor:.2f}")
+
+    def sacar(self, valor):
+        if valor &lt;= 0:
+            raise ValueError(f"saque precisa ser maior que zero (veio {valor})")
+        if valor &gt; self._saldo:
+            self._extrato.append(f"Saque negado: {valor:.2f}")
+            return False
+        self._saldo -= valor
+        self._extrato.append(f"Saque: -{valor:.2f}")
+        return True
+
+    def mostrar_extrato(self):
+        print(f"--- Extrato de {self.titular} ---")
+        for linha in self._extrato:
+            print(linha)
+        print(f"Saldo: R$ {self.saldo:.2f}")
+
+
+ana = ContaBancaria("Ana", 100)
+ana.sacar(30)
+for valor in [50, -500, 0]:
+    try:
+        ana.depositar(valor)
+    except ValueError as erro:
+        print(f"Recusado: {erro}")
+
+print(f"Saldo da Ana: R$ {ana.saldo:.2f}")
+ana.mostrar_extrato()
+ana.saldo = 1_000_000
+</pre>
+
+<dl class="anatomy">
+  <dt>self._saldo = 0 … self.depositar(saldo)</dt><dd>A conta nasce zerada, e o saldo inicial entra <strong>como um depósito</strong>. Assim ele passa pela mesma validação e aparece no extrato.</dd>
+  <dt>@property def saldo(self)</dt><dd>De fora, <code>ana.saldo</code> continua funcionando para <strong>ler</strong>. Como não há setter, ninguém consegue escrever.</dd>
+  <dt>raise ValueError(…)</dt><dd>Depósito ou saque de zero ou menos não fazem sentido: o método se recusa a continuar e explica por quê.</dd>
+  <dt>try: … except ValueError as erro:</dt><dd>Quem usa a conta trata a recusa e o programa segue.</dd>
+  <dt>ana.saldo = 1_000_000</dt><dd>A última linha tenta a fraude da versão 2. Veja o que acontece agora.</dd>
+</dl>
+
+<pre class="term" data-cwd="~/projetos/banco">$ python3 banco.py
+Recusado: depósito precisa ser maior que zero (veio -500)
+Recusado: depósito precisa ser maior que zero (veio 0)
+Saldo da Ana: R$ 120.00
+--- Extrato de Ana ---
+Depósito: +100.00                  « o saldo inicial entrou como depósito
+Saque: -30.00
+Depósito: +50.00
+Saldo: R$ 120.00
+Traceback (most recent call last):
+  File "/home/ana/projetos/banco/banco.py", line 46, in &lt;module&gt;
+    ana.saldo = 1_000_000
+    ^^^^^^^^^
+AttributeError: property 'saldo' of 'ContaBancaria' object has no setter</pre>
+
+<p>Os depósitos de <code>-500</code> e de <code>0</code> foram recusados, o extrato agora conta a história inteira (inclusive o saldo de abertura), e a fraude, que antes passava calada, agora <strong>para o programa</strong> com <code>AttributeError: property 'saldo' … has no setter</code>, "a propriedade <code>saldo</code> não tem setter". Este erro é o programa funcionando como deve: é o cadeado da versão 3.</p>
+
+<div class="note">
+<strong>Por que não um setter com validação?</strong>
+<p>Daria para escrever um <code>@saldo.setter</code> que recusasse valores negativos (a missão final da aula <a href="property.html">@property</a> faz isso). Aqui a escolha é outra: num banco, o saldo <strong>nunca</strong> é escrito direto; ele é o resultado de depósitos e saques, e cada um deixa registro. Sem setter, a única porta para mudar o saldo são os métodos.</p>
+</div>
+
+<div class="trypy" data-goal="out:Recusado:;;out:Saldo: R$ 150.00;;src:raise ValueError;;semerro">
+<p class="try-task"><strong>Missão:</strong> o <code>depositar</code> desta conta aceita qualquer valor, e o depósito de <code>-500</code> deixa o saldo negativo. Faça o método levantar um <code>ValueError</code> quando o valor for zero ou menos. O código de baixo já trata o erro: deve aparecer uma linha começando com <code>Recusado:</code> e, no fim, <code>Saldo: R$ 150.00</code>.</p>
+<pre class="script" data-file="main.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self._saldo = saldo
+
+    @property
+    def saldo(self):
+        return self._saldo
+
+    def depositar(self, valor):
+        self._saldo += valor
+
+
+ana = ContaBancaria("Ana", 100)
+for valor in [50, -500]:
+    try:
+        ana.depositar(valor)
+    except ValueError as erro:
+        print(f"Recusado: {erro}")
+
+print(f"Saldo: R$ {ana.saldo:.2f}")
+</pre>
+<pre class="solucao" data-file="main.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self._saldo = saldo
+
+    @property
+    def saldo(self):
+        return self._saldo
+
+    def depositar(self, valor):
+        if valor &lt;= 0:
+            raise ValueError(f"depósito precisa ser maior que zero (veio {valor})")
+        self._saldo += valor
+
+
+ana = ContaBancaria("Ana", 100)
+for valor in [50, -500]:
+    try:
+        ana.depositar(valor)
+    except ValueError as erro:
+        print(f"Recusado: {erro}")
+
+print(f"Saldo: R$ {ana.saldo:.2f}")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao4">Versão 4 · Herança e uma exceção própria</h2>
+<p>Duas novidades. A primeira: o saque sem saldo vira uma <strong>exceção própria</strong>, <code>SaldoInsuficienteError</code> (aula <a href="excecoes-proprias.html">Criando suas Exceções</a>). Um <code>return False</code> é fácil de ignorar; uma exceção não. A segunda: a poupança vira uma <strong>classe filha</strong> da conta, que só acrescenta os juros (aula <a href="heranca.html">Herança</a>).</p>
+
+<pre class="file" data-file="banco.py">class SaldoInsuficienteError(Exception):
+    def __init__(self, saldo, valor):
+        self.saldo = saldo
+        self.valor = valor
+        super().__init__(f"saldo de R$ {saldo:.2f}, saque de R$ {valor:.2f}")
+
+
+class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self._saldo = 0
+        self._extrato = []
+        if saldo:
+            self.depositar(saldo)
+
+    @property
+    def saldo(self):
+        return self._saldo
+
+    def _registrar(self, tipo, valor):
+        self._extrato.append(f"{tipo:&lt;10}{valor:&gt;+10.2f}")
+
+    def depositar(self, valor):
+        if valor &lt;= 0:
+            raise ValueError(f"depósito precisa ser maior que zero (veio {valor})")
+        self._saldo += valor
+        self._registrar("Depósito", valor)
+
+    def sacar(self, valor):
+        if valor &lt;= 0:
+            raise ValueError(f"saque precisa ser maior que zero (veio {valor})")
+        if valor &gt; self._saldo:
+            raise SaldoInsuficienteError(self._saldo, valor)
+        self._saldo -= valor
+        self._registrar("Saque", -valor)
+
+    def fim_do_mes(self):
+        pass
+
+    def mostrar_extrato(self):
+        print(f"--- {type(self).__name__} de {self.titular} ---")
+        for linha in self._extrato:
+            print(linha)
+        print(f"{'Saldo':&lt;10}{self.saldo:&gt;10.2f}")
+
+
+class ContaPoupanca(ContaBancaria):
+    def __init__(self, titular, saldo=0, taxa=0.01):
+        super().__init__(titular, saldo)
+        self.taxa = taxa
+
+    def fim_do_mes(self):
+        rendimento = round(self._saldo * self.taxa, 2)
+        if rendimento &gt; 0:
+            self._saldo += rendimento
+            self._registrar("Juros", rendimento)
+
+
+ana = ContaBancaria("Ana", 100)
+bia = ContaPoupanca("Bia", 1000)
+
+ana.depositar(50)
+for conta, valor in [(ana, 30), (bia, 2000), (bia, 200)]:
+    try:
+        conta.sacar(valor)
+    except SaldoInsuficienteError as erro:
+        print(f"{conta.titular}: saque negado ({erro})")
+        print(f"  faltaram R$ {erro.valor - erro.saldo:.2f}")
+
+for conta in [ana, bia]:
+    conta.fim_do_mes()
+    conta.mostrar_extrato()
+</pre>
+
+<h3>As partes novas, uma por uma</h3>
+<dl class="anatomy">
+  <dt>class SaldoInsuficienteError(Exception):</dt><dd>Uma exceção é uma classe filha de <code>Exception</code>. O nome termina em <code>Error</code>, como as do Python (<code>ValueError</code>, <code>KeyError</code>): é o costume da <a href="estilo-pep8.html">PEP 8</a>.</dd>
+  <dt>self.saldo = saldo / self.valor = valor</dt><dd>A exceção <strong>carrega dados</strong>: quem a captura sabe quanto havia e quanto foi pedido, e pode calcular quanto faltou.</dd>
+  <dt>super().__init__(f"saldo de R$ …")</dt><dd>A mensagem que aparece quando a exceção é mostrada (no <code>print(erro)</code> ou no traceback).</dd>
+  <dt>raise SaldoInsuficienteError(self._saldo, valor)</dt><dd>No lugar do <code>return False</code>. O saque não "responde que não deu": ele <strong>se recusa</strong> a terminar.</dd>
+  <dt>def _registrar(self, tipo, valor):</dt><dd>Um método interno (com sublinhado) que monta cada linha do extrato. O <code>{tipo:&lt;10}</code> alinha o texto à esquerda em 10 colunas; o <code>{valor:&gt;+10.2f}</code> alinha o número à direita em 10 colunas, com duas casas e <strong>sempre com sinal</strong> (<code>+</code> ou <code>-</code>). Veja <a href="ref-formatacao.html">Formatação</a>.</dd>
+  <dt>def fim_do_mes(self): pass</dt><dd>Na conta comum, o fim do mês não faz nada. O método existe para que <strong>toda</strong> conta tenha um <code>fim_do_mes()</code>.</dd>
+  <dt>class ContaPoupanca(ContaBancaria):</dt><dd>A poupança herda tudo: depositar, sacar, extrato, a propriedade <code>saldo</code>. O <code>__init__</code> dela chama o da mãe com <code>super()</code> e acrescenta a <code>taxa</code>.</dd>
+  <dt>def fim_do_mes(self): (na poupança)</dt><dd><strong>Sobrescreve</strong> o da mãe: calcula os juros, arredondados em centavos com <code>round(…, 2)</code>, e registra no extrato.</dd>
+  <dt>type(self).__name__</dt><dd>O nome da classe do objeto: <code>ContaBancaria</code> ou <code>ContaPoupanca</code>. O mesmo <code>mostrar_extrato</code>, herdado, mostra o tipo certo de cada conta.</dd>
+  <dt>for conta in [ana, bia]: conta.fim_do_mes()</dt><dd><strong>Polimorfismo</strong> (aula <a href="polimorfismo.html">Polimorfismo</a>): o laço trata as duas contas igual, e cada uma faz o seu fim de mês.</dd>
+</dl>
+
+<pre class="term" data-cwd="~/projetos/banco">$ python3 banco.py
+Bia: saque negado (saldo de R$ 1000.00, saque de R$ 2000.00)
+  faltaram R$ 1000.00
+--- ContaBancaria de Ana ---
+Depósito     +100.00
+Depósito      +50.00
+Saque         -30.00
+Saldo         120.00
+--- ContaPoupanca de Bia ---
+Depósito    +1000.00
+Saque        -200.00
+Juros          +8.00
+Saldo         808.00</pre>
+
+<p>Siga a Bia: abriu com 1000, tentou sacar 2000 (a exceção foi capturada, e o <code>erro.valor - erro.saldo</code> calculou que faltaram 1000), sacou 200 e ficou com 800. No fim do mês, a poupança rendeu 1% de 800, os R$ 8,00 de juros. A conta da Ana não rendeu nada: o <code>fim_do_mes</code> dela é o da mãe, que não faz nada.</p>
+
+<h3>Quando dá errado na versão 4</h3>
+
+<div class="cenario">
+<strong>Ninguém capturou a exceção</strong>
+<p>Se o saque sem saldo acontecer fora de um <code>try</code>, o programa para, e o traceback mostra a <strong>sua</strong> exceção:</p>
+<pre class="file" data-file="banco.py">class SaldoInsuficienteError(Exception):
+    def __init__(self, saldo, valor):
+        self.saldo = saldo
+        self.valor = valor
+        super().__init__(f"saldo de R$ {saldo:.2f}, saque de R$ {valor:.2f}")
+
+
+class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self._saldo = saldo
+
+    def sacar(self, valor):
+        if valor &gt; self._saldo:
+            raise SaldoInsuficienteError(self._saldo, valor)
+        self._saldo -= valor
+
+
+bia = ContaBancaria("Bia", 1000)
+bia.sacar(2000)
+</pre>
+<pre class="term" data-cwd="~/projetos/banco">$ python3 banco.py
+Traceback (most recent call last):
+  File "/home/ana/projetos/banco/banco.py", line 20, in &lt;module&gt;
+    bia.sacar(2000)
+    ~~~~~~~~~^^^^^^
+  File "/home/ana/projetos/banco/banco.py", line 15, in sacar
+    raise SaldoInsuficienteError(self._saldo, valor)
+SaldoInsuficienteError: saldo de R$ 1000.00, saque de R$ 2000.00</pre>
+<p>O rastro mostra o caminho: a linha 20 chamou o <code>sacar</code>, e a linha 15, dentro dele, levantou a exceção. A última linha tem o nome da exceção e a mensagem montada no <code>super().__init__</code>. Compare com a versão 2: lá, um <code>bia.sacar(2000)</code> sem <code>if</code> devolvia <code>False</code> e ninguém ficava sabendo. <strong>Como consertar:</strong> envolva o saque num <code>try</code> com <code>except SaldoInsuficienteError</code>, como no programa da versão 4.</p>
+</div>
+
+<div class="trypy" data-goal="out:Negado: faltaram R$ 1000.00;;src:raise SaldoInsuficienteError;;semerro">
+<p class="try-task"><strong>Missão:</strong> a exceção já existe e o código de baixo já sabe capturá-la, mas o <code>sacar</code> ainda só faz um <code>return</code> calado quando falta saldo, e o saque de 2000 some sem aviso. Troque o <code>return</code> por um <code>raise SaldoInsuficienteError(…)</code>, passando o saldo e o valor. Deve aparecer <code>Negado: faltaram R$ 1000.00</code>.</p>
+<pre class="script" data-file="main.py">class SaldoInsuficienteError(Exception):
+    def __init__(self, saldo, valor):
+        self.saldo = saldo
+        self.valor = valor
+        super().__init__(f"saldo de R$ {saldo:.2f}, saque de R$ {valor:.2f}")
+
+
+class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self._saldo = saldo
+
+    @property
+    def saldo(self):
+        return self._saldo
+
+    def sacar(self, valor):
+        if valor &gt; self._saldo:
+            return  # troque por: levante a SaldoInsuficienteError
+        self._saldo -= valor
+
+
+bia = ContaBancaria("Bia", 1000)
+try:
+    bia.sacar(2000)
+except SaldoInsuficienteError as erro:
+    print(f"Negado: faltaram R$ {erro.valor - erro.saldo:.2f}")
+print(f"Saldo: R$ {bia.saldo:.2f}")
+</pre>
+<pre class="solucao" data-file="main.py">class SaldoInsuficienteError(Exception):
+    def __init__(self, saldo, valor):
+        self.saldo = saldo
+        self.valor = valor
+        super().__init__(f"saldo de R$ {saldo:.2f}, saque de R$ {valor:.2f}")
+
+
+class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self._saldo = saldo
+
+    @property
+    def saldo(self):
+        return self._saldo
+
+    def sacar(self, valor):
+        if valor &gt; self._saldo:
+            raise SaldoInsuficienteError(self._saldo, valor)
+        self._saldo -= valor
+
+
+bia = ContaBancaria("Bia", 1000)
+try:
+    bia.sacar(2000)
+except SaldoInsuficienteError as erro:
+    print(f"Negado: faltaram R$ {erro.valor - erro.saldo:.2f}")
+print(f"Saldo: R$ {bia.saldo:.2f}")
+</pre>
+</div>
+
+<div class="trypy" data-goal="out:Saldo: R$ 1010.00;;src:def fim_do_mes\(self;;semerro">
+<p class="try-task"><strong>Missão:</strong> a <code>ContaPoupanca</code> herdou o <code>fim_do_mes</code> da mãe, que não faz nada, e o saldo da Bia não rende. Sobrescreva o <code>fim_do_mes</code> na poupança: some ao <code>self._saldo</code> o saldo vezes a <code>self.taxa</code> (arredonde com <code>round(…, 2)</code>). Com 1000 reais a 1%, deve aparecer <code>Saldo: R$ 1010.00</code>.</p>
+<pre class="script" data-file="main.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self._saldo = saldo
+
+    @property
+    def saldo(self):
+        return self._saldo
+
+    def fim_do_mes(self):
+        pass
+
+
+class ContaPoupanca(ContaBancaria):
+    def __init__(self, titular, saldo=0, taxa=0.01):
+        super().__init__(titular, saldo)
+        self.taxa = taxa
+
+    # escreva aqui o fim_do_mes da poupança
+
+
+bia = ContaPoupanca("Bia", 1000)
+bia.fim_do_mes()
+print(f"Saldo: R$ {bia.saldo:.2f}")
+</pre>
+<pre class="solucao" data-file="main.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self._saldo = saldo
+
+    @property
+    def saldo(self):
+        return self._saldo
+
+    def fim_do_mes(self):
+        pass
+
+
+class ContaPoupanca(ContaBancaria):
+    def __init__(self, titular, saldo=0, taxa=0.01):
+        super().__init__(titular, saldo)
+        self.taxa = taxa
+
+    def fim_do_mes(self):
+        self._saldo += round(self._saldo * self.taxa, 2)
+
+
+bia = ContaPoupanca("Bia", 1000)
+bia.fim_do_mes()
+print(f"Saldo: R$ {bia.saldo:.2f}")
+</pre>
+</div>
+
+<hr>
+
+<h2>As quatro versões lado a lado</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Versão</th><th>Como a conta é guardada</th><th>Saque sem saldo</th><th>Saldo mudado por fora</th><th>Valor negativo</th></tr>
+<tr><td>1 · Dicionário</td><td><code>{"titular": …, "saldo": …}</code> + funções</td><td>Mensagem na tela</td><td>Aceito, calado</td><td>Aceito</td></tr>
+<tr><td>2 · Classe</td><td>Objeto com atributos e métodos</td><td><code>return False</code></td><td>Aceito, calado</td><td>Aceito</td></tr>
+<tr><td>3 · @property</td><td><code>_saldo</code> + propriedade só de leitura</td><td><code>return False</code></td><td><code>AttributeError</code></td><td><code>ValueError</code></td></tr>
+<tr><td>4 · Herança + exceção</td><td>Igual à 3, mais a <code>ContaPoupanca</code></td><td><code>SaldoInsuficienteError</code></td><td><code>AttributeError</code></td><td><code>ValueError</code></td></tr>
+</table>
+</div>
+
+<p>Não existe uma versão "errada": a versão 1 é ótima para um script de dez linhas. O que muda é o tamanho do programa e quantas pessoas mexem nele. Quanto maior, mais vale a pena que o próprio código impeça os enganos, em vez de confiar que ninguém vai cometê-los.</p>
+
+<hr>
+
+<h2>Desafios extras</h2>
+<ul>
+  <li><strong>Tarifa da conta corrente:</strong> crie <code>ContaCorrente(ContaBancaria)</code> cujo <code>fim_do_mes</code> cobra R$ 5,00 de tarifa (registrada no extrato como <code>Tarifa</code>). E se o saldo for menor que a tarifa?</li>
+  <li><strong>Cheque especial:</strong> dê à <code>ContaCorrente</code> um <code>limite</code>, e sobrescreva o <code>sacar</code> para aceitar saques até <code>saldo + limite</code>.</li>
+  <li><strong>Transferência com exceção:</strong> leve o <code>transferir</code> da versão 2 para a versão 4. O que acontece com o dinheiro se o saque levantar <code>SaldoInsuficienteError</code>? (Dica: o depósito no destino nem chega a rodar.)</li>
+  <li><strong>Extrato em arquivo:</strong> faça o <code>_registrar</code> também gravar cada linha num <code>extrato.txt</code> (aula <a href="arquivos-escrever.html">Escrevendo Arquivos</a>). Repare que nada fora da classe precisa mudar.</li>
+</ul>
+
+<hr>
+
+<h2>Referência rápida do projeto</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Peça</th><th>O que faz</th><th>Aula</th></tr>
+<tr><td><code>class ContaBancaria:</code> + <code>__init__</code></td><td>O modelo de toda conta</td><td><a href="init-self.html">__init__ e self</a></td></tr>
+<tr><td><code>self.extrato = []</code> no <code>__init__</code></td><td>Uma lista por conta</td><td><a href="atributos-metodos.html">Atributos e Métodos</a></td></tr>
+<tr><td><code>self._saldo</code></td><td>Dado interno</td><td><a href="encapsulamento.html">Encapsulamento</a></td></tr>
+<tr><td><code>@property def saldo</code></td><td>Saldo só de leitura</td><td><a href="property.html">@property</a></td></tr>
+<tr><td><code>raise ValueError(…)</code></td><td>Recusa valor absurdo</td><td><a href="raise.html">raise</a></td></tr>
+<tr><td><code>class SaldoInsuficienteError(Exception)</code></td><td>Exceção própria com dados</td><td><a href="excecoes-proprias.html">Criando suas Exceções</a></td></tr>
+<tr><td><code>class ContaPoupanca(ContaBancaria)</code> + <code>super()</code></td><td>Conta filha com juros</td><td><a href="heranca.html">Herança</a></td></tr>
+<tr><td><code>for conta in contas: conta.fim_do_mes()</code></td><td>Cada conta do seu jeito</td><td><a href="polimorfismo.html">Polimorfismo</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A mãe das exceções</h3>
+<p>Complete a classe-mãe de uma exceção própria:</p>
+<div class="ex-code">class SaldoInsuficienteError(<input data-answer="Exception" aria-label="classe mãe">):</div>
+</div>
+
+<div class="exercise">
+<h3>2. Lendo o saldo protegido</h3>
+<p>Complete o decorador que deixa <code>conta.saldo</code> funcionar só para leitura:</p>
+<div class="ex-code"><input data-answer="@property" aria-label="decorador"><br>def saldo(self):<br>&nbsp;&nbsp;&nbsp;&nbsp;return self._saldo</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. Na versão 3, por que o saldo inicial entra com <code>self.depositar(saldo)</code>, e não com <code>self._saldo = saldo</code>?</p>
+<label><input type="radio" name="q3"> Porque <code>self._saldo</code> não pode ser usado no <code>__init__</code></label>
+<label><input type="radio" name="q3"> Para o saldo inicial passar pela validação e aparecer no extrato</label>
+<label><input type="radio" name="q3"> Para o programa ficar mais rápido</label>
+<label><input type="radio" name="q3"> Porque o <code>@property</code> obriga</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">4. Qual a vantagem do <code>SaldoInsuficienteError</code> sobre o <code>return False</code> da versão 2?</p>
+<label><input type="radio" name="q4"> Nenhuma: os dois fazem a mesma coisa</label>
+<label><input type="radio" name="q4"> A exceção deixa o saque mais rápido</label>
+<label><input type="radio" name="q4"> A exceção muda o saldo para zero</label>
+<label><input type="radio" name="q4"> Não dá para ignorar sem querer: se ninguém capturar, o programa para e mostra o motivo</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Na versão 4, por que a conta da Ana não rendeu juros no fim do mês?</p>
+<label><input type="radio" name="q5"> Porque ela é uma <code>ContaBancaria</code>, e o <code>fim_do_mes</code> da mãe não faz nada</label>
+<label><input type="radio" name="q5"> Porque o saldo dela é pequeno</label>
+<label><input type="radio" name="q5"> Porque deu erro no laço</label>
+<label><input type="radio" name="q5"> Porque a taxa dela é 0</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">6. A versão 3 parou com <code>AttributeError: property 'saldo' of 'ContaBancaria' object has no setter</code>. O que isso indica?</p>
+<label><input type="radio" name="q6"> Um defeito na classe, que precisa de um setter</label>
+<label><input type="radio" name="q6"> Que o <code>@property</code> está escrito errado</label>
+<label><input type="radio" name="q6"> Que alguém tentou escrever no saldo por fora, e a proteção funcionou</label>
+<label><input type="radio" name="q6"> Que faltou o <code>_saldo</code> no <code>__init__</code></label>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><strong>Versão 1</strong>: dicionário e funções funcionam, mas os dados ficam soltos e qualquer linha muda o saldo.</li>
+  <li><strong>Versão 2</strong>: a classe junta dados e ações (<code>ana.sacar(30)</code>); cada conta tem o seu extrato, criado no <code>__init__</code>.</li>
+  <li><strong>Versão 3</strong>: <code>_saldo</code> + <code>@property</code> sem setter deixam o saldo só de leitura; <code>raise ValueError</code> recusa valores absurdos; o saldo inicial entra como depósito.</li>
+  <li><strong>Versão 4</strong>: <code>SaldoInsuficienteError</code> carrega o saldo e o valor; a <code>ContaPoupanca</code> herda tudo e sobrescreve só o <code>fim_do_mes</code>; um laço trata todas as contas igual (polimorfismo).</li>
+  <li>Cada ferramenta da Orientação a Objetos resolveu um problema que a versão anterior tinha de verdade.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
