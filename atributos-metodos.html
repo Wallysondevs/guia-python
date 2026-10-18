@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Atributos e Métodos — o que o objeto tem e o que ele faz | Guia Python</title>
+<meta name="description" content="Atributos e métodos em Python para quem está começando: métodos que mudam o objeto (depositar, sacar), métodos que devolvem um valor com return, um método chamando outro com self, atributos de classe × atributos de instância, o contador de objetos, a lista compartilhada sem querer, hasattr e getattr, e os erros reais (bound method, 'int' object is not callable, missing 'self', Did you mean: 'self.…').">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Atributos e Métodos</span></h1>
+
+<p class="intro">Um objeto junta duas coisas: o que ele <strong>tem</strong> e o que ele <strong>faz</strong>. Uma conta bancária <strong>tem</strong> titular e saldo, e <strong>faz</strong> depósitos e saques. O que o objeto tem são os <strong>atributos</strong> (os dados); o que ele faz são os <strong>métodos</strong> (as funções que moram na classe). Na aula <a href="init-self.html">__init__ e self</a> você escreveu o primeiro método, <code>mostrar</code>. Nesta aula você vai escrever métodos que <strong>mudam</strong> o objeto, métodos que <strong>respondem</strong> uma pergunta, e vai conhecer um segundo tipo de atributo: o que pertence à <strong>classe</strong> inteira, e não a cada objeto.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A escrever métodos que mudam os dados do objeto (<code>depositar</code>, <code>sacar</code>).</li>
+  <li>A escrever métodos que devolvem um valor com <code>return</code>, e um método que chama outro com <code>self.</code>.</li>
+  <li>A diferença entre <strong>atributo de instância</strong> (de cada objeto) e <strong>atributo de classe</strong> (de todos).</li>
+  <li>A contar quantos objetos uma classe já criou.</li>
+  <li>A armadilha da lista guardada na classe, que todos os objetos dividem sem querer.</li>
+  <li>A perguntar se um objeto tem um atributo, com <code>hasattr</code> e <code>getattr</code>.</li>
+  <li>Os erros reais: o método sem parênteses, o atributo com o nome do método, o método chamado sem objeto e o <code>self.</code> esquecido.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: substantivos e verbos</h2>
+<p>Pense na ficha de um aluno da escola do bairro. Os campos da ficha (nome, turma, notas) são <strong>substantivos</strong>: coisas que o aluno tem. Mas a secretaria também <strong>faz</strong> coisas com a ficha: lança uma nota, calcula a média, diz se o aluno passou. Isso são <strong>verbos</strong>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th>Atributo</th><th>Método</th></tr>
+<tr><td>O que é</td><td>Um dado guardado no objeto</td><td>Uma função que mora na classe</td></tr>
+<tr><td>Parece com</td><td>Um substantivo: <em>saldo</em>, <em>nome</em></td><td>Um verbo: <em>depositar</em>, <em>mostrar</em></td></tr>
+<tr><td>Como se usa</td><td>Sem parênteses: <code>conta.saldo</code></td><td>Com parênteses: <code>conta.depositar(50)</code></td></tr>
+<tr><td>Você já usou</td><td>—</td><td><code>"ana".upper()</code>, <code>lista.append(5)</code></td></tr>
+</table>
+</div>
+
+<p>Os métodos de texto e de lista que você já conhece são exatamente isso: métodos escritos dentro das classes <code>str</code> e <code>list</code>. O <code>compras.append("leite")</code> é um método que muda a lista; o <code>nome.upper()</code> é um método que devolve um texto novo. Vamos escrever os dois tipos.</p>
+
+<hr>
+
+<h2>1. Métodos que mudam o objeto</h2>
+
+<pre class="file" data-file="conta.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self.saldo = saldo
+
+    def depositar(self, valor):
+        self.saldo += valor
+        print(f"Depósito de R$ {valor:.2f}. Saldo: R$ {self.saldo:.2f}")
+
+    def sacar(self, valor):
+        if valor &gt; self.saldo:
+            print(f"Saque de R$ {valor:.2f} negado. Saldo: R$ {self.saldo:.2f}")
+        else:
+            self.saldo -= valor
+            print(f"Saque de R$ {valor:.2f}. Saldo: R$ {self.saldo:.2f}")
+
+
+conta = ContaBancaria("Ana", 100)
+conta.depositar(50)
+conta.sacar(30)
+conta.sacar(500)
+print(conta.saldo)
+</pre>
+
+<dl class="anatomy">
+  <dt>def depositar(self, valor):</dt><dd>Um método com um parâmetro além do <code>self</code>. Quem chama passa só o <code>valor</code>: <code>conta.depositar(50)</code>. O <code>self</code> é a <code>conta</code>, que vem antes do ponto.</dd>
+  <dt>self.saldo += valor</dt><dd>Muda o atributo <code>saldo</code> <strong>do próprio objeto</strong>. A mudança fica guardada: o próximo método que olhar o saldo vai ver o valor novo.</dd>
+  <dt>valor</dt><dd>Um parâmetro comum, que só existe enquanto o método roda. Não precisa de <code>self.</code>: não é um dado do objeto, é só o valor desta operação.</dd>
+  <dt>if valor &gt; self.saldo:</dt><dd>O método pode decidir. É a vantagem de ter o saque dentro da classe: a regra "não dá para sacar mais do que tem" fica num lugar só, e vale para toda conta.</dd>
+</dl>
+
+<pre class="term">$ python3 conta.py
+Depósito de R$ 50.00. Saldo: R$ 150.00
+Saque de R$ 30.00. Saldo: R$ 120.00
+Saque de R$ 500.00 negado. Saldo: R$ 120.00
+120
+</pre>
+
+<p>Cada chamada partiu do saldo que a anterior deixou: 100 + 50 = 150, menos 30 = 120, e o saque de 500 foi negado. O objeto <strong>lembra</strong> o que aconteceu com ele. (O último <code>print</code> mostra <code>120</code>, sem casas decimais, porque a conta começou com o inteiro <code>100</code> e só recebeu inteiros.)</p>
+
+<div class="trypy" data-goal="out:Saldo: R$ 70.00;;src:def sacar\(self;;semerro">
+<p class="try-task"><strong>Missão:</strong> a conta da Bia sabe depositar, mas ainda não sabe sacar, e o programa quebra na linha do saque. Escreva o método <code>sacar(self, valor)</code>, que tira o valor do saldo. A Bia tem 100 reais e saca 30: o programa deve mostrar <code>Saldo: R$ 70.00</code>.</p>
+<pre class="script" data-file="main.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self.saldo = saldo
+
+    def depositar(self, valor):
+        self.saldo += valor
+
+    # escreva aqui o método sacar
+
+    def mostrar(self):
+        print(f"Saldo: R$ {self.saldo:.2f}")
+
+
+conta = ContaBancaria("Bia", 100)
+conta.sacar(30)
+conta.mostrar()
+</pre>
+<pre class="solucao" data-file="main.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self.saldo = saldo
+
+    def depositar(self, valor):
+        self.saldo += valor
+
+    def sacar(self, valor):
+        self.saldo -= valor
+
+    def mostrar(self):
+        print(f"Saldo: R$ {self.saldo:.2f}")
+
+
+conta = ContaBancaria("Bia", 100)
+conta.sacar(30)
+conta.mostrar()
+</pre>
+</div>
+
+<hr>
+
+<h2>2. Métodos que respondem: <code>return</code></h2>
+<p>Nem todo método precisa imprimir. Muitos só <strong>calculam e devolvem</strong> uma resposta, com <code>return</code> (aula <a href="return.html">return</a>), e quem chamou decide o que fazer com ela: somar, comparar, mostrar.</p>
+
+<pre class="file" data-file="devolve.py">class Produto:
+    def __init__(self, nome, preco, estoque=0):
+        self.nome = nome
+        self.preco = preco
+        self.estoque = estoque
+
+    def valor_em_estoque(self):
+        return self.preco * self.estoque
+
+    def tem_estoque(self):
+        return self.estoque &gt; 0
+
+    def resumo(self):
+        situacao = "tem" if self.tem_estoque() else "esgotado"
+        return f"{self.nome} ({situacao}): R$ {self.valor_em_estoque():.2f} parados"
+
+
+cafe = Produto("Café", 18.90, 12)
+leite = Produto("Leite", 6.50)
+
+total = cafe.valor_em_estoque() + leite.valor_em_estoque()
+print(f"Total parado no estoque: R$ {total:.2f}")
+print(cafe.resumo())
+print(leite.resumo())
+</pre>
+
+<dl class="anatomy">
+  <dt>return self.preco * self.estoque</dt><dd>Calcula quanto dinheiro está "parado" na prateleira e <strong>devolve</strong>. O método não mostra nada: quem chamou recebe o número.</dd>
+  <dt>return self.estoque &gt; 0</dt><dd>Um método que responde sim ou não (<code>True</code> ou <code>False</code>). É costume dar a esses métodos nomes de pergunta: <code>tem_estoque</code>, <code>esta_vazio</code>, <code>pode_sacar</code>.</dd>
+  <dt>self.tem_estoque()</dt><dd>Um método chamando <strong>outro método do mesmo objeto</strong>. Repare no <code>self.</code> antes: é o "<strong>eu mesmo</strong>, verifique se eu tenho estoque".</dd>
+  <dt>cafe.valor_em_estoque() + leite.valor_em_estoque()</dt><dd>Como o método devolve um número, dá para fazer conta com o resultado.</dd>
+</dl>
+
+<pre class="term">$ python3 devolve.py
+Total parado no estoque: R$ 226.80
+Café (tem): R$ 226.80 parados
+Leite (esgotado): R$ 0.00 parados
+</pre>
+
+<div class="tip">
+<strong>Devolver ou imprimir?</strong>
+<p>Prefira métodos que <strong>devolvem</strong>. Um método que só imprime serve para uma coisa: imprimir. Um que devolve serve para imprimir, somar, comparar, guardar num arquivo. O <code>"ana".upper()</code> não imprime nada: devolve <code>"ANA"</code>, e você faz o que quiser com ele.</p>
+</div>
+
+<hr>
+
+<h2>3. Atributos de instância × atributos de classe</h2>
+<p>Todos os atributos que você criou até aqui foram escritos com <code>self.</code>, dentro do <code>__init__</code>. Eles se chamam <strong>atributos de instância</strong>: cada objeto tem o seu (o nome do café não é o nome do pão).</p>
+
+<p>Às vezes, um dado é <strong>o mesmo para todos</strong> os objetos. Todos os produtos são da mesma loja, por exemplo. Em vez de guardar uma cópia em cada objeto, você escreve o dado <strong>direto na classe</strong>, fora dos métodos. É um <strong>atributo de classe</strong>. Na comparação da forma de bolo: o sabor é de cada bolo (instância); a marca gravada no fundo da forma sai igual em todos (classe).</p>
+
+<pre class="file" data-file="de_classe.py">class Produto:
+    loja = "Mercadinho da Ana"
+
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+
+cafe = Produto("Café", 18.90)
+pao = Produto("Pão de forma", 9.50)
+
+print(cafe.loja)
+print(pao.loja)
+print(Produto.loja)
+
+Produto.loja = "Mercadinho Aurora"
+print(cafe.loja)
+print(pao.loja)
+
+print(vars(cafe))
+</pre>
+
+<dl class="anatomy">
+  <dt>loja = "Mercadinho da Ana"</dt><dd>Escrito dentro da classe, mas <strong>fora</strong> de qualquer método e <strong>sem</strong> <code>self.</code>. É um atributo da classe <code>Produto</code>.</dd>
+  <dt>cafe.loja</dt><dd>O café não tem um atributo <code>loja</code> próprio. Quando não acha o nome no objeto, o Python procura na <strong>classe</strong>, e acha lá.</dd>
+  <dt>Produto.loja</dt><dd>O atributo de classe também pode ser lido pela própria classe, sem objeto nenhum.</dd>
+  <dt>Produto.loja = "Mercadinho Aurora"</dt><dd>Trocar o valor <strong>na classe</strong> muda o que todos os objetos enxergam, de uma vez.</dd>
+</dl>
+
+<pre class="term">$ python3 de_classe.py
+Mercadinho da Ana
+Mercadinho da Ana
+Mercadinho da Ana
+Mercadinho Aurora                  « mudou na classe…
+Mercadinho Aurora                  « …e todos os objetos enxergam
+{'nome': 'Café', 'preco': 18.9}
+</pre>
+
+<p>A última linha é a prova: dentro do objeto <code>cafe</code> só há <code>nome</code> e <code>preco</code>. A <code>loja</code> não está nele; está na classe, e o objeto só "pega emprestado".</p>
+
+<h3>A ordem da busca: primeiro o objeto, depois a classe</h3>
+<p>E se a Ana escrever <code>cafe.loja = "Barraca da feira"</code>? A regra é: <strong>escrever com <code>objeto.</code> cria (ou troca) o atributo no objeto</strong>, nunca na classe. O café ganha uma <code>loja</code> só dele, que passa a tapar a da classe:</p>
+
+<pre class="file" data-file="sombra.py">class Produto:
+    loja = "Mercadinho da Ana"
+
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+
+cafe = Produto("Café", 18.90)
+pao = Produto("Pão de forma", 9.50)
+
+cafe.loja = "Barraca da feira"
+print(cafe.loja)
+print(pao.loja)
+print(Produto.loja)
+print(vars(cafe))
+
+del cafe.loja
+print(cafe.loja)
+</pre>
+
+<pre class="term">$ python3 sombra.py
+Barraca da feira                   « o café tem uma loja própria
+Mercadinho da Ana                  « o pão continua lendo a da classe
+Mercadinho da Ana                  « a classe não mudou
+{'nome': 'Café', 'preco': 18.9, 'loja': 'Barraca da feira'}
+Mercadinho da Ana                  « depois do del, o café volta a ler a da classe
+</pre>
+
+<p>Quando o Python procura <code>cafe.loja</code>, ele olha <strong>primeiro no objeto</strong>; só se não achar, olha na <strong>classe</strong>. O <code>del cafe.loja</code> apaga o atributo próprio do café, e aí a busca volta a cair na classe.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th>Atributo de instância</th><th>Atributo de classe</th></tr>
+<tr><td>Onde se escreve</td><td>Num método, com <code>self.</code>: <code>self.nome = nome</code></td><td>No corpo da classe, fora dos métodos: <code>loja = "…"</code></td></tr>
+<tr><td>De quem é</td><td>De cada objeto</td><td>Da classe, dividido por todos os objetos</td></tr>
+<tr><td>Como se lê</td><td><code>cafe.nome</code></td><td><code>Produto.loja</code> (ou <code>cafe.loja</code>, se o café não tiver uma própria)</td></tr>
+<tr><td>Como se troca</td><td><code>cafe.nome = "…"</code></td><td><code>Produto.loja = "…"</code> (com o nome da <strong>classe</strong>)</td></tr>
+<tr><td>Bom para</td><td>Os dados de cada um: nome, preço, saldo</td><td>Constantes e configurações iguais para todos; contadores</td></tr>
+</table>
+</div>
+
+<h3>Um contador de objetos</h3>
+<p>Um uso clássico do atributo de classe: contar quantos objetos já foram criados. Cada <code>__init__</code> soma 1 no contador <strong>da classe</strong>:</p>
+
+<pre class="file" data-file="contador.py">class Produto:
+    total = 0
+
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+        Produto.total += 1
+
+
+print(Produto.total)
+cafe = Produto("Café", 18.90)
+pao = Produto("Pão de forma", 9.50)
+leite = Produto("Leite", 6.50)
+print(f"Produtos cadastrados: {Produto.total}")
+</pre>
+
+<pre class="term">$ python3 contador.py
+0
+Produtos cadastrados: 3
+</pre>
+
+<p>Repare no <code>Produto.total += 1</code>, com o nome da <strong>classe</strong>. Com <code>self.total += 1</code> não funcionaria, e sem erro nenhum: veja em <a href="#errado">Quando dá errado</a>.</p>
+
+<hr>
+
+<h2>4. Perguntando se o objeto tem um atributo</h2>
+<p>Duas funções embutidas ajudam quando você não sabe se um atributo existe:</p>
+
+<pre class="file" data-file="getattr_.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+
+cafe = Produto("Café", 18.90)
+print(hasattr(cafe, "preco"))
+print(hasattr(cafe, "estoque"))
+print(getattr(cafe, "nome"))
+print(getattr(cafe, "estoque", 0))
+</pre>
+
+<pre class="term">$ python3 getattr_.py
+True
+False
+Café
+0                                  « não existe: devolveu o valor reserva
+</pre>
+
+<dl class="anatomy">
+  <dt>hasattr(cafe, "preco")</dt><dd><em>has attribute</em>, "tem o atributo?". Responde <code>True</code> ou <code>False</code>, sem erro. O nome do atributo vai entre aspas, como texto.</dd>
+  <dt>getattr(cafe, "nome")</dt><dd><em>get attribute</em>, "pegue o atributo". O mesmo que <code>cafe.nome</code>, mas com o nome num texto, útil quando o nome está guardado numa variável.</dd>
+  <dt>getattr(cafe, "estoque", 0)</dt><dd>Com um terceiro valor: se o atributo não existir, devolve esse valor em vez de dar <code>AttributeError</code>. Parecido com o <code>get</code> dos dicionários.</dd>
+</dl>
+
+<p>No dia a dia, essas funções aparecem pouco: se o <code>__init__</code> cria todos os atributos, você sabe que eles existem. Elas são úteis com objetos que vêm de fora do seu programa.</p>
+
+<hr>
+
+<h2>Formas diferentes de mudar um atributo</h2>
+<p>Para aumentar o saldo de uma conta, você pode mexer no atributo de fora ou pedir ao objeto, por um método:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Exemplo</th><th>Quando usar</th></tr>
+<tr><td>Pelo método</td><td><code>conta.depositar(50)</code></td><td>Quase sempre. A regra (validar o valor, avisar, registrar) fica num lugar só</td></tr>
+<tr><td>Direto no atributo</td><td><code>conta.saldo += 50</code></td><td>Em dados simples, sem regra nenhuma. Numa conta bancária, evite: ninguém confere se o valor faz sentido</td></tr>
+<tr><td>Com <code>setattr</code></td><td><code>setattr(conta, "saldo", 150)</code></td><td>Raramente: só quando o nome do atributo está guardado numa variável</td></tr>
+</table>
+</div>
+
+<p>O Python não proíbe ninguém de escrever <code>conta.saldo = -1000</code> direto. Como avisar "não mexa aqui" é o assunto da aula <a href="encapsulamento.html">Encapsulamento</a>, e como validar cada mudança é o da aula <a href="property.html">@property</a>.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>A lista na classe: todos os alunos com as mesmas notas</strong>
+<p>Este é um dos erros mais famosos do Python. A Ana guardou a lista de notas como atributo de classe:</p>
+<pre class="file" data-file="lista_compartilhada.py">class Aluno:
+    notas = []
+
+    def __init__(self, nome):
+        self.nome = nome
+
+    def adicionar_nota(self, nota):
+        self.notas.append(nota)
+
+
+bia = Aluno("Bia")
+caio = Aluno("Caio")
+bia.adicionar_nota(9.0)
+caio.adicionar_nota(4.5)
+print(bia.nome, bia.notas)
+print(caio.nome, caio.notas)
+</pre>
+<pre class="term">$ python3 lista_compartilhada.py
+Bia [9.0, 4.5]                     « a Bia ganhou o 4,5 do Caio
+Caio [9.0, 4.5]                    « e o Caio, o 9 da Bia
+</pre>
+<p>Nenhuma mensagem de erro, e as notas se misturaram. Siga a busca: <code>self.notas</code> não existe na Bia, então o Python acha a lista <strong>da classe</strong>; o <code>append</code> põe o 9.0 nela. Depois, <code>self.notas</code> do Caio também cai na classe: <strong>a mesma lista</strong>. Existe uma lista só, dividida por todos. (Diferente do <code>cafe.loja = …</code>, o <code>append</code> não cria nada no objeto: ele muda a lista que já existe.)</p>
+<p><strong>Como consertar:</strong> crie a lista no <code>__init__</code>, com <code>self.</code>. Assim cada aluno nasce com a sua lista vazia:</p>
+<pre class="file" data-file="lista_certa.py">class Aluno:
+    def __init__(self, nome):
+        self.nome = nome
+        self.notas = []
+
+    def adicionar_nota(self, nota):
+        self.notas.append(nota)
+
+
+bia = Aluno("Bia")
+caio = Aluno("Caio")
+bia.adicionar_nota(9.0)
+caio.adicionar_nota(4.5)
+print(bia.nome, bia.notas)
+print(caio.nome, caio.notas)
+</pre>
+<pre class="term">$ python3 lista_certa.py
+Bia [9.0]
+Caio [4.5]
+</pre>
+<p>Regra prática: listas, dicionários e conjuntos (as coisas que mudam, aula <a href="mutabilidade.html">Mutável × Imutável</a>) vão no <code>__init__</code>, com <code>self.</code>. Na classe, só valores que ninguém vai mudar por dentro.</p>
+</div>
+
+<div class="cenario">
+<strong>O contador que não conta: <code>self.total += 1</code></strong>
+<pre class="file" data-file="contador_errado.py">class Produto:
+    total = 0
+
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+        self.total += 1
+
+
+cafe = Produto("Café", 18.90)
+pao = Produto("Pão de forma", 9.50)
+leite = Produto("Leite", 6.50)
+print(f"Produtos cadastrados: {Produto.total}")
+print(cafe.total, pao.total, leite.total)
+</pre>
+<pre class="term">$ python3 contador_errado.py
+Produtos cadastrados: 0
+1 1 1
+</pre>
+<p>Três produtos, e o contador da classe continua em 0. O <code>self.total += 1</code> é o mesmo que <code>self.total = self.total + 1</code>: a parte da direita <strong>lê</strong> o 0 da classe, soma 1, e a parte da esquerda <strong>escreve</strong> no objeto (escrever com <code>self.</code> sempre cria no objeto). Cada produto ganhou um <code>total</code> próprio valendo 1, e a classe nem ficou sabendo. <strong>Como consertar:</strong> para mudar um atributo de classe, use o nome da classe: <code>Produto.total += 1</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Chamar o método sem os parênteses</strong>
+<pre class="file" data-file="sem_parenteses.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def mostrar(self):
+        print(f"{self.nome}: R$ {self.preco:.2f}")
+
+
+cafe = Produto("Café", 18.90)
+cafe.mostrar
+print("Fim do programa")
+print(cafe.mostrar)
+</pre>
+<pre class="term">$ python3 sem_parenteses.py
+Fim do programa
+&lt;bound method Produto.mostrar of &lt;__main__.Produto object at 0x7fdd129906e0&gt;&gt;
+</pre>
+<p>A linha 11, <code>cafe.mostrar</code>, não fez nada, e sem erro: sem os parênteses, o método não é <strong>chamado</strong>, só citado. O último <code>print</code> mostra o que é o <code>cafe.mostrar</code> sem parênteses: um <em>bound method</em>, "método amarrado" ao objeto <code>cafe</code>, pronto para ser chamado, mas não chamado. <strong>Como consertar:</strong> <code>cafe.mostrar()</code>. Métodos são verbos: precisam dos parênteses para acontecer.</p>
+</div>
+
+<div class="cenario">
+<strong>Atributo e método com o mesmo nome: <code>'int' object is not callable</code></strong>
+<pre class="file" data-file="mesmo_nome.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self.saldo = saldo
+
+    def saldo(self):
+        print(f"Saldo: R$ {self.saldo:.2f}")
+
+
+conta = ContaBancaria("Ana", 100)
+conta.saldo()
+</pre>
+<pre class="term">$ python3 mesmo_nome.py
+Traceback (most recent call last):
+  File "/home/ana/mesmo_nome.py", line 11, in &lt;module&gt;
+    conta.saldo()
+    ~~~~~~~~~~~^^
+TypeError: 'int' object is not callable
+</pre>
+<p>"Um objeto <code>int</code> não pode ser chamado". O método <code>saldo</code> mora na classe; o atributo <code>saldo</code> (o número 100) mora no objeto. Na busca, o objeto vem primeiro: <code>conta.saldo</code> achou o <strong>número</strong>, e os parênteses tentaram "chamar" o 100, como se fosse uma função. <strong>Como consertar:</strong> dê nomes diferentes. Atributos com substantivos (<code>saldo</code>), métodos com verbos (<code>mostrar_saldo</code>).</p>
+</div>
+
+<div class="cenario">
+<strong>Chamar o método pela classe, sem objeto: <code>missing 1 required positional argument: 'self'</code></strong>
+<pre class="file" data-file="sem_objeto.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def mostrar(self):
+        print(f"{self.nome}: R$ {self.preco:.2f}")
+
+
+Produto.mostrar()
+</pre>
+<pre class="term">$ python3 sem_objeto.py
+Traceback (most recent call last):
+  File "/home/ana/sem_objeto.py", line 10, in &lt;module&gt;
+    Produto.mostrar()
+    ~~~~~~~~~~~~~~~^^
+TypeError: Produto.mostrar() missing 1 required positional argument: 'self'
+</pre>
+<p>"Falta o argumento <code>self</code>". Mostrar <strong>qual</strong> produto? Pela classe não há objeto antes do ponto, então ninguém preencheu o <code>self</code>. É como pedir para a forma de bolo dizer o seu sabor. <strong>Como consertar:</strong> crie um objeto e chame nele: <code>cafe = Produto("Café", 18.90)</code> e <code>cafe.mostrar()</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Um método chamando outro sem <code>self.</code></strong>
+<pre class="file" data-file="sem_self_chamada.py">class Produto:
+    def __init__(self, nome, preco, estoque=0):
+        self.nome = nome
+        self.preco = preco
+        self.estoque = estoque
+
+    def tem_estoque(self):
+        return self.estoque &gt; 0
+
+    def mostrar(self):
+        if tem_estoque():
+            print(f"{self.nome}: disponível")
+        else:
+            print(f"{self.nome}: esgotado")
+
+
+leite = Produto("Leite", 6.50)
+leite.mostrar()
+</pre>
+<pre class="term">$ python3 sem_self_chamada.py
+Traceback (most recent call last):
+  File "/home/ana/sem_self_chamada.py", line 18, in &lt;module&gt;
+    leite.mostrar()
+    ~~~~~~~~~~~~~^^
+  File "/home/ana/sem_self_chamada.py", line 11, in mostrar
+    if tem_estoque():
+       ^^^^^^^^^^^
+NameError: name 'tem_estoque' is not defined. Did you mean: 'self.tem_estoque'?
+</pre>
+<p>O rastro tem dois trechos: a chamada na linha 18 e, dentro do <code>mostrar</code>, a linha 11. "O nome <code>tem_estoque</code> não está definido. Você quis dizer <code>self.tem_estoque</code>?" O próprio Python sugere o conserto. O método mora na classe, não solto no programa; para chegar nele de dentro de outro método, passe pelo objeto. <strong>Como consertar:</strong> <code>if self.tem_estoque():</code>.</p>
+</div>
+
+<div class="trypy" data-goal="out:Caio [4.5];;out:Bia [9.0];;semerro">
+<p class="try-task"><strong>Missão:</strong> as notas da Bia e do Caio estão se misturando. Conserte a classe para cada aluno ter a sua própria lista de notas. O programa deve mostrar <code>Bia [9.0]</code> e <code>Caio [4.5]</code>.</p>
+<pre class="script" data-file="main.py">class Aluno:
+    notas = []
+
+    def __init__(self, nome):
+        self.nome = nome
+
+    def adicionar_nota(self, nota):
+        self.notas.append(nota)
+
+
+bia = Aluno("Bia")
+caio = Aluno("Caio")
+bia.adicionar_nota(9.0)
+caio.adicionar_nota(4.5)
+print(bia.nome, bia.notas)
+print(caio.nome, caio.notas)
+</pre>
+<pre class="solucao" data-file="main.py">class Aluno:
+    def __init__(self, nome):
+        self.nome = nome
+        self.notas = []
+
+    def adicionar_nota(self, nota):
+        self.notas.append(nota)
+
+
+bia = Aluno("Bia")
+caio = Aluno("Caio")
+bia.adicionar_nota(9.0)
+caio.adicionar_nota(4.5)
+print(bia.nome, bia.notas)
+print(caio.nome, caio.notas)
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>def depositar(self, valor):</code></td><td>Método com parâmetro; chamado com <code>conta.depositar(50)</code></td></tr>
+<tr><td><code>self.saldo += valor</code></td><td>Muda um atributo do próprio objeto</td></tr>
+<tr><td><code>return self.preco * self.estoque</code></td><td>O método devolve um valor para quem chamou</td></tr>
+<tr><td><code>self.tem_estoque()</code></td><td>Um método chamando outro do mesmo objeto</td></tr>
+<tr><td><code>loja = "…"</code> no corpo da classe</td><td>Atributo de classe, dividido por todos os objetos</td></tr>
+<tr><td><code>Produto.total += 1</code></td><td>Muda um atributo de classe (pelo nome da classe)</td></tr>
+<tr><td><code>hasattr(obj, "nome")</code></td><td><code>True</code> se o objeto tiver o atributo</td></tr>
+<tr><td><code>getattr(obj, "nome", padrao)</code></td><td>Lê o atributo; se não existir, devolve <code>padrao</code></td></tr>
+<tr><td><code>del obj.nome</code></td><td>Apaga o atributo do objeto</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td>Objetos diferentes com a mesma lista</td><td>Lista criada na classe, e não no <code>__init__</code> com <code>self.</code></td></tr>
+<tr><td>Contador da classe parado em 0</td><td><code>self.total += 1</code> no lugar de <code>Produto.total += 1</code></td></tr>
+<tr><td>O método "não fez nada"; aparece <code>&lt;bound method …&gt;</code></td><td>Faltaram os parênteses na chamada</td></tr>
+<tr><td><code>TypeError: 'int' object is not callable</code></td><td>Atributo e método com o mesmo nome</td></tr>
+<tr><td><code>missing 1 required positional argument: 'self'</code></td><td>Método chamado pela classe, sem objeto</td></tr>
+<tr><td><code>NameError … Did you mean: 'self.…'?</code></td><td>Faltou o <code>self.</code> para chamar outro método (ou ler um atributo)</td></tr>
+<tr><td><code>AttributeError: … object has no attribute 'sacar'</code></td><td>O método não existe na classe (ou o nome está errado)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Dentro do método</h3>
+<p>Complete para o método aumentar o estoque do <strong>próprio</strong> produto:</p>
+<div class="ex-code">def repor(self, quantidade):<br>&nbsp;&nbsp;&nbsp;&nbsp;<input data-answer="self.estoque" aria-label="atributo"> += quantidade</div>
+</div>
+
+<div class="exercise">
+<h3>2. O contador da turma</h3>
+<p>Na classe <code>Aluno</code>, há o atributo de classe <code>matriculados = 0</code>. Complete a linha do <code>__init__</code> que soma 1 no contador da classe:</p>
+<div class="ex-code"><input data-answer="Aluno.matriculados" aria-label="contador"> += 1</div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">3. Na classe <code>Produto</code>, <code>loja = "Mercadinho da Ana"</code> está fora dos métodos. A Ana escreve <code>cafe.loja = "Feira"</code>. Quanto vale <code>pao.loja</code>?</p>
+<label><input type="radio" name="q3"> <code>"Feira"</code></label>
+<label><input type="radio" name="q3"> Dá <code>AttributeError</code></label>
+<label><input type="radio" name="q3"> <code>"Mercadinho da Ana"</code>: a atribuição criou uma <code>loja</code> só no café</label>
+<label><input type="radio" name="q3"> <code>None</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Por que <code>notas = []</code> no corpo da classe faz todos os alunos dividirem as notas?</p>
+<label><input type="radio" name="q4"> Porque listas não podem ser atributos</label>
+<label><input type="radio" name="q4"> Porque existe uma lista só, na classe, e o <code>self.notas.append</code> de cada aluno cai nela</label>
+<label><input type="radio" name="q4"> Porque faltou o <code>return</code></label>
+<label><input type="radio" name="q4"> Porque o Python copia a lista para cada aluno</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. <code>print(conta.depositar)</code> mostrou <code>&lt;bound method ContaBancaria.depositar of …&gt;</code>. O que faltou?</p>
+<label><input type="radio" name="q5"> Os parênteses (e o valor): <code>conta.depositar(50)</code></label>
+<label><input type="radio" name="q5"> O <code>self</code></label>
+<label><input type="radio" name="q5"> Um <code>return</code></label>
+<label><input type="radio" name="q5"> Criar a conta</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. Qual destes é um bom nome para um método que responde se a conta pode pagar um boleto?</p>
+<label><input type="radio" name="q6"> <code>saldo</code></label>
+<label><input type="radio" name="q6"> <code>Boleto</code></label>
+<label><input type="radio" name="q6"> <code>x</code></label>
+<label><input type="radio" name="q6"> <code>pode_pagar</code></label>
+</div>
+
+<h3>Missão final: a média da turma</h3>
+
+<div class="trypy" data-goal="out:Bia: média 8.50;;out:Caio: média 5.25;;src:def media\(self;;semerro">
+<p class="try-task"><strong>Missão:</strong> a classe <code>Aluno</code> já guarda as notas. Escreva o método <code>media(self)</code>, que <strong>devolve</strong> (com <code>return</code>) a média das notas do aluno: a soma dividida pela quantidade. O programa deve mostrar <code>Bia: média 8.50</code> e <code>Caio: média 5.25</code>.</p>
+<pre class="script" data-file="main.py">class Aluno:
+    def __init__(self, nome):
+        self.nome = nome
+        self.notas = []
+
+    def adicionar_nota(self, nota):
+        self.notas.append(nota)
+
+    # escreva aqui o método media
+
+
+bia = Aluno("Bia")
+bia.adicionar_nota(8.0)
+bia.adicionar_nota(9.0)
+
+caio = Aluno("Caio")
+caio.adicionar_nota(4.5)
+caio.adicionar_nota(6.0)
+
+for aluno in [bia, caio]:
+    print(f"{aluno.nome}: média {aluno.media():.2f}")
+</pre>
+<pre class="solucao" data-file="main.py">class Aluno:
+    def __init__(self, nome):
+        self.nome = nome
+        self.notas = []
+
+    def adicionar_nota(self, nota):
+        self.notas.append(nota)
+
+    def media(self):
+        return sum(self.notas) / len(self.notas)
+
+
+bia = Aluno("Bia")
+bia.adicionar_nota(8.0)
+bia.adicionar_nota(9.0)
+
+caio = Aluno("Caio")
+caio.adicionar_nota(4.5)
+caio.adicionar_nota(6.0)
+
+for aluno in [bia, caio]:
+    print(f"{aluno.nome}: média {aluno.media():.2f}")
+</pre>
+</div>
+
+<p>Repare no <code>for aluno in [bia, caio]</code>: uma lista de objetos, e o mesmo método chamado em cada um. O <code>sum</code> e o <code>len</code> estão na aula <a href="funcoes-embutidas.html">Funções Embutidas</a>. Para ir além: e se o aluno ainda não tiver nenhuma nota? Experimente tirar as notas do Caio e veja o <code>ZeroDivisionError</code>; um <code>if not self.notas: return 0</code> no começo do método resolve.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><strong>Atributos</strong> são o que o objeto tem (substantivos, sem parênteses); <strong>métodos</strong> são o que ele faz (verbos, com parênteses).</li>
+  <li>Um método muda o objeto mexendo em <code>self.atributo</code>; a mudança fica guardada para os próximos métodos.</li>
+  <li>Prefira métodos que <strong>devolvem</strong> com <code>return</code>; um método chama outro com <code>self.metodo()</code>.</li>
+  <li><strong>Atributo de instância</strong>: <code>self.x</code> no <code>__init__</code>, um por objeto. <strong>Atributo de classe</strong>: escrito no corpo da classe, dividido por todos.</li>
+  <li>Na leitura, o Python procura primeiro no objeto, depois na classe. Escrever com <code>objeto.x = …</code> sempre cria no objeto; para mudar o da classe, use <code>Classe.x</code>.</li>
+  <li>Listas e dicionários vão no <code>__init__</code>, com <code>self.</code>; na classe, eles viram uma lista só para todo mundo.</li>
+  <li><code>hasattr</code> e <code>getattr</code> perguntam e leem atributos pelo nome, sem <code>AttributeError</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
