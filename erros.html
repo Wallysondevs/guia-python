@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Erros — lendo uma mensagem de erro (traceback) | Guia Python</title>
+<meta name="description" content="Como ler uma mensagem de erro do Python para quem nunca programou: a anatomia de um traceback real com várias chamadas, lido de baixo para cima, as marcas ^^^ e ~~~, SyntaxError × exceções, a tabela dos erros mais comuns com a mensagem real de cada um (NameError, TypeError, ValueError, IndexError, KeyError, ZeroDivisionError, AttributeError, FileNotFoundError, IndentationError) e as dicas Did you mean do Python 3.14.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Mensagens de Erro</span></h1>
+
+<p class="intro">Todo mundo que programa vê mensagens de erro todos os dias, inclusive quem programa há trinta anos. A diferença entre quem está começando e quem tem experiência não é errar menos: é <strong>ler a mensagem</strong>. O Python não só para o programa quando algo dá errado; ele escreve um relatório dizendo <strong>o que</strong> aconteceu, <strong>em qual linha</strong> e <strong>por qual caminho</strong> o programa chegou lá. Esse relatório se chama <strong>traceback</strong> (em inglês, "rastro de volta"). Nesta aula você aprende a ler um, peça por peça, e conhece os erros que mais aparecem.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>As partes de um traceback e por que ele se lê <strong>de baixo para cima</strong>.</li>
+  <li>A seguir o caminho de um erro que passou por <strong>várias funções</strong>.</li>
+  <li>O que querem dizer as marcas <code>^^^^</code> e <code>~~~^~~~</code> embaixo da linha.</li>
+  <li>A diferença entre um <code>SyntaxError</code> (o programa nem começa) e uma <strong>exceção</strong> (o programa para no meio).</li>
+  <li>Os nove erros mais comuns, com a mensagem real de cada um e o que ela quer dizer.</li>
+  <li>As dicas <code>Did you mean</code> ("Você quis dizer…?") que o Python 3.14 dá.</li>
+</ul>
+</div>
+
+<p>Todos os programas desta aula rodaram no <strong>Python 3.14</strong> da máquina da Ana (usuária <code>ana</code>, computador <code>notebook</code>), salvos na pasta pessoal dela (<code>/home/ana</code>) e executados com <code>python3 arquivo.py</code> (veja <a href="executar.html">Rodando um Programa</a>). As mensagens de erro do Python saem sempre <strong>em inglês</strong>; aqui elas aparecem exatamente como saíram, e cada uma é explicada em português.</p>
+
+<hr>
+
+<h2>A ideia: o bilhete do mecânico</h2>
+<p>A Ana deixou o carro na oficina porque ele parou na estrada. Quando ela volta, o mecânico entrega um bilhete:</p>
+<ol class="passo">
+  <li>"A senhora girou a chave na ignição…"</li>
+  <li>"…a ignição mandou a bomba de combustível ligar…"</li>
+  <li>"…a bomba tentou puxar gasolina do tanque…"</li>
+  <li>"<strong>Problema: tanque vazio.</strong>"</li>
+</ol>
+<p>A última linha diz <strong>o que</strong> deu errado. As de cima contam <strong>o caminho</strong> até lá: quem chamou quem. Se a Ana tem pressa, lê só a última linha. Se quer entender por que o tanque estava vazio, sobe o bilhete.</p>
+<p>O traceback do Python é exatamente esse bilhete: <strong>a última linha é o problema</strong>; as de cima são o caminho, na ordem em que as coisas aconteceram. Por isso a regra de ouro desta aula é: <strong>leia de baixo para cima</strong>.</p>
+
+<hr>
+
+<h2>1. O primeiro traceback</h2>
+<p>Comece por um programa bem curto, que divide por zero de propósito:</p>
+
+<pre class="file" data-file="excecao.py">print("Começou")
+print(10 / 0)
+print("Fim")
+</pre>
+
+<pre class="term">$ python3 excecao.py
+Começou
+Traceback (most recent call last):
+  File "/home/ana/excecao.py", line 2, in &lt;module&gt;
+    print(10 / 0)
+          ~~~^~~
+ZeroDivisionError: division by zero
+$ echo $?
+1</pre>
+
+<dl class="anatomy">
+  <dt>Começou</dt><dd>A linha 1 rodou normalmente. O Python executa o programa de cima para baixo, e até a linha 1 estava tudo bem.</dd>
+  <dt>Traceback (most recent call last):</dt><dd>"Rastro (a chamada mais recente por último)". É o cabeçalho de todo traceback: daqui para baixo vem o caminho, e o passo mais recente fica <strong>embaixo</strong>.</dd>
+  <dt>File "/home/ana/excecao.py", line 2, in &lt;module&gt;</dt><dd>Onde aconteceu: no arquivo <code>/home/ana/excecao.py</code>, na <strong>linha 2</strong>, no programa principal. <code>&lt;module&gt;</code> ("módulo") é o nome que o Python dá ao código que não está dentro de nenhuma função.</dd>
+  <dt>print(10 / 0)</dt><dd>A própria linha 2, copiada do seu arquivo para você não precisar abri-lo.</dd>
+  <dt>~~~^~~</dt><dd>As marcas embaixo da linha apontam o pedaço exato que falhou. O <code>^</code> fica embaixo da <strong>operação</strong> que deu errado (a divisão <code>/</code>) e os <code>~</code> embaixo das partes que ela usou (<code>10</code> e <code>0</code>).</dd>
+  <dt>ZeroDivisionError: division by zero</dt><dd>A linha mais importante. Antes dos dois-pontos, o <strong>tipo</strong> do erro (<code>ZeroDivisionError</code>, "erro de divisão por zero"); depois, a <strong>mensagem</strong> ("divisão por zero").</dd>
+  <dt>echo $? → 1</dt><dd>O código de saída do programa. 0 quer dizer "terminou bem"; um programa que para por causa de um erro termina com <strong>1</strong>.</dd>
+</dl>
+
+<p>E o <code>print("Fim")</code>? Não aparece. Quando um erro acontece e ninguém cuida dele, o Python <strong>para o programa ali mesmo</strong>: as linhas de baixo nunca rodam. (Cuidar do erro para o programa continuar é o assunto da próxima aula, <a href="try-except.html">try e except</a>.)</p>
+
+<div class="tip">
+<strong>Erro = exceção</strong>
+<p>No Python, um erro que acontece com o programa rodando se chama <strong>exceção</strong> (em inglês, <em>exception</em>): algo fora do normal que interrompeu o caminho. Quando você ler "o programa lançou uma exceção" ou "deu uma exceção", é isso: deu erro.</p>
+</div>
+
+<hr>
+
+<h2>2. Um traceback com várias chamadas</h2>
+<p>No primeiro exemplo o caminho tinha um passo só. Em programas de verdade, o código fica dividido em <a href="funcoes.html">funções</a> que chamam outras funções, e o traceback mostra todas. A professora da Ana tem um programa que mostra a média de cada aluno:</p>
+
+<pre class="file" data-file="notas.py">def media(notas):
+    return sum(notas) / len(notas)
+
+
+def relatorio(turma):
+    for nome, notas in turma.items():
+        print(f"{nome}: {media(notas):.1f}")
+
+
+turma = {"Ana": [8, 9, 10], "Bruno": [7, 6], "Carla": []}
+relatorio(turma)
+print("Fim do relatório")
+</pre>
+
+<p>A função <code>media</code> soma as notas (<code>sum</code>) e divide pela quantidade (<code>len</code>). A função <code>relatorio</code> passa pelos alunos do <a href="dicionarios.html">dicionário</a> <code>turma</code> e mostra a média de cada um. A Carla entrou na turma ontem e ainda não tem nenhuma nota: a lista dela está vazia, <code>[]</code>.</p>
+
+<pre class="term">$ python3 notas.py
+Ana: 9.0
+Bruno: 6.5
+Traceback (most recent call last):
+  File "/home/ana/notas.py", line 11, in &lt;module&gt;
+    relatorio(turma)
+    ~~~~~~~~~^^^^^^^
+  File "/home/ana/notas.py", line 7, in relatorio
+    print(f"{nome}: {media(notas):.1f}")
+                     ~~~~~^^^^^^^
+  File "/home/ana/notas.py", line 2, in media
+    return sum(notas) / len(notas)
+           ~~~~~~~~~~~^~~~~~~~~~~~
+ZeroDivisionError: division by zero</pre>
+
+<p>A Ana e o Bruno saíram certinhos. Na Carla, o programa parou. Agora o traceback tem <strong>três</strong> linhas <code>File</code>, uma para cada passo do caminho. Leia <strong>de baixo para cima</strong>:</p>
+
+<ol class="passo">
+  <li><strong>A última linha:</strong> <code>ZeroDivisionError: division by zero</code>. O problema foi uma divisão por zero.</li>
+  <li><strong>A linha <code>File</code> mais de baixo:</strong> <code>line 2, in media</code>. A divisão aconteceu na linha 2, dentro da função <code>media</code>: <code>sum(notas) / len(notas)</code>. O <code>^</code> está embaixo da barra da divisão. Se a divisão foi por zero, então <code>len(notas)</code> deu 0: a lista estava vazia.</li>
+  <li><strong>Subindo um passo:</strong> <code>line 7, in relatorio</code>. Quem chamou a <code>media</code> foi a linha 7, dentro da função <code>relatorio</code>. As marcas apontam <code>media(notas)</code>: foi essa chamada que deu errado.</li>
+  <li><strong>Subindo mais um:</strong> <code>line 11, in &lt;module&gt;</code>. E quem chamou a <code>relatorio</code> foi a linha 11 do programa principal.</li>
+</ol>
+
+<p>Lido de cima para baixo, o rastro conta a história na ordem em que ela aconteceu: o programa principal (linha 11) chamou <code>relatorio</code>, que (na linha 7) chamou <code>media</code>, que (na linha 2) dividiu por zero. Por isso o cabeçalho diz "a chamada mais recente <strong>por último</strong>".</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Linha do traceback</th><th>Pergunta que responde</th><th>Aqui</th></tr>
+<tr><td>A última (<code>Tipo: mensagem</code>)</td><td><strong>O que</strong> deu errado?</td><td>Divisão por zero</td></tr>
+<tr><td>O <code>File</code> mais de baixo</td><td><strong>Onde</strong> exatamente?</td><td>Linha 2, na função <code>media</code></td></tr>
+<tr><td>Os <code>File</code> de cima</td><td><strong>Como</strong> o programa chegou lá?</td><td>Linha 11 → <code>relatorio</code> (linha 7) → <code>media</code></td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>Onde o erro aparece × onde está o defeito</strong>
+<p>O erro estourou dentro da <code>media</code>, mas a função não tem nada de errado: para uma lista com notas, ela funciona. O "defeito" é a turma ter uma aluna sem nota, e o programa não prever isso. O traceback mostra <strong>onde o Python tropeçou</strong>; descobrir <strong>por que</strong> é com você, e é para isso que serve subir o rastro. Você conserta este programa na missão do fim da aula.</p>
+</div>
+
+<h3>As marcas embaixo da linha</h3>
+<p>Desde o Python 3.11, o traceback sublinha o pedaço exato da linha que falhou:</p>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Marca</th><th>O que aponta</th><th>Exemplo acima</th></tr>
+<tr><td><code>^^^^</code></td><td>O ponto exato do problema: o nome que não existe, a operação que falhou, os parênteses da chamada que deu erro</td><td><code>^</code> embaixo do <code>/</code>; <code>^^^^^^^</code> embaixo de <code>(notas)</code></td></tr>
+<tr><td><code>~~~~</code></td><td>As partes que participavam da operação</td><td><code>sum(notas)</code> e <code>len(notas)</code>, os dois lados da divisão</td></tr>
+<tr><td>(nenhuma)</td><td>Quando o Python não tem um pedaço menor para apontar, ele mostra só a linha</td><td>Aparece em alguns erros da tabela da seção 4</td></tr>
+</table>
+</div>
+
+<div class="trypy" data-goal="out:Olá, Caio!;;semerro">
+<p class="try-task"><strong>Missão:</strong> este programa deveria cumprimentar os três convidados da festa da Ana, mas dá erro. Clique em Rodar, leia a última linha do traceback (e a dica que vem no fim dela) e conserte.</p>
+<pre class="script" data-file="main.py">convidados = ["Ana", "Bia", "Caio"]
+for convidado in convidados:
+    print(f"Olá, {convidad}!")
+</pre>
+<pre class="solucao" data-file="main.py">convidados = ["Ana", "Bia", "Caio"]
+for convidado in convidados:
+    print(f"Olá, {convidado}!")
+</pre>
+</div>
+
+<hr>
+
+<h2>3. <code>SyntaxError</code>: o programa nem começa</h2>
+<p>Existem dois momentos em que o Python pode reclamar. Antes de rodar a primeira linha, ele <strong>lê o arquivo inteiro</strong> para ver se o texto está escrito como Python (a <a href="sintaxe.html">sintaxe</a>: parênteses fechados, dois-pontos, indentação). Se não estiver, ele nem começa. Olhe este programa, com um parêntese faltando na linha 2:</p>
+
+<pre class="file" data-file="sintaxe.py">print("Começou")
+print("Olá, Ana!"
+print("Fim")
+</pre>
+
+<pre class="term">$ python3 sintaxe.py
+  File "/home/ana/sintaxe.py", line 2
+    print("Olá, Ana!"
+         ^
+SyntaxError: '(' was never closed</pre>
+
+<dl class="anatomy">
+  <dt>(nada de "Começou")</dt><dd>A linha 1 estava certa e mesmo assim <strong>não rodou</strong>. Com um erro de sintaxe, nenhuma linha roda: o Python recusa o arquivo inteiro.</dd>
+  <dt>(sem "Traceback")</dt><dd>Não há o cabeçalho <code>Traceback (most recent call last):</code>, porque não há caminho nenhum para contar: nenhuma função chegou a ser chamada.</dd>
+  <dt>File "/home/ana/sintaxe.py", line 2</dt><dd>O arquivo e a linha. Repare que não tem <code>in &lt;module&gt;</code>: o programa não estava rodando "dentro" de lugar nenhum.</dd>
+  <dt>^</dt><dd>Aponta o parêntese que foi aberto e nunca fechado.</dd>
+  <dt>SyntaxError: '(' was never closed</dt><dd>"Erro de sintaxe: o <code>(</code> nunca foi fechado."</dd>
+</dl>
+
+<p>Compare com o <code>excecao.py</code> da seção 1: lá, o <code>Começou</code> apareceu, porque o texto do programa estava correto e o problema só surgiu <strong>no meio da execução</strong>, na hora de dividir.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th>Erro de sintaxe (<code>SyntaxError</code>)</th><th>Exceção (os outros erros)</th></tr>
+<tr><td>Quando acontece</td><td>Antes de rodar, quando o Python lê o arquivo</td><td>Durante a execução, na linha que falhou</td></tr>
+<tr><td>As linhas de antes rodam?</td><td>Não, nenhuma</td><td>Sim, todas</td></tr>
+<tr><td>Tem <code>Traceback (most recent call last):</code>?</td><td>Não</td><td>Sim</td></tr>
+<tr><td>Causa típica</td><td>Texto mal escrito: parêntese, aspas, dois-pontos, indentação</td><td>Texto certo, mas uma situação impossível: dividir por zero, nome que não existe, arquivo que não existe</td></tr>
+<tr><td>Exemplos</td><td><code>SyntaxError</code>, <code>IndentationError</code></td><td><code>NameError</code>, <code>TypeError</code>, <code>ValueError</code>, …</td></tr>
+</table>
+</div>
+
+<p>O <code>IndentationError</code> (erro de indentação) é um tipo especial de <code>SyntaxError</code>: o texto está mal escrito porque os espaços do começo da linha estão errados. Ele também impede o programa de começar.</p>
+
+<hr>
+
+<h2>4. Os erros mais comuns, com a mensagem real</h2>
+<p>Você não precisa decorar nada desta tabela: a ideia é reconhecer o tipo do erro quando ele aparecer e saber por onde começar a procurar. Cada linha foi rodada no lab; o programa completo e o traceback inteiro vêm logo abaixo da tabela.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Tipo</th><th>Em português</th><th>Mensagem real (última linha)</th><th>Causa típica</th></tr>
+<tr><td><code>NameError</code></td><td>Erro de nome</td><td><code>name 'nome' is not defined. Did you mean: 'nomes'?</code></td><td>Usou uma variável que não existe: nome digitado errado ou variável criada mais para baixo</td></tr>
+<tr><td><code>TypeError</code></td><td>Erro de tipo</td><td><code>can only concatenate str (not "int") to str</code></td><td>Misturou tipos que não combinam: texto + número</td></tr>
+<tr><td><code>ValueError</code></td><td>Erro de valor</td><td><code>invalid literal for int() with base 10: 'dez'</code></td><td>O tipo está certo (é texto), mas o valor não serve: <code>int("dez")</code></td></tr>
+<tr><td><code>IndexError</code></td><td>Erro de índice</td><td><code>list index out of range</code></td><td>Pediu uma posição que a lista não tem</td></tr>
+<tr><td><code>KeyError</code></td><td>Erro de chave</td><td><code>'café'</code></td><td>Pediu uma chave que o dicionário não tem</td></tr>
+<tr><td><code>ZeroDivisionError</code></td><td>Divisão por zero</td><td><code>division by zero</code></td><td>Dividiu por uma variável que valia 0</td></tr>
+<tr><td><code>AttributeError</code></td><td>Erro de atributo</td><td><code>'str' object has no attribute 'uper'. Did you mean: 'upper'?</code></td><td>Método digitado errado, ou usado no tipo errado</td></tr>
+<tr><td><code>FileNotFoundError</code></td><td>Arquivo não encontrado</td><td><code>[Errno 2] No such file or directory: 'notas.txt'</code></td><td>O arquivo não existe, ou não está na pasta onde o programa procura</td></tr>
+<tr><td><code>IndentationError</code></td><td>Erro de indentação</td><td><code>expected an indented block after 'if' statement on line 2</code></td><td>Faltaram (ou sobraram) os espaços do começo da linha</td></tr>
+</table>
+</div>
+
+<h3><code>NameError</code>: esse nome não existe</h3>
+<pre class="file" data-file="e_name.py">nomes = ["Ana", "Bia"]
+print(nome)
+</pre>
+<pre class="term">$ python3 e_name.py
+Traceback (most recent call last):
+  File "/home/ana/e_name.py", line 2, in &lt;module&gt;
+    print(nome)
+          ^^^^
+NameError: name 'nome' is not defined. Did you mean: 'nomes'?</pre>
+<p>"O nome <code>nome</code> não está definido. Você quis dizer <code>nomes</code>?" A variável criada foi <code>nomes</code>, com s. Para o Python, <code>nome</code> e <code>nomes</code> são nomes tão diferentes quanto <code>nome</code> e <code>batata</code>. As marcas <code>^^^^</code> apontam exatamente a palavra que ele não conhece.</p>
+
+<h3><code>TypeError</code>: tipos que não combinam</h3>
+<pre class="file" data-file="e_type.py">idade = 30
+print("Idade: " + idade)
+</pre>
+<pre class="term">$ python3 e_type.py
+Traceback (most recent call last):
+  File "/home/ana/e_type.py", line 2, in &lt;module&gt;
+    print("Idade: " + idade)
+          ~~~~~~~~~~^~~~~~~
+TypeError: can only concatenate str (not "int") to str</pre>
+<p>"Só dá para concatenar (juntar) <code>str</code> (não <code>int</code>) a um <code>str</code>." O <code>+</code> entre dois textos junta os textos; entre dois números, soma. Entre um texto e um número, o Python não sabe o que você quer e se recusa. Com a ordem invertida, a mensagem muda:</p>
+<pre class="file" data-file="e_type2.py">idade = 30
+print(idade + " anos")
+</pre>
+<pre class="term">$ python3 e_type2.py
+Traceback (most recent call last):
+  File "/home/ana/e_type2.py", line 2, in &lt;module&gt;
+    print(idade + " anos")
+          ~~~~~~^~~~~~~~~
+TypeError: unsupported operand type(s) for +: 'int' and 'str'</pre>
+<p>"Tipos de operando não suportados para <code>+</code>: <code>int</code> e <code>str</code>." É o mesmo problema dito de outro jeito: as duas mensagens dizem os dois tipos envolvidos. O conserto, nos dois casos, é uma <a href="f-strings.html">f-string</a> (<code>f"Idade: {idade}"</code>) ou converter o número com <code>str(idade)</code> (veja <a href="conversao.html">Conversão de Tipos</a>).</p>
+
+<h3><code>ValueError</code>: o tipo é certo, o valor não</h3>
+<pre class="file" data-file="e_value.py">quantidade = int("dez")
+</pre>
+<pre class="term">$ python3 e_value.py
+Traceback (most recent call last):
+  File "/home/ana/e_value.py", line 1, in &lt;module&gt;
+    quantidade = int("dez")
+ValueError: invalid literal for int() with base 10: 'dez'</pre>
+<p>"Literal inválido para <code>int()</code> na base 10: <code>'dez'</code>." O <code>int()</code> aceita texto, então o <strong>tipo</strong> está certo; mas o texto <code>'dez'</code> não é feito de algarismos, então o <strong>valor</strong> não serve. É o erro clássico de quando a pessoa digita uma palavra num <code>input()</code> que esperava um número. (Aqui não há marcas: a linha é mostrada sem sublinhado.)</p>
+
+<h3><code>IndexError</code>: essa posição não existe</h3>
+<pre class="file" data-file="e_index.py">compras = ["arroz", "feijão", "café"]
+print(compras[3])
+</pre>
+<pre class="term">$ python3 e_index.py
+Traceback (most recent call last):
+  File "/home/ana/e_index.py", line 2, in &lt;module&gt;
+    print(compras[3])
+          ~~~~~~~^^^
+IndexError: list index out of range</pre>
+<p>"Índice da lista fora do intervalo." A lista tem 3 itens, nas posições 0, 1 e 2 (a contagem começa do zero; veja <a href="listas-acessar.html">Acessando Itens</a>). A posição 3 seria o quarto item, que não existe. O <code>^^^</code> marca o <code>[3]</code>.</p>
+
+<h3><code>KeyError</code>: essa chave não existe</h3>
+<pre class="file" data-file="e_key.py">precos = {"pão": 0.75, "leite": 5.49}
+print(precos["café"])
+</pre>
+<pre class="term">$ python3 e_key.py
+Traceback (most recent call last):
+  File "/home/ana/e_key.py", line 2, in &lt;module&gt;
+    print(precos["café"])
+          ~~~~~~^^^^^^^^
+KeyError: 'café'</pre>
+<p>A mensagem do <code>KeyError</code> é só a chave que faltou, entre aspas: <code>'café'</code>. O dicionário de preços tem <code>pão</code> e <code>leite</code>, mas ninguém cadastrou o café. Repare nas aspas: elas ajudam a ver espaços e maiúsculas. No modo interativo, a Ana procurou <code>"Leite"</code> com L maiúsculo:</p>
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; precos = {"pão": 0.75, "leite": 5.49}
+&gt;&gt;&gt; precos["leite"]
+5.49
+&gt;&gt;&gt; precos["Leite"]
+Traceback (most recent call last):
+  File "&lt;python-input-2&gt;", line 1, in &lt;module&gt;
+    precos["Leite"]
+    ~~~~~~^^^^^^^^^
+KeyError: 'Leite'
+&gt;&gt;&gt; exit()</pre>
+<p>No <code>&gt;&gt;&gt;</code> (veja <a href="repl.html">O Modo Interativo</a>), o lugar do arquivo vira <code>"&lt;python-input-2&gt;"</code>: o terceiro comando digitado na sessão (a contagem começa em 0). E o Python continua aberto depois do erro, esperando o próximo comando.</p>
+
+<h3><code>ZeroDivisionError</code>: divisão por zero</h3>
+<pre class="file" data-file="e_zero.py">total = 120
+pessoas = 0
+print(total / pessoas)
+</pre>
+<pre class="term">$ python3 e_zero.py
+Traceback (most recent call last):
+  File "/home/ana/e_zero.py", line 3, in &lt;module&gt;
+    print(total / pessoas)
+          ~~~~~~^~~~~~~~~
+ZeroDivisionError: division by zero</pre>
+<p>Ninguém escreve <code>/ 0</code> de propósito. O que acontece é dividir por uma <strong>variável</strong> que, naquela vez, valia zero: a conta da pizza quando ninguém apareceu, a média de uma lista vazia.</p>
+
+<h3><code>AttributeError</code>: esse método não existe</h3>
+<pre class="file" data-file="e_attr.py">nome = "ana"
+print(nome.uper())
+</pre>
+<pre class="term">$ python3 e_attr.py
+Traceback (most recent call last):
+  File "/home/ana/e_attr.py", line 2, in &lt;module&gt;
+    print(nome.uper())
+          ^^^^^^^^^
+AttributeError: 'str' object has no attribute 'uper'. Did you mean: 'upper'?</pre>
+<p>"O objeto <code>str</code> não tem o atributo <code>uper</code>. Você quis dizer <code>upper</code>?" Um <strong>atributo</strong> é qualquer coisa que vem depois do ponto: aqui, o método <code>upper</code> (deixar em maiúsculas; veja <a href="strings-metodos.html">Métodos de Texto</a>), escrito com um p só. A mensagem diz também o <strong>tipo</strong> do objeto (<code>'str'</code>), o que ajuda quando a variável não é do tipo que você pensava.</p>
+
+<h3><code>FileNotFoundError</code>: esse arquivo não está aqui</h3>
+<pre class="file" data-file="e_file.py">arquivo = open("notas.txt")
+</pre>
+<pre class="term">$ python3 e_file.py
+Traceback (most recent call last):
+  File "/home/ana/e_file.py", line 1, in &lt;module&gt;
+    arquivo = open("notas.txt")
+FileNotFoundError: [Errno 2] No such file or directory: 'notas.txt'</pre>
+<p>"Arquivo ou diretório inexistente: <code>'notas.txt'</code>." O <code>[Errno 2]</code> é o número que o sistema operacional usa para esse problema (todo programa do Linux recebe o mesmo número quando um arquivo não existe). Ou o arquivo não existe, ou ele está numa pasta diferente da que o programa está olhando. Abrir arquivos tem aula própria: <a href="arquivos.html">Abrindo Arquivos</a>.</p>
+
+<h3><code>IndentationError</code>: os espaços do começo da linha</h3>
+<pre class="file" data-file="e_indent.py">idade = 20
+if idade &gt;= 18:
+print("Pode votar")
+</pre>
+<pre class="term">$ python3 e_indent.py
+  File "/home/ana/e_indent.py", line 3
+    print("Pode votar")
+    ^^^^^
+IndentationError: expected an indented block after 'if' statement on line 2</pre>
+<p>"Esperava um bloco indentado depois do comando <code>if</code> da linha 2." Depois dos dois-pontos do <code>if</code>, a linha de baixo precisa estar 4 espaços para dentro (veja <a href="sintaxe.html">Sintaxe e Indentação</a>). Como é um erro de sintaxe, não há <code>Traceback</code> e nada roda. O erro contrário, espaços <strong>sobrando</strong>, tem outra mensagem:</p>
+<pre class="file" data-file="e_indent2.py">preco = 10
+    total = preco * 2
+</pre>
+<pre class="term">$ python3 e_indent2.py
+  File "/home/ana/e_indent2.py", line 2
+    total = preco * 2
+IndentationError: unexpected indent</pre>
+<p>"Indentação inesperada": a linha 2 começa com espaços, mas não há nenhum <code>if</code>, <code>for</code> ou <code>def</code> em cima pedindo um bloco.</p>
+
+<div class="trypy" data-goal="out:Idade: 30;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa deveria mostrar <code>Idade: 30</code>. Rode, veja qual é o tipo do erro e conserte (dica: uma <a href="f-strings.html">f-string</a> resolve).</p>
+<pre class="script" data-file="main.py">idade = 30
+print("Idade: " + idade)
+</pre>
+<pre class="solucao" data-file="main.py">idade = 30
+print(f"Idade: {idade}")
+</pre>
+</div>
+
+<hr>
+
+<h2>5. "Did you mean…?": as dicas do Python</h2>
+<p>Em vários erros, o Python termina a mensagem com uma sugestão: <code>Did you mean: '…'?</code>, "Você quis dizer…?". Ele procura, entre os nomes que existem, um parecido com o que você escreveu. Você já viu duas (<code>nomes</code> e <code>upper</code>). Mais algumas, todas reais:</p>
+
+<h3>Uma função embutida digitada errado</h3>
+<pre class="file" data-file="e_prin.py">prin("Olá, Ana!")
+</pre>
+<pre class="term">$ python3 e_prin.py
+Traceback (most recent call last):
+  File "/home/ana/e_prin.py", line 1, in &lt;module&gt;
+    prin("Olá, Ana!")
+    ^^^^
+NameError: name 'prin' is not defined. Did you mean: 'print'?</pre>
+
+<h3>Uma variável dentro de uma função</h3>
+<pre class="file" data-file="e_local.py">def saudar():
+    nome_completo = "Ana Souza"
+    print(nome_complet)
+
+
+saudar()
+</pre>
+<pre class="term">$ python3 e_local.py
+Traceback (most recent call last):
+  File "/home/ana/e_local.py", line 6, in &lt;module&gt;
+    saudar()
+    ~~~~~~^^
+  File "/home/ana/e_local.py", line 3, in saudar
+    print(nome_complet)
+          ^^^^^^^^^^^^
+NameError: name 'nome_complet' is not defined. Did you mean: 'nome_completo'?</pre>
+<p>De novo um rastro de dois passos: a linha 6 chamou <code>saudar</code>, e a linha 3, dentro dela, usou o nome errado.</p>
+
+<h3>Um nome importado de um módulo</h3>
+<pre class="file" data-file="e_import.py">from math import sqr
+print(sqr(16))
+</pre>
+<pre class="term">$ python3 e_import.py
+Traceback (most recent call last):
+  File "/home/ana/e_import.py", line 1, in &lt;module&gt;
+    from math import sqr
+ImportError: cannot import name 'sqr' from 'math' (unknown location). Did you mean: 'sqrt'?</pre>
+<p>"Não dá para importar o nome <code>sqr</code> do módulo <code>math</code>. Você quis dizer <code>sqrt</code>?" (A raiz quadrada; veja <a href="math.html">O Módulo math</a>. O <code>(unknown location)</code>, "local desconhecido", aparece porque o <code>math</code> vem embutido no próprio Python, sem um arquivo <code>.py</code> para mostrar.)</p>
+
+<h3>Uma palavra-chave digitada errado <span class="versao">3.14</span></h3>
+<pre class="file" data-file="e_while.py">contador = 0
+whille contador &lt; 3:
+    print(contador)
+    contador += 1
+</pre>
+<pre class="term">$ python3 e_while.py
+  File "/home/ana/e_while.py", line 2
+    whille contador &lt; 3:
+    ^^^^^^
+SyntaxError: invalid syntax. Did you mean 'while'?</pre>
+<p>"Sintaxe inválida. Você quis dizer <code>while</code>?" Esta dica é novidade do Python 3.14: ele reconhece palavras-chave (<code>while</code>, <code>for</code>, <code>if</code>, <code>def</code>…) escritas com um errinho. Como é um <code>SyntaxError</code>, nada rodou.</p>
+
+<div class="note">
+<strong>Num Python mais antigo</strong>
+<p>As dicas <code>Did you mean</code> para nomes e atributos existem desde o Python 3.10, e a do <code>import</code> desde o 3.12. A dica de palavra-chave é do 3.14: num Python 3.13 (o do Debian 13, por exemplo), o mesmo <code>whille</code> dá só <code>SyntaxError: invalid syntax</code>, sem sugestão. As marcas <code>^^^</code>/<code>~~~</code> embaixo da linha existem desde o 3.11.</p>
+</div>
+
+<div class="warning">
+<strong>A dica é um palpite</strong>
+<p>O Python sugere o nome <strong>mais parecido</strong> que existe, mas não sabe o que você queria. Se você escreveu <code>totl</code> querendo uma variável que ainda nem criou, ele pode sugerir outra coisa que não tem nada a ver. E nem todo erro tem dica: o <code>KeyError</code> da seção 4 não sugeriu <code>'leite'</code> para <code>'Leite'</code>.</p>
+</div>
+
+<hr>
+
+<h2>Formas de investigar um erro</h2>
+<p>Diante de um traceback, há alguns caminhos. Os bons programadores usam todos, nesta ordem:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Passo</th><th>Como</th><th>Quando ajuda</th></tr>
+<tr><td>1. Ler a última linha</td><td>O tipo e a mensagem (e a dica <code>Did you mean</code>, se houver)</td><td>Sempre. Muitas vezes é o suficiente: nome digitado errado, parêntese aberto</td></tr>
+<tr><td>2. Ir à linha indicada</td><td>O <code>File … line N</code> mais de baixo, e as marcas <code>^^^</code></td><td>Para ver exatamente o pedaço que falhou</td></tr>
+<tr><td>3. Subir o rastro</td><td>As linhas <code>File</code> de cima, uma a uma</td><td>Quando a linha do erro parece certa e o problema veio de quem chamou (como a turma com a Carla)</td></tr>
+<tr><td>4. Mostrar os valores</td><td>Um <code>print()</code> antes da linha do erro: <code>print(notas)</code></td><td>Quando você não entende por que uma variável tem aquele valor</td></tr>
+<tr><td>5. Procurar a mensagem</td><td>Copiar a última linha (sem os seus nomes) num buscador</td><td>Mensagens que você nunca viu; quase sempre alguém já perguntou</td></tr>
+</table>
+</div>
+
+<p>Depurar com mais ferramentas (parar o programa no meio, olhar as variáveis passo a passo) tem aula própria: <a href="depuracao.html">Depurando com pdb e breakpoint()</a>.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>A linha do erro não é a linha do defeito</strong>
+<p>A Ana escreveu um programa que pergunta a idade e mostra a idade do ano que vem. Ela digitou <code>30</code>:</p>
+<pre class="file" data-file="e_str_int.py">idade = input("Sua idade: ")
+print(idade + 1)
+</pre>
+<pre class="term">$ python3 e_str_int.py
+Sua idade: 30
+Traceback (most recent call last):
+  File "/home/ana/e_str_int.py", line 2, in &lt;module&gt;
+    print(idade + 1)
+          ~~~~~~^~~
+TypeError: can only concatenate str (not "int") to str</pre>
+<p>O traceback acusa a linha 2. Mas a linha 2 é uma soma inocente; o defeito está na <strong>linha 1</strong>: o <code>input()</code> sempre devolve <strong>texto</strong>, então <code>idade</code> vale <code>"30"</code> (com aspas), e não <code>30</code>. A mensagem dá a pista: <code>str</code> é o tipo de <code>idade</code>. <strong>Como consertar:</strong> converter na hora de ler, <code>idade = int(input("Sua idade: "))</code> (veja <a href="input.html">input()</a>). Moral: quando a linha indicada parece certa, pergunte "<strong>de onde veio</strong> esse valor?".</p>
+</div>
+
+<div class="cenario">
+<strong>Ler só o começo do traceback</strong>
+<p>Num traceback comprido, como o do <code>notas.py</code>, quem lê de cima para baixo vê primeiro <code>line 11, relatorio(turma)</code> e vai procurar o problema na linha 11, que está perfeita. A informação útil está <strong>embaixo</strong>: o tipo do erro e o <code>File</code> mais de baixo. <strong>Como evitar:</strong> comece sempre pela última linha e suba.</p>
+</div>
+
+<div class="cenario">
+<strong>Consertar a linha errada num <code>SyntaxError</code></strong>
+<p>No <code>sintaxe.py</code>, o Python apontou a linha 2, onde o parêntese foi aberto, mesmo o "buraco" ficando no fim dela. Em erros de parênteses, colchetes e aspas, o defeito costuma estar <strong>na linha indicada ou logo antes dela</strong>: confira se cada <code>(</code> tem o seu <code>)</code>. A maioria dos editores de código colore o par do parêntese quando você põe o cursor nele.</p>
+</div>
+
+<div class="cenario">
+<strong>Ignorar a dica</strong>
+<p>A dica <code>Did you mean: 'convidado'?</code> estava no fim da linha, e quem não lê a linha até o fim perde. Nos tracebacks desta aula, a dica sozinha já resolvia sete erros. <strong>Leia a última linha inteira</strong>, até o ponto de interrogação.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Parte do traceback</th><th>O que diz</th></tr>
+<tr><td><code>Traceback (most recent call last):</code></td><td>Começa o rastro; o passo mais recente vem por último. Só aparece em exceções (não em <code>SyntaxError</code>)</td></tr>
+<tr><td><code>File "…", line N, in função</code></td><td>Arquivo, linha e função de cada passo. <code>&lt;module&gt;</code> = programa principal; <code>&lt;python-input-N&gt;</code> = comando digitado no <code>&gt;&gt;&gt;</code></td></tr>
+<tr><td>A linha de código copiada</td><td>A linha daquele passo, como está no arquivo</td></tr>
+<tr><td><code>^^^</code> e <code>~~~</code></td><td>O pedaço exato que falhou (<code>^</code>) e as partes envolvidas (<code>~</code>)</td></tr>
+<tr><td><code>Tipo: mensagem</code></td><td>A última linha: o que deu errado</td></tr>
+<tr><td><code>Did you mean: '…'?</code></td><td>Um palpite do Python com o nome parecido mais próximo</td></tr>
+<tr><td><code>echo $?</code> → <code>1</code></td><td>O programa terminou por causa de um erro não tratado</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Tipo</th><th>Pergunte-se</th></tr>
+<tr><td><code>SyntaxError</code> / <code>IndentationError</code></td><td>O texto está bem escrito? Parênteses, aspas, dois-pontos, espaços</td></tr>
+<tr><td><code>NameError</code></td><td>O nome está escrito igual onde a variável foi criada? Ela foi criada antes desta linha?</td></tr>
+<tr><td><code>TypeError</code></td><td>Que tipo tem cada valor? (<code>type(x)</code>; veja <a href="type.html">Descobrindo o Tipo</a>)</td></tr>
+<tr><td><code>ValueError</code></td><td>O valor faz sentido para essa função? (<code>int("dez")</code>)</td></tr>
+<tr><td><code>IndexError</code></td><td>Quantos itens a lista tem? (<code>len(lista)</code>; a última posição é <code>len - 1</code>)</td></tr>
+<tr><td><code>KeyError</code></td><td>A chave existe, com essas maiúsculas e acentos?</td></tr>
+<tr><td><code>ZeroDivisionError</code></td><td>Por que o divisor valia zero?</td></tr>
+<tr><td><code>AttributeError</code></td><td>O método existe para esse tipo? Está escrito certo?</td></tr>
+<tr><td><code>FileNotFoundError</code></td><td>O arquivo existe? Está na pasta onde o programa roda?</td></tr>
+</table>
+</div>
+
+<p>A lista completa dos tipos de erro do Python está em <a href="ref-excecoes.html">Exceções Embutidas</a>.</p>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Qual é o tipo?</h3>
+<p>A última linha de um traceback é <code>KeyError: 'açúcar'</code>. Escreva só o tipo do erro:</p>
+<div class="ex-code"><input data-answer="KeyError" aria-label="tipo do erro"></div>
+</div>
+
+<div class="exercise">
+<h3>2. Em qual linha?</h3>
+<p>Neste traceback, em qual linha do arquivo a exceção realmente aconteceu?</p>
+<pre class="term">$ python3 loja.py
+Vendas do dia: 0
+Traceback (most recent call last):
+  File "/home/ana/loja.py", line 9, in &lt;module&gt;
+    fechar_caixa(vendas)
+    ~~~~~~~~~~~~^^^^^^^^
+  File "/home/ana/loja.py", line 5, in fechar_caixa
+    return total / quantidade
+           ~~~~~~^~~~~~~~~~~~
+ZeroDivisionError: division by zero</pre>
+<div class="ex-code">Linha <input data-answer="5" aria-label="número da linha"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. Por onde se começa a ler um traceback?</p>
+<label><input type="radio" name="q3"> Pela primeira linha, <code>Traceback (most recent call last):</code></label>
+<label><input type="radio" name="q3"> Pela última linha: o tipo e a mensagem do erro</label>
+<label><input type="radio" name="q3"> Pela linha <code>File</code> mais de cima</label>
+<label><input type="radio" name="q3"> Tanto faz, todas dizem a mesma coisa</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Um programa começa com <code>print("Oi")</code> e tem um parêntese sem fechar na linha 5. O que aparece ao rodar?</p>
+<label><input type="radio" name="q4"> <code>Oi</code> e depois o <code>SyntaxError</code></label>
+<label><input type="radio" name="q4"> <code>Oi</code>, as linhas 2 a 4 e depois o <code>SyntaxError</code></label>
+<label><input type="radio" name="q4"> Só o <code>SyntaxError</code>: nenhuma linha roda</label>
+<label><input type="radio" name="q4"> Nada: o Python ignora a linha 5</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. <code>int("12,5")</code> dá <code>ValueError: invalid literal for int() with base 10: '12,5'</code>. O que a mensagem quer dizer?</p>
+<label><input type="radio" name="q5"> Que <code>int</code> não existe</label>
+<label><input type="radio" name="q5"> Que não se pode passar texto para o <code>int()</code></label>
+<label><input type="radio" name="q5"> Que faltou fechar um parêntese</label>
+<label><input type="radio" name="q5"> Que o texto <code>'12,5'</code> não é um número inteiro escrito com algarismos</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. <code>lista = [10, 20, 30]</code> e depois <code>print(lista[3])</code>. Qual erro aparece?</p>
+<label><input type="radio" name="q6"> <code>IndexError: list index out of range</code></label>
+<label><input type="radio" name="q6"> <code>KeyError: 3</code></label>
+<label><input type="radio" name="q6"> <code>ValueError</code></label>
+<label><input type="radio" name="q6"> Nenhum: mostra <code>30</code></label>
+</div>
+
+<h3>Missão final: a média da Carla</h3>
+
+<div class="trypy" data-goal="out:Carla: sem notas;;out:Bruno: 6.5;;out:Fim do relatório;;semerro">
+<p class="try-task"><strong>Missão:</strong> este é o programa da seção 2. Rode e leia o traceback de baixo para cima. Depois, conserte a função <code>relatorio</code> para que, quando a lista de notas estiver vazia, ela mostre <code>Carla: sem notas</code> em vez de chamar a <code>media</code>. Dica: uma lista vazia é "falsa" num <code>if</code> (veja <a href="booleanos.html">Booleanos</a>), então <code>if notas:</code> quer dizer "se a lista tem alguma nota".</p>
+<pre class="script" data-file="main.py">def media(notas):
+    return sum(notas) / len(notas)
+
+
+def relatorio(turma):
+    for nome, notas in turma.items():
+        print(f"{nome}: {media(notas):.1f}")
+
+
+turma = {"Ana": [8, 9, 10], "Bruno": [7, 6], "Carla": []}
+relatorio(turma)
+print("Fim do relatório")
+</pre>
+<pre class="solucao" data-file="main.py">def media(notas):
+    return sum(notas) / len(notas)
+
+
+def relatorio(turma):
+    for nome, notas in turma.items():
+        if notas:
+            print(f"{nome}: {media(notas):.1f}")
+        else:
+            print(f"{nome}: sem notas")
+
+
+turma = {"Ana": [8, 9, 10], "Bruno": [7, 6], "Carla": []}
+relatorio(turma)
+print("Fim do relatório")
+</pre>
+</div>
+
+<p>Com o conserto, o programa mostra as quatro linhas e chega ao fim:</p>
+<pre class="term">$ python3 notas.py
+Ana: 9.0
+Bruno: 6.5
+Carla: sem notas
+Fim do relatório</pre>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>O <strong>traceback</strong> é o relatório do erro. Leia <strong>de baixo para cima</strong>: a última linha diz <strong>o que</strong> (tipo e mensagem); o <code>File</code> mais de baixo diz <strong>onde</strong>; os de cima contam <strong>o caminho</strong> (quem chamou quem).</li>
+  <li><code>File "…", line N, in função</code>: <code>&lt;module&gt;</code> é o programa principal. As marcas <code>^^^</code> apontam o pedaço que falhou; <code>~~~</code>, as partes envolvidas.</li>
+  <li>Um erro não tratado <strong>para o programa</strong> ali: as linhas de baixo não rodam, e o código de saída é 1.</li>
+  <li><code>SyntaxError</code> (e <code>IndentationError</code>): o texto está mal escrito, e <strong>nenhuma</strong> linha roda; não há <code>Traceback (most recent call last):</code>. As outras são <strong>exceções</strong>: acontecem no meio, depois de as linhas anteriores rodarem.</li>
+  <li>Os mais comuns: <code>NameError</code> (nome), <code>TypeError</code> (tipos), <code>ValueError</code> (valor), <code>IndexError</code> (posição), <code>KeyError</code> (chave), <code>ZeroDivisionError</code>, <code>AttributeError</code> (método), <code>FileNotFoundError</code> (arquivo), <code>IndentationError</code> (espaços).</li>
+  <li><code>Did you mean: '…'?</code> é um palpite do Python com o nome parecido; no 3.14 vale até para palavras-chave.</li>
+  <li>A linha do erro nem sempre é a do defeito: pergunte de onde veio o valor.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
