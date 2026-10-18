@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python range() — sequências de números para o for | Guia Python</title>
+<meta name="description" content="A função range() do Python para quem nunca programou: range(fim), range(início, fim) e range(início, fim, passo), por que o fim não entra, contar para trás com passo negativo, ver os números com list(range()), repetir N vezes, somar de 1 a 100, e os erros reais (passo zero, número com vírgula, texto do input).">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">range()</span></h1>
+
+<p class="intro">Na aula <a href="for.html">for</a>, você viu que o <code>for</code> percorre sequências: as letras de um texto, os itens de uma lista. Mas e para contar de 1 até 100? Escrever uma lista com cem números à mão não tem graça. Para isso existe a função <code>range()</code> (em inglês, "faixa", "intervalo"): ela <strong>fabrica uma sequência de números</strong> para o <code>for</code> percorrer. Você diz onde começa, onde termina e de quanto em quanto pular.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>As três formas do <code>range()</code>: com o <strong>fim</strong>; com o <strong>início</strong> e o fim; com início, fim e <strong>passo</strong>.</li>
+  <li>A regra que mais confunde: <strong>o fim não entra</strong>. E por que ela é assim.</li>
+  <li>A contar de 5 em 5, só os pares, e para trás, com passo negativo.</li>
+  <li>A <strong>ver</strong> os números de um <code>range</code> com <code>list(range(…))</code>.</li>
+  <li>A repetir algo N vezes, inclusive um N digitado pelo usuário.</li>
+  <li>Os erros reais: passo zero, número com vírgula, o texto do <code>input()</code> e o <code>range</code> vazio que não avisa nada.</li>
+</ul>
+</div>
+
+<p>Todos os programas desta aula rodaram no <strong>Python 3.14</strong> da máquina da Ana (usuária <code>ana</code>, computador <code>notebook</code>), com <code>python3 arquivo.py</code>; as linhas com <code>&gt;&gt;&gt;</code> foram digitadas no <a href="repl.html">modo interativo</a>.</p>
+
+<hr>
+
+<h2>A ideia: as senhas da padaria</h2>
+<p>A padaria do bairro tem uma máquina de senhas. Às 7 horas, o funcionário anota no quadro: <em>"hoje de manhã, as senhas vão da 1 até antes da 6"</em>. Saem as senhas 1, 2, 3, 4 e 5. A 6 é a primeira que <strong>não</strong> é atendida de manhã: ela marca onde a faixa para.</p>
+<p>O <code>range()</code> funciona exatamente assim. Você dá a ele:</p>
+<ul>
+  <li>o <strong>início</strong>: o primeiro número que entra;</li>
+  <li>o <strong>fim</strong>: o número onde a faixa <strong>para</strong>, que <strong>não entra</strong>;</li>
+  <li>o <strong>passo</strong> (opcional): de quanto em quanto pular.</li>
+</ul>
+
+<hr>
+
+<h2>1. <code>range(fim)</code>: só o fim</h2>
+<p>Com um número só, o <code>range</code> começa do <strong>zero</strong> e para antes do número dado:</p>
+
+<pre class="file" data-file="range5.py">for numero in range(5):
+    print(numero)
+</pre>
+
+<pre class="term">$ python3 range5.py
+0
+1
+2
+3
+4</pre>
+
+<p>Cinco números, de 0 a 4. O 5 <strong>não</strong> aparece. Pode parecer estranho, mas tem uma vantagem: <code>range(5)</code> dá <strong>exatamente 5</strong> voltas. Quer repetir algo 10 vezes? <code>range(10)</code>. O número que você escreve é a quantidade de voltas.</p>
+
+<p>Começar do zero também não é capricho: no Python, as posições de um texto e de uma lista começam do 0 (lembra dos <a href="strings-fatias.html">índices</a>?). O <code>range(5)</code> dá justamente as posições de algo com 5 itens: 0, 1, 2, 3 e 4.</p>
+
+<hr>
+
+<h2>2. <code>range(início, fim)</code>: escolhendo onde começa</h2>
+<p>Para começar de outro número, ponha o início antes do fim, separados por vírgula. As senhas da padaria:</p>
+
+<pre class="file" data-file="senhas.py">for senha in range(1, 6):
+    print(f"Senha {senha}, por favor!")
+</pre>
+
+<pre class="term">$ python3 senhas.py
+Senha 1, por favor!
+Senha 2, por favor!
+Senha 3, por favor!
+Senha 4, por favor!
+Senha 5, por favor!</pre>
+
+<dl class="anatomy">
+  <dt>range</dt><dd>A função que fabrica a sequência de números.</dd>
+  <dt>1</dt><dd>O <strong>início</strong>: o primeiro número, que <strong>entra</strong>.</dd>
+  <dt>,</dt><dd>A vírgula separa os valores (os <strong>argumentos</strong>) que você passa à função.</dd>
+  <dt>6</dt><dd>O <strong>fim</strong>: onde a sequência para. O 6 <strong>não entra</strong>; o último número é o 5.</dd>
+</dl>
+
+<div class="tip">
+<strong>Um truque para não errar</strong>
+<p>Para ir de <strong>A</strong> até <strong>B</strong>, incluindo o B, escreva <code>range(A, B + 1)</code>. De 1 a 10: <code>range(1, 11)</code>. De 1 a 100: <code>range(1, 101)</code>. E <code>range(A, B)</code> sempre tem <strong>B − A</strong> números: <code>range(1, 6)</code> tem 6 − 1 = 5.</p>
+</div>
+
+<h3>Somando de 1 a 100</h3>
+<p>Na aula <a href="while.html">while</a>, somar uma sequência pedia contador, condição e passo. Com <code>for</code> e <code>range</code>, o laço fica assim:</p>
+
+<pre class="file" data-file="soma100.py">soma = 0
+for numero in range(1, 101):
+    soma += numero
+print(f"1 + 2 + ... + 100 = {soma}")
+</pre>
+
+<pre class="term">$ python3 soma100.py
+1 + 2 + ... + 100 = 5050</pre>
+
+<p>O <code>range(1, 101)</code> entrega os números de 1 a 100, um por volta, e o acumulador <code>soma</code> vai juntando.</p>
+
+<hr>
+
+<h2>3. <code>range(início, fim, passo)</code>: pulando de tanto em tanto</h2>
+<p>O terceiro número é o <strong>passo</strong>: de quanto em quanto a sequência anda. Sem ele, o passo é 1. A Ana põe um bolo no forno por meia hora e quer conferir de 5 em 5 minutos:</p>
+
+<pre class="file" data-file="cinco_em_cinco.py">for minuto in range(0, 31, 5):
+    print(f"{minuto} minutos")
+</pre>
+
+<pre class="term">$ python3 cinco_em_cinco.py
+0 minutos
+5 minutos
+10 minutos
+15 minutos
+20 minutos
+25 minutos
+30 minutos</pre>
+
+<p>Começa no 0 e soma 5 a cada volta: 0, 5, 10… até 30. O próximo seria 35, que já passa do fim (31); aí a sequência para. Repare que o fim é <strong>31</strong>, e não 30: com <code>range(0, 30, 5)</code>, o 30 ficaria de fora.</p>
+
+<p>Com passo 2, começando de um número par, saem só os pares:</p>
+
+<pre class="file" data-file="pares.py">for numero in range(2, 11, 2):
+    print(numero, end=" ")
+print()
+</pre>
+
+<pre class="term">$ python3 pares.py
+2 4 6 8 10 </pre>
+
+<div class="trypy" data-goal="outre:^3\n6\n9\n12\n15\n18\n21\n24\n27\n30\n$;;src:\brange\b">
+<p class="try-task"><strong>Missão:</strong> mostre os múltiplos de 3, de <strong>3 até 30</strong> (incluindo o 30), um por linha. Mude só os números do <code>range</code>: o início, o fim e o passo.</p>
+<pre class="script" data-file="main.py">for numero in range(1, 11):
+    print(numero)
+</pre>
+<pre class="solucao" data-file="main.py">for numero in range(3, 31, 3):
+    print(numero)
+</pre>
+</div>
+
+<hr>
+
+<h2>4. Contar para trás: passo negativo</h2>
+<p>Com um passo <strong>negativo</strong>, a sequência anda para trás. Aí o início é o número <strong>maior</strong>, e o fim, o menor:</p>
+
+<pre class="file" data-file="regressiva_range.py">for segundo in range(5, 0, -1):
+    print(f"{segundo}...")
+print("Já!")
+</pre>
+
+<pre class="term">$ python3 regressiva_range.py
+5...
+4...
+3...
+2...
+1...
+Já!</pre>
+
+<p>A regra do fim continua valendo: o <code>0</code> é onde a contagem para, e ele <strong>não entra</strong>. Para incluir o zero, o fim teria de ser <code>-1</code>: <code>range(5, -1, -1)</code>.</p>
+
+<div class="trypy" data-goal="outre:^10\n9\n8\n7\n6\n5\n4\n3\n2\n1\nFeliz Ano Novo!\n$;;src:\brange\b">
+<p class="try-task"><strong>Missão:</strong> é réveillon. Faça a contagem regressiva de <strong>10 até 1</strong>, um número por linha, e depois o <code>Feliz Ano Novo!</code>.</p>
+<pre class="script" data-file="main.py">for numero in range(1, 11):
+    print(numero)
+print("Feliz Ano Novo!")
+</pre>
+<pre class="solucao" data-file="main.py">for numero in range(10, 0, -1):
+    print(numero)
+print("Feliz Ano Novo!")
+</pre>
+</div>
+
+<hr>
+
+<h2>5. Vendo os números: <code>list(range(…))</code></h2>
+<p>Se você mostrar um <code>range</code> direto, o Python não lista os números; ele mostra só a "receita":</p>
+
+<pre class="term">&gt;&gt;&gt; range(5)
+range(0, 5)</pre>
+
+<p>Isso acontece porque o <code>range</code> não guarda os números: ele <strong>calcula</strong> cada um na hora em que o <code>for</code> pede. É por isso que até um <code>range(1000000)</code> ocupa quase nada na memória. Para ver a sequência inteira, transforme-a numa <a href="listas.html">lista</a> com <code>list()</code>:</p>
+
+<pre class="term">&gt;&gt;&gt; list(range(5))
+[0, 1, 2, 3, 4]
+&gt;&gt;&gt; list(range(1, 6))
+[1, 2, 3, 4, 5]
+&gt;&gt;&gt; list(range(0, 21, 5))
+[0, 5, 10, 15, 20]
+&gt;&gt;&gt; list(range(5, 0, -1))
+[5, 4, 3, 2, 1]
+&gt;&gt;&gt; list(range(5, 0))
+[]
+&gt;&gt;&gt; len(range(1, 6))
+5
+&gt;&gt;&gt; sum(range(1, 101))
+5050</pre>
+
+<p>Essa é a melhor forma de <strong>tirar dúvida</strong> sobre um <code>range</code>: antes de pôr no <code>for</code>, olhe os números com <code>list()</code>. Repare em três linhas:</p>
+<ul>
+  <li><code>list(range(5, 0))</code> deu <code>[]</code>, uma lista <strong>vazia</strong>: de 5 até 0 andando de 1 em 1 <strong>para frente</strong>, não há número nenhum. Para trás, só com passo negativo.</li>
+  <li><code>len(range(1, 6))</code> diz quantos números há, sem precisar listá-los: 5.</li>
+  <li><code>sum(range(1, 101))</code> soma a sequência inteira de uma vez: o mesmo 5050 do laço da seção 2. A função <code>sum()</code> ("soma") tem mais detalhes em <a href="funcoes-embutidas.html">Funções Embutidas</a>.</li>
+</ul>
+
+<div class="trypy">
+<p class="try-task"><strong>Experimente:</strong> mude os números e rode para ver a sequência. Tente prever o resultado antes: <code>range(10)</code>, <code>range(3, 8)</code>, <code>range(1, 20, 4)</code>, <code>range(10, 0, -3)</code>, <code>range(8, 3)</code>.</p>
+<pre class="script" data-file="main.py">print(list(range(2, 15, 3)))
+</pre>
+</div>
+
+<hr>
+
+<h2>6. Repetir N vezes</h2>
+<p>Muitas vezes você nem precisa do número: só quer repetir. Quando a variável do laço não vai ser usada, o costume é chamá-la de <code>_</code> (um sublinhado sozinho), que quer dizer "não interessa":</p>
+
+<pre class="file" data-file="hurra.py">for _ in range(3):
+    print("Hip, hip, hurra!")
+</pre>
+
+<pre class="term">$ python3 hurra.py
+Hip, hip, hurra!
+Hip, hip, hurra!
+Hip, hip, hurra!</pre>
+
+<p>E a quantidade pode vir do usuário. Como o <code>input()</code> devolve texto, converta com <code>int()</code> antes de passar ao <code>range</code> (aula <a href="conversao.html">Conversão de Tipos</a>):</p>
+
+<pre class="file" data-file="quantas.py">vezes = int(input("Quantas vezes? "))
+for volta in range(vezes):
+    print(f"Volta {volta + 1} de {vezes}")
+</pre>
+
+<pre class="term">$ python3 quantas.py
+Quantas vezes? 3
+Volta 1 de 3
+Volta 2 de 3
+Volta 3 de 3</pre>
+
+<p>O <code>range(3)</code> deu 0, 1 e 2; o <code>volta + 1</code> mostra 1, 2 e 3, que é como as pessoas contam.</p>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+<p>Contar de 1 a 5 tem várias escritas. Todas dão <code>1 2 3 4 5</code>:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>for n in range(1, 6):</code></td><td>A mais comum: diga onde começa e onde para (o fim é 6 para incluir o 5)</td></tr>
+<tr><td><code>for n in range(5):</code> e usar <code>n + 1</code></td><td>Quando o importante é "5 voltas" e o número da volta é só para mostrar</td></tr>
+<tr><td><code>n = 1</code> / <code>while n &lt;= 5:</code> / <code>n += 1</code></td><td>Funciona, mas tem mais peças para errar; deixe o <code>while</code> para quando não se sabe quantas voltas vão ser</td></tr>
+<tr><td><code>for n in [1, 2, 3, 4, 5]:</code></td><td>Só para poucos números escolhidos à mão (ex.: <code>[2, 3, 5, 7]</code>); para faixas, use <code>range</code></td></tr>
+</table>
+</div>
+
+<p>E para percorrer uma lista <strong>com o número da posição</strong>, dá para combinar <code>range</code> e <code>len</code>:</p>
+
+<pre class="file" data-file="indice.py">compras = ["pão", "leite", "café"]
+for posicao in range(len(compras)):
+    print(f"{posicao + 1}. {compras[posicao]}")
+</pre>
+
+<pre class="term">$ python3 indice.py
+1. pão
+2. leite
+3. café</pre>
+
+<p>Funciona: <code>len(compras)</code> é 3, e <code>range(3)</code> dá as posições 0, 1 e 2. Mas o Python tem uma ferramenta feita para isso, mais clara, o <code>enumerate()</code>, que você vai ver em <a href="enumerate-zip.html">enumerate() e zip()</a>.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Queria ir até 10 e parou no 9</strong>
+<pre class="file" data-file="ate10.py">for numero in range(1, 10):
+    print(numero, end=" ")
+print()
+</pre>
+<pre class="term">$ python3 ate10.py
+1 2 3 4 5 6 7 8 9 </pre>
+<p>Sem mensagem de erro: o Python fez exatamente o que foi pedido. O fim <strong>não entra</strong>, então <code>range(1, 10)</code> para no 9. É o erro mais comum com <code>range</code>, tão comum que tem nome: erro "por um" (em inglês, <em>off-by-one</em>). <strong>Como consertar:</strong> fim = último número + 1: <code>range(1, 11)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Contagem para trás sem o passo negativo</strong>
+<pre class="file" data-file="vazio.py">for segundo in range(5, 0):
+    print(f"{segundo}...")
+print("Já!")
+</pre>
+<pre class="term">$ python3 vazio.py
+Já!</pre>
+<p>Nenhum número, nenhum erro: o laço deu <strong>zero voltas</strong>. Sem o terceiro número, o passo é +1, e não existe caminho de 5 até 0 andando para frente. O <code>range</code> ficou vazio (<code>list(range(5, 0))</code> é <code>[]</code>). <strong>Como consertar:</strong> <code>range(5, 0, -1)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Passo zero</strong>
+<pre class="file" data-file="passo0.py">for numero in range(1, 10, 0):
+    print(numero)
+</pre>
+<pre class="term">$ python3 passo0.py
+Traceback (most recent call last):
+  File "/home/ana/passo0.py", line 1, in &lt;module&gt;
+    for numero in range(1, 10, 0):
+                  ~~~~~^^^^^^^^^^
+ValueError: range() arg 3 must not be zero</pre>
+<p>"Erro de valor: o argumento 3 do <code>range()</code> não pode ser zero". Com passo zero, a sequência nunca sairia do 1; em vez de criar um laço infinito, o Python recusa. Os <code>~~~~~^^^^^^^^^^</code> marcam a chamada do <code>range</code> na linha 1. <strong>Como consertar:</strong> use um passo diferente de zero (1, 2, −1…).</p>
+</div>
+
+<div class="cenario">
+<strong>Número com casas decimais</strong>
+<pre class="file" data-file="decimal.py">for valor in range(0, 1, 0.1):
+    print(valor)
+</pre>
+<pre class="term">$ python3 decimal.py
+Traceback (most recent call last):
+  File "/home/ana/decimal.py", line 1, in &lt;module&gt;
+    for valor in range(0, 1, 0.1):
+                 ~~~~~^^^^^^^^^^^
+TypeError: 'float' object cannot be interpreted as an integer</pre>
+<p>"Erro de tipo: um objeto <code>float</code> (número com casas decimais) não pode ser interpretado como inteiro". O <code>range</code> só trabalha com <strong>números inteiros</strong>: início, fim e passo. <strong>Como consertar:</strong> conte com inteiros e divida dentro do laço. Para ir de 0.0 a 0.9 de 0.1 em 0.1: <code>for n in range(10):</code> e use <code>n / 10</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Passou o texto do <code>input()</code> direto</strong>
+<pre class="file" data-file="texto.py">vezes = input("Quantas vezes? ")
+for volta in range(vezes):
+    print("Oi!")
+</pre>
+<pre class="term">$ python3 texto.py
+Quantas vezes? 3
+Traceback (most recent call last):
+  File "/home/ana/texto.py", line 2, in &lt;module&gt;
+    for volta in range(vezes):
+                 ~~~~~^^^^^^^
+TypeError: 'str' object cannot be interpreted as an integer</pre>
+<p>A mesma família do erro anterior, agora com <code>str</code> (texto): o <code>input()</code> devolveu o <strong>texto</strong> <code>'3'</code>, e o <code>range</code> quer um número inteiro. <strong>Como consertar:</strong> <code>vezes = int(input("Quantas vezes? "))</code>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Números</th><th>O que faz</th></tr>
+<tr><td><code>range(5)</code></td><td>0, 1, 2, 3, 4</td><td>Do 0 até antes do fim; dá exatamente 5 voltas</td></tr>
+<tr><td><code>range(1, 6)</code></td><td>1, 2, 3, 4, 5</td><td>Do início até antes do fim</td></tr>
+<tr><td><code>range(0, 31, 5)</code></td><td>0, 5, 10, …, 30</td><td>De 5 em 5</td></tr>
+<tr><td><code>range(2, 11, 2)</code></td><td>2, 4, 6, 8, 10</td><td>Os pares de 2 a 10</td></tr>
+<tr><td><code>range(5, 0, -1)</code></td><td>5, 4, 3, 2, 1</td><td>Para trás: passo negativo, início maior que o fim</td></tr>
+<tr><td><code>range(5, 0)</code></td><td>(nenhum)</td><td>Vazio: para frente não há caminho de 5 a 0</td></tr>
+<tr><td><code>list(range(…))</code></td><td>—</td><td>Mostra os números como uma lista</td></tr>
+<tr><td><code>len(range(…))</code> / <code>sum(range(…))</code></td><td>—</td><td>Quantos números há / a soma deles</td></tr>
+<tr><td><code>for _ in range(n):</code></td><td>—</td><td>Repetir n vezes sem usar o número</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td>Faltou o último número</td><td>O fim não entra: use fim = último + 1</td></tr>
+<tr><td>O laço não roda nenhuma vez, sem erro</td><td>Início maior que o fim sem passo negativo (ou o contrário)</td></tr>
+<tr><td><code>ValueError: range() arg 3 must not be zero</code></td><td>Passo zero</td></tr>
+<tr><td><code>TypeError: 'float' object cannot be interpreted as an integer</code></td><td>Número com casas decimais no <code>range</code></td></tr>
+<tr><td><code>TypeError: 'str' object cannot be interpreted as an integer</code></td><td>Texto (do <code>input()</code>) no <code>range</code>: faltou o <code>int()</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. De 1 a 10</h3>
+<p>Complete para o laço passar pelos números de 1 a 10, incluindo o 10:</p>
+<div class="ex-code">for numero in range(1, <input data-answer="11" aria-label="fim">):</div>
+</div>
+
+<div class="exercise">
+<h3>2. O último número</h3>
+<p>Qual é o <strong>último</strong> número de <code>range(0, 20, 4)</code>?</p>
+<div class="ex-code">O último é <input data-answer="16" aria-label="último número">.</div>
+</div>
+
+<div class="exercise">
+<h3>3. Quantos números?</h3>
+<p>Quantos números tem <code>range(3, 10)</code>?</p>
+<div class="ex-code">Tem <input data-answer="7" aria-label="quantidade"> números.</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. O que <code>list(range(4))</code> mostra?</p>
+<label><input type="radio" name="q4"> <code>[1, 2, 3, 4]</code></label>
+<label><input type="radio" name="q4"> <code>[0, 1, 2, 3]</code></label>
+<label><input type="radio" name="q4"> <code>[0, 1, 2, 3, 4]</code></label>
+<label><input type="radio" name="q4"> <code>range(0, 4)</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. Qual <code>range</code> faz a contagem 3, 2, 1?</p>
+<label><input type="radio" name="q5"> <code>range(3, 1)</code></label>
+<label><input type="radio" name="q5"> <code>range(1, 4)</code></label>
+<label><input type="radio" name="q5"> <code>range(3, 1, -1)</code></label>
+<label><input type="radio" name="q5"> <code>range(3, 0, -1)</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">6. <code>for i in range(10, 1):</code> não mostrou nada e não deu erro. Por quê?</p>
+<label><input type="radio" name="q6"> O <code>range</code> não aceita o 10</label>
+<label><input type="radio" name="q6"> Faltou o <code>list()</code></label>
+<label><input type="radio" name="q6"> Sem passo, ele anda de 1 em 1 para frente, e não há caminho de 10 até 1: o <code>range</code> está vazio</label>
+<label><input type="radio" name="q6"> O laço deu uma volta, mas o <code>print</code> estava fora</label>
+</div>
+
+<h3>Missão final: a soma dos pares</h3>
+
+<div class="trypy" data-goal="out:Soma dos pares de 1 a 100: 2550;;src:\brange\b">
+<p class="try-task"><strong>Missão:</strong> some todos os números <strong>pares</strong> de 1 a 100 (2 + 4 + 6 + … + 100). Escreva um <code>for</code> com um <code>range</code> de passo 2 no lugar do comentário, juntando cada número no <code>total</code>.</p>
+<pre class="script" data-file="main.py">total = 0
+# escreva o for aqui
+
+print(f"Soma dos pares de 1 a 100: {total}")
+</pre>
+<pre class="solucao" data-file="main.py">total = 0
+for numero in range(2, 101, 2):
+    total += numero
+print(f"Soma dos pares de 1 a 100: {total}")
+</pre>
+</div>
+
+<p>No lab, saiu <code>Soma dos pares de 1 a 100: 2550</code>. Para conferir de outro jeito, rode <code>print(sum(range(2, 101, 2)))</code>.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>range()</code> fabrica uma sequência de números inteiros para o <code>for</code> percorrer.</li>
+  <li><code>range(fim)</code> começa do 0; <code>range(início, fim)</code> começa do início; <code>range(início, fim, passo)</code> pula de passo em passo.</li>
+  <li><strong>O fim nunca entra.</strong> Para incluir o B, use <code>range(A, B + 1)</code>. <code>range(n)</code> dá exatamente n voltas.</li>
+  <li>Para trás, passo negativo e início maior: <code>range(5, 0, -1)</code>. Sem o passo negativo, o <code>range</code> fica vazio, sem aviso.</li>
+  <li><code>list(range(…))</code> mostra os números; use para tirar dúvida antes de pôr no <code>for</code>.</li>
+  <li>Só inteiros: passo zero dá <code>ValueError</code>; <code>float</code> ou texto dão <code>TypeError</code> (converta o <code>input()</code> com <code>int()</code>).</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
