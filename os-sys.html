@@ -47,7 +47,7 @@
 
 <div class="warning">
 <strong>No terminal e no editor, respostas diferentes</strong>
-<p>As respostas do <code>os</code> e do <code>sys</code> dependem de <strong>onde</strong> o programa roda. As janelas de terminal desta aula mostram o computador da Ana (usuária <code>ana</code>, pasta <code>/home/ana</code>, Ubuntu). O editor do guia roda o Python dentro do navegador, numa pasta e com variáveis próprias; lá, <code>os.getcwd()</code> ou <code>os.environ.get("HOME")</code> podem responder outra coisa. As missões desta aula não dependem disso.</p>
+<p>As respostas do <code>os</code> e do <code>sys</code> dependem de <strong>onde</strong> o programa roda. As janelas de terminal desta aula mostram o computador da Ana (usuária <code>ana</code>, pasta <code>/home/ana</code>, Ubuntu). O editor do guia imita a pasta da Ana (<code>/home/ana</code>), mas é o Python do navegador: lá, o <code>sys.platform</code> é <code>'emscripten'</code> (e não <code>'linux'</code>), a versão e o <code>sys.executable</code> são outros, e faltam variáveis de ambiente como a <code>EDITOR</code>. As missões desta aula não dependem disso.</p>
 </div>
 
 <hr>
