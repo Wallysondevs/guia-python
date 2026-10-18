@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Alterando Itens — trocando valores dentro de uma lista | Guia Python</title>
+<meta name="description" content="Como trocar um item de uma lista em Python: lista[i] = novo, somar num item com +=, achar e trocar com index(), trocar uma fatia inteira, alterar todos os itens com range(len()), por que o for sozinho não altera a lista, e os erros reais do Python 3.14 (IndexError na atribuição, == no lugar de =, texto que não aceita troca de letra).">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Alterando Itens</span></h1>
+
+<p class="intro">A Ana chegou no mercado e lembrou que, em casa, ninguém toma café com açúcar. Ela não joga a lista de compras fora: pega a caneta, risca "café" e escreve "café sem açúcar" <strong>no mesmo lugar</strong>. As listas do Python deixam você fazer exatamente isso: trocar o valor de um item, sem mexer nos outros e sem criar uma lista nova. Nesta aula, você aprende a trocar um item, um pedaço da lista e todos os itens de uma vez.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A trocar um item com <code>lista[índice] = novo_valor</code>.</li>
+  <li>A fazer contas com um item: <code>estoque[0] -= 1</code>.</li>
+  <li>A achar um item pelo valor e trocá-lo (<code>index()</code> + atribuição).</li>
+  <li>A trocar uma fatia inteira, até por uma de outro tamanho.</li>
+  <li>A alterar <strong>todos</strong> os itens com <code>for</code> e <code>range(len(…))</code>, e por que o <code>for</code> sozinho não altera nada.</li>
+  <li>Por que dá para trocar um item de uma lista, mas não uma letra de um texto.</li>
+  <li>Os erros reais: <code>IndexError</code> na atribuição, o <code>==</code> que não troca nada, e a fatia que recebe um texto.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: riscar e escrever no mesmo lugar</h2>
+<p>Na aula <a href="listas-acessar.html">Acessando Itens</a>, você usou <code>compras[2]</code> para <strong>ler</strong> o item do armário número 2. Para <strong>trocar</strong> o que tem dentro desse armário, você usa o mesmo endereço, só que do lado <strong>esquerdo</strong> do <code>=</code>, exatamente como numa variável comum:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que acontece</th></tr>
+<tr><td><code>x = compras[2]</code></td><td><strong>Lê</strong> o item 2 e guarda o valor em <code>x</code>. A lista não muda.</td></tr>
+<tr><td><code>compras[2] = x</code></td><td><strong>Troca</strong> o item 2 pelo valor de <code>x</code>. O valor que estava lá antes some.</td></tr>
+</table>
+</div>
+
+<p>Isso só é possível porque a lista é <strong>mutável</strong> (em inglês, <em>mutable</em>, "que pode mudar"): depois de criada, o conteúdo dela pode ser alterado. Nem todo tipo do Python é assim, como você vai ver na seção 5.</p>
+
+<hr>
+
+<h2>1. Trocando um item</h2>
+
+<pre class="file" data-file="trocar.py">compras = ["arroz", "feijão", "café", "leite"]
+print("Antes: ", compras)
+compras[2] = "café sem açúcar"
+compras[-1] = "leite desnatado"
+print("Depois:", compras)
+</pre>
+
+<dl class="anatomy">
+  <dt>compras[2]</dt><dd>O armário de índice 2 (o terceiro item, o café). Do lado esquerdo do <code>=</code>, ele é o <strong>lugar</strong> onde o novo valor vai ser guardado.</dd>
+  <dt>=</dt><dd>A atribuição de sempre: "guarde o valor da direita no lugar da esquerda".</dd>
+  <dt>"café sem açúcar"</dt><dd>O valor novo. Ele ocupa o lugar do antigo; o <code>"café"</code> deixa de existir na lista.</dd>
+  <dt>compras[-1]</dt><dd>Índices negativos também valem para trocar: aqui, o último item.</dd>
+</dl>
+
+<pre class="term">$ python3 trocar.py
+Antes:  ['arroz', 'feijão', 'café', 'leite']
+Depois: ['arroz', 'feijão', 'café sem açúcar', 'leite desnatado']
+</pre>
+
+<p>Repare no que <strong>não</strong> mudou: a lista continua com 4 itens, o arroz e o feijão continuam nos seus lugares, e a ordem é a mesma. Só os dois armários que você indicou receberam um conteúdo novo. (O espaço a mais em <code>"Antes: "</code> é só para as duas listas ficarem alinhadas na saída.)</p>
+
+<div class="trypy" data-goal="out:['arroz', 'feijão', 'café descafeinado', 'leite'];;src:compras\[[^\]]+\]\s*=[^=]">
+<p class="try-task"><strong>Missão:</strong> troque o <code>"café"</code> da lista por <code>"café descafeinado"</code>, com uma linha de atribuição <strong>antes</strong> do <code>print</code> (não reescreva a lista toda).</p>
+<pre class="script" data-file="main.py">compras = ["arroz", "feijão", "café", "leite"]
+
+print(compras)
+</pre>
+<pre class="solucao" data-file="main.py">compras = ["arroz", "feijão", "café", "leite"]
+compras[2] = "café descafeinado"
+print(compras)
+</pre>
+</div>
+
+<hr>
+
+<h2>2. Fazendo contas com um item</h2>
+<p>A Ana também controla o estoque da lojinha numa lista: quantas unidades ela tem de cada produto. Vendeu uma unidade? O item diminui 1. Chegou mercadoria? Aumenta.</p>
+
+<pre class="file" data-file="estoque.py">estoque = [12, 5, 30]
+print(estoque)
+estoque[1] = estoque[1] - 1
+estoque[0] -= 2
+estoque[2] += 10
+print(estoque)
+</pre>
+
+<pre class="term">$ python3 estoque.py
+[12, 5, 30]
+[10, 4, 40]
+</pre>
+
+<dl class="anatomy">
+  <dt>estoque[1] = estoque[1] - 1</dt><dd>Leia da direita para a esquerda: o Python <strong>lê</strong> o item 1 (5), faz a conta (5 − 1 = 4) e <strong>guarda</strong> o resultado de volta no item 1.</dd>
+  <dt>estoque[0] -= 2</dt><dd>A forma curta da mesma coisa (aula <a href="operadores-atribuicao.html">Operadores de Atribuição</a>): "tire 2 do item 0". De 12 foi para 10.</dd>
+  <dt>estoque[2] += 10</dt><dd>"Some 10 ao item 2": de 30 para 40.</dd>
+</dl>
+
+<hr>
+
+<h2>3. Achando o item pelo valor e trocando</h2>
+<p>Nem sempre você sabe o índice. A Ana quer trocar o "feijão" por "feijão preto", mas não lembra em que posição ele está. Juntando o que você aprendeu: primeiro <strong>pergunta</strong> se ele está lá (<code>in</code>), depois <strong>descobre</strong> o índice (<code>index()</code>), e só então <strong>troca</strong>:</p>
+
+<pre class="file" data-file="achar_trocar.py">compras = ["arroz", "feijão", "café", "leite"]
+velho = "feijão"
+novo = "feijão preto"
+if velho in compras:
+    posicao = compras.index(velho)
+    compras[posicao] = novo
+    print(f"Troquei {velho} por {novo} na posição {posicao}.")
+print(compras)
+</pre>
+
+<pre class="term">$ python3 achar_trocar.py
+Troquei feijão por feijão preto na posição 1.
+['arroz', 'feijão preto', 'café', 'leite']
+</pre>
+
+<p>Sem o <code>if velho in compras:</code>, um item que não está na lista faria o <code>index()</code> parar o programa com <code>ValueError</code> (você viu esse erro em <a href="listas-acessar.html#errado">Acessando Itens</a>). E lembre: o <code>index()</code> acha só a <strong>primeira</strong> ocorrência. Se o feijão aparecesse duas vezes, só o primeiro seria trocado.</p>
+
+<hr>
+
+<h2>4. Trocando uma fatia</h2>
+<p>Você pode trocar um <strong>pedaço</strong> da lista de uma vez: do lado esquerdo do <code>=</code> vai uma fatia (aula <a href="listas-acessar.html">Acessando Itens</a>), e do lado direito, uma lista com os itens novos.</p>
+
+<pre class="term">&gt;&gt;&gt; compras = ["arroz", "feijão", "café", "leite"]
+&gt;&gt;&gt; compras[1:3] = ["macarrão", "molho"]
+&gt;&gt;&gt; compras
+['arroz', 'macarrão', 'molho', 'leite']
+</pre>
+
+<p>Os itens dos índices 1 e 2 (feijão e café) saíram, e os dois novos entraram no lugar deles. E se a quantidade for diferente? A fatia aceita: a lista <strong>cresce</strong> ou <strong>encolhe</strong> para caber.</p>
+
+<pre class="term">&gt;&gt;&gt; compras[1:2] = ["batata", "cenoura", "chuchu"]
+&gt;&gt;&gt; compras
+['arroz', 'batata', 'cenoura', 'chuchu', 'molho', 'leite']
+&gt;&gt;&gt; len(compras)
+6
+&gt;&gt;&gt; compras[1:4] = ["legumes"]
+&gt;&gt;&gt; compras
+['arroz', 'legumes', 'molho', 'leite']
+</pre>
+
+<ul>
+  <li><code>compras[1:2] = [...três itens...]</code>: saiu <strong>um</strong> item (o macarrão, índice 1) e entraram <strong>três</strong>. A lista passou de 4 para 6 itens.</li>
+  <li><code>compras[1:4] = ["legumes"]</code>: saíram <strong>três</strong> (batata, cenoura e chuchu) e entrou <strong>um</strong>. Voltou para 4.</li>
+</ul>
+
+<div class="tip">
+<strong>Use com moderação</strong>
+<p>Trocar fatias de tamanhos diferentes é poderoso, mas fica difícil de ler: quem olha <code>compras[1:4] = ["legumes"]</code> precisa parar e contar. Para acrescentar ou tirar itens, existem jeitos mais claros, com nomes que dizem o que fazem: <a href="listas-adicionar.html">Adicionando Itens</a> e <a href="listas-remover.html">Removendo Itens</a>.</p>
+</div>
+
+<hr>
+
+<h2>5. Lista muda, texto não</h2>
+<p>Se a lista deixa trocar um item, será que um texto deixa trocar uma letra? A Ana digitou o nome em minúsculas e quer a primeira letra maiúscula:</p>
+
+<pre class="file" data-file="texto_imutavel.py">nome = "ana"
+nome[0] = "A"
+print(nome)
+</pre>
+
+<pre class="term">$ python3 texto_imutavel.py
+Traceback (most recent call last):
+  File "/home/ana/texto_imutavel.py", line 2, in &lt;module&gt;
+    nome[0] = "A"
+    ~~~~^^^
+TypeError: 'str' object does not support item assignment
+</pre>
+
+<p>"Erro de tipo: o objeto <code>str</code> não aceita atribuição de item". Os textos (<code>str</code>) são <strong>imutáveis</strong>: depois de criados, não mudam. Dá para <strong>ler</strong> <code>nome[0]</code>, mas não <strong>trocar</strong>. Para "mudar" um texto, você cria um texto novo e guarda na variável: <code>nome = "A" + nome[1:]</code>, ou <code>nome = nome.capitalize()</code> (aula <a href="strings-metodos.html">Métodos de Texto</a>).</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th>Lista (<code>list</code>)</th><th>Texto (<code>str</code>)</th></tr>
+<tr><td>Ler um item: <code>x[0]</code></td><td>Pode</td><td>Pode</td></tr>
+<tr><td>Fatiar: <code>x[1:3]</code></td><td>Pode</td><td>Pode</td></tr>
+<tr><td>Trocar um item: <code>x[0] = …</code></td><td><strong>Pode</strong> (mutável)</td><td><strong>Não pode</strong> (imutável): <code>TypeError</code></td></tr>
+</table>
+</div>
+
+<p>Essa diferença entre mutável e imutável explica muitas surpresas do Python; ela tem uma aula só para ela: <a href="mutabilidade.html">Mutável × Imutável</a>.</p>
+
+<hr>
+
+<h2>6. Alterando todos os itens</h2>
+<p>A professora vai dar meio ponto a mais para a turma toda. A primeira ideia é passar pelas notas com um <code>for</code> e somar 0.5 em cada uma:</p>
+
+<pre class="file" data-file="nota_errada.py">notas = [7.0, 8.5, 6.0, 9.5]
+for nota in notas:
+    nota = nota + 0.5
+print(notas)
+</pre>
+
+<pre class="term">$ python3 nota_errada.py
+[7.0, 8.5, 6.0, 9.5]
+</pre>
+
+<p><strong>Nada mudou</strong>, e nenhum erro apareceu. Por quê? A cada volta, o <code>for</code> põe na variável <code>nota</code> o <strong>valor</strong> do item da vez (7.0, depois 8.5…). A linha <code>nota = nota + 0.5</code> calcula um valor novo e o guarda na variável <code>nota</code>, e só nela; o armário da lista continua com o valor antigo, e a lista nem fica sabendo. É como a Ana anotar a nota nova num papelzinho e não passar a limpo no diário.</p>
+
+<p>Para mudar a lista, você precisa escrever no <strong>armário</strong> dela, <code>notas[i] = …</code>, e para isso precisa do <strong>índice</strong>. O <code>range(len(notas))</code> (aula <a href="range.html">range()</a>) dá exatamente os índices: 0, 1, 2, 3.</p>
+
+<pre class="file" data-file="nota_certa.py">notas = [7.0, 8.5, 6.0, 9.5]
+for i in range(len(notas)):
+    notas[i] = notas[i] + 0.5
+print(notas)
+</pre>
+
+<pre class="term">$ python3 nota_certa.py
+[7.5, 9.0, 6.5, 10.0]
+</pre>
+
+<dl class="anatomy">
+  <dt>len(notas)</dt><dd>4, o número de notas.</dd>
+  <dt>range(len(notas))</dt><dd>Os números 0, 1, 2, 3: os índices válidos da lista.</dd>
+  <dt>for i in …</dt><dd>A cada volta, <code>i</code> é um índice. O nome <code>i</code> (de "índice") é um costume muito comum para isso.</dd>
+  <dt>notas[i] = notas[i] + 0.5</dt><dd>Lê o item <code>i</code>, soma 0.5 e guarda <strong>de volta no item <code>i</code></strong>. Agora sim a lista muda.</dd>
+</dl>
+
+<p>Existe também um jeito de criar uma lista <strong>nova</strong> com todos os valores transformados, em uma linha só: a <a href="list-comprehension.html">List Comprehension</a>. E a aula <a href="listas-percorrer.html">Percorrendo uma Lista</a> mostra o <code>enumerate()</code>, que dá o índice e o item ao mesmo tempo.</p>
+
+<hr>
+
+<h2>Formas diferentes de alterar</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Você quer</th><th>Escreva</th><th>Observação</th></tr>
+<tr><td>Trocar o item de um índice que você conhece</td><td><code>lista[i] = novo</code></td><td>O jeito básico; o índice tem de existir</td></tr>
+<tr><td>Fazer uma conta com um item</td><td><code>lista[i] += 1</code></td><td>Igual a <code>lista[i] = lista[i] + 1</code>, mais curto</td></tr>
+<tr><td>Trocar um item pelo valor</td><td><code>if velho in lista:</code> + <code>lista[lista.index(velho)] = novo</code></td><td>Troca só a primeira ocorrência</td></tr>
+<tr><td>Trocar vários itens seguidos</td><td><code>lista[a:b] = [x, y]</code></td><td>Do lado direito, sempre uma lista; pode mudar o tamanho</td></tr>
+<tr><td>Alterar todos os itens</td><td><code>for i in range(len(lista)):</code> + <code>lista[i] = …</code></td><td>Muda a própria lista. <code>for item in lista: item = …</code> <strong>não</strong> muda</td></tr>
+<tr><td>Ter uma lista nova com tudo transformado</td><td><code>[x + 0.5 for x in lista]</code></td><td>A lista original fica como estava (aula <a href="list-comprehension.html">List Comprehension</a>)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>IndexError: trocar um armário que não existe</strong>
+<p>A Ana quer acrescentar o sabão no fim da lista e pensou: "a lista tem 4 itens, então o próximo é o índice 4":</p>
+<pre class="file" data-file="atribuir_fora.py">compras = ["arroz", "feijão", "café", "leite"]
+compras[4] = "sabão"
+print(compras)
+</pre>
+<pre class="term">$ python3 atribuir_fora.py
+Traceback (most recent call last):
+  File "/home/ana/atribuir_fora.py", line 2, in &lt;module&gt;
+    compras[4] = "sabão"
+    ~~~~~~~^^^
+IndexError: list assignment index out of range
+</pre>
+<p>Linha por linha:</p>
+<ul>
+  <li><code>File "/home/ana/atribuir_fora.py", line 2</code>: o problema está na linha 2.</li>
+  <li>As marcas <code>~~~~~~~^^^</code> apontam para <code>compras[4]</code>: o lugar onde a Ana tentou guardar o valor.</li>
+  <li><code>IndexError: list assignment index out of range</code>: "erro de índice: índice da <strong>atribuição</strong> fora do intervalo". Repare na palavra <em>assignment</em> ("atribuição"): ao <strong>ler</strong> um índice que não existe, a mensagem é <code>list index out of range</code>; ao <strong>escrever</strong>, é esta.</li>
+</ul>
+<p>A atribuição só troca o que <strong>já existe</strong>: os armários são 0, 1, 2 e 3, e não aparece um armário novo só porque você escreveu num número a mais. <strong>Como consertar:</strong> para pôr um item no fim, use <code>compras.append("sabão")</code>, que é o assunto da próxima aula, <a href="listas-adicionar.html">Adicionando Itens</a>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>==</code> no lugar de <code>=</code>: nada muda e nada reclama</strong>
+<pre class="file" data-file="igual_duplo.py">compras = ["arroz", "feijão", "café", "leite"]
+compras[1] == "lentilha"
+print(compras)
+</pre>
+<pre class="term">$ python3 igual_duplo.py
+['arroz', 'feijão', 'café', 'leite']
+</pre>
+<p>O feijão continua lá. Com dois sinais de igual, a linha 2 não é uma troca: é uma <strong>pergunta</strong> ("o item 1 é igual a lentilha?", aula <a href="operadores-comparacao.html">Comparações</a>). O Python responde <code>False</code> e joga a resposta fora, porque ninguém a guardou nem mostrou. No modo interativo dá para ver a resposta que se perdeu:</p>
+<pre class="term">&gt;&gt;&gt; compras[1] == "lentilha"
+False
+</pre>
+<p><strong>Como consertar:</strong> para trocar, <strong>um</strong> sinal de igual: <code>compras[1] = "lentilha"</code>. Regra para lembrar: <code>=</code> guarda, <code>==</code> pergunta.</p>
+</div>
+
+<div class="cenario">
+<strong>Uma fatia que recebe um texto</strong>
+<p>A Ana queria trocar o primeiro item por <code>"uva"</code>, mas usou uma fatia e esqueceu os colchetes do lado direito:</p>
+<pre class="term">&gt;&gt;&gt; compras = ["arroz", "legumes", "molho", "leite"]
+&gt;&gt;&gt; compras[0:1] = "uva"
+&gt;&gt;&gt; compras
+['u', 'v', 'a', 'legumes', 'molho', 'leite']
+</pre>
+<p>Nenhum erro, e a uva virou <strong>três itens</strong>: <code>'u'</code>, <code>'v'</code> e <code>'a'</code>. A fatia espera do lado direito uma sequência de itens, e um texto é uma sequência de <strong>letras</strong>; então cada letra virou um item (como no <code>list("uva")</code> da aula <a href="listas.html">Listas</a>). Com um número, que não é uma sequência, aí sim vem um erro:</p>
+<pre class="term">&gt;&gt;&gt; compras[0:1] = 5
+Traceback (most recent call last):
+  File "&lt;python-input-3&gt;", line 1, in &lt;module&gt;
+    compras[0:1] = 5
+    ~~~~~~~^^^^^
+TypeError: must assign iterable to extended slice
+</pre>
+<p>"É preciso atribuir um iterável (algo com vários itens) à fatia". <strong>Como consertar:</strong> para trocar um item só, use o índice, sem fatia: <code>compras[0] = "uva"</code>. Se for mesmo uma fatia, ponha a lista do lado direito: <code>compras[0:1] = ["uva"]</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O <code>for</code> que "altera" e não altera</strong>
+<p>Você viu na seção 6: <code>for nota in notas: nota = nota + 0.5</code> roda sem erro e deixa a lista igualzinha. Se a lista "não mudou" depois de um <code>for</code>, procure uma linha que atribui à <strong>variável do laço</strong> (<code>nota = …</code>) em vez de ao <strong>item da lista</strong> (<code>notas[i] = …</code>).</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>lista[i] = valor</code></td><td>Troca o item de índice <code>i</code> (que tem de existir) por <code>valor</code></td></tr>
+<tr><td><code>lista[-1] = valor</code></td><td>Troca o último item</td></tr>
+<tr><td><code>lista[i] += n</code> / <code>-=</code> / <code>*=</code></td><td>Faz a conta com o item e guarda de volta</td></tr>
+<tr><td><code>lista[lista.index(velho)] = novo</code></td><td>Troca a primeira ocorrência de <code>velho</code> (erro se não houver)</td></tr>
+<tr><td><code>lista[a:b] = [x, y, …]</code></td><td>Troca os itens de <code>a</code> até antes de <code>b</code> pelos novos; a lista pode crescer ou encolher</td></tr>
+<tr><td><code>for i in range(len(lista)): lista[i] = …</code></td><td>Altera todos os itens da própria lista</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>IndexError: list assignment index out of range</code></td><td>Atribuiu a um índice que não existe (para acrescentar no fim, use <code>append</code>)</td></tr>
+<tr><td>A lista não mudou, sem erro</td><td><code>==</code> no lugar de <code>=</code>, ou atribuição à variável do <code>for</code></td></tr>
+<tr><td>Apareceram letras soltas como itens</td><td>Atribuiu um texto a uma fatia: <code>lista[0:1] = "uva"</code></td></tr>
+<tr><td><code>TypeError: must assign iterable to extended slice</code></td><td>Atribuiu um número (ou outro valor sem itens) a uma fatia</td></tr>
+<tr><td><code>TypeError: 'str' object does not support item assignment</code></td><td>Tentou trocar uma letra de um texto; textos são imutáveis</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Trocando o primeiro</h3>
+<p>Complete para trocar o primeiro aluno da lista por <code>"Ana Paula"</code>:</p>
+<div class="ex-code">alunos[<input data-answer="0" aria-label="índice" size="3">] <input data-answer="=" aria-label="sinal" size="3"> "Ana Paula"</div>
+</div>
+
+<div class="exercise">
+<h3>2. Vendi duas</h3>
+<p>Complete o operador para tirar 2 unidades do item 0 do estoque:</p>
+<div class="ex-code">estoque[0] <input data-answer="-=" aria-label="operador" size="3"> 2</div>
+</div>
+
+<div class="exercise">
+<h3>3. Quantos itens?</h3>
+<p>Com <code>lista = [1, 2, 3, 4, 5]</code>, depois de <code>lista[1:4] = [0]</code>, quanto vale <code>len(lista)</code>?</p>
+<div class="ex-code"><input data-answer="3" aria-label="quantidade" size="3"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. A lista <code>compras</code> tem 3 itens. O que acontece com <code>compras[3] = "sal"</code>?</p>
+<label><input type="radio" name="q4"> O sal entra no fim da lista</label>
+<label><input type="radio" name="q4"> <code>IndexError: list assignment index out of range</code></label>
+<label><input type="radio" name="q4"> O sal entra no lugar do último item</label>
+<label><input type="radio" name="q4"> Nada, e nenhum erro aparece</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. Depois de <code>precos = [10, 20]</code> e <code>for p in precos: p = p * 2</code>, quanto vale <code>precos</code>?</p>
+<label><input type="radio" name="q5"> <code>[20, 40]</code></label>
+<label><input type="radio" name="q5"> <code>[10, 20, 20, 40]</code></label>
+<label><input type="radio" name="q5"> <code>[10, 20]</code></label>
+<label><input type="radio" name="q5"> Dá erro</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Qual destes dá erro?</p>
+<label><input type="radio" name="q6"> <code>nome = "bia"</code> e depois <code>nome[0] = "B"</code></label>
+<label><input type="radio" name="q6"> <code>letras = ["b", "i", "a"]</code> e depois <code>letras[0] = "B"</code></label>
+<label><input type="radio" name="q6"> <code>nome = "bia"</code> e depois <code>nome = "Bia"</code></label>
+<label><input type="radio" name="q6"> <code>letras = ["b", "i", "a"]</code> e depois <code>letras[-1] = "A"</code></label>
+</div>
+
+<h3>Missão final: meio ponto para a turma</h3>
+
+<div class="trypy" data-goal="out:[7.5, 9.0, 6.5, 10.0];;semerro">
+<p class="try-task"><strong>Missão:</strong> a professora quer somar 0.5 em <strong>todas</strong> as notas, mas o programa mostra a lista sem mudança nenhuma. Conserte o laço para ele alterar a própria lista (dica: <code>range(len(notas))</code> e <code>notas[i]</code>).</p>
+<pre class="script" data-file="main.py">notas = [7.0, 8.5, 6.0, 9.5]
+for nota in notas:
+    nota = nota + 0.5
+print(notas)
+</pre>
+<pre class="solucao" data-file="main.py">notas = [7.0, 8.5, 6.0, 9.5]
+for i in range(len(notas)):
+    notas[i] = notas[i] + 0.5
+print(notas)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Listas são <strong>mutáveis</strong>: <code>lista[i] = novo</code> troca um item no lugar, sem mexer nos outros.</li>
+  <li>Do lado direito do <code>=</code>, <code>lista[i]</code> <strong>lê</strong>; do lado esquerdo, <strong>escreve</strong>.</li>
+  <li>Contas com um item: <code>estoque[0] -= 1</code>.</li>
+  <li>Para trocar pelo valor: <code>in</code> para conferir, <code>index()</code> para achar, atribuição para trocar.</li>
+  <li><code>lista[a:b] = [...]</code> troca uma fatia, até por outra de tamanho diferente. Do lado direito, sempre uma lista.</li>
+  <li>Atribuir a um índice que não existe dá <code>IndexError</code>: a atribuição não aumenta a lista.</li>
+  <li><code>for item in lista: item = …</code> não altera a lista; use <code>for i in range(len(lista)): lista[i] = …</code>.</li>
+  <li>Textos são imutáveis: <code>nome[0] = "A"</code> dá <code>TypeError</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
