@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Desempacotamento — tirando os valores de uma tupla de uma vez | Guia Python</title>
+<meta name="description" content="Desempacotamento em Python para quem está começando: dia, mes, ano = data; a troca a, b = b, a sem variável extra; o asterisco *resto; o _ para ignorar valores; desempacotar no for; e os erros reais too many values to unpack e not enough values to unpack, com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Desempacotamento</span></h1>
+
+<p class="intro">Na aula <a href="tuplas.html">Tuplas</a>, a data de nascimento da Ana virou <code>(12, 3, 1990)</code>, e para usar cada parte era preciso escrever <code>aniversario[0]</code>, <code>aniversario[1]</code>, <code>aniversario[2]</code>. Funciona, mas ninguém lembra o que é o <code>[1]</code>. O <strong>desempacotamento</strong> (em inglês, <em>unpacking</em>) resolve isso: numa linha só, cada valor da tupla vai para uma variável com nome: <code>dia, mes, ano = aniversario</code>.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A desempacotar uma tupla (ou lista, ou texto) em várias variáveis de uma vez.</li>
+  <li>A trocar o valor de duas variáveis com <code>a, b = b, a</code>, e por que o jeito "óbvio" não funciona.</li>
+  <li>A juntar "o resto" numa lista com o asterisco: <code>primeira, *resto = notas</code>.</li>
+  <li>A ignorar valores com <code>_</code> e a desempacotar dentro do <code>for</code>.</li>
+  <li>Os erros reais: <code>too many values to unpack</code>, <code>not enough values to unpack</code> e companhia.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: desfazer a mala</h2>
+<p>A Ana chega de viagem com uma mala que tem três coisas: uma camiseta, uma calça e um tênis. Desfazer a mala é tirar cada coisa e pôr no seu lugar: a camiseta na gaveta de cima, a calça na do meio, o tênis na sapateira. Uma coisa para cada lugar, na ordem.</p>
+
+<p>Desempacotar é isso. A tupla é a mala; as variáveis à esquerda do <code>=</code> são os lugares. O Python tira o primeiro valor e põe na primeira variável, o segundo na segunda, e assim por diante. A regra de ouro: <strong>o número de lugares tem de ser igual ao número de coisas</strong>. Sobrou coisa ou faltou coisa, o Python reclama.</p>
+
+<hr>
+
+<h2>1. O primeiro desempacotamento</h2>
+
+<pre class="file" data-file="d_basico.py">aniversario = (12, 3, 1990)
+dia, mes, ano = aniversario
+print(dia)
+print(mes)
+print(ano)
+print(f"Nasci em {dia}/{mes}/{ano}")
+</pre>
+
+<dl class="anatomy">
+  <dt>aniversario = (12, 3, 1990)</dt><dd>A "mala": uma tupla com três valores.</dd>
+  <dt>dia, mes, ano</dt><dd>Três variáveis separadas por vírgula, do lado esquerdo do <code>=</code>. São os três "lugares".</dd>
+  <dt>=</dt><dd>A atribuição de sempre. Só que, com várias variáveis à esquerda, o Python <strong>desempacota</strong> o valor da direita.</dd>
+  <dt>resultado</dt><dd><code>dia</code> recebe <code>12</code>, <code>mes</code> recebe <code>3</code>, <code>ano</code> recebe <code>1990</code>. Na ordem: primeiro com primeiro, segundo com segundo.</dd>
+</dl>
+
+<pre class="term">$ python3 d_basico.py
+12
+3
+1990
+Nasci em 12/3/1990
+</pre>
+
+<p>Compare com a aula anterior: <code>f"Nasci em {dia}/{mes}/{ano}"</code> se lê muito melhor que <code>f"Nasci em {aniversario[0]}/{aniversario[1]}/{aniversario[2]}"</code>. Esse é o ganho do desempacotamento: <strong>nomes no lugar de números</strong>.</p>
+
+<hr>
+
+<h2>2. Não é só tupla</h2>
+<p>Dá para desempacotar qualquer coisa que tenha itens em sequência: listas, textos (letra por letra) e até uma tupla escrita ali mesmo, sem parênteses.</p>
+
+<pre class="file" data-file="d_fontes.py">nome, idade = ["Ana", 34]
+print(nome, idade)
+a, b, c = "sol"
+print(a, b, c)
+x, y = 10, 20
+print(x, y)
+</pre>
+
+<pre class="term">$ python3 d_fontes.py
+Ana 34
+s o l
+10 20
+</pre>
+
+<p>A última forma, <code>x, y = 10, 20</code>, é a que você já viu na aula <a href="atribuicao-multipla.html">Atribuição Múltipla</a>. Agora dá para entender o que acontece por dentro: <code>10, 20</code> é uma tupla (a vírgula faz a tupla, lembra?), e o Python a desempacota em <code>x</code> e <code>y</code>.</p>
+
+<hr>
+
+<h2>3. A troca: <code>a, b = b, a</code></h2>
+<p>A Ana tem duas variáveis, <code>a</code> com "café" e <code>b</code> com "chá", e quer trocar: <code>a</code> fica com o chá e <code>b</code> com o café. O jeito que parece óbvio dá errado:</p>
+
+<pre class="file" data-file="d_troca_errada.py">a = "café"
+b = "chá"
+a = b
+b = a
+print(a, b)
+</pre>
+
+<pre class="term">$ python3 d_troca_errada.py
+chá chá
+</pre>
+
+<p>Os dois ficaram com chá. Na linha 3, <code>a = b</code> pôs "chá" em <code>a</code>, e o "café" <strong>se perdeu</strong>: nenhuma variável guarda mais esse valor. Na linha 4, <code>b = a</code> copiou o chá de volta. É como trocar o conteúdo de dois copos sem um terceiro copo: não dá.</p>
+
+<p>O jeito clássico, em muitas linguagens, é usar um terceiro copo, uma variável auxiliar:</p>
+
+<pre class="file" data-file="d_troca_aux.py">a = "café"
+b = "chá"
+guarda = a
+a = b
+b = guarda
+print(a, b)
+</pre>
+
+<pre class="term">$ python3 d_troca_aux.py
+chá café
+</pre>
+
+<p>Em Python existe um jeito mais curto, com desempacotamento:</p>
+
+<pre class="file" data-file="d_troca.py">a = "café"
+b = "chá"
+print("Antes:", a, b)
+a, b = b, a
+print("Depois:", a, b)
+</pre>
+
+<pre class="term">$ python3 d_troca.py
+Antes: café chá
+Depois: chá café
+</pre>
+
+<ol class="passo">
+  <li>O Python calcula primeiro o lado <strong>direito</strong> inteiro: <code>b, a</code> vira a tupla <code>("chá", "café")</code>. Os dois valores ficam guardados nessa tupla.</li>
+  <li>Só depois ele desempacota a tupla no lado esquerdo: <code>a</code> recebe "chá", <code>b</code> recebe "café".</li>
+  <li>Nada se perde, porque a tupla fez o papel do terceiro copo, sem você precisar criá-lo.</li>
+</ol>
+
+<div class="trypy" data-goal="out:a = chá;;out:b = café;;src:a\s*,\s*b\s*=\s*b\s*,\s*a">
+<p class="try-task"><strong>Missão:</strong> troque os valores de <code>a</code> e <code>b</code> com uma linha só, usando desempacotamento, para o programa mostrar <code>a = chá</code> e <code>b = café</code>.</p>
+<pre class="script" data-file="main.py">a = "café"
+b = "chá"
+# escreva a troca aqui
+print("a =", a)
+print("b =", b)
+</pre>
+<pre class="solucao" data-file="main.py">a = "café"
+b = "chá"
+a, b = b, a
+print("a =", a)
+print("b =", b)
+</pre>
+</div>
+
+<hr>
+
+<h2>4. O asterisco: "e o resto"</h2>
+<p>E quando você quer só o primeiro valor, e o resto junto? A Ana tem as notas do bimestre e quer separar a primeira das outras. Com um <code>*</code> antes do nome, a variável vira uma <strong>lista</strong> que recolhe tudo o que sobrou:</p>
+
+<pre class="file" data-file="d_estrela.py">notas = (8, 10, 6, 10, 9)
+primeira, *resto = notas
+print(primeira)
+print(resto)
+*inicio, ultima = notas
+print(inicio)
+print(ultima)
+primeira, *meio, ultima = notas
+print(primeira, meio, ultima)
+</pre>
+
+<pre class="term">$ python3 d_estrela.py
+8
+[10, 6, 10, 9]
+[8, 10, 6, 10]
+9
+8 [10, 6, 10] 9
+</pre>
+
+<dl class="anatomy">
+  <dt>primeira, *resto = notas</dt><dd><code>primeira</code> pega o primeiro valor (8). <code>*resto</code> pega <strong>todo o resto</strong>, numa lista.</dd>
+  <dt>*inicio, ultima = notas</dt><dd>O asterisco pode vir antes: <code>ultima</code> pega o último valor (9) e <code>inicio</code> recolhe o que vem antes dele.</dd>
+  <dt>primeira, *meio, ultima = notas</dt><dd>Ou no meio: primeiro e último com nome, e o miolo numa lista.</dd>
+  <dt>[ … ]</dt><dd>Repare nos colchetes: a variável com asterisco é <strong>sempre uma lista</strong>, mesmo que a origem seja uma tupla.</dd>
+</dl>
+
+<p>Se não sobrar nada para o asterisco, ele fica com uma lista vazia. Não é erro:</p>
+
+<pre class="file" data-file="d_estrela_vazia.py">primeiro, *resto = ["só eu"]
+print(primeiro)
+print(resto)
+</pre>
+
+<pre class="term">$ python3 d_estrela_vazia.py
+só eu
+[]
+</pre>
+
+<p>Com o asterisco, a regra de ouro fica mais flexível: as variáveis sem asterisco precisam de um valor cada, e o asterisco aceita qualquer quantidade, até zero. Mas só pode haver <strong>um</strong> asterisco por desempacotamento (veja <a href="#errado">Quando dá errado</a>).</p>
+
+<hr>
+
+<h2>5. Ignorando valores com <code>_</code></h2>
+<p>Às vezes você não precisa de um dos valores. O costume em Python é dar a ele o nome <code>_</code> (sublinhado), que quer dizer "não me interessa":</p>
+
+<pre class="file" data-file="d_ignorar.py">nome, _, cidade = ("Ana", 34, "Teresina")
+print(nome, "mora em", cidade)
+primeiro, *_ = ("seg", "ter", "qua")
+print(primeiro)
+</pre>
+
+<pre class="term">$ python3 d_ignorar.py
+Ana mora em Teresina
+seg
+</pre>
+
+<p>O <code>_</code> é uma variável comum; o Python guarda o 34 nela normalmente. O nome é só um recado para quem lê: "este valor eu descartei de propósito". E <code>*_</code> descarta todo o resto.</p>
+
+<hr>
+
+<h2>6. Desempacotando no <code>for</code></h2>
+<p>Aqui o desempacotamento brilha. Uma lista de tuplas é muito comum: cada tupla é um "registro" (um aluno e sua nota, um produto e seu preço). No <code>for</code>, você desempacota cada tupla direto nas variáveis do laço:</p>
+
+<pre class="file" data-file="d_for.py">turma = [("Ana", 9), ("Bia", 7), ("Caio", 8)]
+for nome, nota in turma:
+    print(f"{nome} tirou {nota}")
+</pre>
+
+<pre class="term">$ python3 d_for.py
+Ana tirou 9
+Bia tirou 7
+Caio tirou 8
+</pre>
+
+<p>A cada volta, o <code>for</code> pega uma tupla, por exemplo <code>("Ana", 9)</code>, e faz <code>nome, nota = ("Ana", 9)</code>. Sem desempacotar, você escreveria <code>for aluno in turma:</code> e depois <code>aluno[0]</code> e <code>aluno[1]</code>. Esse mesmo truque aparece de novo em <a href="dicionarios-percorrer.html">Percorrendo um Dicionário</a> e em <a href="enumerate-zip.html">enumerate() e zip()</a>.</p>
+
+<h3>Funções que devolvem dois valores</h3>
+<p>Algumas funções do Python devolvem uma tupla, justamente para você desempacotar. A <code>divmod(a, b)</code> devolve o resultado da divisão inteira e o resto, juntos. Com 17 ovos e caixas de 5:</p>
+
+<pre class="file" data-file="d_divmod.py">caixas, sobram = divmod(17, 5)
+print("Caixas cheias:", caixas)
+print("Ovos que sobram:", sobram)
+</pre>
+
+<pre class="term">$ python3 d_divmod.py
+Caixas cheias: 3
+Ovos que sobram: 2
+</pre>
+
+<p>Quando você aprender a criar suas próprias funções, vai ver que <code>return a, b</code> faz a mesma coisa: devolve uma tupla (aula <a href="return.html">return</a>).</p>
+
+<hr>
+
+<h2>7. O asterisco do outro lado: espalhar no <code>print</code></h2>
+<p>O <code>*</code> também funciona ao contrário: na hora de <strong>chamar</strong> uma função, <code>*dias</code> espalha os itens como se você tivesse escrito cada um separado por vírgula.</p>
+
+<pre class="file" data-file="d_print.py">dias = ("seg", "ter", "qua")
+print(dias)
+print(*dias)
+print(*dias, sep=" - ")
+</pre>
+
+<pre class="term">$ python3 d_print.py
+('seg', 'ter', 'qua')
+seg ter qua
+seg - ter - qua
+</pre>
+
+<p><code>print(*dias)</code> é o mesmo que <code>print("seg", "ter", "qua")</code>: três valores separados, que o <code>print</code> mostra com espaço entre eles (ou com o <code>sep</code> que você escolher, como na aula <a href="print-sep-end.html">As Opções sep e end</a>).</p>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Objetivo</th><th>Sem desempacotar</th><th>Desempacotando</th></tr>
+<tr><td>Pegar as partes de uma data</td><td><code>dia = data[0]</code><br><code>mes = data[1]</code><br><code>ano = data[2]</code></td><td><code>dia, mes, ano = data</code></td></tr>
+<tr><td>Trocar duas variáveis</td><td><code>guarda = a</code><br><code>a = b</code><br><code>b = guarda</code></td><td><code>a, b = b, a</code></td></tr>
+<tr><td>Primeiro item e o resto</td><td><code>primeira = notas[0]</code><br><code>resto = list(notas[1:])</code></td><td><code>primeira, *resto = notas</code></td></tr>
+<tr><td>Percorrer uma lista de pares</td><td><code>for aluno in turma:</code><br><code>    print(aluno[0], aluno[1])</code></td><td><code>for nome, nota in turma:</code><br><code>    print(nome, nota)</code></td></tr>
+</table>
+</div>
+
+<p><strong>Qual usar?</strong> Desempacotar quando você sabe quantos valores vêm e quer todos com nome: o código fica mais curto e mais claro. Use índice (<code>data[0]</code>) quando precisa de um item só, numa tupla grande.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Sobraram valores: <code>too many values to unpack</code></strong>
+<pre class="file" data-file="d_muitos.py">dia, mes = (12, 3, 1990)
+</pre>
+<pre class="term">$ python3 d_muitos.py
+Traceback (most recent call last):
+  File "/home/ana/d_muitos.py", line 1, in &lt;module&gt;
+    dia, mes = (12, 3, 1990)
+    ^^^^^^^^
+ValueError: too many values to unpack (expected 2, got 3)
+</pre>
+<dl class="anatomy">
+  <dt>File "/home/ana/d_muitos.py", line 1</dt><dd>O erro está na linha 1.</dd>
+  <dt>^^^^^^^^</dt><dd>Os acentos circunflexos marcam <code>dia, mes</code>: o lado esquerdo, onde estão os "lugares".</dd>
+  <dt>ValueError</dt><dd>"Erro de valor": o tipo está certo (é uma tupla), mas ela não serve do jeito que veio.</dd>
+  <dt>too many values to unpack</dt><dd>"Valores demais para desempacotar". Vieram mais coisas do que lugares.</dd>
+  <dt>(expected 2, got 3)</dt><dd>"Esperava 2, recebeu 3": duas variáveis, três valores. O 1990 ficou sem lugar.</dd>
+</dl>
+<p><strong>Como consertar:</strong> uma variável para cada valor (<code>dia, mes, ano = …</code>), ou recolha o que sobra: <code>dia, mes, *_ = …</code>.</p>
+<div class="note">
+<strong>Em versões mais antigas do Python</strong> <span class="versao">3.14</span>
+<p>O "got 3" (quantos valores vieram) é novidade do Python 3.14. No Python 3.13, que vem no Debian 13, a mesma linha mostra só <code>ValueError: too many values to unpack (expected 2)</code>. O erro é o mesmo; a mensagem é que ficou mais completa.</p>
+</div>
+</div>
+
+<div class="cenario">
+<strong>Faltaram valores: <code>not enough values to unpack</code></strong>
+<pre class="file" data-file="d_poucos.py">dia, mes, ano = (12, 3)
+</pre>
+<pre class="term">$ python3 d_poucos.py
+Traceback (most recent call last):
+  File "/home/ana/d_poucos.py", line 1, in &lt;module&gt;
+    dia, mes, ano = (12, 3)
+    ^^^^^^^^^^^^^
+ValueError: not enough values to unpack (expected 3, got 2)
+</pre>
+<p>"Valores insuficientes para desempacotar (esperava 3, recebeu 2)". Três lugares, duas coisas: o <code>ano</code> ficaria vazio. <strong>Como consertar:</strong> confira de onde vem a tupla; se o número de valores pode variar, use o asterisco: <code>dia, *resto = …</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Dois asteriscos</strong>
+<pre class="file" data-file="d_duas_estrelas.py">notas = (8, 10, 6, 10, 9)
+*a, *b = notas
+</pre>
+<pre class="term">$ python3 d_duas_estrelas.py
+  File "/home/ana/d_duas_estrelas.py", line 2
+    *a, *b = notas
+    ^^^^^^
+SyntaxError: multiple starred expressions in assignment
+</pre>
+<p>"Várias expressões com asterisco na atribuição". Com dois asteriscos, o Python não teria como decidir quantos valores vão para cada um. Repare que não aparece <code>Traceback</code>: um <code>SyntaxError</code> (erro de escrita) é encontrado <strong>antes</strong> de o programa começar a rodar. <strong>Como consertar:</strong> só um asterisco por desempacotamento.</p>
+</div>
+
+<div class="cenario">
+<strong>Um asterisco sozinho</strong>
+<pre class="file" data-file="d_estrela_so.py">*todos = [1, 2, 3]
+</pre>
+<pre class="term">$ python3 d_estrela_so.py
+  File "/home/ana/d_estrela_so.py", line 1
+    *todos = [1, 2, 3]
+    ^^^^^^
+SyntaxError: starred assignment target must be in a list or tuple
+</pre>
+<p>"O alvo com asterisco precisa estar numa lista ou tupla". O asterisco quer dizer "o resto", e só existe resto se houver mais alguém. <strong>Como consertar:</strong> se você quer todos os itens numa lista, não precisa de asterisco: <code>todos = list([1, 2, 3])</code>. (Funcionaria <code>*todos, = [1, 2, 3]</code>, com uma vírgula, mas ninguém escreve assim.)</p>
+</div>
+
+<div class="cenario">
+<strong>Desempacotar um número</strong>
+<pre class="file" data-file="d_int.py">total = 30
+a, b = total
+</pre>
+<pre class="term">$ python3 d_int.py
+Traceback (most recent call last):
+  File "/home/ana/d_int.py", line 2, in &lt;module&gt;
+    a, b = total
+    ^^^^
+TypeError: cannot unpack non-iterable int object
+</pre>
+<p>"Não é possível desempacotar um objeto <code>int</code>, que não é iterável". Iterável é tudo o que tem itens para percorrer (tupla, lista, texto). Um número é um valor só; não há o que tirar da "mala". <strong>Como consertar:</strong> confira se a variável à direita é mesmo a tupla que você imagina (<code>print(type(total))</code>).</p>
+</div>
+
+<div class="trypy" data-goal="out:Primeira: Ana;;out:Esperando: ['Bia', 'Caio', 'Davi'];;semerro">
+<p class="try-task"><strong>Missão:</strong> a fila da padaria tem quatro pessoas, e o programa dá <code>ValueError: too many values to unpack</code>. Conserte a linha 2 para que <code>primeira</code> fique com a Ana e <code>esperando</code> com a lista dos outros três.</p>
+<pre class="script" data-file="main.py">fila = ["Ana", "Bia", "Caio", "Davi"]
+primeira, esperando = fila
+print("Primeira:", primeira)
+print("Esperando:", esperando)
+</pre>
+<pre class="solucao" data-file="main.py">fila = ["Ana", "Bia", "Caio", "Davi"]
+primeira, *esperando = fila
+print("Primeira:", primeira)
+print("Esperando:", esperando)
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>a, b = (1, 2)</code></td><td>Desempacota: <code>a</code> = 1, <code>b</code> = 2</td></tr>
+<tr><td><code>a, b = 1, 2</code></td><td>O mesmo, com a tupla sem parênteses</td></tr>
+<tr><td><code>a, b = b, a</code></td><td>Troca os valores de <code>a</code> e <code>b</code></td></tr>
+<tr><td><code>primeiro, *resto = seq</code></td><td>Primeiro item e o resto numa lista</td></tr>
+<tr><td><code>*inicio, ultimo = seq</code></td><td>Último item e o que vem antes numa lista</td></tr>
+<tr><td><code>nome, _, cidade = registro</code></td><td><code>_</code> marca o valor que você vai ignorar</td></tr>
+<tr><td><code>for nome, nota in turma:</code></td><td>Desempacota cada tupla da lista, a cada volta</td></tr>
+<tr><td><code>print(*seq)</code></td><td>Espalha os itens como valores separados na chamada</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>ValueError: too many values to unpack (expected 2, got 3)</code></td><td>Mais valores do que variáveis</td></tr>
+<tr><td><code>ValueError: not enough values to unpack (expected 3, got 2)</code></td><td>Menos valores do que variáveis</td></tr>
+<tr><td><code>SyntaxError: multiple starred expressions in assignment</code></td><td>Mais de um <code>*</code> no lado esquerdo</td></tr>
+<tr><td><code>SyntaxError: starred assignment target must be in a list or tuple</code></td><td>Um <code>*nome</code> sozinho à esquerda do <code>=</code></td></tr>
+<tr><td><code>TypeError: cannot unpack non-iterable int object</code></td><td>Tentou desempacotar um valor só (um número)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A coordenada</h3>
+<p>Complete para tirar os dois valores de <code>padaria = (-5.0892, -42.8019)</code>:</p>
+<div class="ex-code">latitude, <input data-answer="longitude" aria-label="segunda variável"> = padaria</div>
+</div>
+
+<div class="exercise">
+<h3>2. A troca</h3>
+<p>Complete a troca de <code>x</code> e <code>y</code>:</p>
+<div class="ex-code">x, y = <input data-answer="y, x|y,x" aria-label="lado direito"></div>
+</div>
+
+<div class="exercise">
+<h3>3. O resto</h3>
+<p>Complete o símbolo para que <code>outros</code> recolha todos os itens depois do primeiro:</p>
+<div class="ex-code">primeiro, <input data-answer="*" aria-label="símbolo">outros = ["pão", "leite", "café"]</div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Depois de <code>a, *b = (1, 2, 3)</code>, o que vale <code>b</code>?</p>
+<label><input type="radio" name="q4"> <code>2</code></label>
+<label><input type="radio" name="q4"> <code>(2, 3)</code></label>
+<label><input type="radio" name="q4"> <code>[2, 3]</code></label>
+<label><input type="radio" name="q4"> Dá erro</label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. <code>nome, idade = ("Ana", 34, "Teresina")</code> dá qual erro?</p>
+<label><input type="radio" name="q5"> <code>not enough values to unpack</code></label>
+<label><input type="radio" name="q5"> <code>too many values to unpack</code></label>
+<label><input type="radio" name="q5"> <code>TypeError</code></label>
+<label><input type="radio" name="q5"> Nenhum: a cidade é ignorada</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Por que <code>a = b</code> seguido de <code>b = a</code> não troca os valores?</p>
+<label><input type="radio" name="q6"> Porque o valor antigo de <code>a</code> se perde na primeira linha</label>
+<label><input type="radio" name="q6"> Porque o Python não deixa usar <code>a</code> duas vezes</label>
+<label><input type="radio" name="q6"> Porque precisa de parênteses</label>
+<label><input type="radio" name="q6"> Troca, sim</label>
+</div>
+
+<h3>Missão final: a conta da padaria</h3>
+
+<div class="trypy" data-goal="out:pão: R$ 5.00;;out:leite: R$ 9.50;;out:café: R$ 18.90">
+<p class="try-task"><strong>Missão:</strong> cada compra é uma tupla com o nome, o preço e a quantidade. Mude o <code>for</code> para desempacotar cada tupla em <code>nome, preco, quantidade</code> e mostre, para cada uma, uma linha como <code>pão: R$ 5.00</code> (o preço vezes a quantidade, com duas casas: <code>{preco * quantidade:.2f}</code>).</p>
+<pre class="script" data-file="main.py">compras = [("pão", 0.50, 10), ("leite", 4.75, 2), ("café", 18.90, 1)]
+for item in compras:
+    print(item)
+</pre>
+<pre class="solucao" data-file="main.py">compras = [("pão", 0.50, 10), ("leite", 4.75, 2), ("café", 18.90, 1)]
+for nome, preco, quantidade in compras:
+    print(f"{nome}: R$ {preco * quantidade:.2f}")
+</pre>
+</div>
+
+<p>No lab, a solução mostra <code>pão: R$ 5.00</code>, <code>leite: R$ 9.50</code> e <code>café: R$ 18.90</code>.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Desempacotar é tirar os valores de uma sequência para várias variáveis de uma vez: <code>dia, mes, ano = data</code>.</li>
+  <li>Funciona com tupla, lista, texto, e com a tupla sem parênteses <code>1, 2</code>.</li>
+  <li><code>a, b = b, a</code> troca dois valores: o lado direito é calculado inteiro antes.</li>
+  <li>O <code>*nome</code> recolhe "o resto" numa <strong>lista</strong> (pode ficar vazia). Só um asterisco por vez.</li>
+  <li><code>_</code> é o nome costumeiro para um valor que você vai ignorar.</li>
+  <li><code>for nome, nota in turma:</code> desempacota cada tupla da lista.</li>
+  <li>Variáveis e valores precisam bater: senão, <code>too many values to unpack</code> ou <code>not enough values to unpack</code>, com <code>(expected X, got Y)</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
