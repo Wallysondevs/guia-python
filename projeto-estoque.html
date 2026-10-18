@@ -1,0 +1,1726 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Projeto Estoque com SQLite — sqlite3, funções e menu passo a passo | Guia Python</title>
+<meta name="description" content="Projeto passo a passo: o controle de estoque da padaria em Python com sqlite3. Criar o banco e a tabela no próprio programa, cadastrar com INSERT e o marcador ?, recusar nomes repetidos com IntegrityError, dar entrada e saída com UPDATE sem deixar o estoque negativo, relatório com sum() e um menu com while e match. Quatro versões com sessões reais no Python 3.14 e missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Projeto <span class="hl">Estoque com SQLite</span></h1>
+
+<p class="intro">A padaria da Ana controla o estoque num caderno: chegou café, risca e escreve o número novo; vendeu bolo, risca de novo. Neste projeto, o caderno vira um programa. Os produtos ficam guardados num <strong>banco de dados SQLite</strong>, um arquivo <code>estoque.db</code> que continua lá depois que o programa termina, e um menu no terminal permite listar, cadastrar, dar entrada, dar saída e ver um relatório. O programa recusa um produto repetido, não deixa o estoque ficar negativo e não quebra quando alguém digita "quinze" no lugar de 15.</p>
+
+<div class="note">
+<strong>Você vai praticar</strong>
+<ul>
+  <li>Abrir um banco, criar a tabela e gravar com o módulo <a href="sqlite3.html">sqlite3</a>: <code>CREATE TABLE</code>, <code>INSERT</code>, <code>SELECT</code>, <code>UPDATE</code>, <code>DELETE</code>, sempre com o marcador <code>?</code>.</li>
+  <li>Confirmar as mudanças com <code>with con:</code> (o <code>commit</code> automático).</li>
+  <li>Separar o programa em <a href="funcoes.html">funções</a> com <a href="parametros.html">parâmetros</a> e <a href="return.html">return</a>.</li>
+  <li>Percorrer o resultado com <a href="for.html">for</a> e <a href="desempacotamento.html">desempacotamento</a>, e alinhar colunas com <a href="f-strings.html">f-strings</a>.</li>
+  <li>Tratar erros com <a href="try-except.html">try e except</a> (<code>IntegrityError</code>, <code>ValueError</code>).</li>
+  <li>Fazer o menu com <a href="while.html">while</a>, <a href="break-continue.html">break</a> e <a href="match.html">match e case</a>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2 id="construir">O que vamos construir</h2>
+<p>Este é o programa pronto, no computador da Ana. <strong>O que aparece depois de cada pergunta foi digitado por ela</strong> (o <code>1</code>, o <code>Sonho</code>, o <code>quinze</code>…); o resto foi o programa que escreveu:</p>
+
+<pre class="term" data-cwd="~/projetos/estoque">$ python3 estoque.py
+
+1) Listar  2) Cadastrar  3) Entrada  4) Saída  5) Relatório  0) Sair
+Opção: 1
+=== Estoque da Padaria Pão Quente ===
+Bolo de milho           4 un.   R$  18.00
+Café 500 g             10 un.   R$  18.90
+Leite integral 1 L     24 un.   R$   5.50
+Pão francês           120 un.   R$   0.80
+
+1) Listar  2) Cadastrar  3) Entrada  4) Saída  5) Relatório  0) Sair
+Opção: 2
+Nome do produto: Sonho
+Quantidade: quinze
+"quinze" não é um número inteiro. Tente de novo.   « texto no lugar de número
+Quantidade: 15
+Preço (R$): 6,50                                   « com vírgula também vale
+Cadastrado: Sonho
+
+1) Listar  2) Cadastrar  3) Entrada  4) Saída  5) Relatório  0) Sair
+Opção: 4
+Produto: Bolo de milho
+Quantas saíram? 6
+Não dá para tirar 6 de Bolo de milho: só há 4.     « o estoque não fica negativo
+
+1) Listar  2) Cadastrar  3) Entrada  4) Saída  5) Relatório  0) Sair
+Opção: 4
+Produto: Bolo de milho
+Quantas saíram? 3
+Bolo de milho: 4 -&gt; 1
+
+1) Listar  2) Cadastrar  3) Entrada  4) Saída  5) Relatório  0) Sair
+Opção: 3
+Produto: Café 500 g
+Quantas chegaram? 12
+Café 500 g: 10 -&gt; 22
+
+1) Listar  2) Cadastrar  3) Entrada  4) Saída  5) Relatório  0) Sair
+Opção: 5
+Valor do estoque: R$ 759.30
+Abaixo de 5 unidades:
+  - Bolo de milho (1)
+
+1) Listar  2) Cadastrar  3) Entrada  4) Saída  5) Relatório  0) Sair
+Opção: 9
+Opção inválida: 9
+
+1) Listar  2) Cadastrar  3) Entrada  4) Saída  5) Relatório  0) Sair
+Opção: 0
+Até amanhã!</pre>
+
+<p>E no dia seguinte, quando a Ana abre o programa de novo, tudo continua lá: o Sonho cadastrado, o bolo com 1 unidade, o café com 22. É a diferença entre guardar numa variável (que some quando o programa termina) e guardar num banco:</p>
+
+<pre class="term" data-cwd="~/projetos/estoque">$ python3 estoque.py
+
+1) Listar  2) Cadastrar  3) Entrada  4) Saída  5) Relatório  0) Sair
+Opção: 1
+=== Estoque da Padaria Pão Quente ===
+Bolo de milho           1 un.   R$  18.00
+Café 500 g             22 un.   R$  18.90
+Leite integral 1 L     24 un.   R$   5.50
+Pão francês           120 un.   R$   0.80
+Sonho                  15 un.   R$   6.50
+
+1) Listar  2) Cadastrar  3) Entrada  4) Saída  5) Relatório  0) Sair
+Opção: 0
+Até amanhã!</pre>
+
+<p>Vamos chegar lá em quatro versões. No fim de cada uma o programa roda, e cada versão acrescenta uma coisa só:</p>
+
+<ol class="passo">
+  <li><a href="#versao1">O banco, a tabela e a listagem</a> (<code>connect</code>, <code>CREATE TABLE</code>, <code>INSERT</code>, <code>SELECT</code>).</li>
+  <li><a href="#versao2">Funções e o cadastro sem repetição</a> (<code>def</code>, <code>with con:</code>, <code>IntegrityError</code>).</li>
+  <li><a href="#versao3">Entrada e saída de mercadoria</a> (<code>UPDATE</code>, sem deixar negativo).</li>
+  <li><a href="#versao4">O menu e o relatório</a> (<code>while</code>, <code>match</code>, <code>sum()</code>, entrada validada).</li>
+</ol>
+
+<h3>Antes de começar</h3>
+<p>Leia antes a aula <a href="sqlite3.html">Python com Banco de Dados (sqlite3)</a>: ela explica cada comando SQL usado aqui, com calma. Você também precisa saber criar e rodar um arquivo <code>.py</code> (<a href="executar.html">Rodando um Programa</a>). No seu computador, crie a pasta do projeto; o arquivo vai se chamar <code>estoque.py</code>:</p>
+
+<pre class="term">$ mkdir -p projetos/estoque
+$ cd projetos/estoque</pre>
+
+<div class="warning">
+<strong>No editor do guia, cada Rodar começa do zero</strong>
+<p>Nas caixas <strong>Experimente</strong> desta página, o programa cria o <code>estoque.db</code> e o usa de verdade, mas, como em toda caixa do guia, cada Rodar parte do zero: os arquivos da execução anterior somem. Por isso o programa <strong>cria o banco e a tabela sozinho</strong>, e coloca os produtos iniciais quando a tabela está vazia. No seu computador, o arquivo fica na pasta e os dados se acumulam de uma execução para outra, como nas sessões de terminal desta página.</p>
+</div>
+
+<hr>
+
+<h2 id="versao1">Versão 1 · O banco, a tabela e a listagem</h2>
+<p>A primeira versão abre (ou cria) o banco, cria a tabela de produtos se ela ainda não existir, coloca quatro produtos se a tabela estiver vazia e mostra o estoque em colunas.</p>
+
+<pre class="file" data-file="estoque.py">import sqlite3
+
+con = sqlite3.connect("estoque.db")
+con.execute("""
+    CREATE TABLE IF NOT EXISTS produtos (
+        id INTEGER PRIMARY KEY,
+        nome TEXT NOT NULL UNIQUE,
+        quantidade INTEGER NOT NULL,
+        preco REAL NOT NULL
+    )
+""")
+
+iniciais = [
+    ("Pão francês", 120, 0.80),
+    ("Leite integral 1 L", 24, 5.50),
+    ("Café 500 g", 10, 18.90),
+    ("Bolo de milho", 4, 18.00),
+]
+
+quantos = con.execute("SELECT count(*) FROM produtos").fetchone()[0]
+if quantos == 0:
+    con.executemany(
+        "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+        iniciais,
+    )
+    con.commit()
+    print(f"Banco novo: {len(iniciais)} produtos cadastrados.")
+
+print("=== Estoque da Padaria Pão Quente ===")
+for nome, quantidade, preco in con.execute(
+    "SELECT nome, quantidade, preco FROM produtos ORDER BY nome"
+):
+    print(f"{nome:&lt;20} {quantidade:&gt;4} un.   R$ {preco:&gt;6.2f}")
+
+con.close()
+</pre>
+
+<h3>Por partes</h3>
+<dl class="anatomy">
+  <dt>sqlite3.connect("estoque.db")</dt><dd>Abre o banco guardado no arquivo <code>estoque.db</code>. Se o arquivo não existe, ele é criado, vazio.</dd>
+  <dt>CREATE TABLE IF NOT EXISTS produtos (…)</dt><dd>Cria a tabela <strong>só se ela ainda não existir</strong>. Sem o <code>IF NOT EXISTS</code>, a segunda execução daria erro (<code>table produtos already exists</code>). O texto entre três aspas (<code>"""</code>) pode ocupar várias linhas.</dd>
+  <dt>id INTEGER PRIMARY KEY</dt><dd>Um número único para cada produto, que o SQLite preenche sozinho: 1, 2, 3…</dd>
+  <dt>nome TEXT NOT NULL UNIQUE</dt><dd>O nome é um texto obrigatório (<code>NOT NULL</code>) e não pode se repetir (<code>UNIQUE</code>). Essa regra vai trabalhar a nosso favor na versão 2.</dd>
+  <dt>quantidade INTEGER, preco REAL</dt><dd>Um número inteiro e um número com casas decimais.</dd>
+  <dt>fetchone()[0]</dt><dd>O <code>SELECT count(*)</code> devolve uma linha com um valor só, a contagem. <code>fetchone()</code> pega essa linha (uma tupla) e <code>[0]</code> pega o valor de dentro.</dd>
+  <dt>executemany(…, iniciais)</dt><dd>Roda o mesmo <code>INSERT</code> uma vez para cada tupla da lista. Cada <code>?</code> é preenchido por um item da tupla, na ordem: nome, quantidade, preço.</dd>
+  <dt>con.commit()</dt><dd>Grava de verdade no arquivo. Sem ele, os produtos sumiriam ao fechar o banco.</dd>
+  <dt>for nome, quantidade, preco in con.execute(…)</dt><dd>Percorre o resultado do <code>SELECT</code>: cada linha é uma tupla, aberta em três variáveis.</dd>
+  <dt>{nome:&lt;20} {quantidade:&gt;4} {preco:&gt;6.2f}</dt><dd>Alinhamento: o nome à esquerda em 20 posições, a quantidade à direita em 4, o preço à direita em 6 com 2 casas (<a href="ref-formatacao.html">Formatação</a>). É o que deixa as colunas retas.</dd>
+</dl>
+
+<p>Rodando duas vezes no computador da Ana:</p>
+
+<pre class="term" data-cwd="~/projetos/estoque">$ python3 estoque.py
+Banco novo: 4 produtos cadastrados.
+=== Estoque da Padaria Pão Quente ===
+Bolo de milho           4 un.   R$  18.00
+Café 500 g             10 un.   R$  18.90
+Leite integral 1 L     24 un.   R$   5.50
+Pão francês           120 un.   R$   0.80
+$ python3 estoque.py                               « a 2ª vez: o banco já existe
+=== Estoque da Padaria Pão Quente ===
+Bolo de milho           4 un.   R$  18.00
+Café 500 g             10 un.   R$  18.90
+Leite integral 1 L     24 un.   R$   5.50
+Pão francês           120 un.   R$   0.80</pre>
+
+<p>Na primeira vez, a tabela estava vazia e o programa cadastrou os quatro produtos. Na segunda, a contagem deu 4, o <code>if</code> foi pulado e nada foi cadastrado de novo. Os produtos vieram do arquivo. Dá até para espiar o arquivo com o programa <code>sqlite3</code> do terminal, sem Python nenhum:</p>
+
+<pre class="term" data-cwd="~/projetos/estoque">$ sqlite3 estoque.db "SELECT * FROM produtos;"
+1|Pão francês|120|0.8
+2|Leite integral 1 L|24|5.5
+3|Café 500 g|10|18.9
+4|Bolo de milho|4|18.0</pre>
+
+<p>Lá estão os <code>id</code> que o SQLite preencheu (1 a 4), na ordem em que os produtos foram gravados.</p>
+
+<div class="tip">
+<strong>Mudou a lista de produtos iniciais e nada aconteceu?</strong>
+<p>No seu computador, os produtos iniciais só entram quando a tabela está vazia, ou seja, na primeira vez. Se você acrescentar um produto na lista depois disso, ele não aparece: o banco já tem 4 produtos. Para recomeçar do zero, apague o arquivo: <code>rm estoque.db</code>. (No editor do guia isso não acontece, porque cada Rodar já começa sem o arquivo.)</p>
+</div>
+
+<div class="trypy" data-goal="outre:Sonho +15 un\.;;semerro">
+<p class="try-task"><strong>Missão:</strong> a padaria começou a vender <strong>Sonho</strong>: 15 unidades a R$ 6,50. Acrescente o sonho à lista de produtos iniciais (lembre: no Python, o decimal é com ponto) e rode.</p>
+<pre class="script" data-file="estoque.py">import sqlite3
+
+con = sqlite3.connect("estoque.db")
+con.execute("""
+    CREATE TABLE IF NOT EXISTS produtos (
+        id INTEGER PRIMARY KEY,
+        nome TEXT NOT NULL UNIQUE,
+        quantidade INTEGER NOT NULL,
+        preco REAL NOT NULL
+    )
+""")
+
+iniciais = [
+    ("Pão francês", 120, 0.80),
+    ("Leite integral 1 L", 24, 5.50),
+    ("Café 500 g", 10, 18.90),
+    ("Bolo de milho", 4, 18.00),
+]
+
+quantos = con.execute("SELECT count(*) FROM produtos").fetchone()[0]
+if quantos == 0:
+    con.executemany(
+        "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+        iniciais,
+    )
+    con.commit()
+    print(f"Banco novo: {len(iniciais)} produtos cadastrados.")
+
+print("=== Estoque da Padaria Pão Quente ===")
+for nome, quantidade, preco in con.execute(
+    "SELECT nome, quantidade, preco FROM produtos ORDER BY nome"
+):
+    print(f"{nome:&lt;20} {quantidade:&gt;4} un.   R$ {preco:&gt;6.2f}")
+
+con.close()
+</pre>
+<pre class="solucao" data-file="estoque.py">import sqlite3
+
+con = sqlite3.connect("estoque.db")
+con.execute("""
+    CREATE TABLE IF NOT EXISTS produtos (
+        id INTEGER PRIMARY KEY,
+        nome TEXT NOT NULL UNIQUE,
+        quantidade INTEGER NOT NULL,
+        preco REAL NOT NULL
+    )
+""")
+
+iniciais = [
+    ("Pão francês", 120, 0.80),
+    ("Leite integral 1 L", 24, 5.50),
+    ("Café 500 g", 10, 18.90),
+    ("Bolo de milho", 4, 18.00),
+    ("Sonho", 15, 6.50),
+]
+
+quantos = con.execute("SELECT count(*) FROM produtos").fetchone()[0]
+if quantos == 0:
+    con.executemany(
+        "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+        iniciais,
+    )
+    con.commit()
+    print(f"Banco novo: {len(iniciais)} produtos cadastrados.")
+
+print("=== Estoque da Padaria Pão Quente ===")
+for nome, quantidade, preco in con.execute(
+    "SELECT nome, quantidade, preco FROM produtos ORDER BY nome"
+):
+    print(f"{nome:&lt;20} {quantidade:&gt;4} un.   R$ {preco:&gt;6.2f}")
+
+con.close()
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao2">Versão 2 · Funções e o cadastro sem repetição</h2>
+<p>O programa vai crescer, então é hora de separá-lo em funções, cada uma com uma tarefa: <code>abrir_banco</code>, <code>cadastrar</code> e <code>listar</code>. E o cadastro precisa lidar com o caso em que o produto já existe.</p>
+
+<pre class="file" data-file="estoque.py">import sqlite3
+
+INICIAIS = [
+    ("Pão francês", 120, 0.80),
+    ("Leite integral 1 L", 24, 5.50),
+    ("Café 500 g", 10, 18.90),
+    ("Bolo de milho", 4, 18.00),
+]
+
+
+def abrir_banco(arquivo):
+    con = sqlite3.connect(arquivo)
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS produtos (
+            id INTEGER PRIMARY KEY,
+            nome TEXT NOT NULL UNIQUE,
+            quantidade INTEGER NOT NULL,
+            preco REAL NOT NULL
+        )
+    """)
+    quantos = con.execute("SELECT count(*) FROM produtos").fetchone()[0]
+    if quantos == 0:
+        with con:
+            con.executemany(
+                "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+                INICIAIS,
+            )
+    return con
+
+
+def cadastrar(con, nome, quantidade, preco):
+    try:
+        with con:
+            con.execute(
+                "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+                (nome, quantidade, preco),
+            )
+    except sqlite3.IntegrityError:
+        print(f"Já existe um produto chamado {nome}.")
+        return False
+    print(f"Cadastrado: {nome}")
+    return True
+
+
+def listar(con):
+    print("=== Estoque da Padaria Pão Quente ===")
+    for nome, quantidade, preco in con.execute(
+        "SELECT nome, quantidade, preco FROM produtos ORDER BY nome"
+    ):
+        print(f"{nome:&lt;20} {quantidade:&gt;4} un.   R$ {preco:&gt;6.2f}")
+
+
+con = abrir_banco("estoque.db")
+cadastrar(con, "Sonho", 15, 6.50)
+cadastrar(con, "Café 500 g", 5, 19.90)
+listar(con)
+con.close()
+</pre>
+
+<dl class="anatomy">
+  <dt>INICIAIS</dt><dd>A lista saiu do meio do programa e foi para o topo. O nome em MAIÚSCULAS é o costume para valores fixos, que o programa só lê (aula <a href="escopo.html">Escopo</a>).</dd>
+  <dt>def abrir_banco(arquivo): … return con</dt><dd>Tudo o que a versão 1 fazia para preparar o banco, agora numa função que <strong>devolve</strong> a conexão pronta.</dd>
+  <dt>with con:</dt><dd>Um bloco que faz o <code>commit</code> sozinho quando termina bem e desfaz tudo (<code>rollback</code>) se der erro no meio. É mais seguro que lembrar de chamar <code>con.commit()</code> (aula <a href="sqlite3.html">sqlite3</a>).</dd>
+  <dt>try: … except sqlite3.IntegrityError:</dt><dd>Se o nome já existe, a regra <code>UNIQUE</code> da tabela recusa o <code>INSERT</code> com um <code>IntegrityError</code> ("erro de integridade"). O <code>except</code> pega esse erro e mostra um aviso, em vez de o programa quebrar.</dd>
+  <dt>return False / return True</dt><dd>A função conta a quem chamou se cadastrou ou não. Este programa ainda não usa a resposta, mas ela já está lá para quem precisar.</dd>
+</dl>
+
+<p>Rodando no computador da Ana, sobre o banco que a versão 1 criou:</p>
+
+<pre class="term" data-cwd="~/projetos/estoque">$ python3 estoque.py
+Cadastrado: Sonho
+Já existe um produto chamado Café 500 g.
+=== Estoque da Padaria Pão Quente ===
+Bolo de milho           4 un.   R$  18.00
+Café 500 g             10 un.   R$  18.90
+Leite integral 1 L     24 un.   R$   5.50
+Pão francês           120 un.   R$   0.80
+Sonho                  15 un.   R$   6.50
+$ python3 estoque.py
+Já existe um produto chamado Sonho.                « na 2ª vez, o Sonho já estava lá
+Já existe um produto chamado Café 500 g.
+=== Estoque da Padaria Pão Quente ===
+Bolo de milho           4 un.   R$  18.00
+Café 500 g             10 un.   R$  18.90
+Leite integral 1 L     24 un.   R$   5.50
+Pão francês           120 un.   R$   0.80
+Sonho                  15 un.   R$   6.50</pre>
+
+<h3>Quando dá errado na versão 2</h3>
+
+<div class="cenario">
+<strong>Sem o <code>try</code>: o nome repetido derruba o programa</strong>
+<p>Sem o <code>try</code>/<code>except</code> no <code>cadastrar</code>, o segundo cadastro do café para tudo:</p>
+<pre class="term" data-cwd="~/projetos/estoque">$ python3 estoque.py
+Cadastrado: Sonho
+Traceback (most recent call last):
+  File "/home/ana/projetos/estoque/estoque.py", line 51, in &lt;module&gt;
+    cadastrar(con, "Café 500 g", 5, 19.90)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ana/projetos/estoque/estoque.py", line 33, in cadastrar
+    con.execute(
+    ~~~~~~~~~~~^
+        "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        (nome, quantidade, preco),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+sqlite3.IntegrityError: UNIQUE constraint failed: produtos.nome</pre>
+<p>Leia de baixo para cima: <code>sqlite3.IntegrityError: UNIQUE constraint failed: produtos.nome</code>, "a regra <code>UNIQUE</code> falhou na coluna <code>nome</code> da tabela <code>produtos</code>". O caminho mostra que a linha 51 (o programa principal) chamou <code>cadastrar</code>, e dentro dele o <code>con.execute</code> da linha 33 foi recusado. Como o <code>execute</code> ocupa várias linhas, o Python marca o comando inteiro com <code>^</code>. O <code>sqlite3.</code> antes do nome quer dizer que esse tipo de erro vem do módulo <code>sqlite3</code>; por isso o <code>except</code> escreve <code>sqlite3.IntegrityError</code>.</p>
+<p>Repare que o banco <strong>não aceitou</strong> o café repetido mesmo sem o <code>try</code>: quem protege os dados é a regra <code>UNIQUE</code> da tabela. O <code>try</code> só faz o programa reagir com educação, em vez de quebrar.</p>
+</div>
+
+<div class="trypy" data-goal="out:Cadastrado: Sonho;;out:Já existe um produto chamado Café 500 g.;;outre:Sonho +15 un\.;;semerro">
+<p class="try-task"><strong>Missão:</strong> nesta versão, a função <code>cadastrar</code> está sem o <code>try</code>, e o café repetido derruba o programa. Rode, leia o <code>IntegrityError</code> e proteja o <code>with con:</code> com <code>try</code>/<code>except sqlite3.IntegrityError</code>, mostrando <code>Já existe um produto chamado Café 500 g.</code> e deixando o programa seguir até a listagem.</p>
+<pre class="script" data-file="estoque.py">import sqlite3
+
+INICIAIS = [
+    ("Pão francês", 120, 0.80),
+    ("Leite integral 1 L", 24, 5.50),
+    ("Café 500 g", 10, 18.90),
+    ("Bolo de milho", 4, 18.00),
+]
+
+
+def abrir_banco(arquivo):
+    con = sqlite3.connect(arquivo)
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS produtos (
+            id INTEGER PRIMARY KEY,
+            nome TEXT NOT NULL UNIQUE,
+            quantidade INTEGER NOT NULL,
+            preco REAL NOT NULL
+        )
+    """)
+    quantos = con.execute("SELECT count(*) FROM produtos").fetchone()[0]
+    if quantos == 0:
+        with con:
+            con.executemany(
+                "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+                INICIAIS,
+            )
+    return con
+
+
+def cadastrar(con, nome, quantidade, preco):
+    with con:
+        con.execute(
+            "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+            (nome, quantidade, preco),
+        )
+    print(f"Cadastrado: {nome}")
+    return True
+
+
+def listar(con):
+    print("=== Estoque da Padaria Pão Quente ===")
+    for nome, quantidade, preco in con.execute(
+        "SELECT nome, quantidade, preco FROM produtos ORDER BY nome"
+    ):
+        print(f"{nome:&lt;20} {quantidade:&gt;4} un.   R$ {preco:&gt;6.2f}")
+
+
+con = abrir_banco("estoque.db")
+cadastrar(con, "Sonho", 15, 6.50)
+cadastrar(con, "Café 500 g", 5, 19.90)
+listar(con)
+con.close()
+</pre>
+<pre class="solucao" data-file="estoque.py">import sqlite3
+
+INICIAIS = [
+    ("Pão francês", 120, 0.80),
+    ("Leite integral 1 L", 24, 5.50),
+    ("Café 500 g", 10, 18.90),
+    ("Bolo de milho", 4, 18.00),
+]
+
+
+def abrir_banco(arquivo):
+    con = sqlite3.connect(arquivo)
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS produtos (
+            id INTEGER PRIMARY KEY,
+            nome TEXT NOT NULL UNIQUE,
+            quantidade INTEGER NOT NULL,
+            preco REAL NOT NULL
+        )
+    """)
+    quantos = con.execute("SELECT count(*) FROM produtos").fetchone()[0]
+    if quantos == 0:
+        with con:
+            con.executemany(
+                "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+                INICIAIS,
+            )
+    return con
+
+
+def cadastrar(con, nome, quantidade, preco):
+    try:
+        with con:
+            con.execute(
+                "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+                (nome, quantidade, preco),
+            )
+    except sqlite3.IntegrityError:
+        print(f"Já existe um produto chamado {nome}.")
+        return False
+    print(f"Cadastrado: {nome}")
+    return True
+
+
+def listar(con):
+    print("=== Estoque da Padaria Pão Quente ===")
+    for nome, quantidade, preco in con.execute(
+        "SELECT nome, quantidade, preco FROM produtos ORDER BY nome"
+    ):
+        print(f"{nome:&lt;20} {quantidade:&gt;4} un.   R$ {preco:&gt;6.2f}")
+
+
+con = abrir_banco("estoque.db")
+cadastrar(con, "Sonho", 15, 6.50)
+cadastrar(con, "Café 500 g", 5, 19.90)
+listar(con)
+con.close()
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao3">Versão 3 · Entrada e saída de mercadoria</h2>
+<p>Chegou café, vendeu pão: a quantidade muda. Uma função só, <code>movimentar</code>, faz as duas coisas: um número positivo é entrada, um negativo é saída. Antes de gravar, ela confere duas coisas: se o produto existe e se a saída não deixa o estoque negativo. O resto do programa (<code>abrir_banco</code>, <code>cadastrar</code>, <code>listar</code>) é igual ao da versão 2; estas são as partes novas:</p>
+
+<pre class="file" data-file="estoque.py">def movimentar(con, nome, quantidade):
+    linha = con.execute(
+        "SELECT quantidade FROM produtos WHERE nome = ?", (nome,)
+    ).fetchone()
+    if linha is None:
+        print(f"Produto não encontrado: {nome}")
+        return False
+    atual = linha[0]
+    nova = atual + quantidade
+    if nova &lt; 0:
+        print(f"Não dá para tirar {-quantidade} de {nome}: só há {atual}.")
+        return False
+    with con:
+        con.execute(
+            "UPDATE produtos SET quantidade = ? WHERE nome = ?", (nova, nome)
+        )
+    print(f"{nome}: {atual} -&gt; {nova}")
+    return True
+
+
+con = abrir_banco("estoque.db")
+movimentar(con, "Pão francês", -30)
+movimentar(con, "Café 500 g", 12)
+movimentar(con, "Bolo de milho", -6)
+movimentar(con, "Pão de mel", 5)
+listar(con)
+con.close()
+</pre>
+
+<dl class="anatomy">
+  <dt>WHERE nome = ?", (nome,)</dt><dd>Procura a linha do produto. Repare na vírgula em <code>(nome,)</code>: é ela que faz uma tupla de um item só (aula <a href="tuplas.html">Tuplas</a>). Sem a vírgula, dá erro; veja abaixo.</dd>
+  <dt>if linha is None:</dt><dd>Quando o <code>SELECT</code> não acha nada, o <code>fetchone()</code> devolve <code>None</code> (aula <a href="none.html">O Valor None</a>): o produto não existe.</dd>
+  <dt>nova = atual + quantidade</dt><dd>Com <code>-30</code>, <code>120 + (-30)</code> dá 90. A mesma conta serve para entrada e saída.</dd>
+  <dt>if nova &lt; 0:</dt><dd>A saída deixaria o estoque negativo: avisa e sai da função com <code>return False</code>, <strong>sem gravar nada</strong>. O <code>{-quantidade}</code> mostra o número sem o sinal de menos.</dd>
+  <dt>UPDATE produtos SET quantidade = ? WHERE nome = ?</dt><dd>Troca a quantidade daquele produto. São dois <code>?</code>, então a tupla tem dois valores, na mesma ordem: <code>(nova, nome)</code>. Sem o <code>WHERE</code>, o <code>UPDATE</code> mudaria <strong>todos</strong> os produtos.</dd>
+</dl>
+
+<pre class="term" data-cwd="~/projetos/estoque">$ python3 estoque.py
+Pão francês: 120 -&gt; 90
+Café 500 g: 10 -&gt; 22
+Não dá para tirar 6 de Bolo de milho: só há 4.
+Produto não encontrado: Pão de mel
+=== Estoque da Padaria Pão Quente ===
+Bolo de milho           4 un.   R$  18.00
+Café 500 g             22 un.   R$  18.90
+Leite integral 1 L     24 un.   R$   5.50
+Pão francês            90 un.   R$   0.80
+Sonho                  15 un.   R$   6.50</pre>
+
+<h3>Quando dá errado na versão 3</h3>
+
+<div class="cenario">
+<strong>Sem a conferência, o estoque fica negativo</strong>
+<p>Sem o <code>if nova &lt; 0</code>, o programa obedece cegamente, começando com um banco novo:</p>
+<pre class="term" data-cwd="~/projetos/estoque">$ python3 estoque.py
+Pão francês: 120 -&gt; 90
+Café 500 g: 10 -&gt; 22
+Bolo de milho: 4 -&gt; -2                             « vendeu bolo que não existia
+Produto não encontrado: Pão de mel
+=== Estoque da Padaria Pão Quente ===
+Bolo de milho          -2 un.   R$  18.00
+Café 500 g             22 un.   R$  18.90
+Leite integral 1 L     24 un.   R$   5.50
+Pão francês            90 un.   R$   0.80</pre>
+<p>Nenhum erro, só um estoque impossível: menos dois bolos. O banco não sabe que quantidade negativa não faz sentido; quem tem de conferir é o programa.</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu o <code>with con:</code> (e o <code>commit</code>)</strong>
+<p>Se o <code>UPDATE</code> for feito com <code>con.execute(…)</code> solto, sem <code>with con:</code> nem <code>con.commit()</code>, tudo parece funcionar. Mas rode duas vezes, com um banco novo:</p>
+<pre class="term" data-cwd="~/projetos/estoque">$ python3 estoque.py
+Pão francês: 120 -&gt; 90
+Café 500 g: 10 -&gt; 22
+Não dá para tirar 6 de Bolo de milho: só há 4.
+Produto não encontrado: Pão de mel
+=== Estoque da Padaria Pão Quente ===
+Bolo de milho           4 un.   R$  18.00
+Café 500 g             22 un.   R$  18.90
+Leite integral 1 L     24 un.   R$   5.50
+Pão francês            90 un.   R$   0.80
+$ python3 estoque.py
+Pão francês: 120 -&gt; 90                             « de novo 120: a venda de ontem sumiu
+Café 500 g: 10 -&gt; 22
+Não dá para tirar 6 de Bolo de milho: só há 4.
+Produto não encontrado: Pão de mel
+=== Estoque da Padaria Pão Quente ===
+Bolo de milho           4 un.   R$  18.00
+Café 500 g             22 un.   R$  18.90
+Leite integral 1 L     24 un.   R$   5.50
+Pão francês            90 un.   R$   0.80</pre>
+<p>Dentro de cada execução, a listagem mostra 90 pães. Mas a segunda execução começa de novo com 120: as mudanças ficaram "a lápis" e foram jogadas fora no <code>con.close()</code>. Sem mensagem de erro nenhuma. <strong>Como consertar:</strong> toda mudança (<code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>) dentro de um <code>with con:</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu a vírgula da tupla</strong>
+<pre class="file" data-file="consulta.py">import sqlite3
+
+con = sqlite3.connect("estoque.db")
+nome = "Café 500 g"
+linha = con.execute("SELECT quantidade FROM produtos WHERE nome = ?", (nome)).fetchone()
+print(linha)
+</pre>
+<pre class="term" data-cwd="~/projetos/estoque">$ python3 consulta.py
+Traceback (most recent call last):
+  File "/home/ana/projetos/estoque/consulta.py", line 5, in &lt;module&gt;
+    linha = con.execute("SELECT quantidade FROM produtos WHERE nome = ?", (nome)).fetchone()
+            ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.ProgrammingError: Incorrect number of bindings supplied. The current statement uses 1, and there are 10 supplied.</pre>
+<p>"Número errado de valores: o comando usa 1, e foram fornecidos 10". Dez? Sem a vírgula, <code>(nome)</code> não é uma tupla, é só o texto <code>"Café 500 g"</code> entre parênteses. O <code>sqlite3</code> então tratou o texto como uma sequência de <strong>letras</strong>: são 10 caracteres, contando os espaços. <strong>Como consertar:</strong> <code>(nome,)</code>, com a vírgula.</p>
+</div>
+
+<div class="cenario">
+<strong>Montar o SQL com f-string</strong>
+<p>Parece mais fácil escrever o nome direto no comando com uma f-string. Até aparecer um produto com apóstrofo:</p>
+<pre class="file" data-file="consulta.py">import sqlite3
+
+con = sqlite3.connect("estoque.db")
+nome = "Biscoito D'Ouro"
+linha = con.execute(f"SELECT quantidade FROM produtos WHERE nome = '{nome}'").fetchone()
+print(linha)
+</pre>
+<pre class="term" data-cwd="~/projetos/estoque">$ python3 consulta.py
+Traceback (most recent call last):
+  File "/home/ana/projetos/estoque/consulta.py", line 5, in &lt;module&gt;
+    linha = con.execute(f"SELECT quantidade FROM produtos WHERE nome = '{nome}'").fetchone()
+            ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: near "Ouro": syntax error</pre>
+<p>O comando montado ficou <code>… WHERE nome = 'Biscoito D'Ouro'</code>: o apóstrofo fechou o texto em <code>'Biscoito D'</code>, e o banco tropeçou no <code>Ouro</code> que sobrou. Pior que esse erro é quando alguém digita de propósito um texto que muda o comando: é o <em>SQL injection</em>, explicado na aula <a href="sqlite3.html#injection">sqlite3</a>. Com o <code>?</code>, o mesmo nome funciona (o <code>None</code> só diz que esse biscoito não está cadastrado):</p>
+<pre class="file" data-file="consulta.py">import sqlite3
+
+con = sqlite3.connect("estoque.db")
+nome = "Biscoito D'Ouro"
+linha = con.execute("SELECT quantidade FROM produtos WHERE nome = ?", (nome,)).fetchone()
+print(linha)
+</pre>
+<pre class="term" data-cwd="~/projetos/estoque">$ python3 consulta.py
+None</pre>
+<p><strong>Regra deste projeto:</strong> valor que vem de variável entra no SQL sempre por um <code>?</code>, nunca por f-string.</p>
+</div>
+
+<div class="cenario">
+<strong>Nome de tabela errado</strong>
+<pre class="file" data-file="consulta.py">import sqlite3
+
+con = sqlite3.connect("estoque.db")
+print(con.execute("SELECT nome FROM produto").fetchall())
+</pre>
+<pre class="term" data-cwd="~/projetos/estoque">$ python3 consulta.py
+Traceback (most recent call last):
+  File "/home/ana/projetos/estoque/consulta.py", line 4, in &lt;module&gt;
+    print(con.execute("SELECT nome FROM produto").fetchall())
+          ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such table: produto</pre>
+<p>"Não existe a tabela <code>produto</code>": a tabela se chama <code>produtos</code>, no plural. O Python não confere o texto do SQL; quem descobre o erro é o SQLite, na hora de rodar.</p>
+</div>
+
+<div class="trypy" data-goal="out:Não dá para tirar 6 de Bolo de milho: só há 4.;;outre:Bolo de milho +4 un\.;;semerro">
+<p class="try-task"><strong>Missão:</strong> nesta versão falta a conferência, e o bolo fica com <code>-2</code>. Acrescente na função <code>movimentar</code>, antes do <code>with con:</code>, o teste que recusa a saída quando o estoque ficaria negativo, com a mensagem <code>Não dá para tirar 6 de Bolo de milho: só há 4.</code></p>
+<pre class="script" data-file="estoque.py">import sqlite3
+
+INICIAIS = [
+    ("Pão francês", 120, 0.80),
+    ("Leite integral 1 L", 24, 5.50),
+    ("Café 500 g", 10, 18.90),
+    ("Bolo de milho", 4, 18.00),
+]
+
+
+def abrir_banco(arquivo):
+    con = sqlite3.connect(arquivo)
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS produtos (
+            id INTEGER PRIMARY KEY,
+            nome TEXT NOT NULL UNIQUE,
+            quantidade INTEGER NOT NULL,
+            preco REAL NOT NULL
+        )
+    """)
+    quantos = con.execute("SELECT count(*) FROM produtos").fetchone()[0]
+    if quantos == 0:
+        with con:
+            con.executemany(
+                "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+                INICIAIS,
+            )
+    return con
+
+
+def cadastrar(con, nome, quantidade, preco):
+    try:
+        with con:
+            con.execute(
+                "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+                (nome, quantidade, preco),
+            )
+    except sqlite3.IntegrityError:
+        print(f"Já existe um produto chamado {nome}.")
+        return False
+    print(f"Cadastrado: {nome}")
+    return True
+
+
+def listar(con):
+    print("=== Estoque da Padaria Pão Quente ===")
+    for nome, quantidade, preco in con.execute(
+        "SELECT nome, quantidade, preco FROM produtos ORDER BY nome"
+    ):
+        print(f"{nome:&lt;20} {quantidade:&gt;4} un.   R$ {preco:&gt;6.2f}")
+
+
+def movimentar(con, nome, quantidade):
+    linha = con.execute(
+        "SELECT quantidade FROM produtos WHERE nome = ?", (nome,)
+    ).fetchone()
+    if linha is None:
+        print(f"Produto não encontrado: {nome}")
+        return False
+    atual = linha[0]
+    nova = atual + quantidade
+    with con:
+        con.execute(
+            "UPDATE produtos SET quantidade = ? WHERE nome = ?", (nova, nome)
+        )
+    print(f"{nome}: {atual} -&gt; {nova}")
+    return True
+
+
+con = abrir_banco("estoque.db")
+movimentar(con, "Pão francês", -30)
+movimentar(con, "Café 500 g", 12)
+movimentar(con, "Bolo de milho", -6)
+movimentar(con, "Pão de mel", 5)
+listar(con)
+con.close()
+</pre>
+<pre class="solucao" data-file="estoque.py">import sqlite3
+
+INICIAIS = [
+    ("Pão francês", 120, 0.80),
+    ("Leite integral 1 L", 24, 5.50),
+    ("Café 500 g", 10, 18.90),
+    ("Bolo de milho", 4, 18.00),
+]
+
+
+def abrir_banco(arquivo):
+    con = sqlite3.connect(arquivo)
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS produtos (
+            id INTEGER PRIMARY KEY,
+            nome TEXT NOT NULL UNIQUE,
+            quantidade INTEGER NOT NULL,
+            preco REAL NOT NULL
+        )
+    """)
+    quantos = con.execute("SELECT count(*) FROM produtos").fetchone()[0]
+    if quantos == 0:
+        with con:
+            con.executemany(
+                "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+                INICIAIS,
+            )
+    return con
+
+
+def cadastrar(con, nome, quantidade, preco):
+    try:
+        with con:
+            con.execute(
+                "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+                (nome, quantidade, preco),
+            )
+    except sqlite3.IntegrityError:
+        print(f"Já existe um produto chamado {nome}.")
+        return False
+    print(f"Cadastrado: {nome}")
+    return True
+
+
+def listar(con):
+    print("=== Estoque da Padaria Pão Quente ===")
+    for nome, quantidade, preco in con.execute(
+        "SELECT nome, quantidade, preco FROM produtos ORDER BY nome"
+    ):
+        print(f"{nome:&lt;20} {quantidade:&gt;4} un.   R$ {preco:&gt;6.2f}")
+
+
+def movimentar(con, nome, quantidade):
+    linha = con.execute(
+        "SELECT quantidade FROM produtos WHERE nome = ?", (nome,)
+    ).fetchone()
+    if linha is None:
+        print(f"Produto não encontrado: {nome}")
+        return False
+    atual = linha[0]
+    nova = atual + quantidade
+    if nova &lt; 0:
+        print(f"Não dá para tirar {-quantidade} de {nome}: só há {atual}.")
+        return False
+    with con:
+        con.execute(
+            "UPDATE produtos SET quantidade = ? WHERE nome = ?", (nova, nome)
+        )
+    print(f"{nome}: {atual} -&gt; {nova}")
+    return True
+
+
+con = abrir_banco("estoque.db")
+movimentar(con, "Pão francês", -30)
+movimentar(con, "Café 500 g", 12)
+movimentar(con, "Bolo de milho", -6)
+movimentar(con, "Pão de mel", 5)
+listar(con)
+con.close()
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao4">Versão 4 · O menu e o relatório</h2>
+<p>Até aqui, as movimentações estavam escritas no próprio programa. Na versão final, a Ana escolhe o que fazer num menu, que se repete até ela digitar 0. Entram também o relatório (o valor total do estoque e os produtos acabando) e duas funções que perguntam um número até a resposta ser válida. Este é o programa completo:</p>
+
+<pre class="file" data-file="estoque.py">import sqlite3
+
+INICIAIS = [
+    ("Pão francês", 120, 0.80),
+    ("Leite integral 1 L", 24, 5.50),
+    ("Café 500 g", 10, 18.90),
+    ("Bolo de milho", 4, 18.00),
+]
+MINIMO = 5
+
+
+def abrir_banco(arquivo):
+    con = sqlite3.connect(arquivo)
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS produtos (
+            id INTEGER PRIMARY KEY,
+            nome TEXT NOT NULL UNIQUE,
+            quantidade INTEGER NOT NULL,
+            preco REAL NOT NULL
+        )
+    """)
+    quantos = con.execute("SELECT count(*) FROM produtos").fetchone()[0]
+    if quantos == 0:
+        with con:
+            con.executemany(
+                "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+                INICIAIS,
+            )
+    return con
+
+
+def cadastrar(con, nome, quantidade, preco):
+    try:
+        with con:
+            con.execute(
+                "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+                (nome, quantidade, preco),
+            )
+    except sqlite3.IntegrityError:
+        print(f"Já existe um produto chamado {nome}.")
+        return False
+    print(f"Cadastrado: {nome}")
+    return True
+
+
+def listar(con):
+    print("=== Estoque da Padaria Pão Quente ===")
+    for nome, quantidade, preco in con.execute(
+        "SELECT nome, quantidade, preco FROM produtos ORDER BY nome"
+    ):
+        print(f"{nome:&lt;20} {quantidade:&gt;4} un.   R$ {preco:&gt;6.2f}")
+
+
+def movimentar(con, nome, quantidade):
+    linha = con.execute(
+        "SELECT quantidade FROM produtos WHERE nome = ?", (nome,)
+    ).fetchone()
+    if linha is None:
+        print(f"Produto não encontrado: {nome}")
+        return False
+    atual = linha[0]
+    nova = atual + quantidade
+    if nova &lt; 0:
+        print(f"Não dá para tirar {-quantidade} de {nome}: só há {atual}.")
+        return False
+    with con:
+        con.execute(
+            "UPDATE produtos SET quantidade = ? WHERE nome = ?", (nova, nome)
+        )
+    print(f"{nome}: {atual} -&gt; {nova}")
+    return True
+
+
+def relatorio(con):
+    total = con.execute(
+        "SELECT sum(quantidade * preco) FROM produtos"
+    ).fetchone()[0]
+    print(f"Valor do estoque: R$ {total:.2f}")
+    acabando = con.execute(
+        "SELECT nome, quantidade FROM produtos WHERE quantidade &lt; ? ORDER BY quantidade",
+        (MINIMO,),
+    ).fetchall()
+    if acabando:
+        print(f"Abaixo de {MINIMO} unidades:")
+        for nome, quantidade in acabando:
+            print(f"  - {nome} ({quantidade})")
+    else:
+        print("Nenhum produto acabando.")
+
+
+def ler_inteiro(pergunta):
+    while True:
+        texto = input(pergunta).strip()
+        try:
+            return int(texto)
+        except ValueError:
+            print(f'"{texto}" não é um número inteiro. Tente de novo.')
+
+
+def ler_preco(pergunta):
+    while True:
+        texto = input(pergunta).strip().replace(",", ".")
+        try:
+            return float(texto)
+        except ValueError:
+            print(f'"{texto}" não é um preço. Tente de novo.')
+
+
+def menu(con):
+    while True:
+        print()
+        print("1) Listar  2) Cadastrar  3) Entrada  4) Saída  5) Relatório  0) Sair")
+        opcao = input("Opção: ").strip()
+        match opcao:
+            case "1":
+                listar(con)
+            case "2":
+                nome = input("Nome do produto: ").strip()
+                quantidade = ler_inteiro("Quantidade: ")
+                preco = ler_preco("Preço (R$): ")
+                cadastrar(con, nome, quantidade, preco)
+            case "3":
+                nome = input("Produto: ").strip()
+                movimentar(con, nome, ler_inteiro("Quantas chegaram? "))
+            case "4":
+                nome = input("Produto: ").strip()
+                movimentar(con, nome, -ler_inteiro("Quantas saíram? "))
+            case "5":
+                relatorio(con)
+            case "0":
+                print("Até amanhã!")
+                break
+            case _:
+                print(f"Opção inválida: {opcao}")
+
+
+con = abrir_banco("estoque.db")
+menu(con)
+con.close()
+</pre>
+
+<h3>As partes novas, uma por uma</h3>
+<dl class="anatomy">
+  <dt>MINIMO = 5</dt><dd>Abaixo de quantas unidades um produto aparece como "acabando". Fica no topo, com nome, para ser fácil de mudar.</dd>
+  <dt>SELECT sum(quantidade * preco)</dt><dd>O próprio banco multiplica a quantidade pelo preço de cada produto e soma tudo: o valor do que está na prateleira.</dd>
+  <dt>WHERE quantidade &lt; ? … (MINIMO,)</dt><dd>Os produtos abaixo do mínimo, do que tem menos para o que tem mais (<code>ORDER BY quantidade</code>). O <code>fetchall()</code> devolve uma lista de tuplas; lista vazia conta como falso no <code>if acabando:</code> (aula <a href="booleanos.html">Booleanos</a>).</dd>
+  <dt>ler_inteiro e ler_preco</dt><dd>Perguntam até receber um número válido: o <code>while True</code> repete, e o <code>return</code> dentro do <code>try</code> sai da função assim que a conversão dá certo. O <code>ler_preco</code> troca a vírgula por ponto, para aceitar <code>6,50</code>. É a mesma técnica da versão 4 do <a href="projeto-calculadora.html">Projeto Calculadora</a>.</dd>
+  <dt>-ler_inteiro("Quantas saíram? ")</dt><dd>Na saída, o número digitado vira negativo antes de ir para o <code>movimentar</code>: a Ana digita 3, a função recebe -3.</dd>
+  <dt>match opcao: / case "1": … case _:</dt><dd>Escolhe o que fazer pela opção digitada (um texto). O <code>case _</code> pega qualquer outra coisa (aula <a href="match.html">match e case</a>).</dd>
+  <dt>case "0": … break</dt><dd>Sai do <code>while True</code>; depois dele, o programa fecha o banco e termina.</dd>
+</dl>
+
+<p>A sessão completa está no começo da página, em <a href="#construir">O que vamos construir</a>. O valor do relatório confere: 1 × 18,00 + 22 × 18,90 + 24 × 5,50 + 120 × 0,80 + 15 × 6,50 = R$ 759,30.</p>
+
+<div class="trypy" data-stdin="5\n0" data-goal="out:Valor do estoque: R$ 489.00;;out:Abaixo de 5 unidades:;;out:  - Bolo de milho (4);;semerro">
+<p class="try-task"><strong>Missão:</strong> a função <code>relatorio</code> já está escrita, mas a opção <strong>5</strong> do menu responde "Opção inválida". Ligue a opção 5 à função, no <code>match</code>. A caixa vai digitar <code>5</code> e depois <code>0</code>; o relatório do estoque inicial deve mostrar R$ 489.00 e o bolo de milho acabando.</p>
+<pre class="script" data-file="estoque.py">import sqlite3
+
+INICIAIS = [
+    ("Pão francês", 120, 0.80),
+    ("Leite integral 1 L", 24, 5.50),
+    ("Café 500 g", 10, 18.90),
+    ("Bolo de milho", 4, 18.00),
+]
+MINIMO = 5
+
+
+def abrir_banco(arquivo):
+    con = sqlite3.connect(arquivo)
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS produtos (
+            id INTEGER PRIMARY KEY,
+            nome TEXT NOT NULL UNIQUE,
+            quantidade INTEGER NOT NULL,
+            preco REAL NOT NULL
+        )
+    """)
+    quantos = con.execute("SELECT count(*) FROM produtos").fetchone()[0]
+    if quantos == 0:
+        with con:
+            con.executemany(
+                "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+                INICIAIS,
+            )
+    return con
+
+
+def cadastrar(con, nome, quantidade, preco):
+    try:
+        with con:
+            con.execute(
+                "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+                (nome, quantidade, preco),
+            )
+    except sqlite3.IntegrityError:
+        print(f"Já existe um produto chamado {nome}.")
+        return False
+    print(f"Cadastrado: {nome}")
+    return True
+
+
+def listar(con):
+    print("=== Estoque da Padaria Pão Quente ===")
+    for nome, quantidade, preco in con.execute(
+        "SELECT nome, quantidade, preco FROM produtos ORDER BY nome"
+    ):
+        print(f"{nome:&lt;20} {quantidade:&gt;4} un.   R$ {preco:&gt;6.2f}")
+
+
+def movimentar(con, nome, quantidade):
+    linha = con.execute(
+        "SELECT quantidade FROM produtos WHERE nome = ?", (nome,)
+    ).fetchone()
+    if linha is None:
+        print(f"Produto não encontrado: {nome}")
+        return False
+    atual = linha[0]
+    nova = atual + quantidade
+    if nova &lt; 0:
+        print(f"Não dá para tirar {-quantidade} de {nome}: só há {atual}.")
+        return False
+    with con:
+        con.execute(
+            "UPDATE produtos SET quantidade = ? WHERE nome = ?", (nova, nome)
+        )
+    print(f"{nome}: {atual} -&gt; {nova}")
+    return True
+
+
+def relatorio(con):
+    total = con.execute(
+        "SELECT sum(quantidade * preco) FROM produtos"
+    ).fetchone()[0]
+    print(f"Valor do estoque: R$ {total:.2f}")
+    acabando = con.execute(
+        "SELECT nome, quantidade FROM produtos WHERE quantidade &lt; ? ORDER BY quantidade",
+        (MINIMO,),
+    ).fetchall()
+    if acabando:
+        print(f"Abaixo de {MINIMO} unidades:")
+        for nome, quantidade in acabando:
+            print(f"  - {nome} ({quantidade})")
+    else:
+        print("Nenhum produto acabando.")
+
+
+def ler_inteiro(pergunta):
+    while True:
+        texto = input(pergunta).strip()
+        try:
+            return int(texto)
+        except ValueError:
+            print(f'"{texto}" não é um número inteiro. Tente de novo.')
+
+
+def ler_preco(pergunta):
+    while True:
+        texto = input(pergunta).strip().replace(",", ".")
+        try:
+            return float(texto)
+        except ValueError:
+            print(f'"{texto}" não é um preço. Tente de novo.')
+
+
+def menu(con):
+    while True:
+        print()
+        print("1) Listar  2) Cadastrar  3) Entrada  4) Saída  5) Relatório  0) Sair")
+        opcao = input("Opção: ").strip()
+        match opcao:
+            case "1":
+                listar(con)
+            case "2":
+                nome = input("Nome do produto: ").strip()
+                quantidade = ler_inteiro("Quantidade: ")
+                preco = ler_preco("Preço (R$): ")
+                cadastrar(con, nome, quantidade, preco)
+            case "3":
+                nome = input("Produto: ").strip()
+                movimentar(con, nome, ler_inteiro("Quantas chegaram? "))
+            case "4":
+                nome = input("Produto: ").strip()
+                movimentar(con, nome, -ler_inteiro("Quantas saíram? "))
+            case "0":
+                print("Até amanhã!")
+                break
+            case _:
+                print(f"Opção inválida: {opcao}")
+
+
+con = abrir_banco("estoque.db")
+menu(con)
+con.close()
+</pre>
+<pre class="solucao" data-file="estoque.py">import sqlite3
+
+INICIAIS = [
+    ("Pão francês", 120, 0.80),
+    ("Leite integral 1 L", 24, 5.50),
+    ("Café 500 g", 10, 18.90),
+    ("Bolo de milho", 4, 18.00),
+]
+MINIMO = 5
+
+
+def abrir_banco(arquivo):
+    con = sqlite3.connect(arquivo)
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS produtos (
+            id INTEGER PRIMARY KEY,
+            nome TEXT NOT NULL UNIQUE,
+            quantidade INTEGER NOT NULL,
+            preco REAL NOT NULL
+        )
+    """)
+    quantos = con.execute("SELECT count(*) FROM produtos").fetchone()[0]
+    if quantos == 0:
+        with con:
+            con.executemany(
+                "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+                INICIAIS,
+            )
+    return con
+
+
+def cadastrar(con, nome, quantidade, preco):
+    try:
+        with con:
+            con.execute(
+                "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+                (nome, quantidade, preco),
+            )
+    except sqlite3.IntegrityError:
+        print(f"Já existe um produto chamado {nome}.")
+        return False
+    print(f"Cadastrado: {nome}")
+    return True
+
+
+def listar(con):
+    print("=== Estoque da Padaria Pão Quente ===")
+    for nome, quantidade, preco in con.execute(
+        "SELECT nome, quantidade, preco FROM produtos ORDER BY nome"
+    ):
+        print(f"{nome:&lt;20} {quantidade:&gt;4} un.   R$ {preco:&gt;6.2f}")
+
+
+def movimentar(con, nome, quantidade):
+    linha = con.execute(
+        "SELECT quantidade FROM produtos WHERE nome = ?", (nome,)
+    ).fetchone()
+    if linha is None:
+        print(f"Produto não encontrado: {nome}")
+        return False
+    atual = linha[0]
+    nova = atual + quantidade
+    if nova &lt; 0:
+        print(f"Não dá para tirar {-quantidade} de {nome}: só há {atual}.")
+        return False
+    with con:
+        con.execute(
+            "UPDATE produtos SET quantidade = ? WHERE nome = ?", (nova, nome)
+        )
+    print(f"{nome}: {atual} -&gt; {nova}")
+    return True
+
+
+def relatorio(con):
+    total = con.execute(
+        "SELECT sum(quantidade * preco) FROM produtos"
+    ).fetchone()[0]
+    print(f"Valor do estoque: R$ {total:.2f}")
+    acabando = con.execute(
+        "SELECT nome, quantidade FROM produtos WHERE quantidade &lt; ? ORDER BY quantidade",
+        (MINIMO,),
+    ).fetchall()
+    if acabando:
+        print(f"Abaixo de {MINIMO} unidades:")
+        for nome, quantidade in acabando:
+            print(f"  - {nome} ({quantidade})")
+    else:
+        print("Nenhum produto acabando.")
+
+
+def ler_inteiro(pergunta):
+    while True:
+        texto = input(pergunta).strip()
+        try:
+            return int(texto)
+        except ValueError:
+            print(f'"{texto}" não é um número inteiro. Tente de novo.')
+
+
+def ler_preco(pergunta):
+    while True:
+        texto = input(pergunta).strip().replace(",", ".")
+        try:
+            return float(texto)
+        except ValueError:
+            print(f'"{texto}" não é um preço. Tente de novo.')
+
+
+def menu(con):
+    while True:
+        print()
+        print("1) Listar  2) Cadastrar  3) Entrada  4) Saída  5) Relatório  0) Sair")
+        opcao = input("Opção: ").strip()
+        match opcao:
+            case "1":
+                listar(con)
+            case "2":
+                nome = input("Nome do produto: ").strip()
+                quantidade = ler_inteiro("Quantidade: ")
+                preco = ler_preco("Preço (R$): ")
+                cadastrar(con, nome, quantidade, preco)
+            case "3":
+                nome = input("Produto: ").strip()
+                movimentar(con, nome, ler_inteiro("Quantas chegaram? "))
+            case "4":
+                nome = input("Produto: ").strip()
+                movimentar(con, nome, -ler_inteiro("Quantas saíram? "))
+            case "5":
+                relatorio(con)
+            case "0":
+                print("Até amanhã!")
+                break
+            case _:
+                print(f"Opção inválida: {opcao}")
+
+
+con = abrir_banco("estoque.db")
+menu(con)
+con.close()
+</pre>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de confirmar as mudanças</h2>
+<p>O projeto usou <code>con.commit()</code> na versão 1 e <code>with con:</code> a partir da versão 2. As duas gravam; a diferença está no que acontece quando dá erro no meio.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>con.execute(…)</code> + <code>con.commit()</code></td><td>Funciona, mas depende de você lembrar do <code>commit</code> em todo lugar que muda dados. Um esquecimento e a mudança some, sem aviso</td></tr>
+<tr><td><code>with con:</code> + <code>con.execute(…)</code></td><td>O preferido: grava sozinho no fim do bloco e, se algo der errado no meio, desfaz tudo do bloco</td></tr>
+<tr><td><code>executemany(…, lista)</code></td><td>Para gravar várias linhas com o mesmo comando, como os produtos iniciais</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Desafio extra: remover um produto</h2>
+<p>A padaria parou de vender o bolo de milho. Acrescente a opção <strong>6) Remover</strong>, com uma função que apaga o produto com <code>DELETE</code>. Para saber se apagou alguma coisa, use o <code>rowcount</code> ("contagem de linhas") do resultado do <code>execute</code>: é o número de linhas que o comando mudou, 0 quando o produto não existe.</p>
+
+<pre class="term" data-cwd="~/projetos/estoque">$ python3 estoque.py
+
+1) Listar 2) Cadastrar 3) Entrada 4) Saída 5) Relatório 6) Remover 0) Sair
+Opção: 6
+Produto: Sonho
+Produto não encontrado: Sonho
+
+1) Listar 2) Cadastrar 3) Entrada 4) Saída 5) Relatório 6) Remover 0) Sair
+Opção: 6
+Produto: Bolo de milho
+Removido: Bolo de milho
+
+1) Listar 2) Cadastrar 3) Entrada 4) Saída 5) Relatório 6) Remover 0) Sair
+Opção: 5
+Valor do estoque: R$ 417.00
+Nenhum produto acabando.
+
+1) Listar 2) Cadastrar 3) Entrada 4) Saída 5) Relatório 6) Remover 0) Sair
+Opção: 0
+Até amanhã!</pre>
+
+<p>(Essa sessão começou com um banco novo, só com os quatro produtos iniciais; por isso o Sonho não foi encontrado.)</p>
+
+<div class="trypy" data-stdin="6\nBolo de milho\n6\nPão de mel\n1\n0" data-goal="src:DELETE;;src:\?;;out:Removido: Bolo de milho;;out:Produto não encontrado: Pão de mel;;semerro">
+<p class="try-task"><strong>Missão:</strong> escreva a função <code>remover(con, nome)</code> com <code>DELETE FROM produtos WHERE nome = ?</code> dentro de um <code>with con:</code>, mostrando <code>Removido: …</code> ou <code>Produto não encontrado: …</code>, e ligue-a à opção 6 do menu. A caixa vai remover o bolo de milho, tentar remover o pão de mel, listar e sair.</p>
+<pre class="script" data-file="estoque.py">import sqlite3
+
+INICIAIS = [
+    ("Pão francês", 120, 0.80),
+    ("Leite integral 1 L", 24, 5.50),
+    ("Café 500 g", 10, 18.90),
+    ("Bolo de milho", 4, 18.00),
+]
+MINIMO = 5
+
+
+def abrir_banco(arquivo):
+    con = sqlite3.connect(arquivo)
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS produtos (
+            id INTEGER PRIMARY KEY,
+            nome TEXT NOT NULL UNIQUE,
+            quantidade INTEGER NOT NULL,
+            preco REAL NOT NULL
+        )
+    """)
+    quantos = con.execute("SELECT count(*) FROM produtos").fetchone()[0]
+    if quantos == 0:
+        with con:
+            con.executemany(
+                "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+                INICIAIS,
+            )
+    return con
+
+
+def cadastrar(con, nome, quantidade, preco):
+    try:
+        with con:
+            con.execute(
+                "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+                (nome, quantidade, preco),
+            )
+    except sqlite3.IntegrityError:
+        print(f"Já existe um produto chamado {nome}.")
+        return False
+    print(f"Cadastrado: {nome}")
+    return True
+
+
+def listar(con):
+    print("=== Estoque da Padaria Pão Quente ===")
+    for nome, quantidade, preco in con.execute(
+        "SELECT nome, quantidade, preco FROM produtos ORDER BY nome"
+    ):
+        print(f"{nome:&lt;20} {quantidade:&gt;4} un.   R$ {preco:&gt;6.2f}")
+
+
+def movimentar(con, nome, quantidade):
+    linha = con.execute(
+        "SELECT quantidade FROM produtos WHERE nome = ?", (nome,)
+    ).fetchone()
+    if linha is None:
+        print(f"Produto não encontrado: {nome}")
+        return False
+    atual = linha[0]
+    nova = atual + quantidade
+    if nova &lt; 0:
+        print(f"Não dá para tirar {-quantidade} de {nome}: só há {atual}.")
+        return False
+    with con:
+        con.execute(
+            "UPDATE produtos SET quantidade = ? WHERE nome = ?", (nova, nome)
+        )
+    print(f"{nome}: {atual} -&gt; {nova}")
+    return True
+
+
+def relatorio(con):
+    total = con.execute(
+        "SELECT sum(quantidade * preco) FROM produtos"
+    ).fetchone()[0]
+    print(f"Valor do estoque: R$ {total:.2f}")
+    acabando = con.execute(
+        "SELECT nome, quantidade FROM produtos WHERE quantidade &lt; ? ORDER BY quantidade",
+        (MINIMO,),
+    ).fetchall()
+    if acabando:
+        print(f"Abaixo de {MINIMO} unidades:")
+        for nome, quantidade in acabando:
+            print(f"  - {nome} ({quantidade})")
+    else:
+        print("Nenhum produto acabando.")
+
+
+def ler_inteiro(pergunta):
+    while True:
+        texto = input(pergunta).strip()
+        try:
+            return int(texto)
+        except ValueError:
+            print(f'"{texto}" não é um número inteiro. Tente de novo.')
+
+
+def ler_preco(pergunta):
+    while True:
+        texto = input(pergunta).strip().replace(",", ".")
+        try:
+            return float(texto)
+        except ValueError:
+            print(f'"{texto}" não é um preço. Tente de novo.')
+
+
+def menu(con):
+    while True:
+        print()
+        print("1) Listar  2) Cadastrar  3) Entrada  4) Saída  5) Relatório  0) Sair")
+        opcao = input("Opção: ").strip()
+        match opcao:
+            case "1":
+                listar(con)
+            case "2":
+                nome = input("Nome do produto: ").strip()
+                quantidade = ler_inteiro("Quantidade: ")
+                preco = ler_preco("Preço (R$): ")
+                cadastrar(con, nome, quantidade, preco)
+            case "3":
+                nome = input("Produto: ").strip()
+                movimentar(con, nome, ler_inteiro("Quantas chegaram? "))
+            case "4":
+                nome = input("Produto: ").strip()
+                movimentar(con, nome, -ler_inteiro("Quantas saíram? "))
+            case "5":
+                relatorio(con)
+            case "0":
+                print("Até amanhã!")
+                break
+            case _:
+                print(f"Opção inválida: {opcao}")
+
+
+con = abrir_banco("estoque.db")
+menu(con)
+con.close()
+</pre>
+<pre class="solucao" data-file="estoque.py">import sqlite3
+
+INICIAIS = [
+    ("Pão francês", 120, 0.80),
+    ("Leite integral 1 L", 24, 5.50),
+    ("Café 500 g", 10, 18.90),
+    ("Bolo de milho", 4, 18.00),
+]
+MINIMO = 5
+
+
+def abrir_banco(arquivo):
+    con = sqlite3.connect(arquivo)
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS produtos (
+            id INTEGER PRIMARY KEY,
+            nome TEXT NOT NULL UNIQUE,
+            quantidade INTEGER NOT NULL,
+            preco REAL NOT NULL
+        )
+    """)
+    quantos = con.execute("SELECT count(*) FROM produtos").fetchone()[0]
+    if quantos == 0:
+        with con:
+            con.executemany(
+                "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+                INICIAIS,
+            )
+    return con
+
+
+def cadastrar(con, nome, quantidade, preco):
+    try:
+        with con:
+            con.execute(
+                "INSERT INTO produtos (nome, quantidade, preco) VALUES (?, ?, ?)",
+                (nome, quantidade, preco),
+            )
+    except sqlite3.IntegrityError:
+        print(f"Já existe um produto chamado {nome}.")
+        return False
+    print(f"Cadastrado: {nome}")
+    return True
+
+
+def listar(con):
+    print("=== Estoque da Padaria Pão Quente ===")
+    for nome, quantidade, preco in con.execute(
+        "SELECT nome, quantidade, preco FROM produtos ORDER BY nome"
+    ):
+        print(f"{nome:&lt;20} {quantidade:&gt;4} un.   R$ {preco:&gt;6.2f}")
+
+
+def movimentar(con, nome, quantidade):
+    linha = con.execute(
+        "SELECT quantidade FROM produtos WHERE nome = ?", (nome,)
+    ).fetchone()
+    if linha is None:
+        print(f"Produto não encontrado: {nome}")
+        return False
+    atual = linha[0]
+    nova = atual + quantidade
+    if nova &lt; 0:
+        print(f"Não dá para tirar {-quantidade} de {nome}: só há {atual}.")
+        return False
+    with con:
+        con.execute(
+            "UPDATE produtos SET quantidade = ? WHERE nome = ?", (nova, nome)
+        )
+    print(f"{nome}: {atual} -&gt; {nova}")
+    return True
+
+
+def relatorio(con):
+    total = con.execute(
+        "SELECT sum(quantidade * preco) FROM produtos"
+    ).fetchone()[0]
+    print(f"Valor do estoque: R$ {total:.2f}")
+    acabando = con.execute(
+        "SELECT nome, quantidade FROM produtos WHERE quantidade &lt; ? ORDER BY quantidade",
+        (MINIMO,),
+    ).fetchall()
+    if acabando:
+        print(f"Abaixo de {MINIMO} unidades:")
+        for nome, quantidade in acabando:
+            print(f"  - {nome} ({quantidade})")
+    else:
+        print("Nenhum produto acabando.")
+
+
+def remover(con, nome):
+    with con:
+        cursor = con.execute("DELETE FROM produtos WHERE nome = ?", (nome,))
+    if cursor.rowcount == 0:
+        print(f"Produto não encontrado: {nome}")
+    else:
+        print(f"Removido: {nome}")
+
+
+def ler_inteiro(pergunta):
+    while True:
+        texto = input(pergunta).strip()
+        try:
+            return int(texto)
+        except ValueError:
+            print(f'"{texto}" não é um número inteiro. Tente de novo.')
+
+
+def ler_preco(pergunta):
+    while True:
+        texto = input(pergunta).strip().replace(",", ".")
+        try:
+            return float(texto)
+        except ValueError:
+            print(f'"{texto}" não é um preço. Tente de novo.')
+
+
+def menu(con):
+    while True:
+        print()
+        print("1) Listar 2) Cadastrar 3) Entrada 4) Saída 5) Relatório 6) Remover 0) Sair")
+        opcao = input("Opção: ").strip()
+        match opcao:
+            case "1":
+                listar(con)
+            case "2":
+                nome = input("Nome do produto: ").strip()
+                quantidade = ler_inteiro("Quantidade: ")
+                preco = ler_preco("Preço (R$): ")
+                cadastrar(con, nome, quantidade, preco)
+            case "3":
+                nome = input("Produto: ").strip()
+                movimentar(con, nome, ler_inteiro("Quantas chegaram? "))
+            case "4":
+                nome = input("Produto: ").strip()
+                movimentar(con, nome, -ler_inteiro("Quantas saíram? "))
+            case "5":
+                relatorio(con)
+            case "6":
+                remover(con, input("Produto: ").strip())
+            case "0":
+                print("Até amanhã!")
+                break
+            case _:
+                print(f"Opção inválida: {opcao}")
+
+
+con = abrir_banco("estoque.db")
+menu(con)
+con.close()
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida do projeto</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Para que serviu</th></tr>
+<tr><td><code>sqlite3.connect("estoque.db")</code></td><td>Abrir (ou criar) o arquivo do banco</td></tr>
+<tr><td><code>CREATE TABLE IF NOT EXISTS …</code></td><td>Criar a tabela só na primeira vez</td></tr>
+<tr><td><code>nome TEXT NOT NULL UNIQUE</code></td><td>Proibir nome vazio e nome repetido</td></tr>
+<tr><td><code>INSERT … VALUES (?, ?, ?)</code>, <code>(a, b, c)</code></td><td>Gravar uma linha; cada <code>?</code> recebe um valor da tupla, na ordem</td></tr>
+<tr><td><code>executemany(sql, lista)</code></td><td>Gravar várias linhas de uma vez</td></tr>
+<tr><td><code>SELECT … ORDER BY nome</code> + <code>for a, b, c in …</code></td><td>Listar, já em ordem</td></tr>
+<tr><td><code>fetchone()</code> / <code>fetchall()</code></td><td>Uma linha (ou <code>None</code>) / a lista de todas</td></tr>
+<tr><td><code>UPDATE … SET quantidade = ? WHERE nome = ?</code></td><td>Mudar a quantidade de um produto</td></tr>
+<tr><td><code>DELETE … WHERE nome = ?</code> + <code>rowcount</code></td><td>Apagar e saber se apagou</td></tr>
+<tr><td><code>sum(quantidade * preco)</code></td><td>Somar no próprio banco</td></tr>
+<tr><td><code>with con:</code></td><td>Gravar no fim do bloco, ou desfazer tudo se der erro</td></tr>
+<tr><td><code>except sqlite3.IntegrityError:</code></td><td>Reagir ao nome repetido</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>sqlite3.IntegrityError: UNIQUE constraint failed: produtos.nome</code></td><td>Cadastro de um nome que já existe, sem <code>try</code></td></tr>
+<tr><td>Estoque negativo, sem erro</td><td>Faltou conferir a saída antes do <code>UPDATE</code></td></tr>
+<tr><td>A mudança some na execução seguinte</td><td>Faltou <code>with con:</code> (ou <code>con.commit()</code>)</td></tr>
+<tr><td><code>Incorrect number of bindings supplied</code></td><td>A quantidade de valores não bate com a de <code>?</code>; com um valor só, faltou a vírgula: <code>(nome,)</code></td></tr>
+<tr><td><code>OperationalError: near "…": syntax error</code></td><td>SQL montado com f-string quebrou num apóstrofo: use <code>?</code></td></tr>
+<tr><td><code>OperationalError: no such table: …</code></td><td>Nome da tabela digitado errado</td></tr>
+<tr><td>Produto novo na lista inicial não aparece (no seu computador)</td><td>A tabela já tinha produtos: apague o <code>estoque.db</code> para recomeçar</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O marcador</h3>
+<p>Complete o comando com o marcador que recebe o nome:</p>
+<div class="ex-code">con.execute("SELECT preco FROM produtos WHERE nome = <input data-answer="?" aria-label="marcador">", (nome,))</div>
+</div>
+
+<div class="exercise">
+<h3>2. A tupla de um item</h3>
+<p>Complete o que falta para <code>(nome)</code> virar uma tupla de um item:</p>
+<div class="ex-code">(nome<input data-answer="," aria-label="o que falta">)</div>
+</div>
+
+<div class="exercise">
+<h3>3. Só na primeira vez</h3>
+<p>Complete para que a tabela seja criada só se ainda não existir:</p>
+<div class="ex-code">CREATE TABLE IF <input data-answer="NOT EXISTS|not exists" aria-label="o que falta"> produtos (…)</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. A Ana roda a versão 2 duas vezes no computador dela. Por que, na segunda vez, aparece "Já existe um produto chamado Sonho."?</p>
+<label><input type="radio" name="q4"> Porque o programa cadastra o Sonho duas vezes em cada execução</label>
+<label><input type="radio" name="q4"> Porque o Sonho ficou gravado no <code>estoque.db</code> na primeira execução, e a regra <code>UNIQUE</code> recusa o segundo</label>
+<label><input type="radio" name="q4"> Porque faltou o <code>commit</code></label>
+<label><input type="radio" name="q4"> Porque o <code>with con:</code> apaga o banco</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. O que acontece com um <code>UPDATE</code> feito dentro de <code>with con:</code> quando dá um erro no meio do bloco?</p>
+<label><input type="radio" name="q5"> Ele é gravado mesmo assim</label>
+<label><input type="radio" name="q5"> O banco é apagado</label>
+<label><input type="radio" name="q5"> As mudanças do bloco são desfeitas (<code>rollback</code>)</label>
+<label><input type="radio" name="q5"> O Python ignora o erro</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Por que o projeto nunca monta o SQL com f-string, como <code>f"… WHERE nome = '{nome}'"</code>?</p>
+<label><input type="radio" name="q6"> Porque um apóstrofo no nome quebra o comando, e um texto malicioso pode mudar o comando (SQL injection); o <code>?</code> evita os dois</label>
+<label><input type="radio" name="q6"> Porque f-strings não funcionam com o <code>sqlite3</code></label>
+<label><input type="radio" name="q6"> Porque o <code>?</code> é mais rápido de digitar</label>
+<label><input type="radio" name="q6"> Porque o SQLite só aceita textos em maiúsculas</label>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>O banco SQLite é um arquivo (<code>estoque.db</code>): os dados continuam lá depois que o programa termina. No editor do guia, cada Rodar começa sem ele; por isso o programa cria a tabela e os produtos iniciais sozinho.</li>
+  <li><code>CREATE TABLE IF NOT EXISTS</code> e "só cadastra os iniciais se a tabela está vazia" deixam o programa rodar quantas vezes for preciso.</li>
+  <li>Todo valor que vem de variável entra no SQL por um <code>?</code>, com uma tupla na mesma ordem; com um valor só, <code>(nome,)</code>.</li>
+  <li>Toda mudança vai dentro de <code>with con:</code>: grava no fim, desfaz se der erro. Sem isso, a mudança some sem aviso.</li>
+  <li>A regra <code>UNIQUE</code> protege os dados; o <code>try</code>/<code>except sqlite3.IntegrityError</code> faz o programa reagir com educação.</li>
+  <li>O banco guarda o que você mandar: conferir se a saída deixa o estoque negativo é trabalho do programa.</li>
+  <li>Funções pequenas, cada uma com uma tarefa (<code>abrir_banco</code>, <code>cadastrar</code>, <code>movimentar</code>, <code>relatorio</code>), deixam o menu curto e fácil de ler.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
