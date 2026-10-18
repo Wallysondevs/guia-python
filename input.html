@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python input() — lendo o que a pessoa digita | Guia Python</title>
+<meta name="description" content="A função input() para quem nunca programou: fazer uma pergunta, o texto do prompt e o espaço no fim, guardar a resposta, por que o input() sempre devolve texto (str), o erro real de somar input() com número, o 2 + 3 que vira 23, int() e float() para números, ValueError e EOFError, com saídas reais do Python 3.14 e missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">input()</span></h1>
+
+<p class="intro">Até agora, os seus programas só falavam: o <code>print</code> mostra, mas ninguém responde. Um programa fica muito mais útil quando <strong>pergunta</strong>: qual é o seu nome, quantos pães você quer, quanto custa o quilo. A função <code>input()</code> (em inglês, "entrada": o que entra no programa) para o programa, espera a pessoa digitar alguma coisa e apertar <kbd>Enter</kbd>, e entrega ao programa o que foi digitado.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A pedir uma resposta com <code>input()</code> e o que acontece enquanto o programa espera.</li>
+  <li>A escrever a pergunta dentro do próprio <code>input</code> (o <strong>prompt</strong>) e por que ela termina com um espaço.</li>
+  <li>A guardar a resposta para usar depois.</li>
+  <li>A regra mais importante: o <code>input()</code> <strong>sempre devolve texto</strong>, mesmo quando a pessoa digita um número.</li>
+  <li>O erro real de somar a resposta com um número, e o <code>2 + 3</code> que dá <code>23</code> sem erro nenhum.</li>
+  <li>A transformar a resposta em número com <code>int()</code> e <code>float()</code>, e o que acontece quando a pessoa digita outra coisa.</li>
+</ul>
+</div>
+
+<p>Os programas desta aula foram rodados com o <strong>Python 3.14</strong> na máquina fictícia da Ana (usuária <code>ana</code>, computador <code>notebook</code>), com <code>python3 arquivo.py</code>. Nas saídas de terminal, o que aparece depois da pergunta é <strong>o que a Ana digitou</strong>, seguido de <kbd>Enter</kbd>.</p>
+
+<hr>
+
+<h2>A ideia: o balcão da padaria</h2>
+<p>Na padaria, a atendente pergunta: "O que vai ser hoje?". E aí ela <strong>espera</strong>. Não faz mais nada até o cliente responder. Quando ele diz "seis pães", ela anota no bloquinho, exatamente como ouviu, e só então continua o atendimento.</p>
+
+<p>O <code>input()</code> é essa atendente:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Na padaria</th><th>No Python</th></tr>
+<tr><td>"O que vai ser hoje?"</td><td>O texto entre os parênteses: <code>input("O que vai ser hoje? ")</code>, o <strong>prompt</strong></td></tr>
+<tr><td>Esperar o cliente responder</td><td>O programa fica parado até a pessoa apertar <kbd>Enter</kbd></td></tr>
+<tr><td>Anotar no bloquinho o que ouviu, como ouviu</td><td>O <code>input</code> devolve o que foi digitado, sempre como <strong>texto</strong></td></tr>
+</table>
+</div>
+
+<p>Guarde bem a última linha da tabela: a atendente anota "seis" no papel, em letras; ela não faz conta nenhuma ali. O <code>input</code> também não. Isso vai ser importante na seção 4.</p>
+
+<hr>
+
+<h2>1. O primeiro <code>input()</code></h2>
+
+<pre class="file" data-file="pergunta.py">print("Qual é o seu nome?")
+input()
+print("Obrigada!")
+</pre>
+
+<pre class="term">$ python3 pergunta.py
+Qual é o seu nome?
+Ana                     « a Ana digitou e apertou Enter
+Obrigada!
+</pre>
+
+<ol class="passo">
+  <li>O <code>print</code> mostra a pergunta.</li>
+  <li>O <code>input()</code> <strong>para</strong> o programa. O cursor fica piscando, esperando. Nada acontece até a Ana digitar <code>Ana</code> e apertar <kbd>Enter</kbd>.</li>
+  <li>Depois do <kbd>Enter</kbd>, o programa continua e mostra <code>Obrigada!</code>.</li>
+</ol>
+
+<p>Funcionou, mas o programa perguntou o nome e não fez nada com ele: a resposta foi jogada fora. Antes de usar a resposta, vamos melhorar a pergunta.</p>
+
+<hr>
+
+<h2>2. O prompt: a pergunta dentro do <code>input</code></h2>
+<p>O <code>input</code> pode mostrar a pergunta sozinho: basta escrevê-la entre os parênteses, como no <code>print</code>. Esse texto se chama <strong>prompt</strong> (em inglês, "deixa", "estímulo": o que convida a pessoa a responder). A diferença é que o prompt <strong>não pula a linha</strong>: a resposta é digitada logo ao lado da pergunta.</p>
+
+<pre class="file" data-file="direto.py">print("Olá,", input("Qual é o seu nome? "))
+</pre>
+
+<pre class="term">$ python3 direto.py
+Qual é o seu nome? Ana
+Olá, Ana
+</pre>
+
+<dl class="anatomy">
+  <dt>input("Qual é o seu nome? ")</dt><dd>Mostra o prompt, espera a resposta e <strong>devolve</strong> o que foi digitado. "Devolver" quer dizer que, depois que a pessoa responde, o <code>input(...)</code> inteiro passa a valer o texto digitado, no caso <code>"Ana"</code>.</dd>
+  <dt>print("Olá,", …)</dt><dd>Recebe dois valores: o texto <code>"Olá,"</code> e o que o <code>input</code> devolveu. Mostra os dois com um espaço no meio, como na aula <a href="print.html">print()</a>.</dd>
+</dl>
+
+<p>Repare na ordem: o Python precisa do valor do <code>input</code> para poder chamar o <code>print</code>, então primeiro pergunta, espera a resposta e só depois mostra a linha <code>Olá, Ana</code>.</p>
+
+<h3>O espaço no fim do prompt</h3>
+<p>O <code>input</code> mostra o prompt exatamente como está escrito, nem um espaço a mais. Sem o espaço depois do <code>?</code>, a resposta fica grudada na pergunta:</p>
+
+<pre class="file" data-file="sem-espaco.py">nome = input("Qual é o seu nome?")
+print("Olá,", nome)
+</pre>
+
+<pre class="term">$ python3 sem-espaco.py
+Qual é o seu nome?Ana
+Olá, Ana
+</pre>
+
+<p>Funciona, mas é desconfortável de ler e de digitar. Por isso o costume é terminar o prompt com um espaço (<code>"Qual é o seu nome? "</code>) ou com dois-pontos e espaço (<code>"Nome: "</code>).</p>
+
+<hr>
+
+<h2>3. Guardando a resposta</h2>
+<p>Colocar o <code>input</code> dentro do <code>print</code> funciona, mas a resposta só serve para aquela linha. Quase sempre você quer <strong>guardar</strong> a resposta para usar depois, talvez várias vezes. Para isso, dê um nome a ela:</p>
+
+<pre class="file" data-file="ola-nome.py">nome = input("Qual é o seu nome? ")
+print("Olá,", nome)
+</pre>
+
+<pre class="term">$ python3 ola-nome.py
+Qual é o seu nome? Ana
+Olá, Ana
+</pre>
+
+<dl class="anatomy">
+  <dt>nome</dt><dd>Um nome que você escolheu para guardar a resposta. Isso é uma <strong>variável</strong>, o assunto da aula <a href="variaveis.html">Variáveis</a>. Por enquanto, pense numa etiqueta colada no que a pessoa digitou.</dd>
+  <dt>=</dt><dd>Leia como "recebe": <em>nome recebe o que o <code>input</code> devolveu</em>.</dd>
+  <dt>input("Qual é o seu nome? ")</dt><dd>Pergunta e espera, como antes.</dd>
+  <dt>print("Olá,", nome)</dt><dd>Sem aspas, <code>nome</code> não é o texto "nome": é a etiqueta, e o <code>print</code> mostra o que está guardado nela, <code>Ana</code>.</dd>
+</dl>
+
+<p>Com várias perguntas, cada resposta ganha o seu nome:</p>
+
+<pre class="file" data-file="pedido.py">pao = input("Quantos pães? ")
+leite = input("Quantos litros de leite? ")
+print("Pedido:", pao, "pães e", leite, "litros de leite")
+</pre>
+
+<pre class="term">$ python3 pedido.py
+Quantos pães? 12
+Quantos litros de leite? 2
+Pedido: 12 pães e 2 litros de leite
+</pre>
+
+<p>O programa para duas vezes, uma em cada <code>input</code>, de cima para baixo. (O nome <code>pao</code> vai sem til de propósito: nomes com acento funcionam, mas não são o costume. A aula <a href="nomes-variaveis.html">Nomes de Variáveis</a> explica.)</p>
+
+<div class="trypy" data-stdin="Ana" data-goal="out:Olá, Ana;;src:input\(">
+<p class="try-task"><strong>Missão:</strong> o programa pergunta o nome, mas só responde "Olá!". Faça ele cumprimentar a pessoa pelo nome: <code>Olá, Ana</code>. (Nesta caixa, quem "digita" a resposta <code>Ana</code> é o próprio editor.)</p>
+<pre class="script" data-file="main.py">nome = input("Qual é o seu nome? ")
+print("Olá!")
+</pre>
+<pre class="solucao" data-file="main.py">nome = input("Qual é o seu nome? ")
+print("Olá,", nome)
+</pre>
+</div>
+
+<p>Agora uma caixa livre, sem resposta pronta: ao clicar em Rodar, o programa vai esperar, e <strong>você</strong> digita a resposta no terminal da caixa e aperta <kbd>Enter</kbd>.</p>
+
+<div class="trypy">
+<pre class="script" data-file="main.py">cidade = input("Em que cidade você mora? ")
+print("Que bom! Eu também gosto de", cidade)
+</pre>
+</div>
+
+<hr>
+
+<h2>4. A regra de ouro: <code>input()</code> sempre devolve texto</h2>
+<p>Lembra da atendente que anota "seis" em letras? O <code>input</code> faz igual: o que a pessoa digita volta <strong>sempre como texto</strong> (no Python, o tipo <code>str</code>, de <em>string</em>). Mesmo que ela digite só algarismos. Você pode conferir com a função <code>type()</code>, que diz o tipo de um valor (aula <a href="type.html">Descobrindo o Tipo</a>):</p>
+
+<pre class="file" data-file="tipo.py">resposta = input("Digite um número: ")
+print(type(resposta))
+</pre>
+
+<pre class="term">$ python3 tipo.py
+Digite um número: 42
+&lt;class 'str'&gt;
+</pre>
+
+<p><code>&lt;class 'str'&gt;</code>: um texto. O que voltou não é o número 42, é o texto <code>"42"</code>, com um 4 e um 2, como se tivesse sido escrito entre aspas. Isso tem duas consequências, e as duas pegam todo mundo que está começando.</p>
+
+<h3>Consequência 1: somar com um número dá erro</h3>
+
+<pre class="file" data-file="idade.py">idade = input("Quantos anos você tem? ")
+print("Ano que vem você terá", idade + 1)
+</pre>
+
+<pre class="term">$ python3 idade.py
+Quantos anos você tem? 29
+Traceback (most recent call last):
+  File "/home/ana/idade.py", line 2, in &lt;module&gt;
+    print("Ano que vem você terá", idade + 1)
+                                   ~~~~~~^~~
+TypeError: can only concatenate str (not "int") to str
+</pre>
+
+<dl class="anatomy">
+  <dt>File "/home/ana/idade.py", line 2</dt><dd>O problema está na linha 2. A linha 1 rodou bem: a pergunta apareceu e a Ana respondeu.</dd>
+  <dt>~~~~~~^~~</dt><dd>Os <code>~</code> sublinham os dois lados da conta, <code>idade</code> e <code>1</code>; o <code>^</code> aponta o <code>+</code>.</dd>
+  <dt>TypeError: can only concatenate str (not "int") to str</dt><dd>"Erro de tipo: só dá para concatenar (juntar) <code>str</code> com <code>str</code>, e não <code>int</code>." Em <code>idade</code> está o texto <code>"29"</code>; o <code>1</code> é um número inteiro (<code>int</code>). Com um texto do lado esquerdo, o <code>+</code> quer <strong>juntar textos</strong>, e não sabe juntar um texto com um número.</dd>
+</dl>
+
+<p>Para o Python, é como tentar fazer <code>"vinte e nove" + 1</code>. Ele não tenta adivinhar: para e avisa.</p>
+
+<h3>Consequência 2: somar duas respostas dá um resultado errado, sem erro</h3>
+<p>Este é ainda mais traiçoeiro:</p>
+
+<pre class="file" data-file="soma-errada.py">a = input("Primeiro número: ")
+b = input("Segundo número: ")
+print("A soma é", a + b)
+</pre>
+
+<pre class="term">$ python3 soma-errada.py
+Primeiro número: 2
+Segundo número: 3
+A soma é 23
+</pre>
+
+<p><strong>23!</strong> E nenhuma mensagem de erro. Em <code>a</code> está o texto <code>"2"</code> e em <code>b</code>, o texto <code>"3"</code>. Texto mais texto é permitido: o <code>+</code> <strong>junta</strong> os dois, um atrás do outro, como em <code>"Bom " + "dia"</code>. O resultado é o texto <code>"23"</code>. O programa "funcionou", só que fez a coisa errada.</p>
+
+<div class="warning">
+<strong>Desconfie de toda conta com o que veio do <code>input</code></strong>
+<p>Sempre que a resposta for usada como número, ela precisa ser <strong>convertida</strong> antes. É o que a próxima seção mostra.</p>
+</div>
+
+<hr>
+
+<h2>5. Transformando a resposta em número</h2>
+<p>A função <code>int()</code> (de <em>integer</em>, "inteiro") recebe um texto como <code>"2"</code> e devolve o número inteiro <code>2</code>. Basta colocar o <code>input</code> dentro dela:</p>
+
+<pre class="file" data-file="soma-certa.py">a = int(input("Primeiro número: "))
+b = int(input("Segundo número: "))
+print("A soma é", a + b)
+</pre>
+
+<pre class="term">$ python3 soma-certa.py
+Primeiro número: 2
+Segundo número: 3
+A soma é 5
+</pre>
+
+<dl class="anatomy">
+  <dt>input("Primeiro número: ")</dt><dd>Roda primeiro, porque está mais por dentro: pergunta e devolve o texto <code>"2"</code>.</dd>
+  <dt>int( … )</dt><dd>Recebe o texto <code>"2"</code> e devolve o número <code>2</code>.</dd>
+  <dt>a = …</dt><dd>Guarda o <strong>número</strong>. Agora <code>a + b</code> é uma conta de verdade.</dd>
+</dl>
+
+<p>Para números com casas decimais, como um preço, use <code>float()</code> (de <em>floating point</em>, "ponto flutuante", o nome técnico dos números com casas decimais):</p>
+
+<pre class="file" data-file="preco.py">preco = float(input("Preço do quilo: "))
+print("Dois quilos custam", preco * 2)
+</pre>
+
+<pre class="term">$ python3 preco.py
+Preço do quilo: 18.90
+Dois quilos custam 37.8
+</pre>
+
+<p>A Ana digitou o preço com <strong>ponto</strong>, <code>18.90</code>, porque é assim que o Python escreve números decimais. (Repare também que o resultado saiu <code>37.8</code>, sem o zero do fim: um número não guarda zeros à direita. Para mostrar <code>37.80</code>, com duas casas, existe a formatação, na aula <a href="f-strings.html">f-strings</a>.) Os tipos <code>int</code> e <code>float</code> têm aula própria, <a href="numeros.html">Números</a>, e as conversões, outra: <a href="conversao.html">Conversão de Tipos</a>.</p>
+
+<div class="trypy" data-stdin="2\n3" data-goal="out:A soma é 5">
+<p class="try-task"><strong>Missão:</strong> o programa responde <code>A soma é 23</code> quando a pessoa digita 2 e 3. Conserte para ele fazer a conta de verdade e mostrar <code>A soma é 5</code>. (O editor digita o 2 e o 3 por você.)</p>
+<pre class="script" data-file="main.py">a = input("Primeiro número: ")
+b = input("Segundo número: ")
+print("A soma é", a + b)
+</pre>
+<pre class="solucao" data-file="main.py">a = int(input("Primeiro número: "))
+b = int(input("Segundo número: "))
+print("A soma é", a + b)
+</pre>
+</div>
+
+<hr>
+
+<h2>6. O <code>input</code> devolve exatamente o que foi digitado</h2>
+<p>O <kbd>Enter</kbd> do fim <strong>não</strong> entra na resposta: o <code>input</code> tira a quebra de linha. Todo o resto entra, inclusive espaços que a pessoa digitou sem querer. Os colchetes abaixo mostram onde a resposta começa e termina:</p>
+
+<pre class="file" data-file="espacos.py">nome = input("Nome: ")
+print("[" + nome + "]")
+</pre>
+
+<pre class="term">$ python3 espacos.py
+Nome:   Ana             « a Ana digitou dois espaços antes e dois depois
+[  Ana  ]
+</pre>
+
+<p>Os espaços vieram juntos. Para limpar as pontas existe o método <code>strip()</code>, que você vai ver em <a href="strings-metodos.html">Métodos de Texto</a>. E o <code>+</code> aqui funcionou porque os três pedaços são textos.</p>
+
+<hr>
+
+<h2>Formas diferentes de perguntar</h2>
+
+<pre class="file" data-file="formas.py">print("Seu nome:")
+nome1 = input()
+
+nome2 = input("Seu nome: ")
+
+print("Olá,", input("Seu nome: "))
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Como fica na tela</th><th>Quando usar</th></tr>
+<tr><td><code>print(...)</code> e depois <code>input()</code></td><td>Pergunta numa linha, resposta na linha de baixo</td><td>Quando a pergunta é comprida ou tem várias linhas</td></tr>
+<tr><td><code>nome = input("Seu nome: ")</code></td><td>Resposta ao lado da pergunta</td><td><strong>O jeito mais comum.</strong> Prefira este</td></tr>
+<tr><td><code>print("Olá,", input(...))</code></td><td>Resposta ao lado da pergunta</td><td>Só quando a resposta é usada uma única vez. Fica difícil de ler; evite</td></tr>
+<tr><td><code>int(input(...))</code> / <code>float(input(...))</code></td><td>Igual, mas guarda um número</td><td>Sempre que a resposta for entrar numa conta</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Somar a resposta com um número</strong>
+<p>É o <code>TypeError</code> da seção 4: <code>idade + 1</code> com <code>idade</code> vinda direto do <code>input</code>. <strong>Como consertar:</strong> <code>idade = int(input("Quantos anos você tem? "))</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>A pessoa digita uma palavra onde o <code>int()</code> esperava um número</strong>
+<pre class="term">$ python3 soma-certa.py
+Primeiro número: dois
+Traceback (most recent call last):
+  File "/home/ana/soma-certa.py", line 1, in &lt;module&gt;
+    a = int(input("Primeiro número: "))
+        ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: invalid literal for int() with base 10: 'dois'
+</pre>
+<p>Desta vez é um <code>ValueError</code>, "erro de valor": o tipo estava certo (o <code>int()</code> recebeu um texto, como esperava), mas o <strong>conteúdo</strong> do texto não serve. A explicação: "literal inválido para <code>int()</code> na base 10: <code>'dois'</code>", ou seja, <code>'dois'</code> não se escreve com os algarismos de 0 a 9. O <code>int()</code> só entende números inteiros escritos com algarismos, como <code>"2"</code> ou <code>"-15"</code>. Repare que o erro aparece <strong>depois</strong> que a Ana respondeu: o Python só descobre o problema na hora de converter.</p>
+<p><strong>Como consertar:</strong> no programa, não tem como impedir a pessoa de digitar errado; o que dá para fazer é <strong>tratar</strong> o erro e perguntar de novo, com <code>try</code> e <code>except</code> (aula <a href="try-except.html">try e except</a>). Por enquanto, digite números.</p>
+</div>
+
+<div class="cenario">
+<strong>Número com vírgula ou com casas decimais</strong>
+<pre class="term">$ python3 preco.py
+Preço do quilo: 18,90
+Traceback (most recent call last):
+  File "/home/ana/preco.py", line 1, in &lt;module&gt;
+    preco = float(input("Preço do quilo: "))
+            ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: could not convert string to float: '18,90'
+</pre>
+<p>"Não foi possível converter o texto em <code>float</code>: <code>'18,90'</code>". No Brasil escrevemos 18,90, mas o <code>float()</code> só entende o ponto. E o <code>int()</code> não aceita casas decimais, nem com ponto:</p>
+<pre class="term">$ python3 soma-certa.py
+Primeiro número: 2.5
+Traceback (most recent call last):
+  File "/home/ana/soma-certa.py", line 1, in &lt;module&gt;
+    a = int(input("Primeiro número: "))
+        ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: invalid literal for int() with base 10: '2.5'
+</pre>
+<p><strong>Como consertar:</strong> para valores com casas decimais, use <code>float()</code> e digite com ponto. Para aceitar a vírgula, o programa pode trocá-la por ponto antes de converter (o método <code>replace()</code>, em <a href="strings-metodos.html">Métodos de Texto</a>).</p>
+</div>
+
+<div class="cenario">
+<strong>Não há nada para ler: <code>EOFError</code></strong>
+<p>Às vezes o programa pede uma resposta e a entrada já acabou. Dá para ver isso no terminal com o <code>&lt; /dev/null</code>, que liga a entrada do programa a um "arquivo vazio" no lugar do teclado:</p>
+<pre class="term">$ python3 ola-nome.py &lt; /dev/null
+Qual é o seu nome? Traceback (most recent call last):
+  File "/home/ana/ola-nome.py", line 1, in &lt;module&gt;
+    nome = input("Qual é o seu nome? ")
+           ~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+EOFError: EOF when reading a line
+</pre>
+<p><code>EOF</code> é <em>end of file</em>, "fim do arquivo": "chegou ao fim da entrada enquanto lia uma linha". O traceback começa logo depois do prompt, na mesma linha, porque o prompt não pula linha e ninguém apertou <kbd>Enter</kbd>. O mesmo erro aparece se, no terminal, você apertar <kbd>Ctrl</kbd>+<kbd>D</kbd> (o sinal de "acabou a entrada") em vez de responder. E se apertar <kbd>Ctrl</kbd>+<kbd>C</kbd>, o programa é interrompido e o traceback termina em <code>KeyboardInterrupt</code> ("interrupção pelo teclado"). Nos dois casos, nada de grave: é só rodar de novo.</p>
+</div>
+
+<div class="trypy" data-stdin="29" data-goal="out:Ano que vem você terá 30;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa para com <code>TypeError</code> quando a pessoa responde 29. Conserte para ele mostrar <code>Ano que vem você terá 30</code>.</p>
+<pre class="script" data-file="main.py">idade = input("Quantos anos você tem? ")
+print("Ano que vem você terá", idade + 1)
+</pre>
+<pre class="solucao" data-file="main.py">idade = int(input("Quantos anos você tem? "))
+print("Ano que vem você terá", idade + 1)
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>input()</code></td><td>Espera a pessoa digitar e apertar <kbd>Enter</kbd>; devolve o texto digitado (sem o <kbd>Enter</kbd>)</td></tr>
+<tr><td><code>input("Nome: ")</code></td><td>Mostra o prompt, sem pular linha, e espera a resposta ao lado dele</td></tr>
+<tr><td><code>nome = input("Nome: ")</code></td><td>Guarda a resposta com o nome <code>nome</code></td></tr>
+<tr><td><code>int(input("Idade: "))</code></td><td>Converte a resposta em número inteiro</td></tr>
+<tr><td><code>float(input("Preço: "))</code></td><td>Converte a resposta em número com casas decimais (digitado com ponto)</td></tr>
+<tr><td><code>type(input())</code></td><td>Sempre <code>&lt;class 'str'&gt;</code>: o <code>input</code> devolve texto</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>TypeError: can only concatenate str (not "int") to str</code></td><td>Conta com a resposta do <code>input</code> sem converter</td></tr>
+<tr><td><code>2 + 3</code> deu <code>23</code>, sem erro</td><td>Duas respostas do <code>input</code> somadas sem converter: o <code>+</code> juntou os textos</td></tr>
+<tr><td><code>ValueError: invalid literal for int() with base 10: 'dois'</code></td><td>A pessoa digitou algo que não é um número inteiro</td></tr>
+<tr><td><code>ValueError: could not convert string to float: '18,90'</code></td><td>Decimal digitado com vírgula</td></tr>
+<tr><td><code>EOFError: EOF when reading a line</code></td><td>A entrada acabou antes da resposta (<kbd>Ctrl</kbd>+<kbd>D</kbd> ou entrada vazia)</td></tr>
+<tr><td><code>KeyboardInterrupt</code></td><td>A pessoa apertou <kbd>Ctrl</kbd>+<kbd>C</kbd></td></tr>
+<tr><td>A resposta aparece grudada na pergunta</td><td>Faltou o espaço no fim do prompt</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Complete a pergunta</h3>
+<p>Complete para guardar a resposta da pessoa em <code>cidade</code>:</p>
+<div class="ex-code">cidade = <input data-answer="input" aria-label="nome da função">("Sua cidade: ")</div>
+</div>
+
+<div class="exercise">
+<h3>2. O tipo da resposta</h3>
+<p>A pessoa digitou <code>15</code>. Qual é o tipo do valor que o <code>input()</code> devolveu? (escreva o nome curto do tipo, em minúsculas)</p>
+<div class="ex-code">Tipo: <input data-answer="str" aria-label="tipo"></div>
+</div>
+
+<div class="exercise">
+<h3>3. Convertendo</h3>
+<p>Complete para que <code>pacotes</code> guarde um número inteiro:</p>
+<div class="ex-code">pacotes = <input data-answer="int" aria-label="função de conversão">(input("Quantos pacotes? "))</div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Sem conversão, a pessoa digita <code>4</code> e depois <code>5</code>. O que mostra <code>print(a + b)</code>?</p>
+<label><input type="radio" name="q4"> <code>9</code></label>
+<label><input type="radio" name="q4"> <code>TypeError</code></label>
+<label><input type="radio" name="q4"> <code>45</code></label>
+<label><input type="radio" name="q4"> <code>4 5</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. Por que se costuma terminar o prompt com um espaço, como em <code>input("Nome: ")</code>?</p>
+<label><input type="radio" name="q5"> Sem o espaço, o <code>input</code> dá erro</label>
+<label><input type="radio" name="q5"> Para a resposta não ficar grudada na pergunta</label>
+<label><input type="radio" name="q5"> Para o <code>input</code> devolver um número</label>
+<label><input type="radio" name="q5"> Para o <code>input</code> pular a linha</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. A pessoa digita <code>3.5</code>. Qual destas linhas funciona?</p>
+<label><input type="radio" name="q6"> <code>float(input("Quilos: "))</code></label>
+<label><input type="radio" name="q6"> <code>int(input("Quilos: "))</code></label>
+<label><input type="radio" name="q6"> As duas</label>
+<label><input type="radio" name="q6"> Nenhuma</label>
+</div>
+
+<h3>Missão final: o pedido da padaria</h3>
+
+<div class="trypy" data-stdin="Ana\n6" data-goal="out:Ana, seus 6 pães custam 4.5;;semerro">
+<p class="try-task"><strong>Missão:</strong> cada pão custa 0.75. Complete o programa: ele já pergunta o nome; faça ele perguntar também quantos pães a pessoa quer e mostrar, por exemplo, <code>Ana, seus 6 pães custam 4.5</code>. (O editor responde <code>Ana</code> e <code>6</code>.)</p>
+<pre class="script" data-file="main.py">nome = input("Seu nome: ")
+print(nome, "seu pedido está anotado")
+</pre>
+<pre class="solucao" data-file="main.py">nome = input("Seu nome: ")
+paes = int(input("Quantos pães? "))
+print(nome + ",", "seus", paes, "pães custam", paes * 0.75)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>input()</code> para o programa, espera a pessoa digitar e apertar <kbd>Enter</kbd>, e devolve o que foi digitado.</li>
+  <li>O texto entre os parênteses é o <strong>prompt</strong>: aparece antes da resposta, sem pular linha. Termine-o com um espaço.</li>
+  <li>Guarde a resposta com um nome: <code>nome = input("Nome: ")</code>.</li>
+  <li>O <code>input()</code> <strong>sempre devolve texto</strong> (<code>str</code>), mesmo quando a pessoa digita só algarismos.</li>
+  <li>Por isso, <code>resposta + 1</code> dá <code>TypeError</code> e <code>"2" + "3"</code> dá <code>"23"</code>, sem erro.</li>
+  <li>Para fazer contas, converta: <code>int(input(...))</code> para inteiros, <code>float(input(...))</code> para decimais (com ponto). Se a pessoa digitar outra coisa, vem um <code>ValueError</code>.</li>
+  <li>O <kbd>Enter</kbd> não entra na resposta, mas os espaços sim.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
