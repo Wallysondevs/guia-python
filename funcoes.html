@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Funções (def) — criando seus próprios comandos | Guia Python</title>
+<meta name="description" content="Funções em Python para quem está começando: a ideia da receita, como criar uma função com def, a diferença entre definir e chamar, a ordem em que o programa roda, o pass, e os erros reais: esquecer os parênteses, chamar antes de definir, os dois-pontos e a indentação.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Funções (def)</span></h1>
+
+<p class="intro">Você já usou várias funções sem perceber: <code>print()</code>, <code>input()</code>, <code>len()</code>, <code>type()</code>. Cada uma é um pedaço de código que alguém escreveu, deu um nome e deixou pronto para usar. Nesta aula você vai fazer o mesmo: <strong>criar os seus próprios comandos</strong>. Você junta algumas linhas, dá um nome a elas, e depois basta escrever esse nome para que todas rodem de novo, quantas vezes quiser.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é uma função, com a comparação da receita de bolo.</li>
+  <li>A criar uma função com <code>def</code>, e o que é cada parte da primeira linha.</li>
+  <li>A diferença entre <strong>definir</strong> e <strong>chamar</strong> uma função (definir não roda nada).</li>
+  <li>Em que ordem o Python executa um programa que tem funções.</li>
+  <li>Uma função chamando outra, e o <code>pass</code> para a função que ainda vai ser escrita.</li>
+  <li>Os erros reais: esquecer os parênteses, chamar antes de definir, esquecer os dois-pontos ou a indentação.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: uma receita com nome</h2>
+<p>A Ana anotou no caderno a receita do bolo de milho da avó. Escrever a receita <strong>não faz bolo nenhum</strong>: é só uma lista de passos guardada com um título, "Bolo de milho". O bolo só aparece quando alguém pega o caderno e <strong>segue a receita</strong>. E a mesma receita serve para fazer um bolo hoje, outro no sábado, outro no aniversário: ninguém reescreve os passos a cada vez.</p>
+
+<p>Uma <strong>função</strong> é isso: um grupo de linhas de código guardado com um nome. São dois momentos diferentes:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Na cozinha</th><th>No Python</th><th>O que acontece</th></tr>
+<tr><td>Escrever a receita no caderno</td><td><strong>Definir</strong> a função, com <code>def</code></td><td>O Python guarda os passos com um nome. Nada é executado ainda</td></tr>
+<tr><td>Fazer o bolo seguindo a receita</td><td><strong>Chamar</strong> a função: <code>nome()</code></td><td>O Python executa os passos guardados, um por um</td></tr>
+</table>
+</div>
+
+<p>"Função", em programação, não tem a ver com a função da matemática da escola (aquela do <em>f(x)</em>), pelo menos por enquanto: pense nela como uma <strong>receita com nome</strong>.</p>
+
+<hr>
+
+<h2>1. Definindo a primeira função</h2>
+<p>Toda manhã, o programa da Ana mostra duas mensagens. Vamos guardá-las numa função chamada <code>bom_dia</code>:</p>
+
+<pre class="file" data-file="so_definir.py">def bom_dia():
+    print("Bom dia, Ana!")
+    print("O café está pronto.")
+</pre>
+
+<dl class="anatomy">
+  <dt>def</dt><dd>Abreviação de <em>define</em> ("definir"). Avisa ao Python: "vou criar uma função".</dd>
+  <dt>bom_dia</dt><dd>O <strong>nome</strong> da função, escolhido por você. Segue as mesmas regras dos nomes de variáveis (aula <a href="nomes-variaveis.html">Nomes de Variáveis</a>): letras minúsculas, palavras separadas por <code>_</code>, sem espaços.</dd>
+  <dt>()</dt><dd>Os parênteses são obrigatórios, mesmo vazios. Mais adiante, eles vão guardar as informações que a função recebe (aula <a href="parametros.html">Parâmetros e Argumentos</a>).</dd>
+  <dt>:</dt><dd>Os dois-pontos encerram a primeira linha, como no <code>if</code> e no <code>for</code>: "agora vem o bloco".</dd>
+  <dt>as linhas recuadas</dt><dd>O <strong>corpo</strong> da função: os passos da receita. Todas as linhas com 4 espaços a mais pertencem à função (aula <a href="sintaxe.html">Sintaxe e Indentação</a>). A primeira linha sem esse recuo já está fora dela.</dd>
+</dl>
+
+<p>Agora rode o programa:</p>
+
+<pre class="term">$ python3 so_definir.py
+$                                                  « nenhuma linha de saída
+</pre>
+
+<p><strong>Não apareceu nada.</strong> E está certo: o programa só <strong>definiu</strong> a função. É a receita escrita no caderno. O Python leu as linhas, guardou-as com o nome <code>bom_dia</code>, chegou ao fim do arquivo e terminou. Ninguém pediu o bolo.</p>
+
+<hr>
+
+<h2>2. Chamando a função</h2>
+<p>Para executar os passos guardados, você <strong>chama</strong> a função: escreve o nome dela seguido de parênteses, na margem esquerda, fora do bloco do <code>def</code>.</p>
+
+<pre class="file" data-file="bom_dia.py">def bom_dia():
+    print("Bom dia, Ana!")
+    print("O café está pronto.")
+
+
+bom_dia()
+</pre>
+
+<pre class="term">$ python3 bom_dia.py
+Bom dia, Ana!
+O café está pronto.
+</pre>
+
+<dl class="anatomy">
+  <dt>bom_dia</dt><dd>O nome da função que você quer executar.</dd>
+  <dt>()</dt><dd>Os parênteses são o "faça agora!". Sem eles, o Python não executa nada (você vai ver isso em <a href="#errado">Quando dá errado</a>). É o mesmo jeito de chamar o <code>print()</code>: nome e parênteses.</dd>
+</dl>
+
+<div class="tip">
+<strong>Duas linhas em branco</strong>
+<p>Repare nas <strong>duas linhas em branco</strong> entre o fim da função e a chamada. O Python não exige, mas é o costume da comunidade (o guia de estilo PEP 8, aula <a href="estilo-pep8.html">Estilo de Código</a>): elas deixam claro, de longe, onde a função termina.</p>
+</div>
+
+<h3>Uma receita, vários bolos</h3>
+<p>A vantagem aparece quando você chama a função mais de uma vez. Cada chamada executa o corpo inteiro de novo:</p>
+
+<pre class="file" data-file="tres_vezes.py">def bom_dia():
+    print("Bom dia, Ana!")
+    print("O café está pronto.")
+
+
+bom_dia()
+bom_dia()
+bom_dia()
+</pre>
+
+<pre class="term">$ python3 tres_vezes.py
+Bom dia, Ana!
+O café está pronto.
+Bom dia, Ana!
+O café está pronto.
+Bom dia, Ana!
+O café está pronto.
+</pre>
+
+<p>Três chamadas, seis linhas de saída: duas linhas por chamada.</p>
+
+<div class="trypy" data-goal="src:^def despedida\(\):;;outre:Até amanhã!\nAté amanhã!;;semerro">
+<p class="try-task"><strong>Missão:</strong> crie uma função chamada <code>despedida</code> que mostre <code>Até amanhã!</code>. Depois, chame-a <strong>duas vezes</strong>. (A função <code>bom_dia</code> está aí de modelo.)</p>
+<pre class="script" data-file="main.py">def bom_dia():
+    print("Bom dia, Ana!")
+
+
+bom_dia()
+</pre>
+<pre class="solucao" data-file="main.py">def bom_dia():
+    print("Bom dia, Ana!")
+
+
+def despedida():
+    print("Até amanhã!")
+
+
+bom_dia()
+despedida()
+despedida()
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Em que ordem o programa roda</h2>
+<p>Quem está começando costuma achar que o Python executa tudo de cima para baixo, inclusive o que está dentro do <code>def</code>. Os números nas mensagens abaixo mostram a ordem de verdade:</p>
+
+<pre class="file" data-file="ordem.py">print("1. Começou o programa")
+
+
+def bom_dia():
+    print("3. Dentro da função")
+
+
+print("2. A função foi definida, mas ainda não rodou")
+bom_dia()
+print("4. A função terminou, o programa continua")
+</pre>
+
+<pre class="term">$ python3 ordem.py
+1. Começou o programa
+2. A função foi definida, mas ainda não rodou
+3. Dentro da função
+4. A função terminou, o programa continua
+</pre>
+
+<ol class="passo">
+  <li>O Python executa a linha 1 e mostra a mensagem 1.</li>
+  <li>Encontra o <code>def</code>: <strong>guarda</strong> o corpo da função com o nome <code>bom_dia</code> e pula para depois dele, sem executar o <code>print</code> de dentro.</li>
+  <li>Mostra a mensagem 2.</li>
+  <li>Encontra a chamada <code>bom_dia()</code>: <strong>entra</strong> na função e executa o corpo dela (mensagem 3).</li>
+  <li>Quando o corpo acaba, <strong>volta</strong> para a linha logo depois da chamada e mostra a mensagem 4.</li>
+</ol>
+
+<p>É como a Ana cozinhando: ela está arrumando a cozinha, para, abre o caderno, faz o bolo seguindo a receita e, quando acaba, volta a arrumar a cozinha de onde parou.</p>
+
+<hr>
+
+<h2>4. Para que serve: escrever uma vez, mudar num lugar só</h2>
+<p>A padaria do bairro imprime um cabeçalho em cada nota. Sem função, as cinco linhas do cabeçalho apareceriam repetidas no programa a cada nota. Com uma função:</p>
+
+<pre class="file" data-file="padaria.py">def cabecalho():
+    print("=" * 30)
+    print("   PADARIA PÃO QUENTE")
+    print("   Rua das Flores, 120")
+    print("=" * 30)
+
+
+cabecalho()
+print("Pão francês  x10   R$ 8,00")
+print("Leite        x1    R$ 5,50")
+print()
+cabecalho()
+print("Bolo de milho x1   R$ 18,00")
+</pre>
+
+<pre class="term">$ python3 padaria.py
+==============================
+   PADARIA PÃO QUENTE
+   Rua das Flores, 120
+==============================
+Pão francês  x10   R$ 8,00
+Leite        x1    R$ 5,50
+
+==============================
+   PADARIA PÃO QUENTE
+   Rua das Flores, 120
+==============================
+Bolo de milho x1   R$ 18,00
+</pre>
+
+<p>(O <code>"=" * 30</code> repete o sinal de igual 30 vezes, como na aula <a href="strings-juntar.html">Juntar e Repetir Textos</a>; o <code>print()</code> vazio pula uma linha.)</p>
+
+<p>No dia em que a padaria mudar de endereço, a Ana corrige <strong>uma</strong> linha, dentro da função, e todas as notas saem certas. Com o cabeçalho copiado e colado, ela teria de achar e corrigir cada cópia, e bastaria esquecer uma para uma nota sair com o endereço velho.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Vantagem</th><th>Por quê</th></tr>
+<tr><td>Não repetir código</td><td>Os passos são escritos uma vez e usados quantas vezes for preciso</td></tr>
+<tr><td>Mudar num lugar só</td><td>Corrigir a função corrige todas as chamadas</td></tr>
+<tr><td>Dar nome às coisas</td><td><code>cabecalho()</code> diz o que acontece; cinco <code>print</code> soltos, não</td></tr>
+<tr><td>Dividir um problema grande</td><td>Um programa grande vira várias funções pequenas, cada uma com uma tarefa</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>5. Uma função chamando outra</h2>
+<p>Dentro do corpo de uma função você pode escrever qualquer coisa que escreveria fora dela, inclusive a chamada de <strong>outra</strong> função:</p>
+
+<pre class="file" data-file="aviso.py">def linha():
+    print("-" * 20)
+
+
+def aviso():
+    linha()
+    print("Loja fechada às 18h")
+    linha()
+
+
+aviso()
+</pre>
+
+<pre class="term">$ python3 aviso.py
+--------------------
+Loja fechada às 18h
+--------------------
+</pre>
+
+<p>O programa chama <code>aviso()</code>; o <code>aviso</code> chama <code>linha()</code>, que mostra os tracinhos e volta; o <code>aviso</code> mostra a mensagem; chama <code>linha()</code> de novo; e termina. Cada chamada volta exatamente para o ponto de onde saiu.</p>
+
+<hr>
+
+<h2>6. A função que ainda vai ser escrita: <code>pass</code></h2>
+<p>Às vezes você já sabe o nome da função, mas ainda não escreveu o corpo. Um corpo só com um comentário <strong>não vale</strong>: o Python ignora os comentários, então para ele o corpo está vazio, e isso é erro (veja em <a href="#errado">Quando dá errado</a>). Para isso existe o <code>pass</code> (em inglês, "passar"), um comando que não faz nada:</p>
+
+<pre class="file" data-file="rascunho.py">def relatorio():
+    pass  # ainda vou escrever
+
+
+relatorio()
+print("Fim")
+</pre>
+
+<pre class="term">$ python3 rascunho.py
+Fim
+</pre>
+
+<p>A chamada <code>relatorio()</code> funcionou e não mostrou nada, porque o corpo só tem o <code>pass</code>. É um lugar reservado: depois a Ana troca o <code>pass</code> pelas linhas de verdade.</p>
+
+<hr>
+
+<h2>Formas diferentes de repetir as mesmas linhas</h2>
+<p>As três versões abaixo mostram "Bom dia, Ana!" três vezes:</p>
+
+<pre class="file" data-file="forma1.py">print("Bom dia, Ana!")
+print("Bom dia, Ana!")
+print("Bom dia, Ana!")
+</pre>
+
+<pre class="file" data-file="forma2.py">for vez in range(3):
+    print("Bom dia, Ana!")
+</pre>
+
+<pre class="file" data-file="forma3.py">def bom_dia():
+    print("Bom dia, Ana!")
+
+
+bom_dia()
+bom_dia()
+bom_dia()
+</pre>
+
+<p>As três dão a mesma saída:</p>
+
+<pre class="term">$ python3 forma1.py
+Bom dia, Ana!
+Bom dia, Ana!
+Bom dia, Ana!
+$ python3 forma2.py
+Bom dia, Ana!
+Bom dia, Ana!
+Bom dia, Ana!
+$ python3 forma3.py
+Bom dia, Ana!
+Bom dia, Ana!
+Bom dia, Ana!
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td>Copiar e colar as linhas</td><td>Só quando é uma linha curta, usada uma ou duas vezes. Cada cópia é mais um lugar para corrigir depois</td></tr>
+<tr><td>Um laço (<code>for</code>, aula <a href="for.html">for</a>)</td><td>Quando as repetições vêm <strong>seguidas</strong>, uma atrás da outra</td></tr>
+<tr><td>Uma função (<code>def</code>)</td><td>Quando o mesmo grupo de linhas aparece em <strong>lugares diferentes</strong> do programa (o cabeçalho antes de cada nota), ou quando dar um nome deixa o programa mais claro</td></tr>
+</table>
+</div>
+
+<p>Laço e função se combinam: dá para chamar uma função dentro de um <code>for</code>, e escrever um <code>for</code> dentro de uma função.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Esquecer os parênteses na chamada: nada acontece</strong>
+<pre class="file" data-file="sem_parenteses.py">def bom_dia():
+    print("Bom dia, Ana!")
+
+
+bom_dia
+print("Fim do programa")
+</pre>
+<pre class="term">$ python3 sem_parenteses.py
+Fim do programa
+</pre>
+<p>Nenhum erro, e nenhum "Bom dia". Sem parênteses, <code>bom_dia</code> é só o <strong>nome</strong> da função, como apontar para a receita no caderno sem cozinhar. O Python olhou para ela e seguiu em frente. É o erro mais traiçoeiro desta aula, justamente porque não reclama.</p>
+<p>No modo interativo (aula <a href="repl.html">O Modo Interativo</a>) dá para ver o que o nome sozinho é:</p>
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> def bom_dia():
+...     print("Bom dia, Ana!")
+...
+>>> bom_dia
+&lt;function bom_dia at 0x7f6a39ecb530&gt;
+>>> bom_dia()
+Bom dia, Ana!
+>>> type(bom_dia)
+&lt;class 'function'&gt;
+>>> exit()
+</pre>
+<p>Sem parênteses, o Python responde <code>&lt;function bom_dia at 0x7f6a39ecb530&gt;</code>: "isto é a função <code>bom_dia</code>, guardada no endereço <code>0x7f6a…</code> da memória". Com parênteses, ele executa. E <code>type(bom_dia)</code> confirma: uma função também é um valor, do tipo <code>function</code>.</p>
+<p>O mesmo texto aparece quando alguém escreve <code>print(bom_dia)</code> em vez de <code>bom_dia()</code>. O endereço é diferente a cada execução, porque o Python guarda a função num lugar diferente da memória cada vez:</p>
+<pre class="file" data-file="mostrar_funcao.py">def bom_dia():
+    print("Bom dia, Ana!")
+
+
+print(bom_dia)
+</pre>
+<pre class="term">$ python3 mostrar_funcao.py
+&lt;function bom_dia at 0x7f890c12b530&gt;
+$ python3 mostrar_funcao.py
+&lt;function bom_dia at 0x7f434c70b530&gt;
+</pre>
+<p><strong>Como consertar:</strong> se você viu <code>&lt;function … at 0x…&gt;</code> na saída, ou se a função "não fez nada", procure a chamada e confira os parênteses: <code>bom_dia()</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Chamar a função antes de definir</strong>
+<pre class="file" data-file="antes.py">bom_dia()
+
+
+def bom_dia():
+    print("Bom dia, Ana!")
+</pre>
+<pre class="term">$ python3 antes.py
+Traceback (most recent call last):
+  File "/home/ana/antes.py", line 1, in &lt;module&gt;
+    bom_dia()
+    ^^^^^^^
+NameError: name 'bom_dia' is not defined
+</pre>
+<p>Linha por linha:</p>
+<dl class="anatomy">
+  <dt>Traceback (most recent call last):</dt><dd>"Rastro (a chamada mais recente por último)": o Python vai mostrar o caminho até o erro.</dd>
+  <dt>File "/home/ana/antes.py", line 1, in &lt;module&gt;</dt><dd>O erro foi no arquivo <code>antes.py</code>, na <strong>linha 1</strong>. O <code>&lt;module&gt;</code> quer dizer "no programa principal", fora de qualquer função.</dd>
+  <dt>bom_dia()</dt><dd>A linha culpada, com <code>^^^^^^^</code> embaixo do pedaço exato que deu problema: o nome <code>bom_dia</code>.</dd>
+  <dt>NameError: name 'bom_dia' is not defined</dt><dd>"Erro de nome: o nome 'bom_dia' não está definido". Na linha 1, o Python ainda não tinha chegado ao <code>def</code>, então ainda não conhecia esse nome.</dd>
+</dl>
+<p>Lembre da ordem do programa: o <code>def</code> só cria a função quando o Python passa por ele. É como pedir o bolo de milho antes de a receita ter sido escrita no caderno. <strong>Como consertar:</strong> coloque as funções no <strong>começo</strong> do arquivo e as chamadas depois delas.</p>
+</div>
+
+<div class="cenario">
+<strong>Errar o nome na chamada</strong>
+<pre class="file" data-file="nome_errado.py">def bom_dia():
+    print("Bom dia, Ana!")
+
+
+bom_dai()
+</pre>
+<pre class="term">$ python3 nome_errado.py
+Traceback (most recent call last):
+  File "/home/ana/nome_errado.py", line 5, in &lt;module&gt;
+    bom_dai()
+    ^^^^^^^
+NameError: name 'bom_dai' is not defined. Did you mean: 'bom_dia'?
+</pre>
+<p>O mesmo <code>NameError</code>, agora com uma dica no fim: <code>Did you mean: 'bom_dia'?</code> ("Você quis dizer 'bom_dia'?"). O Python percebeu que existe uma função com um nome quase igual. <strong>Como consertar:</strong> escreva o nome exatamente como no <code>def</code>; maiúsculas e minúsculas também contam (<code>Bom_dia</code> é outro nome).</p>
+</div>
+
+<div class="cenario">
+<strong>Esquecer os dois-pontos</strong>
+<pre class="file" data-file="dois_pontos.py">def bom_dia()
+    print("Bom dia, Ana!")
+
+
+bom_dia()
+</pre>
+<pre class="term">$ python3 dois_pontos.py
+  File "/home/ana/dois_pontos.py", line 1
+    def bom_dia()
+                 ^
+SyntaxError: expected ':'
+</pre>
+<p><code>SyntaxError: expected ':'</code>: "erro de sintaxe: esperava <code>:</code>". O <code>^</code> aponta para o fim da linha 1, exatamente onde os dois-pontos faltam. Repare que não há <code>Traceback</code> nem nenhum "Bom dia": com erro de sintaxe, o Python recusa o arquivo inteiro antes de executar a primeira linha. <strong>Como consertar:</strong> <code>def bom_dia():</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Esquecer o recuo do corpo</strong>
+<pre class="file" data-file="indentacao.py">def bom_dia():
+print("Bom dia, Ana!")
+
+
+bom_dia()
+</pre>
+<pre class="term">$ python3 indentacao.py
+  File "/home/ana/indentacao.py", line 2
+    print("Bom dia, Ana!")
+    ^^^^^
+IndentationError: expected an indented block after function definition on line 1
+</pre>
+<p><code>IndentationError: expected an indented block after function definition on line 1</code>: "erro de indentação: esperava um bloco recuado depois da definição de função da linha 1". Depois do <code>def …:</code>, o Python exige pelo menos uma linha recuada. <strong>Como consertar:</strong> coloque 4 espaços antes de cada linha do corpo.</p>
+<p>A mesma mensagem aparece quando o corpo tem <strong>só um comentário</strong>, porque o comentário não conta como código:</p>
+<pre class="file" data-file="vazia.py">def relatorio():
+    # ainda vou escrever
+
+
+print("Fim")
+</pre>
+<pre class="term">$ python3 vazia.py
+  File "/home/ana/vazia.py", line 5
+    print("Fim")
+    ^^^^^
+IndentationError: expected an indented block after function definition on line 1
+</pre>
+<p>Aqui o Python só percebeu o problema na linha 5, a primeira linha de código depois do <code>def</code>. <strong>Como consertar:</strong> use o <code>pass</code> (seção 6).</p>
+</div>
+
+<div class="cenario">
+<strong>Uma linha que escapou da função</strong>
+<pre class="file" data-file="metade.py">def bom_dia():
+    print("Bom dia, Ana!")
+print("O café está pronto.")
+
+
+bom_dia()
+</pre>
+<pre class="term">$ python3 metade.py
+O café está pronto.
+Bom dia, Ana!
+</pre>
+<p>Sem erro, mas na ordem errada. A linha do café ficou <strong>sem recuo</strong>, então não faz parte da função: ela é executada logo, quando o Python passa por ela, antes mesmo da chamada. Só o "Bom dia" estava guardado na função. <strong>Como consertar:</strong> recue a linha do café com 4 espaços, como a de cima.</p>
+</div>
+
+<div class="trypy" data-goal="outre:Bem-vindo à Padaria Pão Quente!\nHorário da padaria:\nSeg a sáb: 6h às 20h\nDomingo: 7h às 12h;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa da padaria deveria mostrar as boas-vindas e, logo depois, o horário de funcionamento. Mas ele tem <strong>dois</strong> erros desta aula. Rode, leia a mensagem e conserte.</p>
+<pre class="script" data-file="main.py">mostrar_horario()
+
+
+def mostrar_horario():
+    print("Horário da padaria:")
+    print("Seg a sáb: 6h às 20h")
+    print("Domingo: 7h às 12h")
+
+
+print("Bem-vindo à Padaria Pão Quente!")
+mostrar_horario
+</pre>
+<pre class="solucao" data-file="main.py">def mostrar_horario():
+    print("Horário da padaria:")
+    print("Seg a sáb: 6h às 20h")
+    print("Domingo: 7h às 12h")
+
+
+print("Bem-vindo à Padaria Pão Quente!")
+mostrar_horario()
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>def nome():</code> + corpo recuado</td><td>Define (cria e guarda) uma função. Não executa o corpo</td></tr>
+<tr><td><code>nome()</code></td><td>Chama a função: executa o corpo e depois volta para a linha seguinte</td></tr>
+<tr><td><code>nome</code> (sem parênteses)</td><td>Só o nome da função, sem executar. No modo interativo, mostra <code>&lt;function nome at 0x…&gt;</code></td></tr>
+<tr><td><code>pass</code></td><td>Não faz nada; serve de corpo provisório</td></tr>
+<tr><td>Duas linhas em branco depois da função</td><td>Costume (PEP 8) para separar as funções do resto</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td>A função "não fez nada", sem erro</td><td>Faltaram os parênteses na chamada, ou a função nunca foi chamada</td></tr>
+<tr><td><code>&lt;function nome at 0x…&gt;</code> na saída</td><td><code>print(nome)</code> no lugar de <code>nome()</code></td></tr>
+<tr><td><code>NameError: name '…' is not defined</code></td><td>Chamada antes do <code>def</code>, ou nome escrito errado (veja a dica <code>Did you mean</code>)</td></tr>
+<tr><td><code>SyntaxError: expected ':'</code></td><td>Faltaram os dois-pontos no fim da linha do <code>def</code></td></tr>
+<tr><td><code>IndentationError: expected an indented block after function definition</code></td><td>Corpo sem recuo, ou só com comentários (use <code>pass</code>)</td></tr>
+<tr><td>Uma linha roda antes da hora, fora da ordem</td><td>A linha ficou sem recuo e saiu da função</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Criando a função</h3>
+<p>Complete a palavra que cria uma função:</p>
+<div class="ex-code"><input data-answer="def" aria-label="palavra-chave"> mostrar_menu():<br>&nbsp;&nbsp;&nbsp;&nbsp;print("Café, pão e bolo")</div>
+</div>
+
+<div class="exercise">
+<h3>2. Chamando a função</h3>
+<p>Complete a linha que <strong>executa</strong> a função do exercício anterior:</p>
+<div class="ex-code">mostrar_menu<input data-answer="()" aria-label="o que falta"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. Um arquivo tem só a definição de uma função, com dois <code>print</code> dentro, e nenhuma chamada. O que aparece quando você roda o programa?</p>
+<label><input type="radio" name="q3"> As duas mensagens dos <code>print</code></label>
+<label><input type="radio" name="q3"> Nada: definir não executa o corpo</label>
+<label><input type="radio" name="q3"> Um <code>NameError</code></label>
+<label><input type="radio" name="q3"> Um <code>SyntaxError</code>, porque toda função precisa ser chamada</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. A saída de um programa mostrou <code>&lt;function bom_dia at 0x7f434c70b530&gt;</code> no lugar do "Bom dia, Ana!". Qual é o erro mais provável?</p>
+<label><input type="radio" name="q4"> A função foi chamada antes de ser definida</label>
+<label><input type="radio" name="q4"> Faltaram os dois-pontos no <code>def</code></label>
+<label><input type="radio" name="q4"> Alguém escreveu <code>print(bom_dia)</code> em vez de <code>bom_dia()</code></label>
+<label><input type="radio" name="q4"> O corpo da função não tem recuo</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Qual é a ordem das mensagens deste programa?</p>
+<pre class="file" data-file="exercicio.py">def b():
+    print("B")
+
+
+print("A")
+b()
+print("C")
+</pre>
+<label><input type="radio" name="q5"> A, B, C</label>
+<label><input type="radio" name="q5"> B, A, C</label>
+<label><input type="radio" name="q5"> A, C, B</label>
+<label><input type="radio" name="q5"> A, C</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. Você quer criar a função agora e escrever o corpo amanhã. O que vai no corpo para o programa não dar erro?</p>
+<label><input type="radio" name="q6"> Um comentário: <code># depois</code></label>
+<label><input type="radio" name="q6"> Nada, uma linha em branco</label>
+<label><input type="radio" name="q6"> Os parênteses: <code>()</code></label>
+<label><input type="radio" name="q6"> <code>pass</code></label>
+</div>
+
+<h3>Missão final: o cardápio do café da manhã</h3>
+
+<div class="trypy" data-goal="src:^def cardapio\(\):;;outre:CARDÁPIO\nCafé: R\$ 4,00\nPão na chapa: R\$ 6,00\nCARDÁPIO\nCafé: R\$ 4,00\nPão na chapa: R\$ 6,00;;semerro">
+<p class="try-task"><strong>Missão:</strong> a padaria mostra o cardápio duas vezes, e as linhas estão repetidas. Guarde as três linhas numa função chamada <code>cardapio</code> e troque as repetições por duas chamadas. A saída tem de continuar igual.</p>
+<pre class="script" data-file="main.py">print("CARDÁPIO")
+print("Café: R$ 4,00")
+print("Pão na chapa: R$ 6,00")
+print("CARDÁPIO")
+print("Café: R$ 4,00")
+print("Pão na chapa: R$ 6,00")
+</pre>
+<pre class="solucao" data-file="main.py">def cardapio():
+    print("CARDÁPIO")
+    print("Café: R$ 4,00")
+    print("Pão na chapa: R$ 6,00")
+
+
+cardapio()
+cardapio()
+</pre>
+</div>
+
+<p>Agora mude o preço do café dentro da função e rode de novo: as duas cópias do cardápio mudam juntas.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Uma <strong>função</strong> é um grupo de linhas guardado com um nome: uma receita.</li>
+  <li><strong>Definir</strong> (<code>def nome():</code> + corpo recuado) só guarda a receita; não executa nada.</li>
+  <li><strong>Chamar</strong> (<code>nome()</code>) executa o corpo e, no fim, volta para a linha seguinte. Dá para chamar quantas vezes quiser.</li>
+  <li>O <code>def</code> tem de vir <strong>antes</strong> da chamada; senão, <code>NameError: name '…' is not defined</code>.</li>
+  <li>Sem parênteses, nada acontece: <code>nome</code> é só a função, que aparece como <code>&lt;function nome at 0x…&gt;</code> (o endereço muda a cada execução).</li>
+  <li>Faltou <code>:</code> → <code>SyntaxError: expected ':'</code>. Faltou recuo → <code>IndentationError</code>. Corpo provisório → <code>pass</code>.</li>
+  <li>Funções evitam repetição e deixam corrigir num lugar só. Na próxima aula, elas passam a receber informações: <a href="parametros.html">Parâmetros e Argumentos</a>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
