@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Atribuição Múltipla — várias variáveis numa linha | Guia Python</title>
+<meta name="description" content="Atribuição múltipla em Python para iniciantes: criar várias variáveis numa linha (a, b, c = 1, 2, 3), o mesmo valor para várias (x = y = 0), trocar dois valores com a, b = b, a, por que o lado direito é calculado antes, e os erros reais do Python 3.14 (ValueError too many / not enough values to unpack, TypeError cannot unpack) explicados em português.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Atribuição Múltipla</span></h1>
+
+<p class="intro">Até aqui, cada variável ganhou a sua linha: <code>paes = 12</code>, depois <code>leite = 2</code>, depois <code>ovos = 30</code>. O Python permite fazer isso tudo numa linha só, e ainda tem um truque famoso: trocar o valor de duas variáveis sem precisar de uma terceira. Isso se chama <strong>atribuição múltipla</strong>: atribuir (guardar) vários valores de uma vez.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A criar várias variáveis numa linha: <code>paes, leite, ovos = 12, 2, 30</code>.</li>
+  <li>A dar o mesmo valor a várias variáveis: <code>vendidos = perdidos = 0</code>.</li>
+  <li>A trocar dois valores com <code>a, b = b, a</code>, e por que o jeito "óbvio" não funciona.</li>
+  <li>Que o lado direito é calculado <strong>inteiro</strong> antes de qualquer variável mudar.</li>
+  <li>Os erros reais quando o número de nomes e de valores não bate.</li>
+</ul>
+</div>
+
+<p>Os programas desta aula foram rodados com o <strong>Python 3.14</strong> na máquina fictícia da Ana (usuária <code>ana</code>, computador <code>notebook</code>), com <code>python3 arquivo.py</code>.</p>
+
+<hr>
+
+<h2>A ideia: distribuir as etiquetas de uma vez</h2>
+<p>A Ana chega da feira com três sacolas e três etiquetas na mão: "pães", "leite", "ovos". Em vez de pôr uma sacola na mesa, colar a etiqueta, voltar, pegar a outra… ela enfileira as sacolas, enfileira as etiquetas na mesma ordem e cola tudo de uma vez: a primeira etiqueta na primeira sacola, a segunda na segunda, a terceira na terceira.</p>
+
+<p>Na atribuição múltipla, os nomes ficam à esquerda do <code>=</code> e os valores à direita, separados por vírgula, e o Python faz a correspondência <strong>pela posição</strong>. Para dar certo, as duas filas precisam ter o mesmo tamanho: três etiquetas, três sacolas.</p>
+
+<hr>
+
+<h2>1. Várias variáveis numa linha</h2>
+
+<pre class="file" data-file="am-varias.py">nome, idade, cidade = "Ana", 29, "Teresina"
+print(nome)
+print(idade)
+print(cidade)
+</pre>
+
+<pre class="term">$ python3 am-varias.py
+Ana
+29
+Teresina
+</pre>
+
+<dl class="anatomy">
+  <dt>nome, idade, cidade</dt><dd>Os nomes das variáveis, separados por vírgula: a fila de etiquetas.</dd>
+  <dt>=</dt><dd>"Recebem", como sempre.</dd>
+  <dt>"Ana", 29, "Teresina"</dt><dd>Os valores, também separados por vírgula: a fila de sacolas. Podem ser de tipos diferentes, texto e número misturados.</dd>
+  <dt>a correspondência</dt><dd>O 1º nome recebe o 1º valor, o 2º recebe o 2º, o 3º recebe o 3º: <code>nome</code> fica com <code>"Ana"</code>, <code>idade</code> com <code>29</code>, <code>cidade</code> com <code>"Teresina"</code>.</dd>
+</dl>
+
+<p>O resultado é exatamente o mesmo que escrever três linhas:</p>
+
+<pre class="file" data-file="tres-linhas.py">nome = "Ana"
+idade = 29
+cidade = "Teresina"
+</pre>
+
+<p>Outro exemplo, com as compras da Ana:</p>
+
+<pre class="file" data-file="am-compras.py">paes, leite, ovos = 12, 2, 30
+print("Pães:", paes, "| Leite:", leite, "| Ovos:", ovos)
+</pre>
+
+<pre class="term">$ python3 am-compras.py
+Pães: 12 | Leite: 2 | Ovos: 30
+</pre>
+
+<div class="tip">
+<strong>Quando vale a pena</strong>
+<p>Use a forma de uma linha para valores que <strong>andam juntos</strong> (um par de coordenadas, o nome e a idade de uma pessoa, as quantidades de uma compra). Para valores sem relação, ou para mais de três ou quatro nomes, linhas separadas são mais fáceis de ler: fica difícil contar qual valor vai para qual nome.</p>
+</div>
+
+<div class="trypy" data-goal="src:^bolo\s*,\s*torta\s*,\s*sonho\s*=;;out:Bolos: 3 | Tortas: 2 | Sonhos: 10">
+<p class="try-task"><strong>Missão:</strong> junte as três primeiras linhas numa linha só, com atribuição múltipla, na ordem <code>bolo, torta, sonho</code>. A saída deve continuar igual.</p>
+<pre class="script" data-file="main.py">bolo = 3
+torta = 2
+sonho = 10
+print("Bolos:", bolo, "| Tortas:", torta, "| Sonhos:", sonho)
+</pre>
+<pre class="solucao" data-file="main.py">bolo, torta, sonho = 3, 2, 10
+print("Bolos:", bolo, "| Tortas:", torta, "| Sonhos:", sonho)
+</pre>
+</div>
+
+<hr>
+
+<h2>2. O mesmo valor para várias variáveis</h2>
+<p>Quando várias variáveis começam com o <strong>mesmo</strong> valor, dá para encadear os <code>=</code>:</p>
+
+<pre class="file" data-file="am-mesmo.py">vendidos = devolvidos = perdidos = 0
+print(vendidos, devolvidos, perdidos)
+vendidos = 5
+print(vendidos, devolvidos, perdidos)
+</pre>
+
+<pre class="term">$ python3 am-mesmo.py
+0 0 0
+5 0 0
+</pre>
+
+<p>A primeira linha prende as três etiquetas ao mesmo valor, <code>0</code>. Depois, <code>vendidos = 5</code> muda só a etiqueta <code>vendidos</code> de lugar; as outras duas continuam no <code>0</code>, como você viu na cópia de variáveis em <a href="variaveis.html">Variáveis</a>.</p>
+
+<div class="warning">
+<strong>Com números e textos, tudo bem; com listas, cuidado</strong>
+<p>As três etiquetas ficam presas ao <strong>mesmo</strong> valor, e não a três cópias. Com números e textos isso nunca dá problema. Com listas, que podem ser alteradas por dentro, dá: <code>a = b = []</code> cria <strong>uma</strong> lista só com dois nomes. A história completa está em <a href="mutabilidade.html">Mutável × Imutável</a>.</p>
+</div>
+
+<hr>
+
+<h2>3. Trocando dois valores</h2>
+<p>Na padaria, a Carla trabalha de manhã e o Bruno à tarde. Nesta semana eles vão trocar de turno. Parece fácil:</p>
+
+<pre class="file" data-file="am-troca-errada.py">manha = "Carla"
+tarde = "Bruno"
+manha = tarde
+tarde = manha
+print("Manhã:", manha)
+print("Tarde:", tarde)
+</pre>
+
+<pre class="term">$ python3 am-troca-errada.py
+Manhã: Bruno
+Tarde: Bruno
+</pre>
+
+<p><strong>O Bruno ficou nos dois turnos, e a Carla sumiu.</strong> Siga as linhas:</p>
+<ol class="passo">
+  <li><code>manha = tarde</code>: <code>manha</code> passa a ser <code>"Bruno"</code>. Nesse momento, nenhuma variável guarda mais a <code>"Carla"</code>.</li>
+  <li><code>tarde = manha</code>: <code>tarde</code> recebe o valor atual de <code>manha</code>, que já é <code>"Bruno"</code>.</li>
+</ol>
+
+<p>O jeito tradicional (que funciona em qualquer linguagem) é guardar um dos valores numa variável auxiliar antes, como quem põe um copo na mesa para destrocar dois copos de lugar:</p>
+
+<pre class="file" data-file="am-troca-aux.py">manha = "Carla"
+tarde = "Bruno"
+guarda = manha
+manha = tarde
+tarde = guarda
+print("Manhã:", manha)
+print("Tarde:", tarde)
+</pre>
+
+<pre class="term">$ python3 am-troca-aux.py
+Manhã: Bruno
+Tarde: Carla
+</pre>
+
+<p>No Python, a atribuição múltipla faz isso numa linha, sem variável auxiliar:</p>
+
+<pre class="file" data-file="am-troca.py">manha = "Carla"
+tarde = "Bruno"
+manha, tarde = tarde, manha
+print("Manhã:", manha)
+print("Tarde:", tarde)
+</pre>
+
+<pre class="term">$ python3 am-troca.py
+Manhã: Bruno
+Tarde: Carla
+</pre>
+
+<dl class="anatomy">
+  <dt>tarde, manha</dt><dd>O lado direito é calculado <strong>primeiro e inteiro</strong>: o Python pega os valores atuais, <code>"Bruno"</code> e <code>"Carla"</code>, e os guarda de lado, nessa ordem.</dd>
+  <dt>manha, tarde =</dt><dd>Só depois ele cola as etiquetas: <code>manha</code> no primeiro valor guardado (<code>"Bruno"</code>), <code>tarde</code> no segundo (<code>"Carla"</code>). Como os valores já estavam guardados, nenhum se perde.</dd>
+</dl>
+
+<div class="trypy" data-goal="out:Manhã: Bruno;;out:Tarde: Carla;;src:manha\s*,\s*tarde\s*=\s*tarde\s*,\s*manha">
+<p class="try-task"><strong>Missão:</strong> o programa troca os turnos do jeito errado e a Carla some. Troque as duas linhas do meio por <strong>uma</strong> linha com <code>manha, tarde = tarde, manha</code>.</p>
+<pre class="script" data-file="main.py">manha = "Carla"
+tarde = "Bruno"
+manha = tarde
+tarde = manha
+print("Manhã:", manha)
+print("Tarde:", tarde)
+</pre>
+<pre class="solucao" data-file="main.py">manha = "Carla"
+tarde = "Bruno"
+manha, tarde = tarde, manha
+print("Manhã:", manha)
+print("Tarde:", tarde)
+</pre>
+</div>
+
+<hr>
+
+<h2>4. O lado direito vem primeiro, sempre</h2>
+<p>A regra que fez a troca funcionar vale para qualquer atribuição múltipla: <strong>todos</strong> os valores da direita são calculados com as variáveis como estavam <strong>antes</strong> da linha. Compare:</p>
+
+<pre class="file" data-file="am-direita.py">a = 1
+b = 10
+a, b = b, a + b
+print(a, b)
+</pre>
+
+<pre class="term">$ python3 am-direita.py
+10 11
+</pre>
+
+<pre class="file" data-file="am-direita2.py">a = 1
+b = 10
+a = b
+b = a + b
+print(a, b)
+</pre>
+
+<pre class="term">$ python3 am-direita2.py
+10 20
+</pre>
+
+<p>No primeiro programa, <code>a + b</code> foi calculado com o <code>a</code> antigo: <code>1 + 10 = 11</code>. No segundo, em duas linhas, quando a conta <code>a + b</code> foi feita o <code>a</code> já tinha virado 10: <code>10 + 10 = 20</code>. Uma linha só e duas linhas não são a mesma coisa quando uma variável depende da outra.</p>
+
+<hr>
+
+<h2>Formas diferentes de criar várias variáveis</h2>
+
+<pre class="file" data-file="am-pontovirgula.py">paes = 12; leite = 2; ovos = 30
+print(paes, leite, ovos)
+</pre>
+
+<pre class="term">$ python3 am-pontovirgula.py
+12 2 30
+</pre>
+
+<p>O <code>;</code> (ponto e vírgula) permite escrever vários comandos na mesma linha. Funciona, mas a PEP 8, o guia de estilo do Python (aula <a href="estilo-pep8.html">Estilo de Código</a>), desaconselha: cada comando na sua linha é mais fácil de ler.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td>Uma linha para cada variável</td><td>O padrão. Sempre que os valores não têm relação entre si, ou são muitos</td></tr>
+<tr><td><code>nome, idade = "Ana", 29</code></td><td>Para poucos valores que andam juntos</td></tr>
+<tr><td><code>x = y = 0</code></td><td>Para começar vários contadores com o mesmo número ou texto</td></tr>
+<tr><td><code>a, b = b, a</code></td><td>Para trocar dois valores. É o jeito do Python</td></tr>
+<tr><td><code>a = 1; b = 2</code></td><td>Evite: o estilo do Python pede um comando por linha</td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>A vírgula cria uma tupla</strong>
+<p>Por trás dos panos, o lado direito <code>12, 2, 30</code> é <strong>um</strong> valor só: uma <strong>tupla</strong>, um pacote de valores em ordem. Veja o que acontece com um nome só do lado esquerdo:</p>
+<pre class="file" data-file="am-tupla.py">pedido = 12, 2, 30
+print(pedido)
+</pre>
+<pre class="term">$ python3 am-tupla.py
+(12, 2, 30)
+</pre>
+<p>A atribuição múltipla, na verdade, "abre o pacote" e distribui os valores pelos nomes. Esse abrir se chama <strong>desempacotamento</strong> (<em>unpacking</em>), palavra que vai aparecer nas mensagens de erro abaixo. Tuplas e desempacotamento têm aulas próprias: <a href="tuplas.html">Tuplas</a> e <a href="desempacotamento.html">Desempacotamento</a>.</p>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Mais valores do que nomes</strong>
+<pre class="file" data-file="am-muitos.py">paes, leite = 12, 2, 30
+</pre>
+<pre class="term">$ python3 am-muitos.py
+Traceback (most recent call last):
+  File "/home/ana/am-muitos.py", line 1, in &lt;module&gt;
+    paes, leite = 12, 2, 30
+    ^^^^^^^^^^^
+ValueError: too many values to unpack (expected 2, got 3)
+</pre>
+<dl class="anatomy">
+  <dt>^^^^^^^^^^^</dt><dd>Aponta o lado esquerdo, a fila de nomes.</dd>
+  <dt>ValueError</dt><dd>"Erro de valor".</dd>
+  <dt>too many values to unpack</dt><dd>"Valores demais para desempacotar": sobrou sacola sem etiqueta.</dd>
+  <dt>(expected 2, got 3)</dt><dd>"(esperava 2, recebeu 3)": dois nomes, três valores.</dd>
+</dl>
+<p>Nenhuma variável foi criada: o Python confere as quantidades antes de colar qualquer etiqueta. <strong>Como consertar:</strong> um nome para cada valor, <code>paes, leite, ovos = 12, 2, 30</code>.</p>
+</div>
+
+<div class="note">
+<strong>No Python 3.13, a mensagem é mais curta</strong>
+<p>O pedaço <code>got 3</code> ("recebeu 3") é novo <span class="versao">3.14</span>. No Python 3.13, que vem no Debian 13, a mesma linha dá <code>ValueError: too many values to unpack (expected 2)</code>, sem dizer quantos valores vieram.</p>
+</div>
+
+<div class="cenario">
+<strong>Menos valores do que nomes</strong>
+<pre class="file" data-file="am-poucos.py">paes, leite, ovos = 12, 2
+</pre>
+<pre class="term">$ python3 am-poucos.py
+Traceback (most recent call last):
+  File "/home/ana/am-poucos.py", line 1, in &lt;module&gt;
+    paes, leite, ovos = 12, 2
+    ^^^^^^^^^^^^^^^^^
+ValueError: not enough values to unpack (expected 3, got 2)
+</pre>
+<p>"Valores insuficientes para desempacotar (esperava 3, recebeu 2)": sobrou etiqueta sem sacola. <strong>Como consertar:</strong> acrescente o valor que falta, <code>paes, leite, ovos = 12, 2, 30</code>, ou tire o nome que sobra.</p>
+</div>
+
+<div class="cenario">
+<strong>Um valor só para vários nomes</strong>
+<pre class="file" data-file="am-um.py">paes, leite = 12
+</pre>
+<pre class="term">$ python3 am-um.py
+Traceback (most recent call last):
+  File "/home/ana/am-um.py", line 1, in &lt;module&gt;
+    paes, leite = 12
+    ^^^^^^^^^^^
+TypeError: cannot unpack non-iterable int object
+</pre>
+<p>"Não dá para desempacotar um objeto <code>int</code> não iterável". Um número sozinho não é um pacote: não tem "itens" para distribuir (<strong>iterável</strong> é tudo o que pode ser percorrido item por item, como você vai ver em <a href="for.html">for</a>). Se a ideia era dar 12 aos dois, a forma certa é a da seção 2: <code>paes = leite = 12</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Um texto para vários nomes: não dá erro</strong>
+<pre class="file" data-file="am-texto.py">a, b, c = "Ana"
+print(a, b, c)
+</pre>
+<pre class="term">$ python3 am-texto.py
+A n a
+</pre>
+<p>Surpresa: um texto <strong>é</strong> um pacote, de letras. O Python desempacotou <code>"Ana"</code> em três letras, uma para cada nome. Se o texto tivesse quatro letras, viria o <code>ValueError</code> de valores demais. Raramente é isso que se quer; quando acontecer sem querer, confira se faltaram as vírgulas do lado direito.</p>
+</div>
+
+<div class="trypy" data-goal="semerro;;out:Pães: 12 | Leite: 2 | Ovos: 30">
+<p class="try-task"><strong>Missão:</strong> o programa para com <code>ValueError</code>. Leia a mensagem e conserte a primeira linha (sem mudar o <code>print</code>).</p>
+<pre class="script" data-file="main.py">paes, leite = 12, 2, 30
+print("Pães:", paes, "| Leite:", leite, "| Ovos:", ovos)
+</pre>
+<pre class="solucao" data-file="main.py">paes, leite, ovos = 12, 2, 30
+print("Pães:", paes, "| Leite:", leite, "| Ovos:", ovos)
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>a, b, c = 1, 2, 3</code></td><td><code>a</code> recebe 1, <code>b</code> recebe 2, <code>c</code> recebe 3 (pela posição)</td></tr>
+<tr><td><code>x = y = z = 0</code></td><td>As três variáveis recebem o mesmo valor</td></tr>
+<tr><td><code>a, b = b, a</code></td><td>Troca os valores de <code>a</code> e <code>b</code></td></tr>
+<tr><td><code>a, b = b, a + b</code></td><td>Todo o lado direito é calculado com os valores de antes da linha</td></tr>
+<tr><td><code>t = 1, 2, 3</code></td><td>Um nome só: guarda a tupla <code>(1, 2, 3)</code></td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>ValueError: too many values to unpack (expected 2, got 3)</code></td><td>Mais valores do que nomes</td></tr>
+<tr><td><code>ValueError: not enough values to unpack (expected 3, got 2)</code></td><td>Menos valores do que nomes</td></tr>
+<tr><td><code>TypeError: cannot unpack non-iterable int object</code></td><td>Vários nomes e um número só do lado direito</td></tr>
+<tr><td>Os dois turnos ficaram com o mesmo valor, sem erro</td><td>Troca feita em duas linhas (<code>a = b</code>, <code>b = a</code>): use <code>a, b = b, a</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Complete a troca</h3>
+<p>Complete para trocar os valores de <code>x</code> e <code>y</code>:</p>
+<div class="ex-code">x, y = <input data-answer="y, x|y,x" aria-label="lado direito"></div>
+</div>
+
+<div class="exercise">
+<h3>2. Qual é a saída?</h3>
+<pre class="file" data-file="ex2.py">a, b, c = 5, 6, 7
+print(b)
+</pre>
+<div class="ex-code">Saída: <input data-answer="6" aria-label="saída"></div>
+</div>
+
+<div class="exercise">
+<h3>3. E esta?</h3>
+<pre class="file" data-file="ex3.py">a, b = 2, 5
+a, b = b, a * b
+print(a, b)
+</pre>
+<div class="ex-code">Saída: <input data-answer="5 10" aria-label="saída"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. O que acontece com <code>x, y = 1, 2, 3</code>?</p>
+<label><input type="radio" name="q4"> <code>x</code> recebe 1 e <code>y</code> recebe 2; o 3 é ignorado</label>
+<label><input type="radio" name="q4"> <code>ValueError: too many values to unpack</code></label>
+<label><input type="radio" name="q4"> <code>y</code> recebe 2 e 3</label>
+<label><input type="radio" name="q4"> <code>SyntaxError</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. Depois de <code>a = 1</code>, <code>b = 2</code>, <code>a = b</code> e <code>b = a</code>, quanto valem <code>a</code> e <code>b</code>?</p>
+<label><input type="radio" name="q5"> <code>a</code> = 2, <code>b</code> = 1</label>
+<label><input type="radio" name="q5"> <code>a</code> = 1, <code>b</code> = 1</label>
+<label><input type="radio" name="q5"> <code>a</code> = 2, <code>b</code> = 2</label>
+<label><input type="radio" name="q5"> <code>a</code> = 1, <code>b</code> = 2</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Qual linha dá o valor 0 a <code>entradas</code> e a <code>saidas</code>?</p>
+<label><input type="radio" name="q6"> <code>entradas = saidas = 0</code></label>
+<label><input type="radio" name="q6"> <code>entradas, saidas = 0</code></label>
+<label><input type="radio" name="q6"> <code>entradas = 0 = saidas</code></label>
+<label><input type="radio" name="q6"> <code>0 = entradas, saidas</code></label>
+</div>
+
+<h3>Missão final: o caixa do dia</h3>
+
+<div class="trypy" data-goal="semerro;;src:^entradas\s*=\s*saidas\s*=\s*0;;src:^entradas\s*,\s*saidas\s*=\s*saidas\s*,\s*entradas;;out:Entradas: 30 | Saídas: 120">
+<p class="try-task"><strong>Missão:</strong> o caixa da padaria começa o dia zerado. (1) Troque as duas primeiras linhas por <strong>uma</strong>, <code>entradas = saidas = 0</code>. (2) A Ana anotou as vendas e as compras invertidas: antes do <code>print</code>, acrescente uma linha que <strong>troque</strong> os valores de <code>entradas</code> e <code>saidas</code>. Deve aparecer <code>Entradas: 30 | Saídas: 120</code>.</p>
+<pre class="script" data-file="main.py">entradas = 0
+saidas = 0
+entradas = entradas + 120
+saidas = saidas + 30
+print("Entradas:", entradas, "| Saídas:", saidas)
+</pre>
+<pre class="solucao" data-file="main.py">entradas = saidas = 0
+entradas = entradas + 120
+saidas = saidas + 30
+entradas, saidas = saidas, entradas
+print("Entradas:", entradas, "| Saídas:", saidas)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>a, b, c = 1, 2, 3</code> cria várias variáveis numa linha; os valores são distribuídos <strong>pela posição</strong>.</li>
+  <li>O número de nomes e de valores tem de bater; senão, <code>ValueError</code> (<code>too many</code> ou <code>not enough values to unpack</code>).</li>
+  <li><code>x = y = 0</code> dá o mesmo valor a várias variáveis.</li>
+  <li><code>a, b = b, a</code> troca dois valores sem variável auxiliar. Em duas linhas (<code>a = b</code>, <code>b = a</code>), um dos valores se perde.</li>
+  <li>O lado direito é calculado <strong>inteiro</strong> antes de qualquer variável mudar.</li>
+  <li>Use a forma de uma linha para poucos valores que andam juntos; no resto, uma variável por linha.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
