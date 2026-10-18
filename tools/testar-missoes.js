@@ -143,9 +143,11 @@ function analisarHtml(html) {
       problemas.push({ grav: "aviso", linha: linhaDe(l.index), msg: 'link para "' + alvo + '", que não está na NIVEIS' });
   }
   const PROIBIDO = /\/home\/admin|\/home\/wallyson|wallyson(?!devs\.github\.io)|ip-172-\d|guia-python-lab|\/tmp\/claude|\/home\/pyodide|web_user/i;
+  // dados reais que não podem ir para o git (IP da VPS etc.): um por linha em ~/.guia-proibido
+  const PROIBIDO_EXTRA = (() => { try { return fs.readFileSync(path.join(require("os").homedir(), ".guia-proibido"), "utf8").split("\n").map((x) => x.trim()).filter(Boolean); } catch (e) { return []; } })();
   const linhasSrc = html.split("\n");
   for (let k = 0; k < linhasSrc.length; k++) {
-    const p = PROIBIDO.exec(linhasSrc[k]);
+    const p = PROIBIDO.exec(linhasSrc[k]) || PROIBIDO_EXTRA.map((x) => [x]).find((x) => linhasSrc[k].includes(x[0]));
     if (p) problemas.push({ grav: "FALHA", linha: k + 1, msg: 'dado da máquina real na página: "' + p[0] + '" (use só /home/ana e ana@notebook)' });
   }
   return { caixas, problemas };
