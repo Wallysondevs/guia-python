@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python List Comprehension — criando listas em uma linha | Guia Python</title>
+<meta name="description" content="List comprehension para quem está começando: o for com append escrito em uma linha, transformar cada item, filtrar com if, escolher entre dois valores com if/else (e onde cada if fica), limpar o que foi digitado, quando NÃO usar, e os erros reais do Python 3.14: o else no lugar errado, o if sem else, a lista de None do print e a variável que não existe fora.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">List Comprehension</span></h1>
+
+<p class="intro">Nas aulas anteriores, você escreveu muitas vezes a mesma receita: começar com uma lista vazia, percorrer outra lista com <code>for</code> e ir fazendo <code>append</code>. "As notas de quem passou", "os itens em maiúsculas", "os preços com frete". A receita é tão comum que o Python tem um jeito de escrevê-la <strong>em uma linha só</strong>: a <strong>list comprehension</strong> (algo como "compreensão de lista"; em português, muita gente diz só "comprehension" mesmo). Ela é uma das coisas que mais deixam o código com cara de Python, e também uma das mais fáceis de exagerar.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A ler e escrever <code>[expressão for item in lista]</code>, comparando com o <code>for</code> + <code>append</code>.</li>
+  <li>A <strong>transformar</strong> cada item (maiúsculas, contas, tamanhos) e a usar <code>range()</code>.</li>
+  <li>A <strong>filtrar</strong> com <code>if</code> no fim: só os itens que passam no teste.</li>
+  <li>A <strong>escolher</strong> entre dois valores com <code>if</code>/<code>else</code> no começo, e por que os dois <code>if</code> ficam em lugares diferentes.</li>
+  <li><strong>Quando não usar</strong>: para fazer coisas (como <code>print</code>), quando fica comprida demais, quando precisa de <code>break</code>.</li>
+  <li>Os erros reais: o <code>else</code> no fim, o <code>if</code> sem <code>else</code> no começo, a lista de <code>None</code>, a variável que não existe fora e os parênteses no lugar dos colchetes.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: descrever a lista em vez de montá-la</h2>
+<p>Pense em duas maneiras de pedir uma coisa a alguém:</p>
+<ul>
+  <li><strong>Passo a passo:</strong> "pegue uma folha em branco; para cada item da minha lista, escreva o item em letras maiúsculas na folha".</li>
+  <li><strong>Descrevendo o resultado:</strong> "quero os itens da minha lista, em maiúsculas".</li>
+</ul>
+<p>As duas dão a mesma folha. O <code>for</code> com <code>append</code> é o passo a passo; a list comprehension é a descrição. Ela se lê quase como a frase: <code>[item.upper() for item in compras]</code>, "o item em maiúsculas, para cada item em compras".</p>
+
+<hr>
+
+<h2>1. Do <code>for</code> para a comprehension</h2>
+<p>Primeiro, o jeito que você já conhece:</p>
+
+<pre class="file" data-file="lc_for.py">compras = ["arroz", "feijão", "café"]
+maiusculas = []
+for item in compras:
+    maiusculas.append(item.upper())
+print(maiusculas)
+</pre>
+
+<pre class="term">$ python3 lc_for.py
+['ARROZ', 'FEIJÃO', 'CAFÉ']
+</pre>
+
+<p>Agora a mesma coisa, em list comprehension:</p>
+
+<pre class="file" data-file="lc.py">compras = ["arroz", "feijão", "café"]
+maiusculas = [item.upper() for item in compras]
+print(maiusculas)
+print(compras)
+</pre>
+
+<pre class="term">$ python3 lc.py
+['ARROZ', 'FEIJÃO', 'CAFÉ']
+['arroz', 'feijão', 'café']
+</pre>
+
+<dl class="anatomy">
+  <dt>[ … ]</dt><dd>Os colchetes de fora dizem: "o resultado é uma <strong>lista</strong>". Eles fazem o papel do <code>maiusculas = []</code>.</dd>
+  <dt>item.upper()</dt><dd>A <strong>expressão</strong>: o que vai entrar na lista nova para cada item. Faz o papel do que estava dentro do <code>append(…)</code>. Vem <strong>primeiro</strong>, embora seja calculada a cada volta.</dd>
+  <dt>for item in compras</dt><dd>O mesmo <code>for</code> de sempre, só que sem os dois-pontos e sem bloco: diz de onde vêm os itens e o nome de cada um.</dd>
+</dl>
+
+<p>Repare na última linha da saída: a lista <code>compras</code> não mudou. A comprehension <strong>sempre cria uma lista nova</strong>; a original fica como estava.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th><code>for</code> + <code>append</code></th><th>List comprehension</th></tr>
+<tr><td><code>maiusculas = []</code></td><td rowspan="3"><code>maiusculas = [item.upper() for item in compras]</code></td></tr>
+<tr><td><code>for item in compras:</code></td></tr>
+<tr><td><code>    maiusculas.append(item.upper())</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>2. Transformando cada item</h2>
+<p>A expressão do começo pode ser qualquer coisa que dê um valor: uma conta, uma função, um método. E o <code>for</code> pode percorrer qualquer coisa que um <code>for</code> comum percorreria, como um <code>range()</code> (aula <a href="range.html">range()</a>):</p>
+
+<pre class="file" data-file="lc_range.py">quadrados = [n * n for n in range(1, 6)]
+print(quadrados)
+precos = [4.50, 12.00, 8.75]
+com_frete = [preco + 0.50 for preco in precos]
+print(com_frete)
+tamanhos = [len(item) for item in ["arroz", "feijão", "café"]]
+print(tamanhos)
+</pre>
+
+<pre class="term">$ python3 lc_range.py
+[1, 4, 9, 16, 25]
+[5.0, 12.5, 9.25]
+[5, 6, 4]
+</pre>
+
+<ul>
+  <li><code>[n * n for n in range(1, 6)]</code>: para cada <code>n</code> de 1 a 5, o quadrado de <code>n</code>.</li>
+  <li><code>[preco + 0.50 for preco in precos]</code>: cada preço com R$ 0,50 a mais. Compare com o <code>for</code> com <code>range(len(…))</code> da aula <a href="listas-alterar.html">Alterando Itens</a>: lá a própria lista mudava; aqui nasce uma lista nova e a original fica intacta.</li>
+  <li><code>[len(item) for item in …]</code>: o tamanho de cada item.</li>
+</ul>
+
+<div class="trypy" data-goal="out:[5.0, 12.5, 9.25];;src:\[[^\]]*\bfor\b">
+<p class="try-task"><strong>Missão:</strong> o programa monta os preços com frete usando <code>for</code> e <code>append</code>. Troque as três linhas do meio por <strong>uma</strong> list comprehension que dê o mesmo resultado.</p>
+<pre class="script" data-file="main.py">precos = [4.50, 12.00, 8.75]
+com_frete = []
+for preco in precos:
+    com_frete.append(preco + 0.50)
+print(com_frete)
+</pre>
+<pre class="solucao" data-file="main.py">precos = [4.50, 12.00, 8.75]
+com_frete = [preco + 0.50 for preco in precos]
+print(com_frete)
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Filtrando: <code>if</code> no fim</h2>
+<p>A professora quer só as notas de quem passou. Um <code>if</code> (aula <a href="if.html">if</a>) <strong>no fim</strong> da comprehension funciona como uma peneira: o item só entra na lista nova se o teste der verdadeiro.</p>
+
+<pre class="file" data-file="lc_if.py">notas = [7.0, 4.5, 8.5, 6.0, 9.5, 5.0]
+aprovadas = [nota for nota in notas if nota &gt;= 6]
+print(aprovadas)
+turma = ["Ana", "Bruno", "Alice", "Carla", "Artur"]
+com_a = [nome for nome in turma if nome.startswith("A")]
+print(com_a)
+</pre>
+
+<pre class="term">$ python3 lc_if.py
+[7.0, 8.5, 6.0, 9.5]
+['Ana', 'Alice', 'Artur']
+</pre>
+
+<dl class="anatomy">
+  <dt>nota</dt><dd>A expressão: o próprio item, sem transformar. (Dá para transformar e filtrar ao mesmo tempo: <code>[nota + 1 for nota in notas if nota &gt;= 6]</code>.)</dd>
+  <dt>for nota in notas</dt><dd>De onde vêm os itens.</dd>
+  <dt>if nota &gt;= 6</dt><dd>A peneira. A nota 4.5 não passa, e simplesmente <strong>não entra</strong> na lista nova. Por isso a lista nova pode ser menor que a original.</dd>
+</dl>
+
+<p>Este é o "jeito de montar uma lista nova só com o que fica", que a aula <a href="listas-remover.html">Removendo Itens</a> recomendou no lugar de remover itens dentro de um <code>for</code>. Ali levou quatro linhas; aqui, uma.</p>
+
+<div class="trypy" data-goal="out:[7.0, 8.5, 6.0, 9.5];;src:\bif\b">
+<p class="try-task"><strong>Missão:</strong> a lista <code>aprovadas</code> está recebendo todas as notas. Acrescente um <code>if</code> no fim da comprehension para ficarem só as notas <strong>6 ou mais</strong>.</p>
+<pre class="script" data-file="main.py">notas = [7.0, 4.5, 8.5, 6.0, 9.5, 5.0]
+aprovadas = [nota for nota in notas]
+print(aprovadas)
+</pre>
+<pre class="solucao" data-file="main.py">notas = [7.0, 4.5, 8.5, 6.0, 9.5, 5.0]
+aprovadas = [nota for nota in notas if nota &gt;= 6]
+print(aprovadas)
+</pre>
+</div>
+
+<hr>
+
+<h2>4. Escolhendo entre dois valores: <code>if</code>/<code>else</code> no começo</h2>
+<p>E se a professora quiser, para <strong>cada</strong> aluno, a palavra "aprovado" ou "recuperação"? Agora ninguém fica de fora; o que muda é <strong>o valor</strong> que entra. Isso é o <code>if</code> em uma linha (aula <a href="if-ternario.html">if em uma Linha</a>), e ele vai <strong>no começo</strong>, no lugar da expressão:</p>
+
+<pre class="file" data-file="lc_ifelse.py">notas = [7.0, 4.5, 8.5, 6.0, 9.5, 5.0]
+situacao = ["aprovado" if nota &gt;= 6 else "recuperação" for nota in notas]
+print(situacao)
+</pre>
+
+<pre class="term">$ python3 lc_ifelse.py
+['aprovado', 'recuperação', 'aprovado', 'aprovado', 'aprovado', 'recuperação']
+</pre>
+
+<dl class="anatomy">
+  <dt>"aprovado" if nota &gt;= 6 else "recuperação"</dt><dd>A expressão inteira: "<code>"aprovado"</code> se a nota for 6 ou mais, senão <code>"recuperação"</code>". Ela sempre dá um valor, e esse valor entra na lista.</dd>
+  <dt>for nota in notas</dt><dd>De onde vêm as notas. Seis notas, seis palavras: a lista nova tem o <strong>mesmo tamanho</strong> da original.</dd>
+</dl>
+
+<h3>Os dois <code>if</code>, lado a lado</h3>
+<p>É aqui que quase todo mundo se confunde. Os dois <code>if</code> parecem iguais, mas fazem coisas diferentes e moram em lugares diferentes:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th><code>if</code> no fim (filtro)</th><th><code>if</code>/<code>else</code> no começo (escolha)</th></tr>
+<tr><td>Escrita</td><td><code>[nota for nota in notas if nota &gt;= 6]</code></td><td><code>["ok" if nota &gt;= 6 else "rec" for nota in notas]</code></td></tr>
+<tr><td>Pergunta que responde</td><td>"Este item <strong>entra</strong> na lista?"</td><td>"<strong>Qual valor</strong> entra no lugar deste item?"</td></tr>
+<tr><td>Tem <code>else</code>?</td><td><strong>Não</strong>: quem não passa fica de fora</td><td><strong>Sim, obrigatório</strong>: todo item precisa de um valor</td></tr>
+<tr><td>Tamanho da lista nova</td><td>Igual ou menor</td><td>Sempre igual</td></tr>
+</table>
+</div>
+
+<p>Dá para usar os dois juntos: <code>["ok" if nota &gt;= 9 else "bom" for nota in notas if nota &gt;= 6]</code> primeiro peneira (só as notas 6 ou mais) e depois escolhe a palavra. Funciona, mas repare como já ficou difícil de ler. Guarde essa sensação para a seção 6.</p>
+
+<hr>
+
+<h2>5. Um uso do dia a dia: limpar o que foi digitado</h2>
+<p>A Ana digitou a lista de compras numa linha só, separada por vírgulas, com espaços sobrando, maiúsculas misturadas e até um item vazio. O <code>split(",")</code> (aula <a href="strings-metodos.html">Métodos de Texto</a>) corta o texto nas vírgulas, e a comprehension limpa cada pedaço:</p>
+
+<pre class="file" data-file="lc_limpar.py">digitado = "  Arroz, feijão ,CAFÉ,  , leite "
+itens = [pedaco.strip().lower() for pedaco in digitado.split(",") if pedaco.strip()]
+print(itens)
+</pre>
+
+<pre class="term">$ python3 lc_limpar.py
+['arroz', 'feijão', 'café', 'leite']
+</pre>
+
+<ul>
+  <li><code>digitado.split(",")</code>: os pedaços entre as vírgulas, com os espaços e tudo.</li>
+  <li><code>if pedaco.strip()</code>: a peneira. Um pedaço só de espaços, depois do <code>strip()</code>, vira <code>""</code>, e um texto vazio conta como falso (aula <a href="booleanos.html">Booleanos</a>). Então ele fica de fora.</li>
+  <li><code>pedaco.strip().lower()</code>: o que entra, sem espaços nas pontas e em minúsculas.</li>
+</ul>
+
+<p>Essa linha já está no limite do confortável. O mesmo programa, com <code>for</code>:</p>
+
+<pre class="file" data-file="lc_limpar2.py">digitado = "  Arroz, feijão ,CAFÉ,  , leite "
+itens = []
+for pedaco in digitado.split(","):
+    pedaco = pedaco.strip()
+    if pedaco:
+        itens.append(pedaco.lower())
+print(itens)
+</pre>
+
+<pre class="term">$ python3 lc_limpar2.py
+['arroz', 'feijão', 'café', 'leite']
+</pre>
+
+<p>Mais comprido, mas cada linha faz uma coisa só, e o <code>strip()</code> é feito uma vez em vez de duas. Os dois estão certos; escolha o que <strong>você</strong> (e quem for ler depois) entende mais rápido.</p>
+
+<hr>
+
+<h2>6. Quando não usar</h2>
+<p>A list comprehension serve para uma coisa: <strong>criar uma lista</strong> a partir de outra. Fora disso, o <code>for</code> comum é melhor.</p>
+
+<h3>Para fazer algo, e não para criar uma lista</h3>
+<pre class="file" data-file="lc_print.py">compras = ["arroz", "feijão", "café"]
+resultado = [print(item) for item in compras]
+print(resultado)
+</pre>
+
+<pre class="term">$ python3 lc_print.py
+arroz
+feijão
+café
+[None, None, None]
+</pre>
+
+<p>Os itens foram mostrados, mas, de quebra, o Python montou uma lista com o que cada <code>print</code> devolveu: <code>None</code>, três vezes (aula <a href="none.html">O Valor None</a>). Uma lista inútil, criada só para ser jogada fora. Quando o objetivo é <strong>fazer</strong> algo com cada item (mostrar, gravar num arquivo, fazer <code>append</code> em outra lista), use o <code>for</code>:</p>
+
+<pre class="file" data-file="mostrar.py">compras = ["arroz", "feijão", "café"]
+for item in compras:
+    print(item)
+</pre>
+
+<pre class="term">$ python3 mostrar.py
+arroz
+feijão
+café
+</pre>
+
+<p>A mesma saída, sem lista nenhuma sobrando.</p>
+
+<h3>Quando fica comprida ou cheia de condições</h3>
+<p>Uma comprehension pode ter vários <code>for</code> e vários <code>if</code>. Que lista esta linha monta?</p>
+
+<pre class="file" data-file="lc_complicada.py">compras = ["arroz", "feijão", "sal", "café"]
+consoantes = [letra.upper() for item in compras if len(item) &gt; 3 for letra in item if letra not in "aeiouãé"]
+print(consoantes)
+</pre>
+
+<pre class="term">$ python3 lc_complicada.py
+['R', 'R', 'Z', 'F', 'J', 'C', 'F']
+</pre>
+
+<p>Difícil dizer de cabeça. O mesmo com <code>for</code>:</p>
+
+<pre class="file" data-file="lc_complicada2.py">compras = ["arroz", "feijão", "sal", "café"]
+consoantes = []
+for item in compras:
+    if len(item) &gt; 3:
+        for letra in item:
+            if letra not in "aeiouãé":
+                consoantes.append(letra.upper())
+print(consoantes)
+</pre>
+
+<pre class="term">$ python3 lc_complicada2.py
+['R', 'R', 'Z', 'F', 'J', 'C', 'F']
+</pre>
+
+<p>Agora dá para ler: "para cada item com mais de 3 letras, para cada letra que não é vogal, guarde a letra em maiúscula". (O sal ficou de fora por ter só 3 letras.) Mesmo resultado, muito mais fácil de entender e de consertar.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Situação</th><th>Use</th></tr>
+<tr><td>Uma lista nova, transformando cada item</td><td>Comprehension: <code>[x * 2 for x in lista]</code></td></tr>
+<tr><td>Uma lista nova, só com alguns itens</td><td>Comprehension com <code>if</code> no fim</td></tr>
+<tr><td>Uma lista nova, com um de dois valores para cada item</td><td>Comprehension com <code>if</code>/<code>else</code> no começo</td></tr>
+<tr><td>Fazer algo com cada item (<code>print</code>, gravar, contar)</td><td><code>for</code></td></tr>
+<tr><td>Alterar a própria lista</td><td><code>for i in range(len(lista))</code> (aula <a href="listas-alterar.html">Alterando Itens</a>)</td></tr>
+<tr><td>Parar no meio (<code>break</code>)</td><td><code>for</code>: a comprehension não tem <code>break</code></td></tr>
+<tr><td>Não cabe numa linha, ou precisa de mais de um <code>if</code> ou de um <code>for</code> dentro de outro</td><td><code>for</code>: quem lê agradece</td></tr>
+<tr><td>Só somar, achar o maior, contar</td><td><code>sum()</code>, <code>max()</code>, <code>len()</code> (às vezes com uma comprehension dentro: <code>sum([p * 2 for p in precos])</code>)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>O <code>else</code> no fim</strong>
+<p>A professora queria "aprovado" ou "recuperação" e pôs o <code>if</code>/<code>else</code> no fim, onde mora o filtro:</p>
+<pre class="file" data-file="lc_erro_else.py">notas = [7.0, 4.5, 8.5]
+situacao = ["aprovado" for nota in notas if nota &gt;= 6 else "recuperação"]
+print(situacao)
+</pre>
+<pre class="term">$ python3 lc_erro_else.py
+  File "/home/ana/lc_erro_else.py", line 2
+    situacao = ["aprovado" for nota in notas if nota &gt;= 6 else "recuperação"]
+                                                          ^^^^
+SyntaxError: invalid syntax
+</pre>
+<p>Linha por linha:</p>
+<ul>
+  <li><code>File "/home/ana/lc_erro_else.py", line 2</code>: o problema está na linha 2. Sem <code>Traceback</code>: é um erro de escrita, e nada rodou.</li>
+  <li>Os <code>^^^^</code> apontam para o <code>else</code>: foi ali que o Python se perdeu.</li>
+  <li><code>SyntaxError: invalid syntax</code>: "sintaxe inválida". O <code>if</code> do fim é um filtro, e filtro não tem <code>else</code>; o Python não esperava aquela palavra ali.</li>
+</ul>
+<p><strong>Como consertar:</strong> com <code>else</code>, o <code>if</code> vai para o <strong>começo</strong>: <code>["aprovado" if nota &gt;= 6 else "recuperação" for nota in notas]</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O <code>if</code> sem <code>else</code> no começo</strong>
+<pre class="file" data-file="lc_erro_ifsem.py">notas = [7.0, 4.5, 8.5]
+aprovadas = [nota if nota &gt;= 6 for nota in notas]
+print(aprovadas)
+</pre>
+<pre class="term">$ python3 lc_erro_ifsem.py
+  File "/home/ana/lc_erro_ifsem.py", line 2
+    aprovadas = [nota if nota &gt;= 6 for nota in notas]
+                 ^^^^^^^^^^^^^^^^^
+SyntaxError: expected 'else' after 'if' expression
+</pre>
+<p>Agora o erro é o contrário, e o Python 3.14 explica bem: "esperava <code>else</code> depois da expressão <code>if</code>". No começo, o <code>if</code> está escolhendo um valor, e precisa saber o que pôr quando o teste der falso. Os <code>^^^^</code> marcam a expressão inteira, <code>nota if nota &gt;= 6</code>. <strong>Como consertar:</strong> se a ideia era filtrar, mova o <code>if</code> para o fim: <code>[nota for nota in notas if nota &gt;= 6]</code>. Se era escolher, acrescente o <code>else</code>: <code>[nota if nota &gt;= 6 else 0 for nota in notas]</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>A variável da comprehension não existe fora dela</strong>
+<pre class="file" data-file="lc_vazamento.py">compras = ["arroz", "feijão", "café"]
+maiusculas = [item.upper() for item in compras]
+print(maiusculas)
+print(item)
+</pre>
+<pre class="term">$ python3 lc_vazamento.py
+['ARROZ', 'FEIJÃO', 'CAFÉ']
+Traceback (most recent call last):
+  File "/home/ana/lc_vazamento.py", line 4, in &lt;module&gt;
+    print(item)
+          ^^^^
+NameError: name 'item' is not defined. Did you mean: 'iter'?
+</pre>
+<p>Depois de um <code>for</code> comum, a variável do laço continua existindo, com o último valor. A da comprehension, não: o <code>item</code> só existe <strong>dentro</strong> dos colchetes. Fora deles, <code>name 'item' is not defined</code>. A dica <code>Did you mean: 'iter'?</code> é o Python procurando um nome parecido (<code>iter</code> é uma função embutida); aqui ela não ajuda. Isso é uma vantagem, na verdade: a comprehension não deixa variáveis soltas pelo programa. <strong>Como consertar:</strong> se você precisa do último item, use <code>compras[-1]</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Parênteses no lugar dos colchetes</strong>
+<pre class="file" data-file="lc_parenteses.py">notas = [7.0, 4.5, 8.5]
+aprovadas = (nota for nota in notas if nota &gt;= 6)
+print(aprovadas)
+print(list(aprovadas))
+</pre>
+<pre class="term">$ python3 lc_parenteses.py
+&lt;generator object &lt;genexpr&gt; at 0x7fe7e2b0cee0&gt;
+[7.0, 8.5]
+</pre>
+<p>Sem erro, mas o <code>print</code> não mostrou uma lista: mostrou um <strong>gerador</strong> (<em>generator</em>), um objeto que vai produzindo os itens quando alguém pede, sem guardar todos de uma vez (o número depois do <code>at</code> é um endereço da memória e muda a cada execução). Com <code>list()</code> em volta, os itens aparecem. Geradores são muito úteis e têm aula própria: <a href="geradores.html">Geradores</a>. <strong>Como consertar:</strong> para uma lista, colchetes: <code>[nota for nota in notas if nota &gt;= 6]</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>A lista de <code>None</code></strong>
+<p>Você viu na seção 6: <code>[print(item) for item in compras]</code> mostra os itens e cria <code>[None, None, None]</code>. Se aparecer uma lista cheia de <code>None</code>, procure uma comprehension cuja expressão é uma função ou método que não devolve nada (<code>print</code>, <code>append</code>, <code>sort</code>…). Use um <code>for</code> comum.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>O que faz</th><th>Exemplo</th></tr>
+<tr><td><code>[expr for x in seq]</code></td><td>Uma lista com <code>expr</code> calculada para cada <code>x</code></td><td><code>[n * n for n in range(4)]</code> → <code>[0, 1, 4, 9]</code></td></tr>
+<tr><td><code>[x for x in seq if cond]</code></td><td>Só os itens em que <code>cond</code> é verdadeira</td><td><code>[n for n in notas if n &gt;= 6]</code></td></tr>
+<tr><td><code>[a if cond else b for x in seq]</code></td><td>Para cada item, <code>a</code> ou <code>b</code></td><td><code>["ok" if n &gt;= 6 else "rec" for n in notas]</code></td></tr>
+<tr><td><code>[expr for x in seq if cond]</code></td><td>Filtra e transforma</td><td><code>[n + 1 for n in notas if n &gt;= 6]</code></td></tr>
+<tr><td><code>list(… for x in seq)</code> / <code>(… for x in seq)</code></td><td>Gerador (não é lista até passar pelo <code>list()</code>)</td><td>Aula <a href="geradores.html">Geradores</a></td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>SyntaxError: invalid syntax</code> apontando o <code>else</code></td><td><code>if</code>/<code>else</code> no fim; com <code>else</code>, o <code>if</code> vai no começo</td></tr>
+<tr><td><code>SyntaxError: expected 'else' after 'if' expression</code></td><td><code>if</code> no começo sem <code>else</code>; para filtrar, o <code>if</code> vai no fim</td></tr>
+<tr><td>Uma lista cheia de <code>None</code></td><td>A expressão é um <code>print</code> (ou outro que devolve <code>None</code>): use <code>for</code></td></tr>
+<tr><td><code>NameError</code> com a variável da comprehension</td><td>Ela só existe dentro dos colchetes</td></tr>
+<tr><td><code>&lt;generator object &lt;genexpr&gt; at 0x…&gt;</code></td><td>Parênteses no lugar dos colchetes</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Complete a comprehension</h3>
+<p>Complete para criar a lista com o dobro de cada número:</p>
+<div class="ex-code">dobros = [n * 2 <input data-answer="for" aria-label="palavra-chave" size="4"> n <input data-answer="in" aria-label="palavra-chave" size="3"> numeros]</div>
+</div>
+
+<div class="exercise">
+<h3>2. O resultado</h3>
+<p>O que <code>[n * 10 for n in range(3)]</code> devolve? Escreva como o Python mostraria.</p>
+<div class="ex-code"><input data-answer="[0, 10, 20]" aria-label="resultado" size="14"></div>
+</div>
+
+<div class="exercise">
+<h3>3. Só os baratos</h3>
+<p>Complete o filtro para ficarem só os preços menores que 10:</p>
+<div class="ex-code">baratos = [p for p in precos <input data-answer="if" aria-label="palavra-chave" size="3"> p &lt; 10]</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Qual destas linhas está escrita certo?</p>
+<label><input type="radio" name="q4"> <code>[n for n in notas if n &gt;= 6 else 0]</code></label>
+<label><input type="radio" name="q4"> <code>[n if n &gt;= 6 else 0 for n in notas]</code></label>
+<label><input type="radio" name="q4"> <code>[n if n &gt;= 6 for n in notas]</code></label>
+<label><input type="radio" name="q4"> <code>[for n in notas: n]</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. Com <code>notas = [8, 3, 9, 5]</code>, quantos itens tem <code>[n for n in notas if n &gt;= 6]</code>?</p>
+<label><input type="radio" name="q5"> 4</label>
+<label><input type="radio" name="q5"> 0</label>
+<label><input type="radio" name="q5"> 1</label>
+<label><input type="radio" name="q5"> 2</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">6. Em qual destas situações o <code>for</code> comum é melhor que uma list comprehension?</p>
+<label><input type="radio" name="q6"> Criar a lista dos nomes em maiúsculas</label>
+<label><input type="radio" name="q6"> Criar a lista só com as notas acima de 6</label>
+<label><input type="radio" name="q6"> Mostrar cada item na tela com <code>print</code></label>
+<label><input type="radio" name="q6"> Criar a lista dos quadrados de 1 a 10</label>
+</div>
+
+<h3>Missão final: a situação da turma</h3>
+
+<div class="trypy" data-goal="out:['aprovado', 'recuperação', 'aprovado', 'aprovado', 'aprovado', 'recuperação'];;semerro">
+<p class="try-task"><strong>Missão:</strong> a professora quer, para <strong>cada</strong> nota, a palavra <code>"aprovado"</code> (6 ou mais) ou <code>"recuperação"</code>. O programa dá <code>SyntaxError</code>. Ponha o <code>if</code>/<code>else</code> no lugar certo.</p>
+<pre class="script" data-file="main.py">notas = [7.0, 4.5, 8.5, 6.0, 9.5, 5.0]
+situacao = ["aprovado" for nota in notas if nota &gt;= 6 else "recuperação"]
+print(situacao)
+</pre>
+<pre class="solucao" data-file="main.py">notas = [7.0, 4.5, 8.5, 6.0, 9.5, 5.0]
+situacao = ["aprovado" if nota &gt;= 6 else "recuperação" for nota in notas]
+print(situacao)
+</pre>
+</div>
+
+<p>Existe também a mesma ideia para dicionários e conjuntos, com chaves em vez de colchetes: a aula <a href="dict-comprehension.html">Dict e Set Comprehension</a> mostra como.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>[expressão for item in lista]</code> é o <code>for</code> + <code>append</code> em uma linha: cria uma <strong>lista nova</strong> e não mexe na original.</li>
+  <li>A expressão do começo diz <strong>o que</strong> entra; o <code>for</code> diz <strong>de onde</strong> vêm os itens.</li>
+  <li><code>if</code> no <strong>fim</strong>, sem <code>else</code>: filtra (quem não passa fica de fora).</li>
+  <li><code>if</code>/<code>else</code> no <strong>começo</strong>: escolhe um de dois valores para cada item (a lista tem o mesmo tamanho).</li>
+  <li>Não use para <strong>fazer</strong> coisas (<code>print</code>): você ganha uma lista de <code>None</code>. Não use quando ficar comprida ou precisar de <code>break</code>: o <code>for</code> é mais claro.</li>
+  <li>A variável da comprehension só existe dentro dos colchetes. Com parênteses, o resultado é um gerador, não uma lista.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
