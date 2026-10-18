@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python @classmethod e @staticmethod — métodos da classe e métodos utilitários | Guia Python</title>
+<meta name="description" content="@classmethod e @staticmethod para quem está começando: a diferença entre self e cls, o contador da classe, o construtor alternativo (de_texto, como dict.fromkeys e date.fromisoformat), por que usar cls e não o nome da classe, métodos estáticos utilitários e os erros reais do Python 3.14 (missing 'self', takes 1 positional argument but 2 were given).">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">@classmethod e @staticmethod</span></h1>
+
+<p class="intro">Até aqui, todo método que você escreveu começava com <code>self</code>: ele trabalha com <strong>um objeto</strong> (este café, aquele aluno). Mas algumas tarefas pertencem à classe sem pertencer a nenhum objeto em especial. "Quantos produtos a lojinha já cadastrou?" é uma pergunta sobre a <strong>classe</strong> <code>Produto</code>, não sobre o café. "Transforme o número 1234.5 no texto <code>R$ 1.234,50</code>" nem precisa de produto nenhum. Para esses casos, o Python tem dois tipos de método: o <strong>método de classe</strong>, marcado com <code>@classmethod</code>, e o <strong>método estático</strong>, marcado com <code>@staticmethod</code>.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A diferença entre os três tipos de método: o normal (<code>self</code>), o de classe (<code>cls</code>) e o estático (nenhum dos dois).</li>
+  <li>O que é a "arroba" (<code>@</code>) em cima do <code>def</code>.</li>
+  <li>A usar um método de classe para contar os objetos criados.</li>
+  <li>O uso mais comum do <code>@classmethod</code>: um <strong>segundo jeito de criar objetos</strong>, como <code>Produto.de_texto("Café;18.90")</code>.</li>
+  <li>Por que escrever <code>cls(...)</code> e não <code>Produto(...)</code> dentro dele (e o defeito silencioso que aparece com herança).</li>
+  <li>Quando um <code>@staticmethod</code> faz sentido e quando uma função comum é melhor.</li>
+  <li>Os erros reais: <code>missing 1 required positional argument: 'self'</code>, <code>takes 1 positional argument but 2 were given</code> e companhia.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a fábrica, o bolo e a balança</h2>
+<p>Pense numa fábrica de bolos. A <strong>receita</strong> é a classe; cada <strong>bolo</strong> que sai do forno é um objeto. Agora repare em três perguntas diferentes:</p>
+<ul>
+  <li>"Qual é o sabor <strong>deste</strong> bolo?" Só dá para responder olhando um bolo. É um <strong>método normal</strong>: recebe o bolo (o <code>self</code>).</li>
+  <li>"Quantos bolos a fábrica já fez hoje?" "Faça um bolo a partir deste pedido escrito num papel." São tarefas <strong>da fábrica</strong>, não de um bolo. É um <strong>método de classe</strong>: recebe a classe (o <code>cls</code>).</li>
+  <li>"Quanto são 250 gramas em xícaras?" A balança da cozinha responde sem olhar bolo nenhum e sem saber nada da fábrica. Ela só fica guardada ali porque é coisa de cozinha. É um <strong>método estático</strong>: não recebe nem o bolo nem a fábrica.</li>
+</ul>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Tipo de método</th><th>Marca</th><th>Primeiro parâmetro</th><th>Trabalha com…</th></tr>
+<tr><td>Normal (de instância)</td><td>nenhuma</td><td><code>self</code> (o objeto)</td><td>os dados de <strong>um</strong> objeto</td></tr>
+<tr><td>De classe</td><td><code>@classmethod</code></td><td><code>cls</code> (a classe)</td><td>a classe inteira: contadores, outros jeitos de criar objetos</td></tr>
+<tr><td>Estático</td><td><code>@staticmethod</code></td><td>nenhum especial</td><td>só com os argumentos que recebe</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. Lembrando: o método normal recebe <code>self</code></h2>
+<p>A lojinha da Ana tem uma classe <code>Produto</code>, com o nome e o preço de cada produto, como nas aulas <a href="init-self.html">__init__ e self</a> e <a href="atributos-metodos.html">Atributos e Métodos</a>:</p>
+
+<pre class="file" data-file="normal.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def descricao(self):
+        return f"{self.nome}: R$ {self.preco:.2f}"
+
+
+cafe = Produto("Café", 18.9)
+print(cafe.descricao())
+</pre>
+
+<pre class="term">$ python3 normal.py
+Café: R$ 18.90
+</pre>
+
+<p>Quando você escreve <code>cafe.descricao()</code>, o Python entrega o próprio <code>cafe</code> no parâmetro <code>self</code>. É por isso que <code>descricao</code> consegue ler <code>self.nome</code>: ela sabe de qual produto está falando. Guarde isso, porque os outros dois tipos de método mudam justamente <strong>o que chega no primeiro parâmetro</strong>.</p>
+
+<hr>
+
+<h2>2. O primeiro <code>@classmethod</code>: o contador da lojinha</h2>
+<p>A Ana quer saber quantos produtos já foram cadastrados. Esse número não é de um produto; é da classe. Ele fica num <strong>atributo da classe</strong> (escrito dentro da classe, fora de qualquer método), e quem o mostra é um método de classe:</p>
+
+<pre class="file" data-file="contador.py">class Produto:
+    criados = 0  # atributo da classe: um só, para todos os produtos
+
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+        Produto.criados += 1
+
+    @classmethod
+    def total(cls):
+        return f"A lojinha já cadastrou {cls.criados} produtos."
+
+
+print(Produto.total())
+cafe = Produto("Café", 18.9)
+leite = Produto("Leite", 5.49)
+print(Produto.total())
+print(cafe.total())
+</pre>
+
+<dl class="anatomy">
+  <dt>criados = 0</dt><dd>Um atributo <strong>da classe</strong>. Existe uma cópia só, que todos os produtos compartilham, ao contrário de <code>self.nome</code>, que cada produto tem o seu.</dd>
+  <dt>Produto.criados += 1</dt><dd>Toda vez que um produto nasce, o <code>__init__</code> soma 1 ao contador da classe.</dd>
+  <dt>@classmethod</dt><dd>Um <strong>decorador</strong> (do inglês <em>decorator</em>, "enfeite"): uma linha que começa com <code>@</code>, fica logo acima do <code>def</code> e muda o jeito como aquele método funciona. Este diz: "este é um método <strong>de classe</strong>". Decoradores têm aula própria, <a href="decoradores.html">Decoradores</a>; aqui basta saber usar estes dois.</dd>
+  <dt>def total(cls):</dt><dd>O primeiro parâmetro agora se chama <code>cls</code> (abreviação de <em>class</em>, "classe"). Nele o Python entrega <strong>a classe</strong>, e não um objeto. O nome <code>cls</code> é só costume, como <code>self</code>; mas é o costume que todo mundo segue.</dd>
+  <dt>cls.criados</dt><dd>Lê o atributo da classe através do <code>cls</code>.</dd>
+  <dt>Produto.total()</dt><dd>Chama o método direto pela classe, <strong>sem precisar de nenhum objeto</strong>.</dd>
+</dl>
+
+<pre class="term">$ python3 contador.py
+A lojinha já cadastrou 0 produtos.
+A lojinha já cadastrou 2 produtos.
+A lojinha já cadastrou 2 produtos.
+</pre>
+
+<p>Três coisas para reparar:</p>
+<ol>
+  <li>A primeira linha saiu <strong>antes</strong> de existir qualquer produto. Um método normal não conseguiria isso: sem objeto, não há <code>self</code>.</li>
+  <li>Depois do café e do leite, o contador foi para 2.</li>
+  <li><code>cafe.total()</code> também funciona, e dá o mesmo resultado. Mesmo chamado por um objeto, o <code>cls</code> recebe a <strong>classe</strong> do objeto, nunca o objeto. O costume, porém, é chamar pela classe (<code>Produto.total()</code>), que deixa claro que a pergunta é sobre a lojinha toda.</li>
+</ol>
+
+<h3>O que chega no <code>cls</code>, afinal?</h3>
+<p>Dá para conferir com um <code>print</code>:</p>
+
+<pre class="file" data-file="cls.py">class Produto:
+    @classmethod
+    def mostrar(cls):
+        print("cls é:", cls)
+        print("cls é Produto?", cls is Produto)
+
+
+Produto.mostrar()
+</pre>
+
+<pre class="term">$ python3 cls.py
+cls é: &lt;class '__main__.Produto'&gt;
+cls é Produto? True
+</pre>
+
+<p><code>&lt;class '__main__.Produto'&gt;</code> é como o Python mostra uma classe: "a classe <code>Produto</code>, criada no programa principal" (<code>__main__</code> é o nome que o Python dá ao arquivo que você mandou rodar). E <code>cls is Produto</code> deu <code>True</code>: dentro do método, <code>cls</code> <strong>é</strong> a própria classe <code>Produto</code>.</p>
+
+<hr>
+
+<h2>3. O uso mais comum: outro jeito de criar objetos</h2>
+<p>A Ana recebe a lista de preços do fornecedor num arquivo de texto, uma linha por produto, assim: <code>Arroz 5 kg;27.50</code>. Para criar o produto, ela teria de separar o texto, converter o preço e só então chamar <code>Produto(...)</code>, toda vez. Fica muito melhor ensinar a própria classe a fazer isso:</p>
+
+<pre class="file" data-file="de_texto.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    @classmethod
+    def de_texto(cls, linha):
+        nome, preco = linha.split(";")
+        return cls(nome, float(preco))
+
+    def descricao(self):
+        return f"{self.nome}: R$ {self.preco:.2f}"
+
+
+cafe = Produto("Café", 18.9)
+arroz = Produto.de_texto("Arroz 5 kg;27.50")
+print(cafe.descricao())
+print(arroz.descricao())
+print(type(arroz))
+</pre>
+
+<dl class="anatomy">
+  <dt>def de_texto(cls, linha):</dt><dd>Recebe a classe (<code>cls</code>) e a linha de texto.</dd>
+  <dt>nome, preco = linha.split(";")</dt><dd>Corta o texto no ponto e vírgula e guarda as duas partes (aulas <a href="strings-metodos.html">Métodos de Texto</a> e <a href="desempacotamento.html">Desempacotamento</a>).</dd>
+  <dt>cls(nome, float(preco))</dt><dd>Como <code>cls</code> é a classe, <code>cls(...)</code> é o mesmo que <code>Produto(...)</code>: cria um produto novo, passando pelo <code>__init__</code> de sempre.</dd>
+  <dt>return</dt><dd>Devolve o produto pronto.</dd>
+</dl>
+
+<pre class="term">$ python3 de_texto.py
+Café: R$ 18.90
+Arroz 5 kg: R$ 27.50
+&lt;class '__main__.Produto'&gt;
+</pre>
+
+<p>Agora a classe tem <strong>duas portas de entrada</strong>: <code>Produto("Café", 18.9)</code>, quando você já tem o nome e o preço separados, e <code>Produto.de_texto("Arroz 5 kg;27.50")</code>, quando tem a linha do fornecedor. Os dois caminhos terminam no mesmo <code>__init__</code> e dão o mesmo tipo de objeto. Um método assim se chama <strong>construtor alternativo</strong>.</p>
+
+<h3>O próprio Python faz assim</h3>
+<p>Você já pode ter usado construtores alternativos sem saber. Eles costumam ter nomes que começam com <code>from</code> ("a partir de"):</p>
+
+<pre class="file" data-file="do_python.py">from datetime import date
+
+estoque = dict.fromkeys(["café", "leite", "pão"], 0)
+print(estoque)
+
+aniversario = date.fromisoformat("2026-03-12")
+print(aniversario)
+print(type(aniversario))
+
+print(int.from_bytes(b"\x01\x00", "big"))
+</pre>
+
+<pre class="term">$ python3 do_python.py
+{'café': 0, 'leite': 0, 'pão': 0}
+2026-03-12
+&lt;class 'datetime.date'&gt;
+256
+</pre>
+
+<p><code>dict.fromkeys</code> cria um dicionário "a partir de uma lista de chaves"; <code>date.fromisoformat</code> cria uma data "a partir de um texto no formato ano-mês-dia" (aula <a href="datetime.html">Datas e Horas</a>); <code>int.from_bytes</code> cria um número "a partir de bytes". Todos são métodos de classe: você chama pela classe (<code>dict</code>, <code>date</code>, <code>int</code>) e recebe um objeto novo. Nos seus programas, em português, nomes como <code>de_texto</code>, <code>de_dicionario</code> e <code>de_linha_csv</code> seguem a mesma ideia.</p>
+
+<div class="trypy" data-goal="out:Feijão: R$ 8.79;;src:@classmethod">
+<p class="try-task"><strong>Missão:</strong> o programa chama <code>Produto.de_texto(...)</code>, mas o método ainda não existe (rode para ver o erro). Crie o método de classe <code>de_texto</code>, que recebe <code>"Feijão;8.79"</code> e devolve um <code>Produto</code>.</p>
+<pre class="script" data-file="main.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    # crie aqui o método de classe de_texto
+
+    def descricao(self):
+        return f"{self.nome}: R$ {self.preco:.2f}"
+
+
+feijao = Produto.de_texto("Feijão;8.79")
+print(feijao.descricao())
+</pre>
+<pre class="solucao" data-file="main.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    @classmethod
+    def de_texto(cls, linha):
+        nome, preco = linha.split(";")
+        return cls(nome, float(preco))
+
+    def descricao(self):
+        return f"{self.nome}: R$ {self.preco:.2f}"
+
+
+feijao = Produto.de_texto("Feijão;8.79")
+print(feijao.descricao())
+</pre>
+</div>
+
+<hr>
+
+<h2>4. Por que <code>cls(...)</code>, e não <code>Produto(...)</code>?</h2>
+<p>Dentro de <code>de_texto</code>, escrever <code>Produto(nome, float(preco))</code> parece dar no mesmo. E dá, até o dia em que aparece uma <strong>classe filha</strong> (aula <a href="heranca.html">Herança</a>). A Ana criou a classe <code>Importado</code>, que herda tudo de <code>Produto</code> e só muda a descrição. Veja a diferença entre usar <code>cls</code> e escrever o nome da classe à mão:</p>
+
+<pre class="file" data-file="heranca.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def descricao(self):
+        return f"{self.nome}: R$ {self.preco:.2f}"
+
+    @classmethod
+    def de_texto(cls, linha):
+        nome, preco = linha.split(";")
+        return cls(nome, float(preco))
+
+    @classmethod
+    def de_texto_fixo(cls, linha):
+        nome, preco = linha.split(";")
+        return Produto(nome, float(preco))  # nome da classe escrito à mão
+
+
+class Importado(Produto):
+    def descricao(self):
+        return f"{self.nome} (importado): R$ {self.preco:.2f}"
+
+
+azeite = Importado.de_texto("Azeite;42.00")
+print(type(azeite).__name__)
+print(azeite.descricao())
+
+vinho = Importado.de_texto_fixo("Vinho;59.90")
+print(type(vinho).__name__)
+print(vinho.descricao())
+</pre>
+
+<pre class="term">$ python3 heranca.py
+Importado
+Azeite (importado): R$ 42.00
+Produto
+Vinho: R$ 59.90
+</pre>
+
+<p>Os dois métodos foram chamados pela classe <code>Importado</code>. Mas:</p>
+<ul>
+  <li><code>de_texto</code> usa <code>cls</code>. Chamado por <code>Importado</code>, o <code>cls</code> é <code>Importado</code>, e o azeite nasceu importado, com a descrição certa.</li>
+  <li><code>de_texto_fixo</code> escreve <code>Produto</code> à mão. Não importa por qual classe foi chamado: sempre cria um <code>Produto</code> comum. O vinho perdeu o "(importado)" e <strong>nenhum erro apareceu</strong>. É o pior tipo de defeito, o que passa calado.</li>
+</ul>
+<p>(<code>type(azeite).__name__</code> mostra só o nome da classe do objeto, sem o <code>&lt;class '__main__....'&gt;</code> em volta.)</p>
+
+<div class="tip">
+<strong>Regra prática</strong>
+<p>Dentro de um <code>@classmethod</code>, fale sempre da classe pelo <code>cls</code>: <code>cls(...)</code> para criar, <code>cls.criados</code> para ler um atributo da classe. Assim o método continua certo nas classes filhas.</p>
+</div>
+
+<hr>
+
+<h2>5. O <code>@staticmethod</code>: uma ferramenta guardada na classe</h2>
+<p>Algumas funções têm tudo a ver com produtos, mas não precisam de produto nenhum para trabalhar: "este preço é válido?", "como fica este número em reais?". Elas recebem um valor e devolvem uma resposta. Para guardá-las dentro da classe, use <code>@staticmethod</code> ("método estático"):</p>
+
+<pre class="file" data-file="estatico.py">class Produto:
+    def __init__(self, nome, preco):
+        if not Produto.preco_valido(preco):
+            raise ValueError(f"preço inválido: {preco}")
+        self.nome = nome
+        self.preco = preco
+
+    @staticmethod
+    def preco_valido(valor):
+        return valor &gt; 0
+
+    @staticmethod
+    def em_reais(valor):
+        texto = f"{valor:,.2f}"
+        return "R$ " + texto.replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+print(Produto.preco_valido(18.9))
+print(Produto.preco_valido(-3))
+print(Produto.em_reais(1234.5))
+cafe = Produto("Café", 18.9)
+print(cafe.em_reais(cafe.preco))
+</pre>
+
+<dl class="anatomy">
+  <dt>@staticmethod</dt><dd>Diz: "este método não recebe nada automaticamente". Nem o objeto, nem a classe.</dd>
+  <dt>def preco_valido(valor):</dt><dd>Sem <code>self</code> e sem <code>cls</code>. O <code>valor</code> é um parâmetro comum, que você passa na chamada.</dd>
+  <dt>return valor &gt; 0</dt><dd>Devolve <code>True</code> ou <code>False</code>.</dd>
+  <dt>f"{valor:,.2f}"</dt><dd>Formata com vírgula separando os milhares e duas casas decimais: <code>1,234.50</code>, o jeito americano (aula <a href="ref-formatacao.html">Formatação</a>).</dd>
+  <dt>.replace(",", "X")…</dt><dd>Troca a vírgula pelo ponto e o ponto pela vírgula, passando por um <code>X</code> provisório para uma troca não desfazer a outra: <code>1.234,50</code>.</dd>
+  <dt>Produto.preco_valido(preco)</dt><dd>Dentro do <code>__init__</code>, o método estático é chamado pela classe, como qualquer outro.</dd>
+</dl>
+
+<pre class="term">$ python3 estatico.py
+True
+False
+R$ 1.234,50
+R$ 18,90
+</pre>
+
+<p>O método estático funciona chamado pela classe (<code>Produto.em_reais(1234.5)</code>) ou por um objeto (<code>cafe.em_reais(cafe.preco)</code>). Nos dois casos, ele recebe <strong>só</strong> o que está entre os parênteses. Repare que, mesmo chamado pelo café, foi preciso passar <code>cafe.preco</code>: o método não enxerga o café.</p>
+
+<div class="trypy" data-goal="out:R$ 18.90;;out:R$ 5.49;;semerro">
+<p class="try-task"><strong>Missão:</strong> a Ana guardou <code>em_reais</code> dentro da classe, mas esqueceu uma linha, e o programa dá <code>TypeError</code>. Rode, leia o erro e conserte.</p>
+<pre class="script" data-file="main.py">class Produto:
+    def em_reais(valor):
+        return f"R$ {valor:.2f}"
+
+
+cafe = Produto()
+print(cafe.em_reais(18.9))
+print(Produto.em_reais(5.49))
+</pre>
+<pre class="solucao" data-file="main.py">class Produto:
+    @staticmethod
+    def em_reais(valor):
+        return f"R$ {valor:.2f}"
+
+
+cafe = Produto()
+print(cafe.em_reais(18.9))
+print(Produto.em_reais(5.49))
+</pre>
+</div>
+
+<hr>
+
+<h2>6. Os três lado a lado</h2>
+
+<pre class="file" data-file="tres.py">class Produto:
+    def normal(self):
+        return "normal"
+
+    @classmethod
+    def da_classe(cls):
+        return "da classe"
+
+    @staticmethod
+    def estatico():
+        return "estático"
+
+
+p = Produto()
+print(p.normal(), p.da_classe(), p.estatico())
+print(Produto.da_classe(), Produto.estatico())
+</pre>
+
+<pre class="term">$ python3 tres.py
+normal da classe estático
+da classe estático
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th>Normal</th><th><code>@classmethod</code></th><th><code>@staticmethod</code></th></tr>
+<tr><td>O Python entrega sozinho…</td><td>o objeto, em <code>self</code></td><td>a classe, em <code>cls</code></td><td>nada</td></tr>
+<tr><td>Lê os dados do objeto (<code>self.nome</code>)?</td><td>Sim</td><td>Não</td><td>Não</td></tr>
+<tr><td>Lê os atributos da classe?</td><td>Sim</td><td>Sim, por <code>cls</code></td><td>Só escrevendo o nome da classe</td></tr>
+<tr><td>Chamar pelo objeto (<code>p.metodo()</code>)</td><td>Sim</td><td>Sim</td><td>Sim</td></tr>
+<tr><td>Chamar pela classe (<code>Produto.metodo()</code>)</td><td>Não (falta o <code>self</code>)</td><td>Sim</td><td>Sim</td></tr>
+<tr><td>Uso típico</td><td>quase tudo</td><td>construtores alternativos, contadores</td><td>funções utilitárias ligadas ao assunto da classe</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+
+<h3>Método estático ou função comum?</h3>
+<p>Um <code>@staticmethod</code> é, na prática, uma função comum que mora dentro da classe. Muitas vezes, uma função solta no arquivo resolve igual:</p>
+
+<pre class="file" data-file="funcao_solta.py">def em_reais(valor):
+    return f"R$ {valor:.2f}"
+
+
+class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def descricao(self):
+        return f"{self.nome}: {em_reais(self.preco)}"
+
+
+print(em_reais(7.5))
+print(Produto("Pão de queijo", 7.5).descricao())
+</pre>
+
+<pre class="term">$ python3 funcao_solta.py
+R$ 7.50
+Pão de queijo: R$ 7.50
+</pre>
+
+<p>Muitos programadores Python preferem essa forma: a função fica disponível para o programa todo (inclusive para quem não tem nada a ver com produtos). O <code>@staticmethod</code> vale a pena quando a função só faz sentido junto da classe, e você quer que quem lê <code>Produto.preco_valido(...)</code> entenda na hora que é uma regra dos produtos.</p>
+
+<h3>Construtor alternativo ou um <code>__init__</code> que aceita tudo?</h3>
+<p>Outra forma seria um <code>__init__</code> que testa se recebeu um texto ou dois valores, cheio de <code>if</code>. Funciona, mas fica confuso: <code>Produto("Arroz;27.50")</code> não diz o que está acontecendo. <code>Produto.de_texto("Arroz;27.50")</code> diz. Prefira um <code>__init__</code> simples e um método de classe para cada formato diferente.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Você precisa…</th><th>Use</th></tr>
+<tr><td>Trabalhar com os dados de um objeto (<code>self.preco</code>)</td><td>Método normal</td></tr>
+<tr><td>Criar objetos a partir de outro formato (texto, dicionário, linha de CSV)</td><td><code>@classmethod</code> que termina em <code>return cls(...)</code></td></tr>
+<tr><td>Ler ou mudar algo da classe inteira (um contador)</td><td><code>@classmethod</code></td></tr>
+<tr><td>Uma regra ou conta que só usa os argumentos e só faz sentido com a classe</td><td><code>@staticmethod</code></td></tr>
+<tr><td>Uma conta útil para o programa todo</td><td>Função comum, fora da classe</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Chamar um método normal pela classe</strong>
+<pre class="file" data-file="erro_self.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def descricao(self):
+        return f"{self.nome}: R$ {self.preco:.2f}"
+
+
+print(Produto.descricao())
+</pre>
+<pre class="term">$ python3 erro_self.py
+Traceback (most recent call last):
+  File "/home/ana/erro_self.py", line 10, in &lt;module&gt;
+    print(Produto.descricao())
+          ~~~~~~~~~~~~~~~~~^^
+TypeError: Produto.descricao() missing 1 required positional argument: 'self'
+</pre>
+<p>Linha por linha:</p>
+<ul>
+  <li><code>Traceback (most recent call last)</code>: "rastro (a chamada mais recente por último)". O Python vai mostrar o caminho até o erro.</li>
+  <li><code>File "/home/ana/erro_self.py", line 10, in &lt;module&gt;</code>: o erro aconteceu na linha 10, no corpo principal do arquivo (<code>&lt;module&gt;</code>).</li>
+  <li>Os <code>~~~^^</code> embaixo da linha apontam a chamada que falhou: <code>Produto.descricao()</code>.</li>
+  <li><code>TypeError: Produto.descricao() missing 1 required positional argument: 'self'</code>: "erro de tipo: está faltando 1 argumento obrigatório, o <code>self</code>".</li>
+</ul>
+<p>Chamado pela classe, o método normal não sabe <strong>de qual produto</strong> deve falar, e ninguém preencheu o <code>self</code>. <strong>Como consertar:</strong> crie um objeto e chame por ele (<code>cafe.descricao()</code>). Se o método realmente não precisa de objeto, ele deveria ser <code>@classmethod</code> ou <code>@staticmethod</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Esquecer o <code>@staticmethod</code></strong>
+<pre class="file" data-file="erro_static.py">class Produto:
+    def em_reais(valor):
+        return f"R$ {valor:.2f}"
+
+
+cafe = Produto()
+print(cafe.em_reais(18.9))
+</pre>
+<pre class="term">$ python3 erro_static.py
+Traceback (most recent call last):
+  File "/home/ana/erro_static.py", line 7, in &lt;module&gt;
+    print(cafe.em_reais(18.9))
+          ~~~~~~~~~~~~~^^^^^^
+TypeError: Produto.em_reais() takes 1 positional argument but 2 were given
+</pre>
+<p>"<code>em_reais()</code> recebe 1 argumento, mas foram passados 2." Você só escreveu um (<code>18.9</code>)! O segundo é o <strong>objeto</strong>: sem decorador, <code>em_reais</code> é um método normal, e o Python entregou o <code>cafe</code> no primeiro parâmetro, o <code>valor</code>. Não sobrou lugar para o <code>18.9</code>. <strong>Como consertar:</strong> ponha <code>@staticmethod</code> na linha de cima do <code>def</code>. (Foi a missão do item 5.)</p>
+</div>
+
+<div class="cenario">
+<strong><code>@classmethod</code> sem o <code>cls</code></strong>
+<pre class="file" data-file="erro_cls.py">class Produto:
+    criados = 0
+
+    @classmethod
+    def total():
+        return Produto.criados
+
+
+print(Produto.total())
+</pre>
+<pre class="term">$ python3 erro_cls.py
+Traceback (most recent call last):
+  File "/home/ana/erro_cls.py", line 9, in &lt;module&gt;
+    print(Produto.total())
+          ~~~~~~~~~~~~~^^
+TypeError: Produto.total() takes 0 positional arguments but 1 was given
+</pre>
+<p>O mesmo problema, ao contrário: o <code>@classmethod</code> <strong>sempre</strong> entrega a classe no primeiro parâmetro, mas <code>total()</code> não tem parâmetro nenhum para recebê-la. "Recebe 0, foi passado 1." <strong>Como consertar:</strong> <code>def total(cls):</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Querer os dados de um objeto dentro de um <code>@classmethod</code></strong>
+<pre class="file" data-file="erro_cls_nome.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    @classmethod
+    def descricao(cls):
+        return f"{cls.nome}: R$ {cls.preco:.2f}"
+
+
+cafe = Produto("Café", 18.9)
+print(cafe.descricao())
+</pre>
+<pre class="term">$ python3 erro_cls_nome.py
+Traceback (most recent call last):
+  File "/home/ana/erro_cls_nome.py", line 12, in &lt;module&gt;
+    print(cafe.descricao())
+          ~~~~~~~~~~~~~~^^
+  File "/home/ana/erro_cls_nome.py", line 8, in descricao
+    return f"{cls.nome}: R$ {cls.preco:.2f}"
+              ^^^^^^^^
+AttributeError: type object 'Produto' has no attribute 'nome'
+</pre>
+<p>Agora o rastro tem dois andares: a linha 12 chamou <code>descricao</code>, e o erro estourou lá dentro, na linha 8, em <code>cls.nome</code>. "O objeto-tipo <code>Produto</code> não tem o atributo <code>nome</code>." Mesmo chamado pelo café, o <code>cls</code> é a <strong>classe</strong>, e o nome mora em cada objeto (<code>self.nome</code>), não na classe. <strong>Como consertar:</strong> um método que usa os dados de um objeto é um método normal: tire o <code>@classmethod</code> e troque <code>cls</code> por <code>self</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Usar <code>self</code> dentro de um <code>@staticmethod</code></strong>
+<pre class="file" data-file="erro_static_self.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    @staticmethod
+    def descricao():
+        return f"{self.nome}: R$ {self.preco:.2f}"
+
+
+cafe = Produto("Café", 18.9)
+print(cafe.descricao())
+</pre>
+<pre class="term">$ python3 erro_static_self.py
+Traceback (most recent call last):
+  File "/home/ana/erro_static_self.py", line 12, in &lt;module&gt;
+    print(cafe.descricao())
+          ~~~~~~~~~~~~~~^^
+  File "/home/ana/erro_static_self.py", line 8, in descricao
+    return f"{self.nome}: R$ {self.preco:.2f}"
+              ^^^^
+NameError: name 'self' is not defined
+</pre>
+<p>"O nome <code>self</code> não está definido." O <code>self</code> não é uma palavra mágica: é só um parâmetro, e o método estático não tem esse parâmetro. <strong>Como consertar:</strong> se precisa do objeto, é um método normal (<code>def descricao(self):</code>, sem o decorador).</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>def metodo(self):</code></td><td>Método normal: recebe o objeto</td></tr>
+<tr><td><code>@classmethod</code><br><code>def metodo(cls):</code></td><td>Método de classe: recebe a classe</td></tr>
+<tr><td><code>@staticmethod</code><br><code>def metodo(x):</code></td><td>Método estático: recebe só os argumentos</td></tr>
+<tr><td><code>return cls(a, b)</code></td><td>Dentro de um <code>@classmethod</code>: cria um objeto da classe que chamou (funciona com classes filhas)</td></tr>
+<tr><td><code>Classe.metodo()</code></td><td>Chama um método de classe ou estático sem criar objeto</td></tr>
+<tr><td><code>dict.fromkeys(chaves, 0)</code>, <code>date.fromisoformat(texto)</code></td><td>Construtores alternativos do próprio Python</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>missing 1 required positional argument: 'self'</code></td><td>Método normal chamado pela classe, sem objeto</td></tr>
+<tr><td><code>takes 1 positional argument but 2 were given</code></td><td>Faltou o <code>@staticmethod</code> (ou faltou o <code>self</code> num método normal)</td></tr>
+<tr><td><code>takes 0 positional arguments but 1 was given</code></td><td>Método de classe sem o parâmetro <code>cls</code></td></tr>
+<tr><td><code>type object 'Produto' has no attribute 'nome'</code></td><td>Usou <code>cls.nome</code>: o nome é de cada objeto, não da classe</td></tr>
+<tr><td><code>name 'self' is not defined</code></td><td>Usou <code>self</code> num método estático</td></tr>
+<tr><td>A classe filha cria objetos da classe mãe, sem erro</td><td>O construtor alternativo escreveu o nome da classe em vez de <code>cls</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A marca</h3>
+<p>Complete o decorador que transforma <code>total</code> num método de classe:</p>
+<div class="ex-code"><input data-answer="@classmethod" aria-label="decorador"><br>def total(cls):</div>
+</div>
+
+<div class="exercise">
+<h3>2. O primeiro parâmetro</h3>
+<p>Complete o primeiro parâmetro do construtor alternativo e a criação do objeto:</p>
+<div class="ex-code">@classmethod<br>def de_texto(<input data-answer="cls" aria-label="primeiro parâmetro">, linha):<br>&nbsp;&nbsp;&nbsp;&nbsp;nome, preco = linha.split(";")<br>&nbsp;&nbsp;&nbsp;&nbsp;return <input data-answer="cls" aria-label="quem cria">(nome, float(preco))</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. Num método marcado com <code>@classmethod</code>, o que o Python entrega no primeiro parâmetro quando você escreve <code>cafe.total()</code>?</p>
+<label><input type="radio" name="q3"> O objeto <code>cafe</code></label>
+<label><input type="radio" name="q3"> A classe do <code>cafe</code> (<code>Produto</code>)</label>
+<label><input type="radio" name="q3"> Nada</label>
+<label><input type="radio" name="q3"> Dá erro: método de classe só pode ser chamado pela classe</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. A função <code>converte_kg_em_gramas(kg)</code> só faz uma conta com o número que recebe, e só é usada pelos produtos. Qual é a escolha mais adequada?</p>
+<label><input type="radio" name="q4"> Método normal, com <code>self</code></label>
+<label><input type="radio" name="q4"> <code>@classmethod</code>, com <code>cls</code></label>
+<label><input type="radio" name="q4"> <code>@staticmethod</code> (ou uma função comum, fora da classe)</label>
+<label><input type="radio" name="q4"> Tanto faz: dá erro em todos</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. <code>cafe.em_reais(18.9)</code> deu <code>takes 1 positional argument but 2 were given</code>. O que aconteceu?</p>
+<label><input type="radio" name="q5"> Faltou o <code>@staticmethod</code>, e o Python entregou o <code>cafe</code> como primeiro argumento</label>
+<label><input type="radio" name="q5"> O <code>18.9</code> foi contado duas vezes</label>
+<label><input type="radio" name="q5"> Métodos não aceitam números com casas decimais</label>
+<label><input type="radio" name="q5"> Faltou criar o objeto <code>cafe</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. Por que, dentro de um construtor alternativo, é melhor escrever <code>return cls(...)</code> do que <code>return Produto(...)</code>?</p>
+<label><input type="radio" name="q6"> Porque <code>Produto(...)</code> dá erro dentro da classe</label>
+<label><input type="radio" name="q6"> Porque <code>cls(...)</code> é mais rápido</label>
+<label><input type="radio" name="q6"> Porque o Python 3.14 proíbe o nome da classe</label>
+<label><input type="radio" name="q6"> Porque, chamado por uma classe filha, <code>cls</code> é a filha, e o objeto nasce do tipo certo</label>
+</div>
+
+<h3>Missão final: o boletim da turma</h3>
+
+<div class="trypy" data-goal="out:Caio: 6.0 (recuperação);;out:3 alunos;;src:@staticmethod;;src:@classmethod">
+<p class="try-task"><strong>Missão:</strong> a professora da turma da Ana recebe as notas em linhas como <code>"Bia;8.5"</code>. Complete a classe <code>Aluno</code> com: (1) um método <strong>estático</strong> <code>situacao(nota)</code>, que devolve <code>"aprovado"</code> se a nota for 7 ou mais e <code>"recuperação"</code> se for menor; (2) um método <strong>de classe</strong> <code>de_texto(cls, linha)</code>, que cria o aluno a partir da linha.</p>
+<pre class="script" data-file="main.py">class Aluno:
+    matriculados = 0
+
+    def __init__(self, nome, nota):
+        self.nome = nome
+        self.nota = nota
+        Aluno.matriculados += 1
+
+    # 1) crie aqui o método estático situacao(nota)
+
+    # 2) crie aqui o método de classe de_texto(cls, linha)
+
+    def boletim(self):
+        return f"{self.nome}: {self.nota} ({Aluno.situacao(self.nota)})"
+
+
+for linha in ["Bia;8.5", "Caio;6.0", "Duda;9.25"]:
+    aluno = Aluno.de_texto(linha)
+    print(aluno.boletim())
+
+print(Aluno.matriculados, "alunos")
+</pre>
+<pre class="solucao" data-file="main.py">class Aluno:
+    matriculados = 0
+
+    def __init__(self, nome, nota):
+        self.nome = nome
+        self.nota = nota
+        Aluno.matriculados += 1
+
+    @staticmethod
+    def situacao(nota):
+        if nota &gt;= 7:
+            return "aprovado"
+        return "recuperação"
+
+    @classmethod
+    def de_texto(cls, linha):
+        nome, nota = linha.split(";")
+        return cls(nome, float(nota))
+
+    def boletim(self):
+        return f"{self.nome}: {self.nota} ({Aluno.situacao(self.nota)})"
+
+
+for linha in ["Bia;8.5", "Caio;6.0", "Duda;9.25"]:
+    aluno = Aluno.de_texto(linha)
+    print(aluno.boletim())
+
+print(Aluno.matriculados, "alunos")
+</pre>
+</div>
+
+<p>Com a solução, o lab mostrou:</p>
+<pre class="term">$ python3 main.py
+Bia: 8.5 (aprovado)
+Caio: 6.0 (recuperação)
+Duda: 9.25 (aprovado)
+3 alunos
+</pre>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>O <strong>método normal</strong> recebe o objeto em <code>self</code> e trabalha com os dados dele.</li>
+  <li>O <code>@classmethod</code> recebe a <strong>classe</strong> em <code>cls</code>, seja chamado pela classe ou por um objeto. Serve para contadores e, principalmente, para <strong>construtores alternativos</strong> (<code>Produto.de_texto(...)</code>, como <code>dict.fromkeys</code> e <code>date.fromisoformat</code>).</li>
+  <li>Dentro do <code>@classmethod</code>, crie com <code>cls(...)</code>, não com o nome da classe: assim as classes filhas recebem objetos do tipo certo.</li>
+  <li>O <code>@staticmethod</code> não recebe nada automaticamente: é uma função comum guardada na classe. Se ela serve para o programa todo, uma função fora da classe pode ser melhor.</li>
+  <li>Os erros contam o que faltou ou sobrou no primeiro parâmetro: <code>missing … 'self'</code>, <code>takes 1 … but 2 were given</code>, <code>takes 0 … but 1 was given</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
