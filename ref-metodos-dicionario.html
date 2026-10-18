@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Métodos de Dicionário — get, keys, values, items, update, pop e os outros | Guia Python</title>
+<meta name="description" content="Referência rápida dos 11 métodos de dicionário do Python 3.14 (get, keys, values, items, update, setdefault, pop, popitem, clear, copy, fromkeys) e das operações com dicionários (d[chave], in, del, len, |, |=), com exemplo curto, resultado real, os erros comuns e o link para a aula.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Métodos de Dicionário</span></h1>
+
+<p class="intro">Esta é a página de consulta rápida dos <strong>métodos de dicionário</strong>: as funções que todo dicionário (<code>dict</code>) já traz, para ler valores sem erro, ver as chaves e os valores, acrescentar, juntar e remover. São 11. No fim estão também as operações com dicionários que não são métodos (<code>d[chave]</code>, <code>in</code>, <code>del</code>, <code>|</code>). A explicação passo a passo começa na aula <a href="dicionarios.html">Dicionários</a>.</p>
+
+<div class="note">
+<strong>Como ler as tabelas</strong>
+<ul>
+  <li><strong>Exemplo</strong> é o que você digitaria depois do <code>&gt;&gt;&gt;</code> do <a href="repl.html">modo interativo</a>, uma linha depois da outra; <strong>Resultado</strong> é o que o Python 3.14.4 respondeu no computador da Ana.</li>
+  <li>Quase todos os exemplos usam os preços da padaria: <code>precos = {"pão": 0.5, "leite": 4.0, "café": 18.9}</code>. Cada par <code>"pão": 0.5</code> é uma <strong>chave</strong> (<code>"pão"</code>) e o seu <strong>valor</strong> (<code>0.5</code>).</li>
+  <li>Os dicionários guardam a <strong>ordem em que as chaves entraram</strong>, e os resultados aparecem sempre nessa ordem.</li>
+  <li>Quando o exemplo dá erro, o resultado mostra a última linha da mensagem do Python (em inglês).</li>
+</ul>
+</div>
+
+<div class="warning">
+<strong>O erro mais comum: a chave que não existe</strong>
+<p>Ler com colchetes uma chave que não está no dicionário dá <code>KeyError</code>. O método <code>get</code> lê sem esse risco:</p>
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; precos = {"pão": 0.5, "leite": 4.0, "café": 18.9}
+&gt;&gt;&gt; precos["mel"]
+Traceback (most recent call last):
+  File "&lt;python-input-1&gt;", line 1, in &lt;module&gt;
+    precos["mel"]
+    ~~~~~~^^^^^^^
+KeyError: 'mel'
+&gt;&gt;&gt; precos.get("mel", 0)
+0
+&gt;&gt;&gt; exit()
+</pre>
+<p><code>KeyError: 'mel'</code> = "erro de chave: <code>'mel'</code>": a mensagem é só o nome da chave que faltou. O <code>get("mel", 0)</code> devolveu o valor padrão <code>0</code> em vez de quebrar o programa.</p>
+</div>
+
+<hr>
+
+<h2 id="metodos">Os 11 métodos, de relance</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Método</th><th>O que faz</th><th>Muda o dicionário?</th><th>Devolve</th></tr>
+<tr><td><code>get(chave, padrão)</code></td><td>lê um valor sem dar erro</td><td>não</td><td>o valor, ou o padrão</td></tr>
+<tr><td><code>keys()</code></td><td>as chaves</td><td>não</td><td>uma "vista" das chaves</td></tr>
+<tr><td><code>values()</code></td><td>os valores</td><td>não</td><td>uma "vista" dos valores</td></tr>
+<tr><td><code>items()</code></td><td>os pares (chave, valor)</td><td>não</td><td>uma "vista" dos pares</td></tr>
+<tr><td><code>update(outro)</code></td><td>acrescenta ou troca vários pares</td><td>sim</td><td><code>None</code></td></tr>
+<tr><td><code>setdefault(chave, padrão)</code></td><td>lê; se a chave não existe, cria com o padrão</td><td>às vezes</td><td>o valor</td></tr>
+<tr><td><code>pop(chave)</code></td><td>tira a chave</td><td>sim</td><td>o valor tirado</td></tr>
+<tr><td><code>popitem()</code></td><td>tira o último par que entrou</td><td>sim</td><td>o par tirado</td></tr>
+<tr><td><code>clear()</code></td><td>esvazia</td><td>sim</td><td><code>None</code></td></tr>
+<tr><td><code>copy()</code></td><td>faz uma cópia</td><td>não</td><td>um dicionário novo</td></tr>
+<tr><td><code>dict.fromkeys(chaves, valor)</code></td><td>cria um dicionário com essas chaves</td><td>(cria um novo)</td><td>um dicionário novo</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="ler">Ler valores e ver as chaves</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>d[chave]</code></td><td>O valor da chave (não é método).</td><td><code>precos["leite"]</code></td><td><code>4.0</code></td><td><a href="dicionarios.html">Dicionários</a></td></tr>
+<tr><td></td><td>chave que não existe</td><td><code>precos["mel"]</code></td><td><code>KeyError: 'mel'</code></td><td></td></tr>
+<tr><td><code>get(chave)</code></td><td>O valor, ou <code>None</code> se a chave não existe (sem erro).</td><td><code>precos.get("leite")</code><br><code>print(precos.get("mel"))</code></td><td><code>4.0</code><br><code>None</code></td><td><a href="dicionarios.html">Dicionários</a></td></tr>
+<tr><td><code>get(chave, padrão)</code></td><td>Com um valor padrão no lugar do <code>None</code>.</td><td><code>precos.get("mel", 0)</code></td><td><code>0</code></td><td></td></tr>
+<tr><td><code>keys()</code></td><td>As chaves (<em>keys</em>).</td><td><code>precos.keys()</code></td><td><code>dict_keys(['pão', 'leite', 'café'])</code></td><td><a href="dicionarios-percorrer.html">Percorrendo um Dicionário</a></td></tr>
+<tr><td><code>values()</code></td><td>Os valores (<em>values</em>).</td><td><code>precos.values()</code></td><td><code>dict_values([0.5, 4.0, 18.9])</code></td><td><a href="dicionarios-percorrer.html">Percorrendo um Dicionário</a></td></tr>
+<tr><td></td><td>somar os valores</td><td><code>sum(precos.values())</code></td><td><code>23.4</code></td><td></td></tr>
+<tr><td><code>items()</code></td><td>Os pares chave e valor (<em>items</em>), cada um numa tupla.</td><td><code>precos.items()</code></td><td><code>dict_items([('pão', 0.5), ('leite', 4.0), ('café', 18.9)])</code></td><td><a href="dicionarios-percorrer.html">Percorrendo um Dicionário</a></td></tr>
+<tr><td></td><td>para virar uma lista de verdade</td><td><code>list(precos.items())</code></td><td><code>[('pão', 0.5), ('leite', 4.0), ('café', 18.9)]</code></td><td></td></tr>
+<tr><td><code>chave in d</code></td><td>"Tem essa <strong>chave</strong>?" (procura só nas chaves!)</td><td><code>"pão" in precos</code><br><code>0.5 in precos</code></td><td><code>True</code><br><code>False</code></td><td><a href="operadores-is-in.html">is e in</a></td></tr>
+<tr><td><code>valor in d.values()</code></td><td>"Algum valor é esse?"</td><td><code>0.5 in precos.values()</code></td><td><code>True</code></td><td></td></tr>
+<tr><td><code>len(d)</code></td><td>Quantos pares.</td><td><code>len(precos)</code></td><td><code>3</code></td><td></td></tr>
+</table>
+</div>
+
+<div class="tip">
+<strong>O que é uma "vista"</strong>
+<p><code>keys()</code>, <code>values()</code> e <code>items()</code> não fazem uma cópia: são uma janela para o dicionário, que acompanha as mudanças nele. Dá para usá-las num <code>for</code>, com <code>in</code>, <code>len</code>, <code>sum</code> e <code>sorted</code>. Para ter uma lista de verdade (e usar <code>[0]</code>, por exemplo), ponha dentro de <code>list()</code>.</p>
+</div>
+
+<hr>
+
+<h2 id="alterar">Acrescentar e trocar</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>d[chave] = valor</code></td><td>Cria a chave, se ela não existe…</td><td><code>estoque = {"pão": 30, "leite": 12}</code><br><code>estoque["café"] = 5</code><br><code>estoque</code></td><td><code>{'pão': 30, 'leite': 12, 'café': 5}</code></td><td><a href="dicionarios-alterar.html">Adicionando e Removendo Chaves</a></td></tr>
+<tr><td></td><td>…ou troca o valor, se existe</td><td><code>estoque["pão"] = 25</code><br><code>estoque</code></td><td><code>{'pão': 25, 'leite': 12, 'café': 5}</code></td><td></td></tr>
+<tr><td><code>update(outro)</code></td><td>Faz o mesmo para todos os pares de outro dicionário (<em>update</em> = "atualizar").</td><td><code>estoque.update({"leite": 10, "ovo": 24})</code><br><code>estoque</code></td><td><code>{'pão': 25, 'leite': 10, 'café': 5, 'ovo': 24}</code></td><td><a href="dicionarios-alterar.html">Adicionando e Removendo Chaves</a></td></tr>
+<tr><td></td><td>também com argumentos nomeados</td><td><code>estoque.update(mel=3)</code><br><code>estoque</code></td><td><code>{'pão': 25, 'leite': 10, 'café': 5, 'ovo': 24, 'mel': 3}</code></td><td></td></tr>
+<tr><td><code>setdefault(chave, padrão)</code></td><td>Se a chave <strong>não</strong> existe, cria com o padrão e devolve o padrão…</td><td><code>estoque.setdefault("sal", 0)</code></td><td><code>0</code> (e agora <code>'sal': 0</code> está no fim do estoque)</td><td></td></tr>
+<tr><td></td><td>…se existe, só devolve o valor, sem trocar</td><td><code>estoque.setdefault("pão", 99)</code></td><td><code>25</code> (o pão continua 25)</td><td></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="remover">Remover</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>pop(chave)</code></td><td>Tira a chave e devolve o valor dela.</td><td><code>estoque = {"pão": 30, "leite": 12, "café": 5}</code><br><code>estoque.pop("leite")</code><br><code>estoque</code></td><td><code>12</code><br><code>{'pão': 30, 'café': 5}</code></td><td><a href="dicionarios-alterar.html">Adicionando e Removendo Chaves</a></td></tr>
+<tr><td></td><td>chave que não existe</td><td><code>estoque.pop("mel")</code></td><td><code>KeyError: 'mel'</code></td><td></td></tr>
+<tr><td><code>pop(chave, padrão)</code></td><td>Com padrão, não dá erro.</td><td><code>estoque.pop("mel", None)</code></td><td>(nada aparece: devolveu <code>None</code>)</td><td></td></tr>
+<tr><td><code>popitem()</code></td><td>Tira o <strong>último</strong> par que entrou e o devolve como tupla.</td><td><code>estoque = {"pão": 30, "leite": 12, "café": 5}</code><br><code>estoque.popitem()</code><br><code>estoque</code></td><td><code>('café', 5)</code><br><code>{'pão': 30, 'leite': 12}</code></td><td></td></tr>
+<tr><td></td><td>dicionário vazio</td><td><code>{}.popitem()</code></td><td><code>KeyError: 'popitem(): dictionary is empty'</code></td><td></td></tr>
+<tr><td><code>del d[chave]</code></td><td>Não é método: apaga a chave, sem devolver.</td><td><code>del estoque["pão"]</code><br><code>estoque</code></td><td><code>{'leite': 12}</code></td><td><a href="dicionarios-alterar.html">Adicionando e Removendo Chaves</a></td></tr>
+<tr><td></td><td>chave que não existe</td><td><code>del estoque["mel"]</code></td><td><code>KeyError: 'mel'</code></td><td></td></tr>
+<tr><td><code>clear()</code></td><td>Esvazia o dicionário.</td><td><code>estoque.clear()</code><br><code>estoque</code></td><td><code>{}</code></td><td></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="criar">Criar e copiar</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>dict.fromkeys(chaves, valor)</code></td><td>Um dicionário novo, com todas as chaves valendo o mesmo. É chamado no tipo <code>dict</code>.</td><td><code>dict.fromkeys(["Ana", "Bia", "Caio"], 0)</code></td><td><code>{'Ana': 0, 'Bia': 0, 'Caio': 0}</code></td><td><a href="dicionarios.html">Dicionários</a></td></tr>
+<tr><td></td><td>sem o valor, todas valem <code>None</code></td><td><code>dict.fromkeys("abc")</code></td><td><code>{'a': None, 'b': None, 'c': None}</code></td><td></td></tr>
+<tr><td><code>dict(…)</code></td><td>Cria com argumentos nomeados, com uma lista de pares ou com <code>zip</code>.</td><td><code>dict(zip(["pão", "leite"], [0.5, 4.0]))</code></td><td><code>{'pão': 0.5, 'leite': 4.0}</code></td><td><a href="ref-funcoes-embutidas.html#converter">Funções Embutidas</a></td></tr>
+<tr><td><code>{chave: valor for …}</code></td><td>Monta um dicionário a partir de um laço.</td><td><code>{n: n * n for n in range(1, 5)}</code></td><td><code>{1: 1, 2: 4, 3: 9, 4: 16}</code></td><td><a href="dict-comprehension.html">Dict e Set Comprehension</a></td></tr>
+<tr><td><code>copy()</code></td><td>Uma cópia: mudar a cópia não muda o original.</td><td><code>a = {"pão": 0.5}</code><br><code>b = a.copy()</code><br><code>b["mel"] = 22.0</code><br><code>a</code>, depois <code>b</code></td><td><code>{'pão': 0.5}</code><br><code>{'pão': 0.5, 'mel': 22.0}</code></td><td><a href="copias.html">Cópia Rasa e Cópia Profunda</a></td></tr>
+</table>
+</div>
+
+<div class="warning">
+<strong><code>fromkeys</code> com uma lista como valor</strong>
+<p>Em <code>dict.fromkeys(nomes, [])</code>, todas as chaves recebem <strong>a mesma</strong> lista: acrescentar algo na lista de uma acrescenta em todas. Com <code>d = dict.fromkeys(["Ana", "Bia"], [])</code> e depois <code>d["Ana"].append(7)</code>, o <code>d</code> fica <code>{'Ana': [7], 'Bia': [7]}</code>. Para uma lista nova em cada chave, use <code>{nome: [] for nome in nomes}</code>.</p>
+</div>
+
+<hr>
+
+<h2 id="juntar">Juntar e comparar</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>a | b</code></td><td>Um dicionário <strong>novo</strong> com os pares dos dois. Se a chave está nos dois, vale o de <code>b</code> (o da direita). O <code>a</code> não muda.</td><td><code>loja = {"pão": 0.5, "leite": 4.0}</code><br><code>promo = {"leite": 3.5, "mel": 22.0}</code><br><code>loja | promo</code></td><td><code>{'pão': 0.5, 'leite': 3.5, 'mel': 22.0}</code></td><td><a href="dicionarios-alterar.html">Adicionando e Removendo Chaves</a></td></tr>
+<tr><td><code>a |= b</code></td><td>O mesmo que <code>a.update(b)</code>: muda o <code>a</code>.</td><td><code>loja |= promo</code><br><code>loja</code></td><td><code>{'pão': 0.5, 'leite': 3.5, 'mel': 22.0}</code></td><td></td></tr>
+<tr><td><code>{**a, **b}</code></td><td>O jeito mais antigo de fazer o <code>a | b</code>.</td><td><code>{**{"a": 1}, **{"b": 2}}</code></td><td><code>{'a': 1, 'b': 2}</code></td><td><a href="args-kwargs.html">*args e **kwargs</a></td></tr>
+<tr><td><code>a == b</code></td><td>Mesmos pares? A ordem não importa.</td><td><code>{"a": 1, "b": 2} == {"b": 2, "a": 1}</code></td><td><code>True</code></td><td><a href="operadores-comparacao.html">Comparações</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="percorrer">Percorrer e ordenar</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>for chave, valor in d.items():</code></td><td>Passa por todos os pares.</td><td><code>for nome, preco in precos.items():</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;print(nome, preco)</code></td><td><code>pão 0.5</code><br><code>leite 4.0</code><br><code>café 18.9</code></td><td><a href="dicionarios-percorrer.html">Percorrendo um Dicionário</a></td></tr>
+<tr><td><code>list(d)</code></td><td>Percorrer o dicionário direto dá as <strong>chaves</strong>.</td><td><code>list(precos)</code></td><td><code>['pão', 'leite', 'café']</code></td><td></td></tr>
+<tr><td><code>reversed(d)</code></td><td>As chaves, da última que entrou para a primeira.</td><td><code>list(reversed(precos))</code></td><td><code>['café', 'leite', 'pão']</code></td><td></td></tr>
+<tr><td><code>sorted(d)</code></td><td>As chaves em ordem alfabética.</td><td><code>sorted(precos)</code></td><td><code>['café', 'leite', 'pão']</code></td><td><a href="listas-ordenar.html">Ordenando Listas</a></td></tr>
+<tr><td><code>sorted(d.items(), key=…)</code></td><td>Os pares, ordenados pelo valor.</td><td><code>sorted(precos.items(), key=lambda par: par[1])</code></td><td><code>[('pão', 0.5), ('leite', 4.0), ('café', 18.9)]</code></td><td><a href="lambda.html">lambda</a></td></tr>
+<tr><td><code>max(d, key=d.get)</code></td><td>A chave que tem o maior valor.</td><td><code>max(precos, key=precos.get)</code></td><td><code>'café'</code></td><td><a href="ref-funcoes-embutidas.html#numeros">Funções Embutidas</a></td></tr>
+<tr><td></td><td>não dá para mudar o tamanho do dicionário dentro do <code>for</code> que o percorre</td><td><code>for k in precos:</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;precos["novo"] = 1</code></td><td><code>RuntimeError: dictionary changed size during iteration</code></td><td></td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>Que valores podem ser chave?</strong>
+<p>Textos, números, <code>True</code>/<code>False</code> e tuplas (de valores que não mudam). <strong>Listas, dicionários e conjuntos não</strong>, porque podem mudar. No Python 3.14, a mensagem de erro ficou mais clara: <code>{[1, 2]: "x"}</code> dá <code>TypeError: cannot use 'list' as a dict key (unhashable type: 'list')</code> = "não dá para usar uma lista como chave de dicionário". <span class="versao">3.14</span> No 3.13, a mesma linha dizia só <code>unhashable type: 'list'</code>. Veja <a href="mutabilidade.html">Mutável × Imutável</a>.</p>
+</div>
+
+<hr>
+
+<h2>Experimente</h2>
+
+<div class="trypy" data-goal="out:{'pão': 3, 'bolo': 2, 'café': 1};;src:\.get\(">
+<p class="try-task"><strong>Missão:</strong> a Ana fez uma votação do lanche da turma e quer contar os votos. Rode e veja o <code>KeyError</code>: no primeiro voto, a chave <code>'pão'</code> ainda não existe. Conserte a linha do laço usando <code>contagem.get(voto, 0)</code> no lugar de <code>contagem[voto]</code> (só do lado direito do <code>=</code>). A saída deve ser <code>{'pão': 3, 'bolo': 2, 'café': 1}</code>.</p>
+<pre class="script" data-file="main.py">votos = ["pão", "bolo", "pão", "café", "pão", "bolo"]
+contagem = {}
+for voto in votos:
+    contagem[voto] = contagem[voto] + 1
+print(contagem)
+</pre>
+<pre class="solucao" data-file="main.py">votos = ["pão", "bolo", "pão", "café", "pão", "bolo"]
+contagem = {}
+for voto in votos:
+    contagem[voto] = contagem.get(voto, 0) + 1
+print(contagem)
+</pre>
+</div>
+
+<p>No computador da Ana, o programa da missão, antes e depois do conserto:</p>
+
+<pre class="term">$ python3 votos.py
+Traceback (most recent call last):
+  File "/home/ana/votos.py", line 4, in &lt;module&gt;
+    contagem[voto] = contagem[voto] + 1
+                     ~~~~~~~~^^^^^^
+KeyError: 'pão'
+$ python3 votos2.py
+{'pão': 3, 'bolo': 2, 'café': 1}
+</pre>
+
+<div class="trypy">
+<p class="try-task"><strong>Livre:</strong> o estoque da padaria. Acrescente produtos com <code>update</code>, tire outros com <code>pop</code>, troque <code>"mel"</code> por <code>"pão"</code> na última linha.</p>
+<pre class="script" data-file="main.py">estoque = {"pão": 30, "leite": 12, "café": 5}
+estoque.update({"leite": 10, "ovo": 24})
+vendido = estoque.pop("café")
+print("Café saiu do estoque:", vendido, "pacotes")
+for produto, quantidade in estoque.items():
+    print(f"{produto:&lt;6} {quantidade:&gt;3}")
+print("Total de itens:", sum(estoque.values()))
+print("Tem mel?", "mel" in estoque, "- quantidade:", estoque.get("mel", 0))
+</pre>
+</div>
+
+<pre class="term">$ python3 estoque.py
+Café saiu do estoque: 5 pacotes
+pão     30
+leite   10
+ovo     24
+Total de itens: 64
+Tem mel? False - quantidade: 0
+</pre>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Ler: <code>d[chave]</code> dá <code>KeyError</code> se a chave falta; <code>d.get(chave, padrão)</code> não dá.</li>
+  <li>Ver: <code>keys()</code>, <code>values()</code>, <code>items()</code> (este, no <code>for chave, valor in d.items():</code>). <code>in</code> procura só nas chaves.</li>
+  <li>Acrescentar e trocar: <code>d[chave] = valor</code>, <code>update</code>, <code>|=</code>; <code>setdefault</code> cria só se faltar.</li>
+  <li>Remover: <code>pop(chave)</code> devolve o valor; <code>popitem()</code> tira o último par; <code>del d[chave]</code>; <code>clear()</code>.</li>
+  <li>Criar: <code>dict.fromkeys</code>, <code>dict(zip(…))</code>, dict comprehension; copiar com <code>copy()</code>; juntar com <code>a | b</code>.</li>
+  <li>Chaves precisam ser valores que não mudam: listas não podem ser chave.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
