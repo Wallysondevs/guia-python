@@ -540,6 +540,7 @@
         return api.rodar();
       },
       digitar: function (texto) { if (sessao && sessao.campo) { sessao.campo.value = texto; sessao.campo.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })); return true; } return false; },
+      fimDaEntrada: function () { if (sessao && sessao.campo) { sessao.campo.dispatchEvent(new KeyboardEvent("keydown", { key: "d", ctrlKey: true, bubbles: true })); return true; } return false; },
       esperando: function () { return !!(sessao && sessao.esperando); },
       parar: function () { parar(); },
     };

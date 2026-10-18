@@ -260,7 +260,10 @@ def preparar(ambiente, em_node=False):
     _BASE["meta_path"] = list(sys.meta_path)
     _BASE["path_hooks"] = list(sys.path_hooks)
     _BASE["warn"] = list(warnings.filters)
-    _BASE["executable"] = sys.executable
+    # o navegador daria "/home/ana/this.program" e o Node o caminho do script da VPS:
+    # o editor usa o do python3 do Ubuntu (o do lab)
+    _BASE["executable"] = "/usr/bin/python3"
+    sys._base_executable = "/usr/bin/python3"
     import _locale
     _BASE["locale"] = _locale.setlocale(_locale.LC_ALL)
     return sys.version
@@ -291,13 +294,14 @@ def _reiniciar():
     shutil.rmtree(HOME, ignore_errors=True); os.makedirs(HOME, exist_ok=True)
     _limpar_pasta("/tmp")
     os.chdir(HOME)
-    sys.setrecursionlimit(1000); sys.settrace(None); sys.setprofile(None)
+    _DESLOCAMENTO[0] = 0; _set_rec(1000); sys.settrace(None); sys.setprofile(None)
     try: sys.set_int_max_str_digits(4300)
     except Exception: pass
     sys.excepthook = sys.__excepthook__; sys.displayhook = sys.__displayhook__
     sys.breakpointhook = sys.__breakpointhook__; sys.unraisablehook = sys.__unraisablehook__
     sys.stdout = sys.__stdout__; sys.stderr = sys.__stderr__
     sys.executable = _BASE["executable"]
+    sys.getrecursionlimit = getrecursionlimit; sys.setrecursionlimit = setrecursionlimit
     try:
         import _locale
         _locale.setlocale(_locale.LC_ALL, _BASE["locale"])
@@ -311,6 +315,22 @@ def _reiniciar():
             except Exception: pass
     atexit._clear()
     gc.collect()
+
+# ---------- limite de recursão igual ao do python3 ----------
+# O programa do leitor roda dentro de executar(): um quadro a mais na pilha. O editor soma
+# esses quadros ao limite e esconde a soma (sys.getrecursionlimit() continua 1000).
+_get_rec, _set_rec = sys.getrecursionlimit, sys.setrecursionlimit
+_DESLOCAMENTO = [0]
+def getrecursionlimit():
+    return _get_rec() - _DESLOCAMENTO[0]
+def setrecursionlimit(limit, /):
+    if not isinstance(limit, int):
+        raise TypeError("'%s' object cannot be interpreted as an integer" % type(limit).__name__)
+    if limit < 1:
+        raise ValueError("recursion limit must be greater or equal than 1")
+    _set_rec(limit + _DESLOCAMENTO[0])
+getrecursionlimit.__doc__ = _get_rec.__doc__; setrecursionlimit.__doc__ = _set_rec.__doc__
+sys.getrecursionlimit = getrecursionlimit; sys.setrecursionlimit = setrecursionlimit
 
 def _sem_quadros_do_editor(tb):
     while tb is not None and tb.tb_frame.f_code.co_filename == _ESTE:
@@ -361,6 +381,10 @@ def executar(req, pedir=None, avisar=None, eco=None, dorme=None):
     if r.get("semente") is not None:
         import random
         random.seed(r["semente"])
+    f, n = sys._getframe(), 0
+    while f is not None:
+        n += 1; f = f.f_back
+    _DESLOCAMENTO[0] = n; _set_rec(1000 + n)
     mod = types.ModuleType("__main__")
     mod.__file__ = principal; mod.__cached__ = None; mod.__builtins__ = builtins
     sys.modules["__main__"] = mod

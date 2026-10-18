@@ -132,7 +132,8 @@ async def dobro(n):
     return n * 2
 
 print(asyncio.run(dobro(21)))
-print(sys.platform, os.getcwd(), __file__)
+print(sys.platform, os.getcwd(), __file__, sys.argv)
+print("executable:", repr(sys.executable), sys.getrecursionlimit())
 print("os.system:", os.system("ls"))
 try:
     import subprocess
