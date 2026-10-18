@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python type() — descobrindo o tipo de um valor | Guia Python</title>
+<meta name="description" content="A função type() para quem está começando: perguntar o tipo de um valor, de uma variável e de uma conta, ler a resposta &lt;class 'int'&gt;, usar type() para achar erros como o 1527 do input(), comparar com type(x) == int, conhecer o isinstance() e os erros reais do Python 3.14 (TypeError, NameError) explicados em português, com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">type()</span></h1>
+
+<p class="intro">Na aula <a href="tipos-de-dados.html">Tipos de Dados</a> você viu que todo valor tem um tipo, e que o tipo muda tudo: <code>15 + 27</code> dá <code>42</code>, mas <code>"15" + "27"</code> dá <code>"1527"</code>. Só que, olhando para uma variável, nem sempre dá para saber o tipo do que está guardado nela. A função <code>type()</code> (em inglês, "tipo") responde a essa pergunta. Ela é a lupa do programador: quando um resultado sai estranho, perguntar o tipo é muitas vezes o primeiro passo para achar o erro.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A perguntar o tipo de um valor, de uma variável e do resultado de uma conta com <code>type()</code>.</li>
+  <li>A ler a resposta: o que quer dizer <code>&lt;class 'int'&gt;</code>.</li>
+  <li>A usar <code>type()</code> para descobrir por que um programa deu <code>1527</code> em vez de <code>42</code>.</li>
+  <li>A conferir se um valor é de um tipo: <code>type(x) == int</code>, e a armadilha de comparar com <code>"int"</code>.</li>
+  <li>A conhecer o <code>isinstance()</code>, o jeito mais usado de conferir tipos.</li>
+  <li>Os erros reais: <code>type()</code> vazio, <code>Type</code> com maiúscula e o nome do tipo entre aspas.</li>
+</ul>
+</div>
+
+<p>Os programas desta aula foram rodados com o <strong>Python 3.14</strong> na máquina fictícia da Ana (usuária <code>ana</code>, computador <code>notebook</code>), com <code>python3 arquivo.py</code>.</p>
+
+<hr>
+
+<h2>A ideia: ler o rótulo da embalagem</h2>
+<p>Na despensa da padaria, dois potes iguais, sem nada escrito: um tem sal, o outro tem açúcar. Por fora, não dá para saber. Antes de pôr a colher no bolo, a Ana vira o pote e <strong>lê o rótulo</strong> no fundo.</p>
+
+<p>Uma variável é como esse pote: <code>vendas</code> pode guardar o número <code>15</code> ou o texto <code>"15"</code>, e o <code>print</code> mostra os dois do mesmo jeito, <code>15</code>. O <code>type()</code> vira o pote e lê o rótulo: diz se ali dentro tem um <code>int</code>, um <code>str</code>, um <code>float</code>…</p>
+
+<hr>
+
+<h2>1. Perguntando o tipo</h2>
+
+<pre class="file" data-file="ty-basico.py">print(type(42))
+print(type(7.5))
+print(type("Ana"))
+print(type(True))
+print(type(None))
+</pre>
+
+<pre class="term">$ python3 ty-basico.py
+&lt;class 'int'&gt;
+&lt;class 'float'&gt;
+&lt;class 'str'&gt;
+&lt;class 'bool'&gt;
+&lt;class 'NoneType'&gt;
+</pre>
+
+<dl class="anatomy">
+  <dt>type</dt><dd>O nome da função. Tudo em minúsculas, como <code>print</code>.</dd>
+  <dt>( 42 )</dt><dd>O valor cujo tipo você quer saber. Vai <strong>um</strong> valor só.</dd>
+  <dt>print( … )</dt><dd>O <code>type()</code> <strong>devolve</strong> o tipo, mas não mostra nada sozinho num programa. Quem mostra é o <code>print</code>, como sempre.</dd>
+  <dt>&lt;class 'int'&gt;</dt><dd>A resposta. <code>class</code> ("classe") é o nome que o Python dá a um tipo; entre as aspas vem o nome do tipo, aqui <code>int</code>. Os sinais <code>&lt;</code> e <code>&gt;</code> só marcam que aquilo é uma descrição, e não um texto comum. Leia como "<strong>é do tipo int</strong>".</dd>
+</dl>
+
+<h3>No modo interativo</h3>
+<p>No <code>&gt;&gt;&gt;</code> (aula <a href="repl.html">O Modo Interativo</a>) nem precisa do <code>print</code>. É o jeito mais rápido de tirar uma dúvida:</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; type(42)
+&lt;class 'int'&gt;
+&gt;&gt;&gt; type("42")
+&lt;class 'str'&gt;
+&gt;&gt;&gt; type(42.0)
+&lt;class 'float'&gt;
+&gt;&gt;&gt; exit()
+</pre>
+
+<hr>
+
+<h2>2. O tipo de variáveis e de contas</h2>
+<p>Dentro dos parênteses pode ir qualquer coisa que tenha valor: uma variável, uma conta, o que uma função devolveu. O <code>type()</code> responde o tipo do <strong>valor</strong> que está ali naquele momento:</p>
+
+<pre class="file" data-file="ty-var.py">preco = 7.5
+quantidade = 3
+total = preco * quantidade
+print(type(preco))
+print(type(quantidade))
+print(type(total))
+print(type(7 / 2), type(10 // 2), type(3 + 0.5))
+</pre>
+
+<pre class="term">$ python3 ty-var.py
+&lt;class 'float'&gt;
+&lt;class 'int'&gt;
+&lt;class 'float'&gt;
+&lt;class 'float'&gt; &lt;class 'int'&gt; &lt;class 'float'&gt;
+</pre>
+
+<ul>
+  <li><code>type(preco)</code>: o Python troca o nome pelo valor, <code>7.5</code>, e responde <code>float</code>.</li>
+  <li><code>type(total)</code>: <code>7.5 * 3</code> dá <code>22.5</code>; um <code>float</code> vezes um <code>int</code> dá <code>float</code>.</li>
+  <li><code>type(7 / 2)</code>: a divisão com <code>/</code> sempre dá <code>float</code>. Já o <code>//</code>, a divisão inteira (aula <a href="operadores-aritmeticos.html">Operadores Aritméticos</a>), deu <code>int</code>.</li>
+</ul>
+
+<h3>Só o nome do tipo</h3>
+<p>Para mostrar o tipo numa frase, sem o <code>&lt;class '…'&gt;</code> em volta, peça só o nome com <code>.__name__</code> (dois sublinhados de cada lado; em inglês, "nome"):</p>
+
+<pre class="file" data-file="ty-nome.py">estoque = 12
+print("estoque é do tipo", type(estoque).__name__)
+</pre>
+
+<pre class="term">$ python3 ty-nome.py
+estoque é do tipo int
+</pre>
+
+<p>Esse ponto depois do <code>type(estoque)</code> quer dizer "pegue uma informação de dentro dele". Você vai ver muitos pontos assim a partir da aula <a href="strings-metodos.html">Métodos de Texto</a>; por enquanto, basta saber que <code>type(x).__name__</code> dá o nome do tipo como texto.</p>
+
+<hr>
+
+<h2>3. O <code>type()</code> como detetive</h2>
+<p>Lembra do programa da aula <a href="input.html">input()</a> que somava 15 e 27 e dava 1527? Imagine que você não soubesse o motivo. Um <code>print(type(...))</code> resolve o mistério:</p>
+
+<pre class="file" data-file="ty-debug.py">manha = input("Vendas da manhã: ")
+tarde = input("Vendas da tarde: ")
+print("Total:", manha + tarde)
+print(type(manha), type(tarde))
+</pre>
+
+<pre class="term">$ python3 ty-debug.py
+Vendas da manhã: 15
+Vendas da tarde: 27
+Total: 1527
+&lt;class 'str'&gt; &lt;class 'str'&gt;
+</pre>
+
+<p>Os dois são <code>str</code>: o <code>+</code> juntou textos em vez de somar números. Pista encontrada, conserto sabido: <code>int(input(...))</code>. Esse truque de colocar um <code>print</code> a mais para "espiar" o programa é a forma mais simples de <strong>depuração</strong> (achar e corrigir erros); a aula <a href="depuracao.html">Depurando com pdb</a> mostra ferramentas maiores.</p>
+
+<div class="trypy" data-stdin="15\n27" data-goal="out:&lt;class 'str'&gt;;;src:type\(\s*manha\s*\)">
+<p class="try-task"><strong>Missão:</strong> seja o detetive. Acrescente no fim uma linha que mostre o tipo de <code>manha</code>, com <code>print(type(manha))</code>, e veja com os seus olhos por que o total saiu errado. (O editor digita 15 e 27.)</p>
+<pre class="script" data-file="main.py">manha = input("Vendas da manhã: ")
+tarde = input("Vendas da tarde: ")
+print("Total:", manha + tarde)
+</pre>
+<pre class="solucao" data-file="main.py">manha = input("Vendas da manhã: ")
+tarde = input("Vendas da tarde: ")
+print("Total:", manha + tarde)
+print(type(manha))
+</pre>
+</div>
+
+<hr>
+
+<h2>4. Conferindo se um valor é de um tipo</h2>
+<p>Às vezes você não quer só <strong>ver</strong> o tipo, quer <strong>perguntar</strong>: "isto é um inteiro?". O nome do tipo, sem aspas, pode ser comparado com o <code>==</code> ("é igual?"), e a resposta é um <code>bool</code>, <code>True</code> ou <code>False</code>:</p>
+
+<pre class="file" data-file="ty-compara.py">idade = 29
+print(type(idade) == int)
+print(type(idade) == str)
+print(type(idade) == "int")
+</pre>
+
+<pre class="term">$ python3 ty-compara.py
+True
+False
+False
+</pre>
+
+<dl class="anatomy">
+  <dt>type(idade) == int</dt><dd>"O tipo de <code>idade</code> é <code>int</code>?" Sim: <code>True</code>. Aqui <code>int</code> vai <strong>sem aspas</strong>: é o próprio tipo, o mesmo nome que você usa em <code>int(input(...))</code>.</dd>
+  <dt>type(idade) == str</dt><dd>"É <code>str</code>?" Não: <code>False</code>.</dd>
+  <dt>type(idade) == "int"</dt><dd><strong>Cuidado:</strong> deu <code>False</code>, sem erro nenhum. Com aspas, <code>"int"</code> é um <strong>texto</strong> de três letras, e o tipo <code>int</code> não é igual a um texto. A pergunta está errada e a resposta engana.</dd>
+</dl>
+
+<p>Essas respostas <code>True</code>/<code>False</code> vão ficar úteis quando o programa começar a tomar decisões, com o <code>if</code> ("se"), na aula <a href="if.html">if</a>.</p>
+
+<h3>O <code>isinstance()</code></h3>
+<p>Existe uma segunda função para essa pergunta, e é a que os programadores Python mais usam: <code>isinstance()</code>, de <em>is instance</em>, "é uma instância de", ou seja, "é um exemplar de". Ela recebe <strong>dois</strong> valores: o que você quer testar e o tipo.</p>
+
+<pre class="file" data-file="ty-isinstance.py">idade = 29
+preco = 7.5
+print(isinstance(idade, int))
+print(isinstance(preco, int))
+print(isinstance(preco, (int, float)))
+print(isinstance(preco, int | float))
+print(isinstance("29", int))
+</pre>
+
+<pre class="term">$ python3 ty-isinstance.py
+True
+False
+True
+True
+False
+</pre>
+
+<dl class="anatomy">
+  <dt>isinstance(idade, int)</dt><dd>"<code>idade</code> é um <code>int</code>?" Sim.</dd>
+  <dt>isinstance(preco, int)</dt><dd><code>7.5</code> é <code>float</code>, não <code>int</code>: <code>False</code>.</dd>
+  <dt>isinstance(preco, (int, float))</dt><dd>Vários tipos entre parênteses, separados por vírgula: "é <code>int</code> <strong>ou</strong> <code>float</code>?". Sim. É o jeito de perguntar "é um número?".</dd>
+  <dt>isinstance(preco, int | float)</dt><dd>A mesma pergunta, escrita com a barra vertical <code>|</code>, que aqui se lê "ou". Funciona desde o Python 3.10.</dd>
+  <dt>isinstance("29", int)</dt><dd>Com aspas, <code>"29"</code> é texto: <code>False</code>.</dd>
+</dl>
+
+<div class="note">
+<strong>Por que existem dois jeitos?</strong>
+<p>O <code>type(x) == int</code> pergunta "o tipo é <strong>exatamente</strong> <code>int</code>?". O <code>isinstance(x, int)</code> pergunta "é um <code>int</code>, ou um tipo que é uma variação de <code>int</code>?". A diferença aparece num caso curioso: para o Python, o <code>bool</code> é uma variação do <code>int</code> (<code>True</code> vale 1 nas contas). Então <code>type(True) == int</code> dá <code>False</code>, mas <code>isinstance(True, int)</code> dá <code>True</code>. Essa história de "tipos que são variações de outros" se chama <strong>herança</strong> e fica para a aula <a href="heranca.html">Herança</a>. Por enquanto, a regra prática: <strong>para conferir um tipo, prefira <code>isinstance()</code></strong>; use <code>type()</code> para ver qual é o tipo.</p>
+</div>
+
+<div class="trypy" data-goal="out:True;;src:isinstance\(\s*preco\s*,\s*(\(\s*int\s*,\s*float\s*\)|\(\s*float\s*,\s*int\s*\)|int\s*\|\s*float|float\s*\|\s*int)\s*\)">
+<p class="try-task"><strong>Missão:</strong> o programa pergunta se <code>preco</code> é um <code>int</code>, e a resposta é <code>False</code>. Mude a pergunta para "é <code>int</code> <strong>ou</strong> <code>float</code>?", com o <code>isinstance()</code>, para a resposta ser <code>True</code>.</p>
+<pre class="script" data-file="main.py">preco = 7.5
+print(isinstance(preco, int))
+</pre>
+<pre class="solucao" data-file="main.py">preco = 7.5
+print(isinstance(preco, (int, float)))
+</pre>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de descobrir o tipo</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Responde</th><th>Quando usar</th></tr>
+<tr><td><code>type(x)</code> no <code>&gt;&gt;&gt;</code></td><td><code>&lt;class 'int'&gt;</code></td><td>Tirar uma dúvida rápida</td></tr>
+<tr><td><code>print(type(x))</code></td><td><code>&lt;class 'int'&gt;</code></td><td>Espiar um programa que está dando resultado estranho</td></tr>
+<tr><td><code>type(x).__name__</code></td><td><code>'int'</code> (um texto)</td><td>Mostrar o nome do tipo numa frase</td></tr>
+<tr><td><code>type(x) == int</code></td><td><code>True</code> / <code>False</code></td><td>Conferir o tipo exato. Raro</td></tr>
+<tr><td><code>isinstance(x, int)</code></td><td><code>True</code> / <code>False</code></td><td><strong>O jeito preferido</strong> de conferir um tipo</td></tr>
+<tr><td><code>isinstance(x, (int, float))</code></td><td><code>True</code> / <code>False</code></td><td>Conferir vários tipos de uma vez ("é um número?")</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong><code>type()</code> sem nada, ou com dois valores</strong>
+<pre class="file" data-file="ty-err-vazio.py">print(type())
+</pre>
+<pre class="term">$ python3 ty-err-vazio.py
+Traceback (most recent call last):
+  File "/home/ana/ty-err-vazio.py", line 1, in &lt;module&gt;
+    print(type())
+          ~~~~^^
+TypeError: type() takes 1 or 3 arguments
+</pre>
+<p>"<code>type()</code> recebe 1 ou 3 argumentos". Com zero não dá. Com dois valores, como <code>type(12, 7.5)</code>, a mensagem é a mesma. O jeito com 3 argumentos serve para <strong>criar</strong> tipos novos, coisa avançada que você não vai precisar; para perguntar o tipo, é sempre <strong>um</strong> valor. <strong>Como consertar:</strong> um <code>type()</code> para cada valor: <code>print(type(12), type(7.5))</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>Type</code> com maiúscula</strong>
+<pre class="file" data-file="ty-err-Type.py">print(Type(29))
+</pre>
+<pre class="term">$ python3 ty-err-Type.py
+Traceback (most recent call last):
+  File "/home/ana/ty-err-Type.py", line 1, in &lt;module&gt;
+    print(Type(29))
+          ^^^^
+NameError: name 'Type' is not defined. Did you mean: 'type'?
+</pre>
+<p>Como com o <code>Print</code> da aula <a href="print.html">print()</a>: o Python diferencia maiúsculas, e a dica "Did you mean" já diz o conserto: <code>type</code>, minúsculo.</p>
+</div>
+
+<div class="cenario">
+<strong>O nome do tipo entre aspas no <code>isinstance()</code></strong>
+<pre class="file" data-file="ty-err-texto.py">print(isinstance(29, "int"))
+</pre>
+<pre class="term">$ python3 ty-err-texto.py
+Traceback (most recent call last):
+  File "/home/ana/ty-err-texto.py", line 1, in &lt;module&gt;
+    print(isinstance(29, "int"))
+          ~~~~~~~~~~^^^^^^^^^^^
+TypeError: isinstance() arg 2 must be a type, a tuple of types, or a union
+</pre>
+<p>"O argumento 2 do <code>isinstance()</code> tem de ser um tipo, uma tupla de tipos ou uma união". O segundo valor foi o texto <code>"int"</code>, e não o tipo <code>int</code>. (A "tupla de tipos" é o <code>(int, float)</code>; a "união" é o <code>int | float</code>.) Aqui, pelo menos, o Python avisa; com <code>type(x) == "int"</code>, ele só responde <code>False</code> em silêncio (seção 4). <strong>Como consertar:</strong> sem aspas, <code>isinstance(29, int)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Nome do tipo por extenso</strong>
+<pre class="file" data-file="ty-err-nome.py">print(isinstance(29, integer))
+</pre>
+<pre class="term">$ python3 ty-err-nome.py
+Traceback (most recent call last):
+  File "/home/ana/ty-err-nome.py", line 1, in &lt;module&gt;
+    print(isinstance(29, integer))
+                         ^^^^^^^
+NameError: name 'integer' is not defined
+</pre>
+<p>O tipo se chama <code>int</code>, abreviado, e não <code>integer</code>. O mesmo vale para <code>str</code> (e não <code>string</code>) e <code>bool</code> (e não <code>boolean</code>). <strong>Como consertar:</strong> use os nomes curtos, exatamente como o <code>type()</code> mostra: <code>int</code>, <code>float</code>, <code>str</code>, <code>bool</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Uma variável chamada <code>type</code></strong>
+<p>Na aula <a href="nomes-variaveis.html">Nomes de Variáveis</a> você viu que dá para criar uma variável com o nome de uma função do Python, e que isso esconde a função. Com <code>type</code> é igual: depois de <code>type = "pão doce"</code>, qualquer <code>type(…)</code> do programa dá <code>TypeError: 'str' object is not callable</code>. Use outro nome, como <code>tipo</code> ou <code>categoria</code>.</p>
+</div>
+
+<div class="trypy" data-goal="out:True;;src:==\s*int\b">
+<p class="try-task"><strong>Missão:</strong> o programa deveria responder <code>True</code> (29 é um inteiro), mas responde <code>False</code>, e sem erro. Ache o problema na comparação e conserte.</p>
+<pre class="script" data-file="main.py">idade = 29
+print(type(idade) == "int")
+</pre>
+<pre class="solucao" data-file="main.py">idade = 29
+print(type(idade) == int)
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Resultado</th></tr>
+<tr><td><code>type(42)</code></td><td><code>&lt;class 'int'&gt;</code></td></tr>
+<tr><td><code>type(7.5)</code></td><td><code>&lt;class 'float'&gt;</code></td></tr>
+<tr><td><code>type("Ana")</code></td><td><code>&lt;class 'str'&gt;</code></td></tr>
+<tr><td><code>type(True)</code></td><td><code>&lt;class 'bool'&gt;</code></td></tr>
+<tr><td><code>type(None)</code></td><td><code>&lt;class 'NoneType'&gt;</code></td></tr>
+<tr><td><code>type(7 / 2)</code></td><td><code>&lt;class 'float'&gt;</code> (o tipo do resultado da conta)</td></tr>
+<tr><td><code>type(x).__name__</code></td><td>Só o nome do tipo, como texto: <code>'int'</code></td></tr>
+<tr><td><code>type(x) == int</code></td><td><code>True</code> se o tipo for exatamente <code>int</code></td></tr>
+<tr><td><code>isinstance(x, int)</code></td><td><code>True</code> se <code>x</code> for um <code>int</code></td></tr>
+<tr><td><code>isinstance(x, (int, float))</code> ou <code>isinstance(x, int | float)</code></td><td><code>True</code> se for <code>int</code> ou <code>float</code></td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>TypeError: type() takes 1 or 3 arguments</code></td><td><code>type()</code> vazio ou com dois valores</td></tr>
+<tr><td><code>NameError: name 'Type' is not defined. Did you mean: 'type'?</code></td><td>Maiúscula no nome da função</td></tr>
+<tr><td><code>TypeError: isinstance() arg 2 must be a type, a tuple of types, or a union</code></td><td>Nome do tipo entre aspas</td></tr>
+<tr><td><code>NameError: name 'integer' is not defined</code></td><td>Nome do tipo por extenso: é <code>int</code></td></tr>
+<tr><td><code>type(x) == "int"</code> sempre dá <code>False</code>, sem erro</td><td>Comparando o tipo com um texto: tire as aspas</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Complete</h3>
+<p>Complete para mostrar o tipo da variável <code>nome</code>:</p>
+<div class="ex-code">print(<input data-answer="type" aria-label="função">(nome))</div>
+</div>
+
+<div class="exercise">
+<h3>2. Qual é a saída?</h3>
+<p>O que mostra <code>print(type(10 / 5))</code>?</p>
+<div class="ex-code">Saída: <input data-answer="&lt;class 'float'&gt;" aria-label="saída"></div>
+</div>
+
+<div class="exercise">
+<h3>3. Verdadeiro ou falso?</h3>
+<p>O que mostra <code>print(isinstance("7", int))</code>?</p>
+<div class="ex-code">Saída: <input data-answer="False" aria-label="saída"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. A pessoa digitou <code>42</code> em <code>valor = input("Valor: ")</code>. O que mostra <code>print(type(valor))</code>?</p>
+<label><input type="radio" name="q4"> <code>&lt;class 'int'&gt;</code></label>
+<label><input type="radio" name="q4"> <code>&lt;class 'str'&gt;</code></label>
+<label><input type="radio" name="q4"> <code>&lt;class 'float'&gt;</code></label>
+<label><input type="radio" name="q4"> <code>42</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. Qual destas linhas responde <code>True</code> para <code>x = 3.5</code>?</p>
+<label><input type="radio" name="q5"> <code>type(x) == "float"</code></label>
+<label><input type="radio" name="q5"> <code>isinstance(x, int)</code></label>
+<label><input type="radio" name="q5"> <code>type(x) == int</code></label>
+<label><input type="radio" name="q5"> <code>isinstance(x, (int, float))</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">6. Qual é a recomendação para <strong>conferir</strong> se um valor é de um tipo?</p>
+<label><input type="radio" name="q6"> Comparar <code>type(x)</code> com o nome do tipo entre aspas</label>
+<label><input type="radio" name="q6"> Olhar o valor com <code>print</code></label>
+<label><input type="radio" name="q6"> Usar <code>isinstance(x, tipo)</code></label>
+<label><input type="radio" name="q6"> Usar <code>type()</code> com dois argumentos</label>
+</div>
+
+<h3>Missão final: a ficha de cadastro</h3>
+
+<div class="trypy" data-stdin="Ana\n29\n1.65" data-goal="out:nome: str;;out:idade: int;;out:altura: float;;semerro">
+<p class="try-task"><strong>Missão:</strong> o cadastro lê nome, idade e altura, e mostra o tipo de cada um. Hoje, os três saem <code>str</code>. Converta a idade com <code>int()</code> e a altura com <code>float()</code> para a ficha mostrar <code>nome: str</code>, <code>idade: int</code> e <code>altura: float</code>. (O editor digita <code>Ana</code>, <code>29</code> e <code>1.65</code>.)</p>
+<pre class="script" data-file="main.py">nome = input("Nome: ")
+idade = input("Idade: ")
+altura = input("Altura: ")
+print("nome:", type(nome).__name__)
+print("idade:", type(idade).__name__)
+print("altura:", type(altura).__name__)
+</pre>
+<pre class="solucao" data-file="main.py">nome = input("Nome: ")
+idade = int(input("Idade: "))
+altura = float(input("Altura: "))
+print("nome:", type(nome).__name__)
+print("idade:", type(idade).__name__)
+print("altura:", type(altura).__name__)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>type(valor)</code> devolve o tipo de um valor, de uma variável ou do resultado de uma conta; num programa, mostre com <code>print</code>.</li>
+  <li>A resposta <code>&lt;class 'int'&gt;</code> se lê "é do tipo <code>int</code>". Para só o nome, <code>type(x).__name__</code>.</li>
+  <li>Resultado estranho? Espie com <code>print(type(...))</code>: muitos erros de iniciante são um <code>str</code> onde deveria haver um número.</li>
+  <li><code>type(x) == int</code> confere o tipo exato; o tipo vai <strong>sem aspas</strong> (com aspas, a resposta é sempre <code>False</code>).</li>
+  <li><code>isinstance(x, int)</code> é o jeito preferido de conferir; aceita vários tipos: <code>isinstance(x, (int, float))</code>.</li>
+  <li>Os nomes dos tipos são curtos: <code>int</code>, <code>float</code>, <code>str</code>, <code>bool</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
