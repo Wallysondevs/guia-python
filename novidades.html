@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Novidades — o que mudou no 3.14 e no 3.15 | Guia Python</title>
+<meta name="description" content="As novidades do Python 3.14 (a versão deste guia) e do Python 3.15, explicadas para quem está começando: mensagens de erro melhores, modo interativo colorido, except sem parênteses (PEP 758), template strings t&quot;&quot; (PEP 750), anotações adiadas (PEP 649), return no finally, pathlib copy e move, e o que chegou no 3.15 (lazy import, frozendict, desempacotamento em comprehensions, UTF-8 por padrão), conferido na documentação oficial e rodado no Python 3.14 de verdade.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Novidades</span> do 3.14 e do 3.15</h1>
+
+<p class="intro">O Python ganha uma versão nova todo ano, em outubro. Este guia ensina o <strong>Python 3.14</strong>, lançado em 7 de outubro de 2025: é o que vem no Ubuntu 26.04 e o que roda no editor do guia. Um ano depois, em 9 de outubro de 2026, saiu o <strong>Python 3.15</strong>. Esta página reúne o que mudou nas duas versões, do jeito que interessa a quem está aprendendo: o que você vai ver de diferente, o que pode escrever agora e o que vai encontrar no código dos outros. Tudo foi conferido nas páginas oficiais <em>What's New</em> ("O que há de novo") em <code>docs.python.org/3/whatsnew/</code>; o que é do 3.14 foi rodado no Python 3.14 de verdade.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>Como saber qual Python você tem, e como as versões são lançadas.</li>
+  <li>As novidades do 3.14 que você sente logo: mensagens de erro mais espertas e o modo interativo colorido.</li>
+  <li><code>except A, B:</code> sem parênteses (PEP 758).</li>
+  <li>As <em>template strings</em>, <code>t"…"</code>: parentes das f-strings, mas com um superpoder (PEP 750).</li>
+  <li>As anotações de tipo adiadas (PEP 649) e o aviso de <code>return</code> dentro do <code>finally</code> (PEP 765).</li>
+  <li>Melhorias pequenas e úteis: <code>Path.copy()</code>, <code>map(strict=True)</code>, <code>uuid7()</code> e outras.</li>
+  <li>O que chegou no 3.15: <code>lazy import</code>, <code>frozendict</code>, desempacotamento em comprehensions, UTF-8 por padrão, dicas de erro novas.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: um celular que recebe atualizações</h2>
+<p>O seu celular de hoje faz o mesmo que fazia ontem, mas a cada atualização ganha alguma coisa: um atalho novo, uma mensagem mais clara, uma função que antes precisava de um aplicativo à parte. Raramente algo some, e quando some há aviso com antecedência. As versões do Python são assim: o código que você escreveu para o 3.13 continua rodando no 3.14 quase sempre, e as mudanças que quebram coisas são avisadas versões antes (com os <code>DeprecationWarning</code>, "aviso de obsolescência").</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Termo</th><th>O que é</th></tr>
+<tr><td><code>3.14.4</code></td><td>3 = a "geração" do Python (desde 2008); 14 = a versão do ano; 4 = a quarta correção dela. As correções (3.14.1, 3.14.2…) só consertam defeitos, não trazem recursos</td></tr>
+<tr><td>PEP</td><td><em>Python Enhancement Proposal</em>, "proposta de melhoria": o documento numerado que descreve cada mudança grande (veja <a href="estilo-pep8.html">PEP 8</a>)</td></tr>
+<tr><td>Ciclo de vida</td><td>Cada versão recebe correções por cerca de cinco anos; a situação de cada uma está em <code>devguide.python.org/versions</code></td></tr>
+</table>
+</div>
+
+<h3>Qual é o meu Python?</h3>
+
+<pre class="file" data-file="versao.py">import sys
+
+print(sys.version)
+print(sys.version_info)
+print(sys.version_info &gt;= (3, 14))
+</pre>
+
+<pre class="term">$ python3 --version
+Python 3.14.4
+$ python3 versao.py
+3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]
+sys.version_info(major=3, minor=14, micro=4, releaselevel='final', serial=0)
+True
+</pre>
+
+<p>O <code>sys.version_info</code> é uma <a href="tuplas.html">tupla</a> com nome, e compará-la com <code>(3, 14)</code> diz se o Python é o 3.14 ou mais novo. O editor do guia roda o 3.14 também (uma correção diferente da do terminal da Ana, o que não muda nada nesta página). E o Debian 13, por exemplo, traz o 3.13: as novidades abaixo não funcionam nele.</p>
+
+<hr>
+
+<h2>Python 3.14 <span class="versao">3.14</span></h2>
+
+<h3>1. Mensagens de erro mais espertas</h3>
+<p>Desde o 3.10, a cada versão o Python explica melhor os erros. No 3.14, ele passou a reconhecer palavras-chave digitadas errado:</p>
+
+<pre class="file" data-file="erros_314.py">whille True:
+    pass
+</pre>
+<pre class="term">$ python3 erros_314.py
+  File "/home/ana/erros_314.py", line 1
+    whille True:
+    ^^^^^^
+SyntaxError: invalid syntax. Did you mean 'while'?
+</pre>
+
+<p>"Sintaxe inválida. Você quis dizer <code>while</code>?" Antes, era só <code>invalid syntax</code>. Outros casos novos, todos colhidos no 3.14:</p>
+
+<pre class="file" data-file="erro_elif.py">nota = 7
+if nota &gt;= 9:
+    print("Ótimo")
+else:
+    print("Continue estudando")
+elif nota &gt;= 6:
+    print("Bom")
+</pre>
+<pre class="term">$ python3 erro_elif.py
+  File "/home/ana/erro_elif.py", line 6
+    elif nota &gt;= 6:
+    ^^^^
+SyntaxError: 'elif' block follows an 'else' block
+</pre>
+<p>"Um bloco <code>elif</code> depois de um bloco <code>else</code>." O <code>else</code> é sempre o último (veja <a href="elif.html">elif</a>).</p>
+
+<pre class="file" data-file="erro_chave.py">estoque = {}
+produto = ["arroz", "5 kg"]
+estoque[produto] = 12
+</pre>
+<pre class="term">$ python3 erro_chave.py
+Traceback (most recent call last):
+  File "/home/ana/erro_chave.py", line 3, in &lt;module&gt;
+    estoque[produto] = 12
+    ~~~~~~~^^^^^^^^^
+TypeError: cannot use 'list' as a dict key (unhashable type: 'list')
+</pre>
+<p>"Não dá para usar uma <code>list</code> como chave de dicionário (tipo não <em>hashable</em>)." Antes vinha só <code>unhashable type: 'list'</code>; agora a mensagem diz o que você tentou fazer. Listas podem mudar, por isso não servem de chave; uma <a href="tuplas.html">tupla</a> serve: <code>("arroz", "5 kg")</code>. O mesmo vale para os conjuntos:</p>
+
+<pre class="term">$ python3 erro_conjunto.py
+Traceback (most recent call last):
+  File "/home/ana/erro_conjunto.py", line 2, in &lt;module&gt;
+    vistos.add({"nome": "Ana"})
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^
+TypeError: cannot use 'dict' as a set element (unhashable type: 'dict')
+$ python3 erro_prefixo.py
+  File "/home/ana/erro_prefixo.py", line 1
+    dados = ub"abc"
+            ^^
+SyntaxError: 'u' and 'b' prefixes are incompatible
+</pre>
+<p>"Não dá para usar um <code>dict</code> como elemento de conjunto", e, no segundo, "os prefixos <code>u</code> e <code>b</code> são incompatíveis" (um texto não pode ser ao mesmo tempo texto Unicode e <em>bytes</em>).</p>
+
+<h3>2. O modo interativo colorido</h3>
+<p>No terminal, o <code>&gt;&gt;&gt;</code> do <a href="repl.html">modo interativo</a> agora <strong>colore o código enquanto você digita</strong>: o prompt em roxo, os textos em verde, os números, as palavras-chave e as funções embutidas cada um com sua cor. E o Tab completa nomes de módulos no <code>import</code>: digite <code>import co</code> e aperte Tab para ver os módulos que começam com "co". As cores também chegaram a outras ferramentas: o relatório do <code>unittest</code> (veja <a href="testes.html">Testes</a>), o código que o <code>pdb</code> mostra (veja <a href="depuracao.html">Depuração</a>), a ajuda do <code>argparse</code>, os tracebacks.</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; nome = "Ana"
+&gt;&gt;&gt; t"Olá, {nome}!"
+Template(strings=('Olá, ', '!'), interpolations=(Interpolation('Ana', 'nome', None, ''),))
+&gt;&gt;&gt; exit()
+</pre>
+
+<p>(Aqui, sem as cores. Esse <code>t"…"</code> é a próxima novidade.) Se as cores atrapalharem, a variável de ambiente <code>NO_COLOR=1</code> desliga todas.</p>
+
+<h3>3. <code>except</code> sem parênteses (PEP 758)</h3>
+<p>Para tratar dois tipos de erro do mesmo jeito, era obrigatório pôr os tipos entre parênteses: <code>except (ValueError, ZeroDivisionError):</code>. No 3.14, os parênteses podem sair:</p>
+
+<pre class="file" data-file="except_sem_parenteses.py">texto = "dez"
+
+try:
+    quantidade = int(texto)
+    porcao = 100 / quantidade
+except ValueError, ZeroDivisionError:
+    print("Quantidade inválida:", texto)
+</pre>
+<pre class="term">$ python3 except_sem_parenteses.py
+Quantidade inválida: dez
+</pre>
+
+<p>Mas só quando <strong>não</strong> há o <code>as</code>. Com o <code>as</code> (para guardar o erro numa variável), os parênteses continuam obrigatórios, e o 3.14 diz isso com todas as letras:</p>
+
+<pre class="file" data-file="except_as.py">try:
+    quantidade = int("dez")
+except ValueError, ZeroDivisionError as erro:
+    print("Deu erro:", erro)
+</pre>
+<pre class="term">$ python3 except_as.py
+  File "/home/ana/except_as.py", line 3
+    except ValueError, ZeroDivisionError as erro:
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+SyntaxError: multiple exception types must be parenthesized when using 'as'
+</pre>
+
+<p>"Vários tipos de exceção precisam de parênteses quando se usa <code>as</code>." Conserto: <code>except (ValueError, ZeroDivisionError) as erro:</code>. (A aula <a href="try-except.html">try e except</a> explica o <code>try</code>.)</p>
+
+<div class="warning">
+<strong>Em Pythons mais antigos</strong>
+<p>Até o 3.13, <code>except ValueError, ZeroDivisionError:</code> é <code>SyntaxError</code>. Se o seu programa precisa rodar em versões mais velhas, continue com os parênteses: eles funcionam em todas.</p>
+</div>
+
+<div class="trypy" data-goal="src:except ValueError, KeyError:;;out:Produto ou preço inválido;;semerro">
+<p class="try-task"><strong>Missão:</strong> tire os parênteses do <code>except</code>, no estilo novo do 3.14. O programa deve continuar mostrando a mensagem de erro.</p>
+<pre class="script" data-file="main.py">precos = {"arroz": "27.90", "café": "dezoito"}
+
+try:
+    preco = float(precos["café"])
+except (ValueError, KeyError):
+    print("Produto ou preço inválido")
+</pre>
+<pre class="solucao" data-file="main.py">precos = {"arroz": "27.90", "café": "dezoito"}
+
+try:
+    preco = float(precos["café"])
+except ValueError, KeyError:
+    print("Produto ou preço inválido")
+</pre>
+</div>
+
+<h3>4. Template strings: <code>t"…"</code> (PEP 750)</h3>
+<p>As <a href="f-strings.html">f-strings</a> montam o texto na hora: <code>f"Olá, {nome}!"</code> vira <code>"Olá, Ana!"</code>, e pronto, não dá mais para saber qual parte era fixa e qual veio da variável. A <strong>t-string</strong> (de <em>template</em>, "modelo") se escreve igual, com <code>t</code> no lugar do <code>f</code>, mas <strong>não monta o texto</strong>: ela guarda as partes separadas, para uma função decidir o que fazer com cada uma.</p>
+
+<pre class="file" data-file="tstring.py">nome = "Ana"
+fstring = f"Olá, {nome}!"
+template = t"Olá, {nome}!"
+
+print(type(fstring), fstring)
+print(type(template))
+print(list(template))
+print(template.strings)
+print(template.values)
+</pre>
+<pre class="term">$ python3 tstring.py
+&lt;class 'str'&gt; Olá, Ana!
+&lt;class 'string.templatelib.Template'&gt;
+['Olá, ', Interpolation('Ana', 'nome', None, ''), '!']
+('Olá, ', '!')
+('Ana',)
+</pre>
+
+<dl class="anatomy">
+  <dt>t"Olá, {nome}!"</dt><dd>Uma t-string. O resultado não é um <code>str</code>: é um objeto <code>Template</code>, do módulo <code>string.templatelib</code>.</dd>
+  <dt>list(template)</dt><dd>Percorrer o template entrega as partes em ordem: os pedaços fixos (textos comuns) e as <strong>interpolações</strong> (as partes entre chaves).</dd>
+  <dt>Interpolation('Ana', 'nome', None, '')</dt><dd>Uma interpolação guarda o valor (<code>'Ana'</code>), o código que estava entre as chaves (<code>'nome'</code>) e a formatação, se houver.</dd>
+  <dt>template.strings / template.values</dt><dd>Só os pedaços fixos / só os valores.</dd>
+</dl>
+
+<p>Para que serve? Para tratar <strong>de um jeito</strong> o que você escreveu e <strong>de outro</strong> o que veio de fora. O exemplo clássico é uma página de internet: se um visitante escreve um comentário com código HTML dentro, e o site cola o comentário direto na página, o código do visitante roda no navegador de todo mundo (é o "primo" do <a href="sqlite3.html#injection">SQL injection</a>). Com uma t-string, a função pode "desarmar" só os valores:</p>
+
+<pre class="file" data-file="tstring_html.py">from html import escape
+from string.templatelib import Interpolation
+
+
+def html(template):
+    partes = []
+    for parte in template:
+        if isinstance(parte, Interpolation):
+            partes.append(escape(str(parte.value)))
+        else:
+            partes.append(parte)
+    return "".join(partes)
+
+
+comentario = "&lt;script&gt;roubar()&lt;/script&gt; Adorei o bolo!"
+print(f"&lt;p&gt;{comentario}&lt;/p&gt;")
+print(html(t"&lt;p&gt;{comentario}&lt;/p&gt;"))
+</pre>
+<pre class="term">$ python3 tstring_html.py
+&lt;p&gt;&lt;script&gt;roubar()&lt;/script&gt; Adorei o bolo!&lt;/p&gt;
+&lt;p&gt;&amp;lt;script&amp;gt;roubar()&amp;lt;/script&amp;gt; Adorei o bolo!&lt;/p&gt;
+</pre>
+
+<ol class="passo">
+  <li>A função <code>html()</code> percorre as partes do template. As partes fixas (<code>&lt;p&gt;</code> e <code>&lt;/p&gt;</code>, que você escreveu) passam do jeito que estão.</li>
+  <li>As interpolações (o comentário, que veio do visitante) passam pelo <code>escape()</code> do módulo <code>html</code>, que troca <code>&lt;</code> por <code>&amp;lt;</code> e <code>&gt;</code> por <code>&amp;gt;</code>. O navegador mostra esses códigos como os sinais, mas não executa nada.</li>
+  <li>Com a f-string, o <code>&lt;script&gt;</code> foi colado inteiro. Com a t-string, saiu desarmado, e o <code>&lt;p&gt;</code> que você escreveu continuou funcionando.</li>
+</ol>
+
+<p>Uma t-string não é um texto: para mostrar, alguma função tem de transformá-la. Tentar usá-la como texto dá erro:</p>
+
+<pre class="file" data-file="tstring_str.py">nome = "Ana"
+template = t"Olá, {nome}!"
+print(template)
+print("Bem-vinda: " + template)
+</pre>
+<pre class="term">$ python3 tstring_str.py
+Template(strings=('Olá, ', '!'), interpolations=(Interpolation('Ana', 'nome', None, ''),))
+Traceback (most recent call last):
+  File "/home/ana/tstring_str.py", line 4, in &lt;module&gt;
+    print("Bem-vinda: " + template)
+          ~~~~~~~~~~~~~~^~~~~~~~~~
+TypeError: can only concatenate str (not "string.templatelib.Template") to str
+</pre>
+
+<p>O <code>print</code> mostrou a "ficha técnica" do template, e não "Olá, Ana!". E o <code>+</code> recusou: "só dá para juntar <code>str</code> com <code>str</code> (não com <code>Template</code>)". No dia a dia, para montar texto, continue com as f-strings. As t-strings são para quem escreve <strong>bibliotecas</strong> que precisam tratar os valores com cuidado (HTML, SQL, comandos, logs); você vai usá-las através dessas bibliotecas.</p>
+
+<div class="trypy" data-goal="out:&amp;lt;b&amp;gt;Ana;;src:html\(t[&quot;'];;semerro">
+<p class="try-task"><strong>Missão:</strong> o nome do cliente veio com um código HTML (<code>&lt;b&gt;</code>). A função <code>html()</code> já sabe desarmar os valores, mas só funciona com uma t-string. Troque o <code>f</code> por <code>t</code> na linha do <code>print</code> e rode: o <code>&lt;b&gt;</code> do nome tem de sair como <code>&amp;lt;b&amp;gt;</code>.</p>
+<pre class="script" data-file="main.py">from html import escape
+from string.templatelib import Interpolation
+
+
+def html(template):
+    partes = []
+    for parte in template:
+        if isinstance(parte, Interpolation):
+            partes.append(escape(str(parte.value)))
+        else:
+            partes.append(parte)
+    return "".join(partes)
+
+
+cliente = "&lt;b&gt;Ana&lt;/b&gt;"
+print(html(f"&lt;p&gt;Pedido de {cliente} saiu para entrega&lt;/p&gt;"))
+</pre>
+<pre class="solucao" data-file="main.py">from html import escape
+from string.templatelib import Interpolation
+
+
+def html(template):
+    partes = []
+    for parte in template:
+        if isinstance(parte, Interpolation):
+            partes.append(escape(str(parte.value)))
+        else:
+            partes.append(parte)
+    return "".join(partes)
+
+
+cliente = "&lt;b&gt;Ana&lt;/b&gt;"
+print(html(t"&lt;p&gt;Pedido de {cliente} saiu para entrega&lt;/p&gt;"))
+</pre>
+</div>
+
+<p>Por que a versão com <code>f</code> não deu erro? Porque um texto comum também pode ser percorrido (letra por letra), e nenhuma letra é uma <code>Interpolation</code>: a função devolveu o texto sem desarmar nada. É exatamente o perigo que a t-string evita.</p>
+
+<h3>5. Anotações adiadas (PEP 649)</h3>
+<p>As <a href="type-hints.html">dicas de tipo</a> (anotações) dizem que tipo cada parâmetro espera. Até o 3.13, o Python calculava as anotações no momento do <code>def</code>; se uma anotação citava uma classe definida <strong>mais abaixo</strong> no arquivo, dava <code>NameError</code>, e o truque era escrevê-la entre aspas (<code>-&gt; "Cliente"</code>). No 3.14, as anotações só são calculadas quando alguém pede por elas:</p>
+
+<pre class="file" data-file="anotacoes.py">def cadastrar(nome: str) -&gt; Cliente:
+    return Cliente(nome)
+
+
+class Cliente:
+    def __init__(self, nome: str) -&gt; None:
+        self.nome = nome
+
+
+ana = cadastrar("Ana")
+print(ana.nome)
+print(cadastrar.__annotations__)
+</pre>
+<pre class="term">$ python3 anotacoes.py
+Ana
+{'nome': &lt;class 'str'&gt;, 'return': &lt;class '__main__.Cliente'&gt;}
+</pre>
+
+<p>A função <code>cadastrar</code> foi criada antes de existir a classe <code>Cliente</code>, e não deu erro: quando o <code>print</code> pediu as anotações (<code>__annotations__</code>), a classe já existia. Para quem lê as anotações por programa, o módulo novo <code>annotationlib</code> pode entregá-las de três jeitos, inclusive quando um nome não existe:</p>
+
+<pre class="file" data-file="anotacoes_lib.py">from annotationlib import Format, get_annotations
+
+
+def entregar(pedido: Pedido, endereco: str) -&gt; None:
+    pass
+
+
+print(get_annotations(entregar, format=Format.STRING))
+print(get_annotations(entregar, format=Format.FORWARDREF))
+print(get_annotations(entregar))
+</pre>
+<pre class="term">$ python3 anotacoes_lib.py
+{'pedido': 'Pedido', 'endereco': 'str', 'return': 'None'}
+{'pedido': ForwardRef('Pedido', owner=&lt;function entregar at 0x7fd70d37f320&gt;), 'endereco': &lt;class 'str'&gt;, 'return': None}
+Traceback (most recent call last):
+  File "/home/ana/anotacoes_lib.py", line 10, in &lt;module&gt;
+    print(get_annotations(entregar))
+          ~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib/python3.14/annotationlib.py", line 966, in get_annotations
+    ann = _get_dunder_annotations(obj)
+  File "/usr/lib/python3.14/annotationlib.py", line 1159, in _get_dunder_annotations
+    ann = getattr(obj, "__annotations__", None)
+  File "/home/ana/anotacoes_lib.py", line 4, in __annotate__
+    def entregar(pedido: Pedido, endereco: str) -&gt; None:
+                         ^^^^^^
+NameError: name 'Pedido' is not defined
+</pre>
+
+<dl class="anatomy">
+  <dt>Format.STRING</dt><dd>As anotações como textos, exatamente como foram escritas. Nunca dá erro.</dd>
+  <dt>Format.FORWARDREF</dt><dd>Os valores reais quando existem (<code>str</code>, <code>None</code>) e uma "referência adiantada" (<code>ForwardRef('Pedido')</code>) para o que ainda não existe.</dd>
+  <dt>sem formato (VALUE)</dt><dd>Os valores reais. Como <code>Pedido</code> nunca foi definido, o cálculo atrasado deu <code>NameError</code>, e o traceback mostra a linha do <code>def</code> (dentro de uma função escondida chamada <code>__annotate__</code>).</dd>
+</dl>
+
+<p>Repare: o erro aconteceu na linha 10, quando as anotações foram <strong>pedidas</strong>, e não na linha 4, onde o <code>def</code> foi escrito. Esse é o "adiado". Para quem só escreve dicas de tipo, a mudança é simples: <strong>as aspas em volta de nomes definidos mais abaixo não são mais necessárias</strong>.</p>
+
+<div class="cenario">
+<strong>O <code>__annotations__</code> do módulo sumiu</strong>
+<p>Uma consequência que pega quem vem de versões antigas: anotações de variáveis soltas no arquivo também são adiadas, e o nome <code>__annotations__</code> não existe mais "solto" no módulo:</p>
+<pre class="file" data-file="modulo_anot.py">preco: float = 27.90
+print(__annotations__)
+</pre>
+<pre class="term">$ python3 modulo_anot.py
+Traceback (most recent call last):
+  File "/home/ana/modulo_anot.py", line 2, in &lt;module&gt;
+    print(__annotations__)
+          ^^^^^^^^^^^^^^^
+NameError: name '__annotations__' is not defined. Did you mean: '__annotate__'?
+</pre>
+<p>No 3.13, isso mostrava <code>{'preco': &lt;class 'float'&gt;}</code>. No 3.14, a dica aponta o <code>__annotate__</code>, a função escondida que calcula as anotações. Para lê-las, peça ao módulo: <code>sys.modules[__name__].__annotations__</code> (com <code>import sys</code>) ou <code>annotationlib.get_annotations()</code> passando o módulo.</p>
+</div>
+
+<h3>6. <code>return</code> dentro do <code>finally</code> agora dá aviso (PEP 765)</h3>
+<p>O bloco <code>finally</code> roda sempre, com erro ou sem erro (veja <a href="else-finally.html">else e finally</a>). Um <code>return</code> lá dentro "engole" qualquer erro, e o programa segue como se nada tivesse acontecido. O 3.14 passou a avisar:</p>
+
+<pre class="file" data-file="finally_return.py">def dividir(a, b):
+    try:
+        return a / b
+    finally:
+        return "acabou"
+
+
+print(dividir(10, 0))
+</pre>
+<pre class="term">$ python3 finally_return.py
+/home/ana/finally_return.py:5: SyntaxWarning: 'return' in a 'finally' block
+  return "acabou"
+acabou
+</pre>
+
+<p>Dividir por zero devia dar <code>ZeroDivisionError</code>, mas o <code>return</code> do <code>finally</code> jogou o erro fora e a função devolveu <code>"acabou"</code>. O <code>SyntaxWarning</code> ("aviso de sintaxe": não para o programa) aponta o problema. O mesmo aviso vale para <code>break</code> e <code>continue</code> que saem de um <code>finally</code>. Conserto: tire o <code>return</code> do <code>finally</code>; ele serve para "arrumar a casa" (fechar arquivos, por exemplo), não para devolver valores.</p>
+
+<h3>7. Pequenas melhorias úteis</h3>
+
+<pre class="file" data-file="pathlib_copia.py">from pathlib import Path
+
+lista = Path("compras.txt")
+lista.write_text("arroz\nfeijão\n", encoding="utf-8")
+
+copia = lista.copy("compras-backup.txt")
+print(copia, copia.read_text(encoding="utf-8").split())
+
+pasta = Path("antigas")
+pasta.mkdir(exist_ok=True)
+movida = copia.move_into(pasta)
+print(movida, movida.exists(), copia.exists())
+</pre>
+<pre class="term">$ python3 pathlib_copia.py
+compras-backup.txt ['arroz', 'feijão']
+antigas/compras-backup.txt True False
+</pre>
+<p>O <a href="pathlib.html"><code>pathlib</code></a> ganhou <code>copy()</code> (copiar), <code>copy_into()</code> (copiar para dentro de uma pasta), <code>move()</code> (mover) e <code>move_into()</code> (mover para dentro de uma pasta). Antes, era preciso o módulo <code>shutil</code>. Repare na última linha: depois de mover, o arquivo existe na pasta nova (<code>True</code>) e não mais no lugar antigo (<code>False</code>).</p>
+
+<pre class="file" data-file="map_strict.py">precos = [27.90, 8.49, 4.99]
+quantidades = [2, 3]
+
+print(list(map(lambda p, q: p * q, precos, quantidades)))
+print(list(map(lambda p, q: p * q, precos, quantidades, strict=True)))
+</pre>
+<pre class="term">$ python3 map_strict.py
+[55.8, 25.47]
+Traceback (most recent call last):
+  File "/home/ana/map_strict.py", line 5, in &lt;module&gt;
+    print(list(map(lambda p, q: p * q, precos, quantidades, strict=True)))
+          ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: map() argument 2 is shorter than argument 1
+</pre>
+<p>Três preços e só duas quantidades: o <a href="map-filter.html"><code>map()</code></a> comum para calado no menor (o açúcar sumiu da conta). Com <code>strict=True</code> ("estrito"), novo no 3.14, ele avisa: "o argumento 2 é mais curto que o argumento 1". O <code>zip()</code> já tinha essa opção desde o 3.10.</p>
+
+<pre class="file" data-file="formatar.py">x = 1234.567891
+print(f"{x:,.6f}")
+print(f"{x:,.6_f}")
+print(f"{x:_._f}")
+</pre>
+<pre class="term">$ python3 formatar.py
+1,234.567891
+1,234.567_891
+1_234.567_891
+</pre>
+<p>Na <a href="ref-formatacao.html">formatação</a>, o separador de milhares (<code>,</code> ou <code>_</code>) agora também pode agrupar as <strong>casas decimais</strong>, de três em três: basta repeti-lo depois do ponto.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Novidade do 3.14</th><th>Em uma frase</th></tr>
+<tr><td><code>uuid.uuid7()</code></td><td>Identificadores únicos que já vêm em ordem de criação (bons para números de pedido); também <code>uuid6()</code> e <code>uuid8()</code></td></tr>
+<tr><td><code>compression.zstd</code></td><td>Um módulo novo para o formato de compressão Zstandard (PEP 784)</td></tr>
+<tr><td><code>concurrent.interpreters</code></td><td>Vários interpretadores Python no mesmo programa, rodando em paralelo (PEP 734)</td></tr>
+<tr><td>Python sem GIL (<em>free-threaded</em>)</td><td>A versão do Python que roda <em>threads</em> realmente em paralelo passou a ser oficialmente suportada, mas continua opcional (PEP 779)</td></tr>
+<tr><td><code>python3 -m pdb -p PID</code></td><td>Conectar o depurador a um programa que já está rodando (PEP 768); veja <a href="depuracao.html">Depuração</a></td></tr>
+<tr><td><code>unittest</code></td><td>Saída colorida e conferências novas, como <code>assertStartsWith</code>; veja <a href="testes.html">Testes</a></td></tr>
+<tr><td><code>sqlite3</code></td><td>Marcadores com nome (<code>:nome</code>) com uma tupla viraram erro; veja <a href="sqlite3.html">sqlite3</a></td></tr>
+<tr><td><code>python3 -c</code></td><td>O código passado ao <code>-c</code> agora pode vir indentado: o Python tira o recuo comum</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Python 3.15 <span class="versao">3.15</span></h2>
+
+<div class="warning">
+<strong>Exemplos ilustrativos</strong>
+<p>O Python deste guia (no terminal da Ana e no editor) é o 3.14, que não entende o que vem abaixo. Os exemplos com <code>&gt;&gt;&gt;</code> desta seção foram copiados da página oficial <em>What's New in Python 3.15</em> (<code>docs.python.org/3.15/whatsnew/3.15.html</code>) e não foram rodados aqui. As saídas que aparecem com <code>$ python3</code> são do 3.14 de verdade, mostrando o que acontece quando se tenta usar a novidade numa versão que ainda não a tem.</p>
+</div>
+
+<h3>1. <code>lazy import</code>: importar só quando usar (PEP 810)</h3>
+<p>Um programa grande pode demorar para abrir só por causa dos <code>import</code>s: cada módulo é lido e executado no começo, mesmo que o programa nunca o use naquela vez. No 3.15, a palavra <code>lazy</code> ("preguiçoso") adia o carregamento até o primeiro uso:</p>
+
+<pre class="file" data-file="lazy.py">lazy import json
+lazy from pathlib import Path
+
+print("Abrindo...")             # json e pathlib ainda não foram carregados
+dados = json.loads('{"a": 1}')  # o json é carregado aqui
+</pre>
+
+<p>Os <code>import</code>s continuam no topo do arquivo, como pede a <a href="estilo-pep8.html">PEP 8</a>, mas o custo só é pago quando o nome é usado. O <code>lazy</code> só vale no "corpo" do módulo (dentro de uma função ou de um <code>try</code>, é <code>SyntaxError</code>). No 3.14, a palavra nem existe:</p>
+
+<pre class="term">$ python3 so315c.py
+  File "/home/ana/so315c.py", line 1
+    lazy import json
+         ^^^^^^
+SyntaxError: invalid syntax
+</pre>
+
+<h3>2. <code>frozendict</code>: o dicionário que não muda (PEP 814)</h3>
+<p>Assim como o <code>frozenset</code> é o conjunto que não muda (veja <a href="conjuntos.html">Conjuntos</a>), o <code>frozendict</code> é o <a href="dicionarios.html">dicionário</a> congelado: depois de criado, não aceita chaves novas nem mudanças. Em troca, pode ser chave de outro dicionário ou item de um conjunto. Da documentação:</p>
+
+<pre class="file" data-file="frozendict-315.txt">&gt;&gt;&gt; a = frozendict(x=1, y=2)
+&gt;&gt;&gt; a
+frozendict({'x': 1, 'y': 2})
+&gt;&gt;&gt; a['z'] = 3
+Traceback (most recent call last):
+  File "&lt;python-input-2&gt;", line 1, in &lt;module&gt;
+    a['z'] = 3
+    ~^^^^^
+TypeError: 'frozendict' object does not support item assignment
+&gt;&gt;&gt; b = frozendict(y=2, x=1)
+&gt;&gt;&gt; hash(a) == hash(b)
+True
+&gt;&gt;&gt; a == b
+True
+</pre>
+
+<p>E no 3.14, o nome não existe (repare na dica do Python, que sugere o parente mais próximo):</p>
+<pre class="term">$ python3 so315b.py
+Traceback (most recent call last):
+  File "/home/ana/so315b.py", line 1, in &lt;module&gt;
+    config = frozendict(tema="escuro", fonte=14)
+             ^^^^^^^^^^
+NameError: name 'frozendict' is not defined. Did you mean: 'frozenset'?
+</pre>
+
+<h3>3. <code>*</code> e <code>**</code> dentro das comprehensions (PEP 798)</h3>
+<p>Para "achatar" uma lista de listas numa lista só, era preciso uma <a href="list-comprehension.html">comprehension</a> com dois <code>for</code>. No 3.15, o <code>*</code> de <a href="desempacotamento.html">desempacotar</a> pode entrar na comprehension:</p>
+
+<pre class="file" data-file="desempacotar-315.txt">&gt;&gt;&gt; lists = [[1, 2], [3, 4], [5]]
+&gt;&gt;&gt; [*L for L in lists]  # equivalent to [x for L in lists for x in L]
+[1, 2, 3, 4, 5]
+&gt;&gt;&gt; dicts = [{'a': 1}, {'b': 2}, {'a': 3}]
+&gt;&gt;&gt; {**d for d in dicts}  # equivalent to {k: v for d in dicts for k,v in d.items()}
+{'a': 3, 'b': 2}
+</pre>
+
+<p>No 3.14, isso é um erro com mensagem própria:</p>
+<pre class="term">$ python3 so315.py
+  File "/home/ana/so315.py", line 2
+    print([*l for l in listas])
+           ^^
+SyntaxError: iterable unpacking cannot be used in comprehension
+</pre>
+<p>"Desempacotamento não pode ser usado numa comprehension." No 3.14, use a forma com dois <code>for</code>: <code>[x for l in listas for x in l]</code>.</p>
+
+<h3>4. UTF-8 por padrão (PEP 686)</h3>
+<p>Quando você abre um arquivo de texto sem dizer o <code>encoding</code> (a "tabela" que transforma letras em bytes), o Python usava a do sistema. No Linux e no macOS quase sempre é UTF-8, mas no Windows podia ser outra, e um arquivo com "ç" e "ã" gravado num computador saía embaralhado no outro. No 3.15, <code>open("compras.txt")</code> usa <strong>UTF-8 em qualquer sistema</strong>. Mesmo assim, a recomendação continua: escreva <code>encoding="utf-8"</code>, como nas aulas de <a href="arquivos.html">arquivos</a>, e o programa funciona igual em todas as versões.</p>
+
+<h3>5. Mais dicas nas mensagens de erro</h3>
+<p>Quem vem de outra linguagem costuma usar o nome de método de lá. No 3.14, a mensagem só diz que o método não existe:</p>
+<pre class="term">$ python3 so315d.py
+Traceback (most recent call last):
+  File "/home/ana/so315d.py", line 2, in &lt;module&gt;
+    compras.push("feijão")
+    ^^^^^^^^^^^^
+AttributeError: 'list' object has no attribute 'push'
+</pre>
+<p>No 3.15, o Python reconhece nomes comuns do JavaScript, do Java, do Ruby e do C#, e sugere o equivalente. Da documentação:</p>
+<pre class="file" data-file="dicas-315.txt">&gt;&gt;&gt; [1, 2, 3].push(4)
+AttributeError: 'list' object has no attribute 'push'. Did you mean '.append'?
+&gt;&gt;&gt; 'hello'.toUpperCase()
+AttributeError: 'str' object has no attribute 'toUpperCase'. Did you mean '.upper'?
+&gt;&gt;&gt; {}.put("a", 1)
+AttributeError: 'dict' object has no attribute 'put'. Use d[k] = v.
+&gt;&gt;&gt; (1, 2, 3).append(4)
+AttributeError: 'tuple' object has no attribute 'append'. Did you mean to use a 'list' object?
+</pre>
+
+<h3>6. O resto, em uma frase</h3>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Novidade do 3.15</th><th>Em uma frase</th></tr>
+<tr><td><code>sentinel</code> (PEP 661)</td><td>Um tipo embutido para criar "valores marcadores" únicos, como um <code>None</code> próprio que quer dizer "não informado"</td></tr>
+<tr><td><code>profiling</code> e o Tachyon (PEP 799)</td><td>Um pacote novo para medir onde o programa gasta tempo, com um medidor por amostragem rápido</td></tr>
+<tr><td><code>math.integer</code></td><td>Um módulo novo com as funções matemáticas para números inteiros (PEP 791)</td></tr>
+<tr><td>Mais cores</td><td>A ajuda do <code>python3 --help</code>, o <code>argparse</code>, o <code>calendar</code>, o <code>timeit</code>, a linha de comando do <code>sqlite3</code> (que também completa SQL com Tab) e outras</td></tr>
+<tr><td>Modo interativo</td><td>O Tab colore as sugestões pelo tipo de objeto e sugere os nomes de dentro de um módulo no <code>from … import</code></td></tr>
+<tr><td><code>pdb</code></td><td>O <code>(Pdb)</code> usa o mesmo editor de linha do modo interativo novo</td></tr>
+<tr><td>JIT</td><td>O compilador experimental "na hora" (<em>just-in-time</em>), que acelera o Python, foi bastante melhorado</td></tr>
+<tr><td><code>sqlite3.connect()</code></td><td>Todos os parâmetros, menos o nome do banco, passam a ser só nomeados (<code>timeout=5</code>, e não um 5 solto)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Formas de lidar com versões diferentes</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Situação</th><th>O que fazer</th></tr>
+<tr><td>Você está aprendendo</td><td>Use a versão que o seu sistema traz (no Ubuntu 26.04, o 3.14) e não se preocupe</td></tr>
+<tr><td>O programa vai rodar em computadores com Pythons diferentes</td><td>Escreva no estilo da versão mais velha que precisa funcionar (por exemplo, <code>except (A, B):</code> com parênteses)</td></tr>
+<tr><td>Quer usar um recurso novo e avisar quem tiver Python velho</td><td><code>if sys.version_info &lt; (3, 14): sys.exit("Este programa precisa do Python 3.14")</code></td></tr>
+<tr><td>Quer experimentar o 3.15 sem trocar o do sistema</td><td>Instale-o à parte, sem mexer no <code>python3</code> do sistema (veja <a href="instalar.html">Instalar o Python</a>), e use um <a href="venv.html">ambiente virtual</a> com ele</td></tr>
+<tr><td>Quer saber o que mudou numa versão</td><td>Leia a página <em>What's New</em> dela em <code>docs.python.org/3/whatsnew/</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Código novo num Python velho</strong>
+<p>O erro mais comum com novidades é rodar o código numa versão que não as tem. Os sinais: <code>SyntaxError: invalid syntax</code> numa linha que parece certa (<code>lazy import</code>, <code>except A, B:</code> no 3.13), ou <code>NameError</code> para um nome que a documentação garante que existe (<code>frozendict</code> no 3.14). Antes de procurar o erro no código, confira a versão: <code>python3 --version</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>as</code> sem parênteses no <code>except</code></strong>
+<p>A novidade do 3.14 tem um limite: <code>except ValueError, ZeroDivisionError as erro:</code> dá <code>SyntaxError: multiple exception types must be parenthesized when using 'as'</code>, como você viu na seção 3. Com <code>as</code>, parênteses: <code>except (ValueError, ZeroDivisionError) as erro:</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Tratar uma t-string como texto</strong>
+<p><code>print(t"…")</code> mostra <code>Template(strings=…)</code>, e <code>"texto" + t"…"</code> dá <code>TypeError: can only concatenate str (not "string.templatelib.Template") to str</code> (seção 4). Uma t-string precisa de uma função que a transforme. Se você só quer montar um texto, a ferramenta é a f-string.</p>
+</div>
+
+<div class="trypy" data-goal="out:Bom;;out:Fim: 3 {('arroz', '5 kg'): 12};;semerro">
+<p class="try-task"><strong>Missão:</strong> este programa tem três erros, e as mensagens do Python 3.14 apontam cada um. Rode, leia a mensagem, conserte e rode de novo, até o fim. (Dica: palavra-chave digitada errado, a ordem do <code>elif</code> e uma lista que não pode ser chave de dicionário.)</p>
+<pre class="script" data-file="main.py">contador = 0
+whille contador &lt; 3:
+    contador += 1
+
+nota = 7
+if nota &gt;= 9:
+    print("Ótimo")
+else:
+    print("Continue estudando")
+elif nota &gt;= 6:
+    print("Bom")
+
+estoque = {}
+produto = ["arroz", "5 kg"]
+estoque[produto] = 12
+print("Fim:", contador, estoque)
+</pre>
+<pre class="solucao" data-file="main.py">contador = 0
+while contador &lt; 3:
+    contador += 1
+
+nota = 7
+if nota &gt;= 9:
+    print("Ótimo")
+elif nota &gt;= 6:
+    print("Bom")
+else:
+    print("Continue estudando")
+
+estoque = {}
+produto = ("arroz", "5 kg")
+estoque[produto] = 12
+print("Fim:", contador, estoque)
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Recurso</th><th>Versão</th><th>Exemplo</th></tr>
+<tr><td><code>except</code> sem parênteses</td><td>3.14</td><td><code>except ValueError, KeyError:</code></td></tr>
+<tr><td>Template strings</td><td>3.14</td><td><code>t"Olá, {nome}!"</code> → <code>Template</code></td></tr>
+<tr><td>Anotações adiadas</td><td>3.14</td><td><code>def f() -&gt; Cliente:</code> antes de <code>class Cliente</code>; <code>annotationlib.get_annotations()</code></td></tr>
+<tr><td>Aviso de <code>return</code>/<code>break</code>/<code>continue</code> no <code>finally</code></td><td>3.14</td><td><code>SyntaxWarning: 'return' in a 'finally' block</code></td></tr>
+<tr><td>Copiar e mover com <code>pathlib</code></td><td>3.14</td><td><code>Path("a.txt").copy("b.txt")</code>, <code>.move_into(pasta)</code></td></tr>
+<tr><td><code>map(..., strict=True)</code></td><td>3.14</td><td>Erro se as sequências tiverem tamanhos diferentes</td></tr>
+<tr><td>Modo interativo colorido, Tab no <code>import</code></td><td>3.14</td><td><code>python3</code></td></tr>
+<tr><td><code>lazy import</code></td><td>3.15</td><td><code>lazy import json</code></td></tr>
+<tr><td><code>frozendict</code></td><td>3.15</td><td><code>frozendict(x=1, y=2)</code></td></tr>
+<tr><td><code>*</code>/<code>**</code> em comprehensions</td><td>3.15</td><td><code>[*l for l in listas]</code></td></tr>
+<tr><td>UTF-8 por padrão</td><td>3.15</td><td><code>open("a.txt")</code> lê e grava em UTF-8</td></tr>
+<tr><td>Versão em uso</td><td>todas</td><td><code>python3 --version</code>, <code>sys.version_info &gt;= (3, 14)</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A letra da t-string</h3>
+<p>Uma f-string começa com <code>f</code>. Com que letra começa uma template string?</p>
+<div class="ex-code"><input data-answer="t|T" aria-label="letra">"Olá, {nome}!"</div>
+</div>
+
+<div class="exercise">
+<h3>2. Qual Python?</h3>
+<p>Complete o comando que mostra a versão do Python no terminal:</p>
+<div class="ex-code">python3 <input data-answer="--version|-V" aria-label="opção"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. No Python 3.14, qual destas linhas é <code>SyntaxError</code>?</p>
+<label><input type="radio" name="q3"> <code>except ValueError, KeyError:</code></label>
+<label><input type="radio" name="q3"> <code>except ValueError, KeyError as erro:</code></label>
+<label><input type="radio" name="q3"> <code>except (ValueError, KeyError):</code></label>
+<label><input type="radio" name="q3"> <code>except (ValueError, KeyError) as erro:</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. O que <code>t"Olá, {nome}!"</code> produz?</p>
+<label><input type="radio" name="q4"> O texto <code>"Olá, Ana!"</code>, igual à f-string</label>
+<label><input type="radio" name="q4"> Um <code>SyntaxError</code> no 3.14</label>
+<label><input type="radio" name="q4"> Um objeto <code>Template</code>, com as partes fixas e os valores guardados separados</label>
+<label><input type="radio" name="q4"> Uma lista de letras</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. No Python 3.14, uma função anotada com <code>-&gt; Cliente</code>, escrita <strong>antes</strong> da <code>class Cliente</code>:</p>
+<label><input type="radio" name="q5"> Funciona: as anotações só são calculadas quando alguém pede por elas</label>
+<label><input type="radio" name="q5"> Dá <code>NameError</code> na linha do <code>def</code></label>
+<label><input type="radio" name="q5"> Só funciona com <code>"Cliente"</code> entre aspas</label>
+<label><input type="radio" name="q5"> Dá <code>SyntaxError</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. Você roda <code>config = frozendict(tema="escuro")</code> e recebe <code>NameError: name 'frozendict' is not defined</code>. A causa mais provável:</p>
+<label><input type="radio" name="q6"> Faltou <code>import frozendict</code></label>
+<label><input type="radio" name="q6"> O nome certo é <code>FrozenDict</code></label>
+<label><input type="radio" name="q6"> Dicionários não podem ter textos como valores</label>
+<label><input type="radio" name="q6"> O seu Python é anterior ao 3.15, que foi quando o <code>frozendict</code> chegou</label>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Sai um Python novo todo outubro. O deste guia é o 3.14 (outubro de 2025); o 3.15 saiu em 9 de outubro de 2026. Confira a sua com <code>python3 --version</code>.</li>
+  <li>3.14: erros mais claros (<code>Did you mean 'while'?</code>, <code>'elif' block follows an 'else' block</code>, <code>cannot use 'list' as a dict key</code>) e modo interativo colorido.</li>
+  <li>3.14: <code>except A, B:</code> sem parênteses, mas com <code>as</code> os parênteses continuam.</li>
+  <li>3.14: <code>t"…"</code> cria um <code>Template</code>, que guarda os valores separados para uma função tratá-los com cuidado; para montar texto, continue com f-strings.</li>
+  <li>3.14: anotações adiadas (nada de aspas para nomes definidos depois), aviso de <code>return</code> no <code>finally</code>, <code>Path.copy()</code>/<code>move()</code>, <code>map(strict=True)</code>.</li>
+  <li>3.15: <code>lazy import</code>, <code>frozendict</code>, <code>[*l for l in listas]</code>, UTF-8 por padrão e dicas como <code>Did you mean '.append'?</code>. Num Python mais velho, eles dão <code>SyntaxError</code> ou <code>NameError</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
