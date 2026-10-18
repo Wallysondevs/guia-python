@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Copiando Listas — por que b = a não copia, e copy(), list() e [:] | Guia Python</title>
+<meta name="description" content="Como copiar uma lista em Python: por que b = a não faz uma cópia (as duas variáveis são a mesma lista), is × ==, os três jeitos de copiar (copy(), list() e [:]), o que a cópia rasa não copia (listas dentro de listas), e os erros reais do Python 3.14: o copy sem parênteses e a grade [[0, 0]] * 3.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Copiando Listas</span></h1>
+
+<p class="intro">A irmã da Ana vai ao mercado também e pede: "me passa uma cópia da sua lista, que eu tiro o que eu não quero e ponho as minhas coisas". A Ana escreve <code>lista_irma = lista_ana</code>, a irmã tira o café e põe chocolate… e o café some <strong>da lista da Ana também</strong>. Nesta aula você vai entender por que o <code>=</code> não copia uma lista, e os jeitos certos de fazer uma cópia de verdade.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que <code>b = a</code> faz de verdade com listas: <strong>dois nomes para a mesma lista</strong>.</li>
+  <li>A diferença entre <code>is</code> ("é a mesma lista?") e <code>==</code> ("têm os mesmos itens?").</li>
+  <li>Os três jeitos de copiar: <code>a.copy()</code>, <code>list(a)</code> e <code>a[:]</code>.</li>
+  <li>O limite da cópia: listas dentro de listas continuam compartilhadas (a <strong>cópia rasa</strong>).</li>
+  <li>Os erros reais: o <code>copy</code> sem parênteses e a grade <code>[[0, 0]] * 3</code>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: duas etiquetas na mesma caixa</h2>
+<p>Até aqui, você pensou numa variável como uma caixa com etiqueta (aula <a href="variaveis.html">Variáveis</a>). Para listas, a imagem mais exata é outra: a lista é uma <strong>caixa</strong>, e a variável é uma <strong>etiqueta colada nela</strong>. Quando você escreve:</p>
+
+<pre class="file" data-file="etiquetas.py">lista_ana = ["arroz", "feijão", "café"]
+lista_irma = lista_ana
+</pre>
+
+<p>a primeira linha cria a caixa (a lista) e cola nela a etiqueta <code>lista_ana</code>. A segunda linha <strong>não cria caixa nenhuma</strong>: ela pega uma segunda etiqueta, <code>lista_irma</code>, e cola <strong>na mesma caixa</strong>. Existe uma lista só, com dois nomes. Tudo o que você fizer usando um nome, o outro vê, porque é a mesma lista.</p>
+
+<p>É como a lista de compras compartilhada no celular: a Ana e a irmã abrem a mesma lista, e o que uma risca, some para as duas. Às vezes é isso que você quer. Quando não é, você precisa de uma <strong>cópia</strong>: uma caixa nova, com os mesmos itens.</p>
+
+<hr>
+
+<h2>1. <code>b = a</code> não copia</h2>
+
+<pre class="file" data-file="igual.py">lista_ana = ["arroz", "feijão", "café"]
+lista_irma = lista_ana
+lista_irma.remove("café")
+lista_irma.append("chocolate")
+print("Ana: ", lista_ana)
+print("Irmã:", lista_irma)
+</pre>
+
+<pre class="term">$ python3 igual.py
+Ana:  ['arroz', 'feijão', 'chocolate']
+Irmã: ['arroz', 'feijão', 'chocolate']
+</pre>
+
+<p>A irmã mexeu só na <code>lista_irma</code>, mas a lista da Ana perdeu o café e ganhou o chocolate. Nenhum erro, nenhum aviso: o Python fez exatamente o que foi pedido. O <code>remove</code> e o <code>append</code> mudaram <strong>a</strong> lista, e as duas etiquetas estão nela.</p>
+
+<h3>Como ver isso: <code>is</code> e <code>==</code></h3>
+<p>O operador <code>is</code> ("é", aula <a href="operadores-is-in.html">is e in</a>) pergunta se dois nomes estão na <strong>mesma</strong> lista. O <code>==</code> pergunta se duas listas têm os <strong>mesmos itens</strong>, mesmo que sejam caixas diferentes:</p>
+
+<pre class="term">&gt;&gt;&gt; a = ["arroz", "feijão"]
+&gt;&gt;&gt; b = a
+&gt;&gt;&gt; b is a
+True
+&gt;&gt;&gt; c = a.copy()
+&gt;&gt;&gt; c is a
+False
+&gt;&gt;&gt; c == a
+True
+&gt;&gt;&gt; b.append("sal")
+&gt;&gt;&gt; a
+['arroz', 'feijão', 'sal']
+&gt;&gt;&gt; c
+['arroz', 'feijão']
+</pre>
+
+<ul>
+  <li><code>b is a</code> é <code>True</code>: <code>b</code> e <code>a</code> são a mesma lista.</li>
+  <li><code>c is a</code> é <code>False</code>: o <code>copy()</code> criou uma lista nova. Mas <code>c == a</code> é <code>True</code>: por enquanto, as duas têm os mesmos itens.</li>
+  <li>O <code>append</code> feito por <code>b</code> apareceu em <code>a</code> (são a mesma), mas não em <code>c</code> (é outra).</li>
+</ul>
+
+<div class="note">
+<strong>E se eu der um valor novo para <code>b</code>?</strong>
+<p>Mudar a lista (com <code>append</code>, <code>remove</code>, <code>b[0] = …</code>) é diferente de <strong>dar outra lista</strong> para a variável. Um <code>=</code> com uma lista nova descola a etiqueta e a cola numa caixa nova; a lista antiga não muda:</p>
+<pre class="term">&gt;&gt;&gt; a = ["arroz", "feijão"]
+&gt;&gt;&gt; b = a
+&gt;&gt;&gt; b = ["pão"]
+&gt;&gt;&gt; a
+['arroz', 'feijão']
+&gt;&gt;&gt; b
+['pão']
+</pre>
+<p>É por isso que, com números e textos, <code>b = a</code> nunca causa essa surpresa: eles são imutáveis, então não há como "mudar a caixa"; toda mudança é um <code>=</code> com um valor novo. A aula <a href="mutabilidade.html">Mutável × Imutável</a> conta essa história inteira.</p>
+</div>
+
+<div class="trypy" data-goal="out:Ana:  ['arroz', 'feijão', 'café'];;out:Irmã: ['arroz', 'feijão', 'chocolate']">
+<p class="try-task"><strong>Missão:</strong> conserte a segunda linha para a irmã receber uma <strong>cópia</strong> da lista. A lista da Ana tem de continuar com o café.</p>
+<pre class="script" data-file="main.py">lista_ana = ["arroz", "feijão", "café"]
+lista_irma = lista_ana
+lista_irma.remove("café")
+lista_irma.append("chocolate")
+print("Ana: ", lista_ana)
+print("Irmã:", lista_irma)
+</pre>
+<pre class="solucao" data-file="main.py">lista_ana = ["arroz", "feijão", "café"]
+lista_irma = lista_ana.copy()
+lista_irma.remove("café")
+lista_irma.append("chocolate")
+print("Ana: ", lista_ana)
+print("Irmã:", lista_irma)
+</pre>
+</div>
+
+<hr>
+
+<h2>2. Copiando de verdade: <code>copy()</code></h2>
+
+<pre class="file" data-file="copia.py">lista_ana = ["arroz", "feijão", "café"]
+lista_irma = lista_ana.copy()
+lista_irma.remove("café")
+lista_irma.append("chocolate")
+print("Ana: ", lista_ana)
+print("Irmã:", lista_irma)
+</pre>
+
+<pre class="term">$ python3 copia.py
+Ana:  ['arroz', 'feijão', 'café']
+Irmã: ['arroz', 'feijão', 'chocolate']
+</pre>
+
+<dl class="anatomy">
+  <dt>lista_ana.copy()</dt><dd>O método <code>copy</code> ("copiar") cria uma lista <strong>nova</strong>, com os mesmos itens, na mesma ordem, e a devolve. Os parênteses são obrigatórios: é uma chamada.</dd>
+  <dt>lista_irma = …</dt><dd>A lista nova ganha a etiqueta <code>lista_irma</code>. Agora são duas caixas, cada uma com o seu nome.</dd>
+</dl>
+
+<p>Agora cada uma mexe na sua. A Ana continua com o café; a irmã tem o chocolate.</p>
+
+<hr>
+
+<h2>3. Três jeitos de copiar</h2>
+<p>Além do <code>copy()</code>, há outros dois jeitos muito comuns, e você vai encontrar os três em programas dos outros:</p>
+
+<pre class="file" data-file="tres_jeitos.py">original = ["arroz", "feijão", "café"]
+copia1 = original.copy()
+copia2 = list(original)
+copia3 = original[:]
+original.append("leite")
+print("original:", original)
+print("copia1:  ", copia1)
+print("copia2:  ", copia2)
+print("copia3:  ", copia3)
+</pre>
+
+<pre class="term">$ python3 tres_jeitos.py
+original: ['arroz', 'feijão', 'café', 'leite']
+copia1:   ['arroz', 'feijão', 'café']
+copia2:   ['arroz', 'feijão', 'café']
+copia3:   ['arroz', 'feijão', 'café']
+</pre>
+
+<p>O leite entrou só na original: as três cópias são listas independentes.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Jeito</th><th>Como funciona</th><th>Quando usar</th></tr>
+<tr><td><code>b = a.copy()</code></td><td>O método de cópia da lista</td><td><strong>O mais claro</strong>: quem lê sabe na hora que é uma cópia. Prefira este</td></tr>
+<tr><td><code>b = list(a)</code></td><td>A função <code>list()</code> (aula <a href="listas.html">Listas</a>) cria uma lista nova com os itens de <code>a</code></td><td>Quando <code>a</code> pode não ser uma lista (uma tupla, um <code>range</code>) e você quer uma lista</td></tr>
+<tr><td><code>b = a[:]</code></td><td>Uma fatia do começo ao fim (aula <a href="listas-acessar.html">Acessando Itens</a>) é sempre uma lista nova</td><td>Muito comum em código antigo; curto, mas menos óbvio para quem está começando</td></tr>
+<tr><td><code>b = a</code></td><td><strong>Não copia</strong>: outro nome para a mesma lista</td><td>Só quando você quer mesmo que os dois nomes vejam as mesmas mudanças</td></tr>
+</table>
+</div>
+
+<p>Você já usou um desses sem perceber: na aula <a href="listas-remover.html">Removendo Itens</a>, o <code>for nota in notas[:]</code> percorria uma <strong>cópia</strong> enquanto o <code>remove</code> mexia na original.</p>
+
+<hr>
+
+<h2>4. O limite: listas dentro de listas</h2>
+<p>Os três jeitos fazem uma <strong>cópia rasa</strong> (em inglês, <em>shallow copy</em>): a caixa de fora é nova, mas o que está <strong>dentro</strong> dela não é copiado. Se um item for uma lista, as duas caixas guardam <strong>a mesma</strong> lista de dentro. Veja com a turma, em que cada aluno é um par <code>[nome, nota]</code>:</p>
+
+<pre class="file" data-file="rasa.py">turma = [["Ana", 9.5], ["Bruno", 7.0]]
+copia = turma.copy()
+copia.append(["Carla", 8.0])
+copia[0][1] = 10.0
+print("turma:", turma)
+print("copia:", copia)
+</pre>
+
+<pre class="term">$ python3 rasa.py
+turma: [['Ana', 10.0], ['Bruno', 7.0]]
+copia: [['Ana', 10.0], ['Bruno', 7.0], ['Carla', 8.0]]
+</pre>
+
+<ul>
+  <li>A Carla entrou só na <code>copia</code>: o <code>append</code> mexeu na caixa de fora, que é nova. Até aqui, a cópia funcionou.</li>
+  <li>Mas a nota da Ana virou 10.0 <strong>nas duas</strong>. <code>copia[0]</code> é o par da Ana, e esse par é <strong>o mesmo</strong> nas duas listas: a cópia rasa copiou a etiqueta do par, e não o par.</li>
+</ul>
+
+<p>Para listas de textos e números, como a lista de compras, a cópia rasa é tudo de que você precisa. Para listas de listas, existe a <strong>cópia profunda</strong>, que copia também o que está dentro. Ela tem aula própria: <a href="copias.html">Cópia Rasa e Cópia Profunda</a>.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>"Mexi numa lista e a outra mudou"</strong>
+<p>O sintoma do <code>igual.py</code>: nenhum erro, mas uma lista que você não tocou mudou sozinha. A causa é sempre a mesma: em algum lugar, um <code>b = a</code> (ou um <code>a</code> passado para algum lugar e guardado com outro nome) fez os dois nomes apontarem para a mesma lista. <strong>Como descobrir:</strong> <code>print(b is a)</code>; se der <code>True</code>, é a mesma lista. <strong>Como consertar:</strong> <code>b = a.copy()</code> no lugar onde a "cópia" foi feita.</p>
+</div>
+
+<div class="cenario">
+<strong>O <code>copy</code> sem parênteses</strong>
+<pre class="file" data-file="sem_parenteses.py">lista_ana = ["arroz", "feijão", "café"]
+lista_irma = lista_ana.copy
+print(lista_irma)
+lista_irma.append("chocolate")
+</pre>
+<pre class="term">$ python3 sem_parenteses.py
+&lt;built-in method copy of list object at 0x7fa8813b5d40&gt;
+Traceback (most recent call last):
+  File "/home/ana/sem_parenteses.py", line 4, in &lt;module&gt;
+    lista_irma.append("chocolate")
+    ^^^^^^^^^^^^^^^^^
+AttributeError: 'builtin_function_or_method' object has no attribute 'append'
+</pre>
+<p>Linha por linha:</p>
+<ul>
+  <li><strong>Linha 2:</strong> sem os parênteses, o <code>copy</code> não foi <strong>chamado</strong>. A variável <code>lista_irma</code> recebeu o próprio <strong>método</strong>, a "ferramenta de copiar", e não uma lista.</li>
+  <li><strong>Linha 3:</strong> o <code>print</code> mostra isso: <code>&lt;built-in method copy of list object at 0x…&gt;</code>, "método embutido <code>copy</code> de um objeto lista". O número depois do <code>at</code> é um endereço da memória e muda a cada execução.</li>
+  <li><strong>Linha 4:</strong> <code>AttributeError: 'builtin_function_or_method' object has no attribute 'append'</code>: um método não tem <code>append</code>, porque não é uma lista.</li>
+</ul>
+<p><strong>Como consertar:</strong> <code>lista_ana.copy()</code>, com os parênteses.</p>
+</div>
+
+<div class="cenario">
+<strong>A grade <code>[[0, 0]] * 3</code>: três vezes a mesma linha</strong>
+<p>A professora quer uma grade de notas com 3 alunos e 2 provas, começando tudo em zero. Ela lembrou do <code>*</code> da aula <a href="listas-adicionar.html">Adicionando Itens</a>:</p>
+<pre class="file" data-file="grade.py">grade = [[0, 0]] * 3
+print(grade)
+grade[0][0] = 5
+print(grade)
+</pre>
+<pre class="term">$ python3 grade.py
+[[0, 0], [0, 0], [0, 0]]
+[[5, 0], [5, 0], [5, 0]]
+</pre>
+<p>Ela mudou a primeira prova do <strong>primeiro</strong> aluno, e mudou a dos três. O <code>* 3</code> não copiou a lista <code>[0, 0]</code> três vezes: ele pôs <strong>a mesma</strong> lista três vezes na grade, como três etiquetas na mesma caixa. (Com <code>[0] * 3</code> não há problema, porque o 0 é um número, imutável.)</p>
+<p><strong>Como consertar:</strong> criar uma lista nova para cada linha. O jeito curto é uma list comprehension (aula <a href="list-comprehension.html">List Comprehension</a>), que roda <code>[0, 0]</code> de novo a cada volta:</p>
+<pre class="term">&gt;&gt;&gt; grade = [[0, 0] for i in range(3)]
+&gt;&gt;&gt; grade[0][0] = 5
+&gt;&gt;&gt; grade
+[[5, 0], [0, 0], [0, 0]]
+</pre>
+</div>
+
+<div class="cenario">
+<strong>A cópia que "não copiou" o que está dentro</strong>
+<p>Você copiou com <code>copy()</code>, mudou um item <strong>de dentro</strong> de um item (<code>copia[0][1] = …</code>) e a original mudou também: é o limite da cópia rasa, da seção 4. <strong>Como consertar:</strong> veja a cópia profunda, em <a href="copias.html">Cópia Rasa e Cópia Profunda</a>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Lista nova?</th></tr>
+<tr><td><code>b = a</code></td><td>Mais um nome para a mesma lista</td><td>Não</td></tr>
+<tr><td><code>b = a.copy()</code></td><td>Cópia rasa (o jeito mais claro)</td><td>Sim</td></tr>
+<tr><td><code>b = list(a)</code></td><td>Cópia rasa; aceita qualquer sequência</td><td>Sim</td></tr>
+<tr><td><code>b = a[:]</code></td><td>Cópia rasa por fatia</td><td>Sim</td></tr>
+<tr><td><code>b is a</code></td><td><code>True</code> se são a mesma lista</td><td>—</td></tr>
+<tr><td><code>b == a</code></td><td><code>True</code> se têm os mesmos itens, na mesma ordem</td><td>—</td></tr>
+<tr><td><code>[[0, 0] for i in range(3)]</code></td><td>Uma lista de listas, cada uma nova</td><td>Sim</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td>Mexi numa lista e outra mudou junto</td><td><code>b = a</code> em vez de <code>b = a.copy()</code></td></tr>
+<tr><td><code>&lt;built-in method copy of list object at 0x…&gt;</code></td><td><code>a.copy</code> sem parênteses</td></tr>
+<tr><td><code>AttributeError: 'builtin_function_or_method' object has no attribute 'append'</code></td><td>A variável guarda o método, não a lista (faltaram os parênteses)</td></tr>
+<tr><td>Mudei uma linha da grade e todas mudaram</td><td><code>[[…]] * n</code>: use <code>[[…] for i in range(n)]</code></td></tr>
+<tr><td>Mudei um item de dentro na cópia e a original mudou</td><td>Cópia rasa: veja <a href="copias.html">Cópia Rasa e Cópia Profunda</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Uma cópia de verdade</h3>
+<p>Complete com o método que copia a lista:</p>
+<div class="ex-code">reserva = compras.<input data-answer="copy()" aria-label="método" size="8"></div>
+</div>
+
+<div class="exercise">
+<h3>2. Cópia por fatia</h3>
+<p>Complete a fatia que copia a lista inteira:</p>
+<div class="ex-code">reserva = compras[<input data-answer=":" aria-label="fatia" size="3">]</div>
+</div>
+
+<div class="exercise">
+<h3>3. A mesma lista?</h3>
+<p>Depois de <code>a = [1, 2]</code> e <code>b = a</code>, o que <code>b is a</code> responde?</p>
+<div class="ex-code"><input data-answer="True" aria-label="resposta" size="6"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Depois de <code>a = [1, 2]</code>, <code>b = a</code> e <code>b.append(3)</code>, quanto vale <code>a</code>?</p>
+<label><input type="radio" name="q4"> <code>[1, 2]</code></label>
+<label><input type="radio" name="q4"> <code>[1, 2, 3]</code></label>
+<label><input type="radio" name="q4"> <code>[3]</code></label>
+<label><input type="radio" name="q4"> Dá erro</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. Qual destas linhas <strong>não</strong> cria uma lista nova?</p>
+<label><input type="radio" name="q5"> <code>b = a.copy()</code></label>
+<label><input type="radio" name="q5"> <code>b = list(a)</code></label>
+<label><input type="radio" name="q5"> <code>b = a[:]</code></label>
+<label><input type="radio" name="q5"> <code>b = a</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">6. Com <code>c = a.copy()</code>, o que <code>c == a</code> e <code>c is a</code> respondem logo depois da cópia?</p>
+<label><input type="radio" name="q6"> <code>True</code> e <code>True</code></label>
+<label><input type="radio" name="q6"> <code>False</code> e <code>False</code></label>
+<label><input type="radio" name="q6"> <code>True</code> e <code>False</code></label>
+<label><input type="radio" name="q6"> <code>False</code> e <code>True</code></label>
+</div>
+
+<h3>Missão final: a lista do mês</h3>
+
+<div class="trypy" data-goal="out:Semana: ['arroz', 'feijão', 'café'];;out:Mês: ['arroz', 'feijão', 'café', 'sabão', 'detergente'];;src:(\.copy\(\)|list\(|\[:\])">
+<p class="try-task"><strong>Missão:</strong> a Ana quer montar a lista do mês a partir da lista da semana, acrescentando sabão e detergente, mas a lista da semana está sendo estragada. Faça <code>mes</code> ser uma <strong>cópia</strong> de <code>semana</code>.</p>
+<pre class="script" data-file="main.py">semana = ["arroz", "feijão", "café"]
+mes = semana
+mes.extend(["sabão", "detergente"])
+print("Semana:", semana)
+print("Mês:", mes)
+</pre>
+<pre class="solucao" data-file="main.py">semana = ["arroz", "feijão", "café"]
+mes = semana.copy()
+mes.extend(["sabão", "detergente"])
+print("Semana:", semana)
+print("Mês:", mes)
+</pre>
+</div>
+
+<p>Outro jeito, sem cópia nenhuma: <code>mes = semana + ["sabão", "detergente"]</code>. O <code>+</code> já cria uma lista nova (aula <a href="listas-adicionar.html">Adicionando Itens</a>).</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Com listas, <code>b = a</code> <strong>não copia</strong>: cria outro nome para <strong>a mesma</strong> lista. O que um muda, o outro vê.</li>
+  <li><code>is</code> pergunta se é a mesma lista; <code>==</code> pergunta se os itens são iguais.</li>
+  <li>Para copiar: <code>a.copy()</code> (o mais claro), <code>list(a)</code> ou <code>a[:]</code>.</li>
+  <li>Dar uma lista nova para a variável (<code>b = [...]</code>) descola o nome; não muda a lista antiga.</li>
+  <li>As três cópias são <strong>rasas</strong>: listas dentro da lista continuam compartilhadas. Para isso existe a cópia profunda (<a href="copias.html">Cópia Rasa e Cópia Profunda</a>).</li>
+  <li><code>[[0, 0]] * 3</code> repete a mesma lista três vezes; use <code>[[0, 0] for i in range(3)]</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
