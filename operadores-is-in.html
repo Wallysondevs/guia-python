@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python is e in — "está dentro?" e "é o mesmo?" | Guia Python</title>
+<meta name="description" content="Os operadores in, not in, is e is not para quem está começando: procurar um pedaço dentro de um texto ou de uma lista, a diferença entre == (mesmo valor) e is (mesmo objeto), o jeito certo de testar None, o SyntaxWarning real de x is 1 e os TypeError do in, com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">is</span> e <span class="hl">in</span></h1>
+
+<p class="intro">Você já conhece as comparações (<code>==</code>, <code>&lt;</code>, <code>&gt;</code>) e o <code>and</code>, o <code>or</code> e o <code>not</code>. Faltam dois operadores que também respondem com <code>True</code> ou <code>False</code>, e que são palavras, em vez de símbolos. O <code>in</code> (em inglês, "em", "dentro de") pergunta <strong>"isto está lá dentro?"</strong>: a palavra "leite" está na lista de compras? O <code>is</code> (em inglês, "é") pergunta <strong>"é a mesma coisa?"</strong>, e não só "é igual?". Parece um detalhe, mas confundir <code>is</code> com <code>==</code> é um dos erros mais comuns de quem começa.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A procurar um pedaço dentro de um texto com <code>in</code>, e a perguntar o contrário com <code>not in</code>.</li>
+  <li>Por que <code>"Leite" in frase</code> pode dar <code>False</code> quando a frase tem "leite".</li>
+  <li>Como o <code>in</code> funciona numa lista: ele procura o <strong>item inteiro</strong>.</li>
+  <li>A diferença entre <code>==</code> ("tem o mesmo valor?") e <code>is</code> ("é o mesmo objeto?").</li>
+  <li>O jeito certo de testar se algo é <code>None</code>: <code>is None</code> e <code>is not None</code>.</li>
+  <li>O aviso real que o Python dá quando você escreve <code>idade is 1</code>, e os erros reais do <code>in</code>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: "está na sacola?" e "é a mesma sacola?"</h2>
+<p>A Ana voltou da padaria com uma sacola. A mãe pergunta: "o leite está na sacola?". Para responder, a Ana olha <strong>dentro</strong> da sacola e procura. Essa é a pergunta do <code>in</code>: <code>"leite" in sacola</code>.</p>
+
+<p>Agora imagine que a Ana e a irmã, a Bia, compraram exatamente as mesmas coisas, em sacolas iguais. As duas sacolas são <strong>iguais</strong> (mesmo conteúdo), mas <strong>não são a mesma sacola</strong>: se a Ana comer o pão da sacola dela, a da Bia continua com pão. Já se a Ana disser "a sacola da casa é esta aqui" e apontar para a sacola dela, aí "a sacola da casa" e "a sacola da Ana" são <strong>a mesma sacola</strong>, com dois nomes.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Operador</th><th>Pergunta que faz</th><th>Exemplo</th></tr>
+<tr><td><code>in</code></td><td>Isto está <strong>dentro</strong> daquilo?</td><td><code>"leite" in frase</code></td></tr>
+<tr><td><code>not in</code></td><td>Isto <strong>não</strong> está dentro daquilo?</td><td><code>"queijo" not in frase</code></td></tr>
+<tr><td><code>==</code></td><td>Os dois têm o <strong>mesmo valor</strong>? (sacolas iguais)</td><td><code>lista_ana == lista_bia</code></td></tr>
+<tr><td><code>is</code></td><td>Os dois são o <strong>mesmo objeto</strong>? (a mesma sacola)</td><td><code>lista_ana is lista_da_casa</code></td></tr>
+<tr><td><code>is not</code></td><td>Os dois <strong>não</strong> são o mesmo objeto?</td><td><code>resposta is not None</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. <code>in</code>: procurando dentro de um texto</h2>
+<p>O uso mais simples do <code>in</code> é procurar um pedaço de texto dentro de outro texto. A Ana anotou o que precisa comprar numa frase:</p>
+
+<pre class="file" data-file="busca.py">frase = "Comprar pão, leite e café"
+
+print("leite" in frase)
+print("queijo" in frase)
+print("queijo" not in frase)
+</pre>
+
+<dl class="anatomy">
+  <dt>"leite"</dt><dd>O pedaço que você está procurando. Fica à <strong>esquerda</strong> do <code>in</code>.</dd>
+  <dt>in</dt><dd>"Está dentro de?". Compara os dois lados e responde <code>True</code> (verdadeiro) ou <code>False</code> (falso).</dd>
+  <dt>frase</dt><dd>Onde procurar. Fica à <strong>direita</strong> do <code>in</code>.</dd>
+  <dt>not in</dt><dd>A pergunta ao contrário: "<strong>não</strong> está dentro de?". São duas palavras que funcionam juntas, como um operador só.</dd>
+</dl>
+
+<pre class="term">$ python3 busca.py
+True
+False
+True
+</pre>
+
+<p>Linha por linha: "leite" aparece na frase, então <code>True</code>. "queijo" não aparece, então <code>False</code>. E "queijo" <strong>não</strong> está na frase? Verdade: <code>True</code>.</p>
+
+<p>O <code>in</code> procura o pedaço em <strong>qualquer lugar</strong> do texto, até no meio de uma palavra. No modo interativo:</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; "an" in "banana"
+True
+&gt;&gt;&gt; "ana" in "Ana Maria"
+False
+&gt;&gt;&gt; exit()
+</pre>
+
+<p>"an" está dentro de "b<strong>an</strong>ana". Mas por que "ana" <strong>não</strong> está em "Ana Maria"? É o assunto da próxima seção.</p>
+
+<hr>
+
+<h2>2. Maiúsculas e acentos contam</h2>
+<p>Para o Python, <code>"A"</code> e <code>"a"</code> são letras diferentes, e <code>"ã"</code> e <code>"a"</code> também. O <code>in</code> procura o pedaço <strong>exatamente</strong> como você escreveu:</p>
+
+<pre class="file" data-file="maiusculas.py">frase = "Comprar pão, leite e café"
+
+print("Leite" in frase)
+print("pao" in frase)
+print("" in frase)
+</pre>
+
+<pre class="term">$ python3 maiusculas.py
+False
+False
+True
+</pre>
+
+<ul>
+  <li><code>"Leite"</code>, com L maiúsculo, não está na frase: lá está <code>"leite"</code>, com l minúsculo.</li>
+  <li><code>"pao"</code>, sem til, não está: lá está <code>"pão"</code>.</li>
+  <li>E o texto vazio, <code>""</code>? Ele está dentro de <strong>qualquer</strong> texto. É uma curiosidade, mas vale saber: se um dia o <code>in</code> der <code>True</code> sem você esperar, confira se o pedaço procurado não ficou vazio.</li>
+</ul>
+
+<div class="tip">
+<strong>Procurar sem ligar para maiúsculas</strong>
+<p>O jeito comum é deixar os dois lados em minúsculas antes de procurar: <code>"leite" in frase.lower()</code>. O <code>.lower()</code> (em inglês, "mais baixo", isto é, minúsculo) devolve o texto todo em minúsculas. Ele e os outros métodos de texto estão na aula <a href="strings-metodos.html">Métodos de Texto</a>.</p>
+</div>
+
+<div class="trypy" data-goal="src:[&quot;']@[&quot;']\s+in\b;;out:Tem arroba? True">
+<p class="try-task"><strong>Missão:</strong> o programa pergunta se o email tem ponto. Mude a pergunta para saber se ele tem <strong>arroba</strong> (<code>@</code>): troque o texto da mensagem para <code>Tem arroba?</code> e o <code>"."</code> por <code>"@"</code>.</p>
+<pre class="script" data-file="main.py">email = "ana@email.com"
+print("Tem ponto?", "." in email)
+</pre>
+<pre class="solucao" data-file="main.py">email = "ana@email.com"
+print("Tem arroba?", "@" in email)
+</pre>
+</div>
+
+<p>Depois de cumprir a missão, apague o <code>@</code> do email e rode de novo: a resposta vira <code>False</code>. É um teste (bem simples) que um site faz antes de aceitar o seu cadastro.</p>
+
+<hr>
+
+<h2>3. <code>in</code> numa lista: procura o item inteiro</h2>
+<p>Uma <strong>lista</strong> guarda vários valores em ordem, entre colchetes e separados por vírgula. Ela tem aulas próprias, a partir de <a href="listas.html">Listas</a>; aqui, só precisa saber que o <code>in</code> funciona nela também:</p>
+
+<pre class="file" data-file="compras.py">compras = ["pão", "leite", "café"]
+
+print("leite" in compras)
+print("arroz" in compras)
+print("lei" in compras)
+</pre>
+
+<pre class="term">$ python3 compras.py
+True
+False
+False
+</pre>
+
+<p>Repare na última linha. No texto, <code>"lei" in "leite"</code> daria <code>True</code>, porque o <code>in</code> procura pedaços. Na lista, o <code>in</code> pergunta "algum <strong>item</strong> da lista é igual a <code>"lei"</code>?". Os itens são <code>"pão"</code>, <code>"leite"</code> e <code>"café"</code>; nenhum deles é <code>"lei"</code>, então <code>False</code>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Onde procura</th><th>O que o <code>in</code> pergunta</th><th>Exemplo</th><th>Resultado</th></tr>
+<tr><td>Num texto</td><td>Este pedaço aparece em algum lugar do texto?</td><td><code>"lei" in "leite"</code></td><td><code>True</code></td></tr>
+<tr><td>Numa lista</td><td>Algum item é igual a este valor?</td><td><code>"lei" in ["pão", "leite"]</code></td><td><code>False</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>4. <code>is</code>: é o mesmo objeto?</h2>
+<p>Agora o <code>is</code>. Para entender, você precisa saber de uma coisa sobre as variáveis: o nome não <strong>é</strong> o valor, ele <strong>aponta</strong> para o valor, como uma etiqueta presa num objeto (reveja a aula <a href="variaveis.html">Variáveis</a> se precisar). Duas etiquetas podem estar presas no <strong>mesmo</strong> objeto. É isso que o <code>is</code> pergunta. As sacolas da Ana e da Bia, em Python:</p>
+
+<pre class="file" data-file="identidade.py">lista_ana = ["pão", "leite"]
+lista_bia = ["pão", "leite"]
+lista_da_casa = lista_ana
+
+print(lista_ana == lista_bia)
+print(lista_ana is lista_bia)
+print(lista_ana is lista_da_casa)
+
+lista_da_casa.append("café")
+print(lista_ana)
+print(lista_bia)
+</pre>
+
+<dl class="anatomy">
+  <dt>lista_ana = ["pão", "leite"]</dt><dd>Cria uma lista nova e prende nela a etiqueta <code>lista_ana</code>.</dd>
+  <dt>lista_bia = ["pão", "leite"]</dt><dd>Cria <strong>outra</strong> lista nova, com o mesmo conteúdo. São duas sacolas iguais.</dd>
+  <dt>lista_da_casa = lista_ana</dt><dd>Não cria lista nenhuma: prende mais uma etiqueta, <code>lista_da_casa</code>, na lista que <code>lista_ana</code> já aponta. Uma sacola, dois nomes.</dd>
+  <dt>==</dt><dd>"Têm o mesmo valor?" Compara o <strong>conteúdo</strong>.</dd>
+  <dt>is</dt><dd>"São o mesmo objeto?" Compara se as duas etiquetas estão presas na <strong>mesma</strong> coisa.</dd>
+  <dt>.append("café")</dt><dd>Acrescenta um item no fim da lista (aula <a href="listas-adicionar.html">Adicionando Itens</a>). Está aqui só para provar quem é quem.</dd>
+</dl>
+
+<pre class="term">$ python3 identidade.py
+True
+False
+True
+['pão', 'leite', 'café']
+['pão', 'leite']
+</pre>
+
+<ol class="passo">
+  <li><code>lista_ana == lista_bia</code> é <code>True</code>: o conteúdo é o mesmo.</li>
+  <li><code>lista_ana is lista_bia</code> é <code>False</code>: são duas listas diferentes, que por acaso têm o mesmo conteúdo.</li>
+  <li><code>lista_ana is lista_da_casa</code> é <code>True</code>: as duas etiquetas estão na mesma lista.</li>
+  <li>A prova: o café foi acrescentado pela etiqueta <code>lista_da_casa</code>, e apareceu em <code>lista_ana</code> (é a mesma sacola). A <code>lista_bia</code> não mudou.</li>
+</ol>
+
+<div class="warning">
+<strong>No dia a dia, use <code>==</code></strong>
+<p>Quase sempre você quer saber se dois valores são <strong>iguais</strong>: se a senha digitada é a senha certa, se a nota é 10, se o nome é "Ana". Para isso, é <code>==</code>. O <code>is</code> serve para uma pergunta bem mais rara, "é o mesmo objeto?", e para o <code>None</code>, que vem a seguir. Na dúvida, <code>==</code>.</p>
+</div>
+
+<p>Esse assunto (duas etiquetas na mesma lista) volta com mais calma nas aulas <a href="listas-copiar.html">Copiando Listas</a> e <a href="mutabilidade.html">Mutável × Imutável</a>.</p>
+
+<hr>
+
+<h2>5. <code>is None</code>: o uso mais comum do <code>is</code></h2>
+<p>O <code>None</code> é o valor que quer dizer "nada", "ainda não tem" (aula <a href="none.html">O Valor None</a>). Só existe <strong>um</strong> <code>None</code> no programa inteiro: toda variável que vale <code>None</code> aponta para o mesmo objeto. Por isso, o jeito certo de perguntar "isto é <code>None</code>?" é com <code>is</code>:</p>
+
+<pre class="file" data-file="nada.py">resposta = None
+
+print(resposta is None)
+print(resposta is not None)
+
+resposta = "sim"
+print(resposta is None)
+print(resposta is not None)
+</pre>
+
+<pre class="term">$ python3 nada.py
+True
+False
+False
+True
+</pre>
+
+<p>Enquanto <code>resposta</code> vale <code>None</code>, <code>resposta is None</code> é <code>True</code>. Depois que ela passa a valer <code>"sim"</code>, vira <code>False</code>. O <code>is not None</code> faz a pergunta ao contrário: "já tem alguma coisa?".</p>
+
+<h3>E <code>== None</code>? Funciona, mas não se usa</h3>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; x = None
+&gt;&gt;&gt; x is None
+True
+&gt;&gt;&gt; x == None
+True
+&gt;&gt;&gt; exit()
+</pre>
+
+<p>As duas dão <code>True</code>. Então por que preferir <code>is</code>? Dois motivos:</p>
+<ul>
+  <li><strong>É a regra de estilo do Python</strong> (o PEP 8, que tem aula própria: <a href="estilo-pep8.html">Estilo de Código</a>): comparações com <code>None</code> se fazem com <code>is</code> ou <code>is not</code>, nunca com <code>==</code>. Quem lê o seu código espera isso.</li>
+  <li><strong>O <code>is</code> não pode ser enganado.</strong> Mais adiante você vai criar os seus próprios tipos (aula <a href="metodos-especiais.html">Métodos Especiais</a>) e vai ver que cada tipo pode decidir o que o <code>==</code> faz. Já o <code>is</code> só pergunta "é aquele objeto?", e ninguém muda isso.</li>
+</ul>
+
+<div class="trypy" data-goal="src:\bis\s+None\b;;out:Sem telefone? True;;semerro">
+<p class="try-task"><strong>Missão:</strong> o cadastro da Ana ainda não tem telefone. O programa testa isso com <code>== None</code>. Troque pela forma recomendada, com <code>is</code>.</p>
+<pre class="script" data-file="main.py">telefone = None
+print("Sem telefone?", telefone == None)
+</pre>
+<pre class="solucao" data-file="main.py">telefone = None
+print("Sem telefone?", telefone is None)
+</pre>
+</div>
+
+<hr>
+
+<h2>6. <code>not in</code> e <code>is not</code>: a pergunta ao contrário</h2>
+<p>Você pode negar com o <code>not</code> na frente da pergunta inteira, ou usar as formas de duas palavras. O resultado é o mesmo:</p>
+
+<pre class="file" data-file="is-not.py">telefone = None
+email = "ana@email.com"
+
+print(telefone is not None)
+print(email is not None)
+print(not email is None)
+print("@" not in email)
+print(not "@" in email)
+</pre>
+
+<pre class="term">$ python3 is-not.py
+False
+True
+True
+False
+False
+</pre>
+
+<p><code>email is not None</code> e <code>not email is None</code> deram a mesma resposta (<code>True</code>); <code>"@" not in email</code> e <code>not "@" in email</code> também (<code>False</code>). Mas as formas de duas palavras, <code>is not</code> e <code>not in</code>, leem como uma frase em inglês ("email is not None": "o email não é nada") e são as que o PEP 8 recomenda.</p>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma pergunta</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Você quer saber…</th><th>Use</th><th>Funciona, mas evite</th><th>Por quê</th></tr>
+<tr><td>se dois valores são iguais</td><td><code>a == b</code></td><td><code>a is b</code></td><td>O <code>is</code> pergunta outra coisa; pode dar <code>False</code> com valores iguais (veja <a href="#errado">Quando dá errado</a>)</td></tr>
+<tr><td>se algo é <code>None</code></td><td><code>x is None</code></td><td><code>x == None</code></td><td>Regra do PEP 8; o <code>is</code> não pode ser enganado</td></tr>
+<tr><td>se algo não é <code>None</code></td><td><code>x is not None</code></td><td><code>not x is None</code></td><td>Lê melhor</td></tr>
+<tr><td>se um pedaço não está no texto</td><td><code>"@" not in email</code></td><td><code>not "@" in email</code></td><td>Lê melhor</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong><code>is</code> no lugar de <code>==</code>: o aviso <code>SyntaxWarning</code></strong>
+<p>A Ana quis saber se a idade é 1 e escreveu <code>is</code>, porque em inglês "idade é 1" se diz "idade <em>is</em> 1":</p>
+<pre class="file" data-file="is-numero.py">idade = 1
+print(idade is 1)
+print(idade == 1)
+</pre>
+<pre class="term">$ python3 is-numero.py
+/home/ana/is-numero.py:2: SyntaxWarning: "is" with 'int' literal. Did you mean "=="?
+  print(idade is 1)
+True
+True
+</pre>
+<p>O programa rodou, mas antes o Python deu um <strong>aviso</strong> (em inglês, <em>warning</em>). Um aviso não para o programa, como um erro pararia; ele diz "isto funciona, mas desconfio que não é o que você quer". Linha por linha:</p>
+<dl class="anatomy">
+  <dt>/home/ana/is-numero.py:2:</dt><dd>Em qual arquivo e em qual linha (a 2) está o problema.</dd>
+  <dt>SyntaxWarning</dt><dd>"Aviso de sintaxe": o Python viu isso só de <strong>ler</strong> o código, antes de rodar.</dd>
+  <dt>"is" with 'int' literal.</dt><dd>"<code>is</code> com um número inteiro escrito direto no código" (<em>literal</em> é um valor escrito ali mesmo, como <code>1</code> ou <code>"Ana"</code>).</dd>
+  <dt>Did you mean "=="?</dt><dd>"Você quis dizer <code>==</code>?" A própria dica do conserto.</dd>
+  <dt>print(idade is 1)</dt><dd>A linha que causou o aviso, copiada para você ver.</dd>
+</dl>
+<p>Com <code>is not</code> o aviso também aparece, e sugere o <code>!=</code> ("diferente"). Com texto acontece o mesmo, e o aviso muda para <code>'str' literal</code> (<code>str</code> é o tipo dos textos). No modo interativo, o "arquivo" se chama <code>&lt;python-input-2&gt;</code>, que quer dizer "a terceira linha que você digitou" (a contagem começa no zero):</p>
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; nome = "Ana"
+&gt;&gt;&gt; nome == "Ana"
+True
+&gt;&gt;&gt; nome is "Ana"
+&lt;python-input-2&gt;:1: SyntaxWarning: "is" with 'str' literal. Did you mean "=="?
+True
+&gt;&gt;&gt; exit()
+</pre>
+<p><strong>"Mas deu <code>True</code>! Qual o problema?"</strong> O problema é que deu <code>True</code> <strong>por sorte</strong>. Para economizar memória, o Python às vezes reaproveita o mesmo objeto para valores iguais, e às vezes não. Veja dois mil, um escrito direto no código e outro feito a partir de um texto com <code>int()</code> (aula <a href="conversao.html">Conversão de Tipos</a>):</p>
+<pre class="file" data-file="mil2.py">a = 1000
+b = 1000
+print(a is b)
+
+c = int("1000")
+d = int("1000")
+print(c is d)
+</pre>
+<pre class="term">$ python3 mil2.py
+True
+False
+</pre>
+<p>Os quatro valem mil, e <code>c == d</code> seria <code>True</code>. Mas <code>c is d</code> deu <code>False</code>: o <code>int()</code> fabricou dois objetos separados. Imagine o número vindo do teclado, com <code>input()</code>: o <code>is</code> falharia "do nada". <strong>Como consertar:</strong> para comparar valores, sempre <code>==</code>. Quando o Python mostrar <code>Did you mean "=="?</code>, ele tem razão.</p>
+</div>
+
+<div class="cenario">
+<strong>Procurar dentro de um número</strong>
+<p>A Ana quer saber se o ano 2026 tem o algarismo 2:</p>
+<pre class="file" data-file="in-numero.py">codigo = 2026
+print(2 in codigo)
+</pre>
+<pre class="term">$ python3 in-numero.py
+Traceback (most recent call last):
+  File "/home/ana/in-numero.py", line 2, in &lt;module&gt;
+    print(2 in codigo)
+          ^^^^^^^^^^^
+TypeError: argument of type 'int' is not a container or iterable
+</pre>
+<dl class="anatomy">
+  <dt>Traceback (most recent call last):</dt><dd>"Rastro (a chamada mais recente por último)": o Python vai contar onde o erro aconteceu. A aula <a href="erros.html">Lendo uma Mensagem de Erro</a> detalha cada parte.</dd>
+  <dt>File "/home/ana/in-numero.py", line 2, in &lt;module&gt;</dt><dd>No arquivo <code>in-numero.py</code>, linha 2, no corpo principal do programa.</dd>
+  <dt>^^^^^^^^^^^</dt><dd>Os acentos circunflexos sublinham o pedaço exato que falhou: o <code>2 in codigo</code>.</dd>
+  <dt>TypeError:</dt><dd>"Erro de tipo": a operação não serve para esse tipo de valor.</dd>
+  <dt>argument of type 'int' is not a container or iterable</dt><dd>"Um valor do tipo <code>int</code> (número inteiro) não é um recipiente nem algo que se percorra." Um número não tem "lá dentro" onde procurar: ele é um valor só, e não uma sequência de algarismos.</dd>
+</dl>
+<p><strong>Como consertar:</strong> se você quer olhar os algarismos, transforme o número em texto: <code>"2" in str(codigo)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Procurar um número dentro de um texto</strong>
+<p>Agora o código já é um texto, mas a Ana procurou o <strong>número</strong> 2:</p>
+<pre class="file" data-file="in-texto-numero.py">codigo = "2026"
+print(2 in codigo)
+</pre>
+<pre class="term">$ python3 in-texto-numero.py
+Traceback (most recent call last):
+  File "/home/ana/in-texto-numero.py", line 2, in &lt;module&gt;
+    print(2 in codigo)
+          ^^^^^^^^^^^
+TypeError: 'in &lt;string&gt;' requires string as left operand, not int
+</pre>
+<p><code>'in &lt;string&gt;' requires string as left operand, not int</code>: "o <code>in</code> num texto precisa de um texto do lado esquerdo, e não de um <code>int</code>". Dentro de um texto só há texto; o número 2 e o texto <code>"2"</code> são coisas diferentes para o Python. <strong>Como consertar:</strong> ponha o 2 entre aspas, <code>"2" in codigo</code>, ou converta com <code>str(2) in codigo</code>.</p>
+</div>
+
+<div class="trypy" data-goal="semerro;;out:True">
+<p class="try-task"><strong>Missão:</strong> o programa quer saber se o código da senha tem o algarismo 7, mas dá <code>TypeError</code>. Conserte <strong>só a linha do <code>print</code></strong>.</p>
+<pre class="script" data-file="main.py">senha = "4750"
+print(7 in senha)
+</pre>
+<pre class="solucao" data-file="main.py">senha = "4750"
+print("7" in senha)
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Pergunta</th><th>Exemplo → resultado</th></tr>
+<tr><td><code>a in b</code></td><td><code>a</code> está dentro de <code>b</code>?</td><td><code>"lei" in "leite"</code> → <code>True</code></td></tr>
+<tr><td><code>a not in b</code></td><td><code>a</code> não está dentro de <code>b</code>?</td><td><code>"queijo" not in "pão e leite"</code> → <code>True</code></td></tr>
+<tr><td><code>item in lista</code></td><td>Algum item da lista é igual a <code>item</code>?</td><td><code>"lei" in ["pão", "leite"]</code> → <code>False</code></td></tr>
+<tr><td><code>a is b</code></td><td><code>a</code> e <code>b</code> são o mesmo objeto?</td><td><code>lista_ana is lista_bia</code> → <code>False</code></td></tr>
+<tr><td><code>a is not b</code></td><td><code>a</code> e <code>b</code> não são o mesmo objeto?</td><td>com <code>resposta = "sim"</code>: <code>resposta is not None</code> → <code>True</code></td></tr>
+<tr><td><code>x is None</code></td><td><code>x</code> é o "nada"?</td><td>O jeito certo de testar <code>None</code></td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>SyntaxWarning: "is" with 'int' literal. Did you mean "=="?</code></td><td><code>is</code> usado para comparar com um valor: troque por <code>==</code></td></tr>
+<tr><td><code>TypeError: argument of type 'int' is not a container or iterable</code></td><td><code>in</code> com um número do lado direito: um número não tem "dentro"</td></tr>
+<tr><td><code>TypeError: 'in &lt;string&gt;' requires string as left operand, not int</code></td><td>Número procurado num texto: ponha entre aspas ou use <code>str()</code></td></tr>
+<tr><td><code>in</code> deu <code>False</code>, mas a palavra está lá</td><td>Maiúsculas ou acentos diferentes; ou é uma lista e o item não é exatamente igual</td></tr>
+<tr><td><code>is</code> deu <code>False</code> com valores iguais</td><td>São objetos diferentes com o mesmo valor: para valores, use <code>==</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Tem café?</h3>
+<p>Complete para perguntar se <code>"café"</code> está dentro de <code>frase</code>:</p>
+<div class="ex-code">print("café" <input data-answer="in" aria-label="operador"> frase)</div>
+</div>
+
+<div class="exercise">
+<h3>2. Ainda não respondeu</h3>
+<p>Complete do jeito recomendado para perguntar se <code>resposta</code> ainda vale <code>None</code>:</p>
+<div class="ex-code">print(resposta <input data-answer="is" aria-label="operador"> None)</div>
+</div>
+
+<div class="exercise">
+<h3>3. Sem arroba</h3>
+<p>Complete com as duas palavras que perguntam "não está dentro?":</p>
+<div class="ex-code">print("@" <input data-answer="not in" aria-label="operador"> email)</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Com <code>frase = "Comprar pão, leite e café"</code>, quanto vale <code>"Pão" in frase</code>?</p>
+<label><input type="radio" name="q4"> <code>True</code>, porque "pão" está na frase</label>
+<label><input type="radio" name="q4"> <code>False</code>, porque na frase o "pão" está com p minúsculo</label>
+<label><input type="radio" name="q4"> Dá <code>TypeError</code></label>
+<label><input type="radio" name="q4"> Dá <code>SyntaxWarning</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. Com <code>compras = ["pão", "leite", "café"]</code>, quanto vale <code>"caf" in compras</code>?</p>
+<label><input type="radio" name="q5"> <code>True</code>, porque "caf" é um pedaço de "café"</label>
+<label><input type="radio" name="q5"> Dá <code>TypeError</code></label>
+<label><input type="radio" name="q5"> <code>False</code>, porque na lista o <code>in</code> procura um item inteiro igual a "caf"</label>
+<label><input type="radio" name="q5"> <code>None</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. A Ana quer saber se a nota digitada é igual a 10. Qual escrever?</p>
+<label><input type="radio" name="q6"> <code>nota == 10</code></label>
+<label><input type="radio" name="q6"> <code>nota is 10</code></label>
+<label><input type="radio" name="q6"> <code>nota in 10</code></label>
+<label><input type="radio" name="q6"> Tanto faz: as três dão o mesmo resultado</label>
+</div>
+
+<h3>Missão final: a lista de convidados</h3>
+
+<div class="trypy" data-goal="src:\bnot\s+in\b;;out:A Bia ficou de fora? True;;semerro">
+<p class="try-task"><strong>Missão:</strong> a Ana montou a lista de convidados da festa e quer conferir se a Bia ficou <strong>de fora</strong>. Complete a segunda mensagem usando <code>not in</code>.</p>
+<pre class="script" data-file="main.py">convidados = ["Ana", "Carla", "Davi", "Eduardo"]
+
+print("O Davi foi convidado?", "Davi" in convidados)
+print("A Bia ficou de fora?")
+</pre>
+<pre class="solucao" data-file="main.py">convidados = ["Ana", "Carla", "Davi", "Eduardo"]
+
+print("O Davi foi convidado?", "Davi" in convidados)
+print("A Bia ficou de fora?", "Bia" not in convidados)
+</pre>
+</div>
+
+<p>Acrescente <code>"Bia"</code> à lista e rode de novo: a segunda resposta vira <code>False</code>.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>in</code> pergunta "está dentro?"; <code>not in</code>, "não está dentro?". Os dois respondem <code>True</code> ou <code>False</code>.</li>
+  <li>Num texto, o <code>in</code> procura um <strong>pedaço</strong> em qualquer lugar, com maiúsculas e acentos exatos. Numa lista, ele procura um <strong>item inteiro</strong> igual.</li>
+  <li><code>==</code> pergunta "mesmo valor?" (sacolas iguais); <code>is</code> pergunta "mesmo objeto?" (a mesma sacola). Para comparar valores, use sempre <code>==</code>.</li>
+  <li>O uso certo do <code>is</code> no dia a dia: <code>x is None</code> e <code>x is not None</code>.</li>
+  <li><code>idade is 1</code> dá <code>SyntaxWarning: "is" with 'int' literal. Did you mean "=="?</code>: o Python tem razão, troque por <code>==</code>.</li>
+  <li>Número não tem "dentro" (<code>2 in 2026</code> dá <code>TypeError</code>), e num texto só se procura texto (<code>"2" in "2026"</code>).</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
