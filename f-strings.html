@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python f-strings — formatando textos com {variáveis} | Guia Python</title>
+<meta name="description" content="f-strings em Python para quem está começando: variáveis e contas entre chaves, casas decimais com {x:.2f}, separador de milhar e o jeito brasileiro (1.234,56), alinhar colunas com &lt; &gt; ^, zeros à esquerda, porcentagem, {x=} para conferir valores, f-strings aninhadas do Python 3.12+ e os erros reais: o f esquecido, expecting '}', Unknown format code 'f'.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">f-strings</span>: Formatando Textos</h1>
+
+<p class="intro">Na aula <a href="strings-juntar.html">Juntar e Repetir Textos</a>, montar a frase "A Ana tem 30 anos" deu trabalho: <code>"A Ana tem " + str(idade) + " anos"</code>, cuidando dos espaços e convertendo o número. A <strong>f-string</strong> resolve isso de um jeito muito mais limpo: você escreve a frase inteira e põe as variáveis <strong>entre chaves</strong>, no lugar onde elas devem aparecer: <code>f"A Ana tem {idade} anos"</code>. E ela faz mais: mostra um preço com duas casas decimais, alinha as colunas de um cardápio, põe o separador de milhar. É o jeito preferido de montar textos no Python de hoje.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A pôr variáveis, contas e métodos dentro de um texto com <code>f"…{x}…"</code>.</li>
+  <li>A escolher as casas decimais: <code>{preco:.2f}</code>.</li>
+  <li>O separador de milhar (<code>{x:,.2f}</code>) e como chegar ao jeito brasileiro, <code>1.234,56</code>.</li>
+  <li>A alinhar textos e números em colunas: <code>{nome:&lt;10}</code>, <code>{preco:&gt;8.2f}</code>, <code>{titulo:^20}</code>.</li>
+  <li>Zeros à esquerda (<code>007</code>), porcentagem (<code>25.6%</code>) e chaves de verdade no texto (<code>{{ }}</code>).</li>
+  <li>O <code>{x=}</code>, que mostra o nome e o valor de uma variável, e as f-strings aninhadas do Python 3.12 em diante.</li>
+  <li>Os erros reais: o <code>f</code> esquecido, a chave sem fechar e o <code>Unknown format code 'f'</code>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: um formulário com lacunas</h2>
+<p>Pense num formulário impresso: "Eu, ________, com ____ anos, declaro…". O texto já está pronto; só faltam as <strong>lacunas</strong>, que cada pessoa preenche com os seus dados. A f-string é esse formulário. As chaves <code>{ }</code> são as lacunas, e dentro delas você diz <strong>o que</strong> vai ali: o Python preenche na hora de criar o texto.</p>
+
+<p>O "f" vem de <em>formatted</em>, "formatado". O nome oficial é "texto formatado literal" (<em>formatted string literal</em>), mas todo mundo diz f-string.</p>
+
+<hr>
+
+<h2>1. A primeira f-string</h2>
+
+<pre class="file" data-file="ola.py">nome = "Ana"
+idade = 30
+
+print(f"Olá, {nome}!")
+print(f"A {nome} tem {idade} anos.")
+print(f"Daqui a 5 anos, terá {idade + 5}.")
+print(f"Em maiúsculas: {nome.upper()}")
+</pre>
+
+<dl class="anatomy">
+  <dt>f</dt><dd>A letra <code>f</code> colada <strong>antes</strong> das aspas transforma o texto numa f-string. Sem ela, as chaves são só chaves.</dd>
+  <dt>"Olá, </dt><dd>O texto fixo, escrito normalmente.</dd>
+  <dt>{nome}</dt><dd>A lacuna: o Python troca <code>{nome}</code> pelo valor da variável <code>nome</code>.</dd>
+  <dt>{idade}</dt><dd>Um número. A f-string converte sozinha para texto: nada de <code>str()</code>.</dd>
+  <dt>{idade + 5}</dt><dd>Dentro das chaves vale qualquer <strong>expressão</strong>: uma conta, um método, uma função. O Python calcula e põe o resultado.</dd>
+</dl>
+
+<pre class="term">$ python3 ola.py
+Olá, Ana!
+A Ana tem 30 anos.
+Daqui a 5 anos, terá 35.
+Em maiúsculas: ANA
+</pre>
+
+<p>Repare como os espaços ficam naturais: você escreve a frase como ela é, e não precisa lembrar de <code>" "</code> entre os pedaços. E o número 30 entrou no texto sem <code>str()</code> e sem <code>TypeError</code>.</p>
+
+<div class="trypy" data-goal="out:A Ana tem 30 anos.;;src:\bf[&quot;']">
+<p class="try-task"><strong>Missão:</strong> reescreva o <code>print</code> com uma f-string, sem <code>+</code> e sem <code>str()</code>. A saída deve continuar <code>A Ana tem 30 anos.</code></p>
+<pre class="script" data-file="main.py">idade = 30
+print("A Ana tem " + str(idade) + " anos.")
+</pre>
+<pre class="solucao" data-file="main.py">idade = 30
+print(f"A Ana tem {idade} anos.")
+</pre>
+</div>
+
+<hr>
+
+<h2>2. Casas decimais: <code>{preco:.2f}</code></h2>
+<p>Depois do nome, dentro das chaves, você pode pôr <strong>dois-pontos</strong> e um "pedido de formato". O mais usado de todos é o das casas decimais:</p>
+
+<pre class="file" data-file="casas.py">preco = 12.5
+media = 7.66666
+
+print(f"{preco}")
+print(f"{preco:.2f}")
+print(f"{media:.2f}")
+print(f"{media:.1f}")
+print(f"{media:.0f}")
+print(f"R$ {preco * 3:.2f}")
+</pre>
+
+<pre class="term">$ python3 casas.py
+12.5
+12.50
+7.67
+7.7
+8
+R$ 37.50
+</pre>
+
+<dl class="anatomy">
+  <dt>preco</dt><dd>O valor.</dd>
+  <dt>:</dt><dd>"Agora vem o formato."</dd>
+  <dt>.2</dt><dd>Duas casas depois do ponto.</dd>
+  <dt>f</dt><dd>De <em>fixed point</em>, "ponto fixo": mostre como número com casas decimais. (Este <code>f</code> não tem nada a ver com o <code>f</code> antes das aspas.)</dd>
+</dl>
+
+<ul>
+  <li><code>12.5</code> com <code>.2f</code> virou <code>12.50</code>: completou com zero. É o jeito certo de mostrar dinheiro.</li>
+  <li><code>7.66666</code> com <code>.2f</code> virou <code>7.67</code>: <strong>arredondou</strong>, não cortou. Com <code>.1f</code>, <code>7.7</code>; com <code>.0f</code>, <code>8</code>.</li>
+  <li>A expressão e o formato andam juntos: <code>{preco * 3:.2f}</code> calcula e formata.</li>
+  <li>A variável não muda: <code>preco</code> continua valendo <code>12.5</code>. O formato vale só para o texto que está sendo montado.</li>
+</ul>
+
+<div class="tip">
+<strong>Um detalhe do arredondamento</strong>
+<p>Quando o número fica exatamente no meio, o Python arredonda para o lado <strong>par</strong>: <code>f"{2.5:.0f}"</code> dá <code>2</code>, e <code>f"{3.5:.0f}"</code> dá <code>4</code>. É a regra do "arredondamento bancário", que evita que os arredondamentos puxem sempre para cima. Para dinheiro com duas casas, isso quase nunca aparece.</p>
+</div>
+
+<div class="trypy" data-goal="out:Café: R$ 4.50;;semerro">
+<p class="try-task"><strong>Missão:</strong> o preço do café saiu como <code>R$ 4.5</code>. Faça sair com duas casas decimais: <code>R$ 4.50</code>.</p>
+<pre class="script" data-file="main.py">preco = 4.5
+print(f"Café: R$ {preco}")
+</pre>
+<pre class="solucao" data-file="main.py">preco = 4.5
+print(f"Café: R$ {preco:.2f}")
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Separador de milhar, e o jeito brasileiro</h2>
+<p>Números grandes ficam difíceis de ler: <code>1234567.891</code>. Uma vírgula (ou um sublinhado) no formato separa os milhares:</p>
+
+<pre class="file" data-file="milhar.py">salario = 1234567.891
+
+print(f"{salario:,.2f}")
+print(f"{salario:_.2f}")
+print(f"{1500000:,}")
+</pre>
+
+<pre class="term">$ python3 milhar.py
+1,234,567.89
+1_234_567.89
+1,500,000
+</pre>
+
+<p>Mas repare: saiu no <strong>jeito americano</strong>, com vírgula nos milhares e ponto nos decimais. No Brasil é o contrário: <code>1.234.567,89</code>. O formato da f-string não tem uma opção "brasileira", então o truque mais usado é <strong>trocar</strong> os sinais depois, com o <code>replace()</code> da aula <a href="strings-metodos.html">Métodos de Texto</a>:</p>
+
+<pre class="file" data-file="brasileiro.py">salario = 1234567.891
+
+americano = f"{salario:,.2f}"
+brasileiro = americano.replace(",", "X").replace(".", ",").replace("X", ".")
+
+print(americano)
+print(brasileiro)
+print(f"R$ {brasileiro}")
+</pre>
+
+<pre class="term">$ python3 brasileiro.py
+1,234,567.89
+1.234.567,89
+R$ 1.234.567,89
+</pre>
+
+<ol class="passo">
+  <li><code>.replace(",", "X")</code>: as vírgulas viram um <code>X</code> provisório: <code>1X234X567.89</code>.</li>
+  <li><code>.replace(".", ",")</code>: o ponto decimal vira vírgula: <code>1X234X567,89</code>.</li>
+  <li><code>.replace("X", ".")</code>: os <code>X</code> viram pontos: <code>1.234.567,89</code>.</li>
+</ol>
+
+<p>Por que o <code>X</code>? Se você trocasse direto as vírgulas por pontos, depois não saberia mais quais pontos eram os decimais. O <code>X</code> guarda o lugar, como quando você troca o conteúdo de dois copos usando um terceiro.</p>
+
+<div class="note">
+<strong>E o módulo <code>locale</code>?</strong>
+<p>O Python tem um módulo, o <code>locale</code>, que formata números do jeito de cada país. Ele depende de como o sistema está configurado (o "pt_BR" precisa estar instalado na máquina), e por isso pode funcionar num computador e falhar em outro. O truque do <code>replace()</code> funciona em qualquer lugar.</p>
+</div>
+
+<hr>
+
+<h2>4. Alinhando: <code>&lt;</code>, <code>&gt;</code> e <code>^</code></h2>
+<p>Um número logo depois dos dois-pontos diz a <strong>largura</strong>: quantos caracteres o pedaço deve ocupar, completando com espaços. Um sinal antes dele diz para que lado encostar. Os colchetes no exemplo mostram onde o pedaço começa e termina:</p>
+
+<pre class="file" data-file="alinhar.py">print(f"[{'pão':&lt;10}]")
+print(f"[{'pão':&gt;10}]")
+print(f"[{'pão':^10}]")
+print(f"[{'pão':*^10}]")
+print(f"[{'pão':.&lt;10}]")
+</pre>
+
+<pre class="term">$ python3 alinhar.py
+[pão       ]
+[       pão]
+[   pão    ]
+[***pão****]
+[pão.......]
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Formato</th><th>O que faz</th><th>Como lembrar</th></tr>
+<tr><td><code>:&lt;10</code></td><td>Ocupa 10, encostado à <strong>esquerda</strong></td><td>A ponta da seta aponta para onde o texto vai</td></tr>
+<tr><td><code>:&gt;10</code></td><td>Ocupa 10, encostado à <strong>direita</strong></td><td>Bom para números e preços</td></tr>
+<tr><td><code>:^10</code></td><td>Ocupa 10, <strong>centralizado</strong></td><td>O <code>^</code> é um "telhadinho" no meio</td></tr>
+<tr><td><code>:*^10</code></td><td>Centralizado, completando com <code>*</code></td><td>O caractere antes do sinal é o "enchimento"</td></tr>
+</table>
+</div>
+
+<p>Repare nas aspas: dentro de uma f-string com aspas duplas, o texto <code>'pão'</code> foi escrito com aspas simples. (Desde o Python 3.12, aspas duplas também funcionariam; veja a seção 7.)</p>
+
+<p>Com largura e casas decimais juntas, a Ana monta o cardápio da padaria em colunas. Texto à esquerda, preço à direita:</p>
+
+<pre class="file" data-file="cardapio.py">print(f"{'Produto':&lt;15}{'Preço':&gt;8}")
+print(f"{'Pão francês':&lt;15}{0.8:&gt;8.2f}")
+print(f"{'Bolo de fubá':&lt;15}{25:&gt;8.2f}")
+print(f"{'Café':&lt;15}{4.5:&gt;8.2f}")
+</pre>
+
+<pre class="term">$ python3 cardapio.py
+Produto           Preço
+Pão francês        0.80
+Bolo de fubá      25.00
+Café               4.50
+</pre>
+
+<p><code>{0.8:&gt;8.2f}</code> se lê: "8 de largura, encostado à direita, com 2 casas decimais". Assim os pontos decimais ficam todos um embaixo do outro. Os números já se alinham à direita sozinhos, então <code>{0.8:8.2f}</code> daria o mesmo; o <code>&gt;</code> deixa a intenção clara.</p>
+
+<div class="trypy">
+<p class="try-task"><strong>Experimente:</strong> acrescente uma linha para o "Sonho", de 6 reais, e mude as larguras (<code>15</code> e <code>8</code>) para ver o que acontece com as colunas.</p>
+<pre class="script" data-file="main.py">print(f"{'Produto':&lt;15}{'Preço':&gt;8}")
+print(f"{'Pão francês':&lt;15}{0.8:&gt;8.2f}")
+print(f"{'Bolo de fubá':&lt;15}{25:&gt;8.2f}")
+</pre>
+</div>
+
+<hr>
+
+<h2>5. Zeros, porcentagem e chaves de verdade</h2>
+
+<pre class="file" data-file="zeros.py">pedido = 7
+acerto = 0.256
+
+print(f"Pedido nº {pedido:03}")
+print(f"Pedido nº {pedido:03d}")
+print(f"Acertos: {acerto:.1%}")
+print(f"Chaves: {{nome}}")
+</pre>
+
+<pre class="term">$ python3 zeros.py
+Pedido nº 007
+Pedido nº 007
+Acertos: 25.6%
+Chaves: {nome}
+</pre>
+
+<ul>
+  <li><code>:03</code>: largura 3, completando com <strong>zeros</strong> à esquerda. <code>:03d</code> é o mesmo, dizendo que é um inteiro (<code>d</code> de "decimal", base 10).</li>
+  <li><code>:.1%</code>: multiplica por 100, põe o <code>%</code> e uma casa decimal. <code>0.256</code> virou <code>25.6%</code>.</li>
+  <li><code>{{</code> e <code>}}</code>: para escrever uma chave <strong>de verdade</strong> numa f-string, dobre-a.</li>
+</ul>
+
+<hr>
+
+<h2>6. <code>{x=}</code>: o nome e o valor, para conferir</h2>
+<p>Quando um programa não faz o que você espera, é comum espalhar <code>print</code> para ver quanto vale cada variável. Com um <code>=</code> no fim, dentro das chaves, a f-string mostra o <strong>nome</strong> e o <strong>valor</strong> de uma vez:</p>
+
+<pre class="file" data-file="igual.py">preco = 12.5
+quantidade = 3
+
+print(f"{preco=}")
+print(f"{quantidade = }")
+print(f"{preco * quantidade = }")
+print(f"{preco=:.2f}")
+</pre>
+
+<pre class="term">$ python3 igual.py
+preco=12.5
+quantidade = 3
+preco * quantidade = 37.5
+preco=12.50
+</pre>
+
+<p>Os espaços que você põe em volta do <code>=</code> aparecem na saída. Funciona com contas também (a conta aparece escrita, seguida do resultado), e dá para juntar com um formato: <code>{preco=:.2f}</code>. Use enquanto procura um problema, e apague depois; para conferir programas maiores, existe a aula <a href="depuracao.html">Depurando com pdb</a>.</p>
+
+<hr>
+
+<h2>7. f-strings dentro de f-strings (Python 3.12 em diante)</h2>
+<p>Desde o Python 3.12, o que está dentro das chaves pode usar <strong>as mesmas aspas</strong> da f-string de fora, e até outra f-string:</p>
+
+<pre class="file" data-file="aninhada.py">compras = ["pão", "leite", "café"]
+print(f"Comprar: {", ".join(compras)}")
+
+nome = "Ana"
+print(f"{f"[{nome}]":&gt;12}")
+
+largura = 10
+print(f"{'pão':&gt;{largura}}")
+</pre>
+
+<pre class="term">$ python3 aninhada.py
+Comprar: pão, leite, café
+       [Ana]
+       pão
+</pre>
+
+<dl class="anatomy">
+  <dt>{", ".join(compras)}</dt><dd>Aspas duplas dentro de uma f-string de aspas duplas. O Python entende que as aspas de dentro pertencem à expressão entre chaves.</dd>
+  <dt>{f"[{nome}]":&gt;12}</dt><dd>Uma f-string dentro da outra: a de dentro monta <code>[Ana]</code>; a de fora alinha esse texto à direita, em 12 caracteres.</dd>
+  <dt>{'pão':&gt;{largura}}</dt><dd>Chaves dentro do formato: a largura vem de uma variável. (Isso funciona em versões bem mais antigas também.)</dd>
+</dl>
+
+<div class="note">
+<strong>Se o seu Python for mais antigo</strong>
+<p>Essa liberdade com as aspas veio no Python 3.12 (a mudança se chama PEP 701). No 3.11 e anteriores, <code>f"{", ".join(compras)}"</code> dá <code>SyntaxError</code>, e você precisa usar o outro tipo de aspas por dentro: <code>f"{', '.join(compras)}"</code>. O guia ensina o 3.14, e o Debian 13 traz o 3.13, ambos depois da mudança. Mas, se o seu código vai rodar em computadores antigos, alternar as aspas é o jeito que funciona em todos. (Não deu para rodar um Python 3.11 no laboratório; o comportamento antigo está descrito conforme a documentação oficial.)</p>
+</div>
+
+<div class="note">
+<strong>Novidade do 3.14: as t-strings</strong> <span class="versao">3.14</span>
+<p>Com <code>t</code> no lugar do <code>f</code>, como em <code>t"Olá, {nome}!"</code>, o Python 3.14 cria uma <strong>t-string</strong> (de <em>template</em>, "modelo"). Ela não vira texto na hora: vira um objeto do tipo <code>string.templatelib.Template</code>, que guarda as partes fixas e os valores separados, para outro código decidir como juntar (por exemplo, protegendo um site contra textos maliciosos). É um recurso para bibliotecas, não para o dia a dia de quem está começando. Mais em <a href="novidades.html">Novidades do Python 3.14 e 3.15</a>.</p>
+<pre class="file" data-file="tstring.py">nome = "Ana"
+modelo = t"Olá, {nome}!"
+print(type(modelo))
+</pre>
+<pre class="term">$ python3 tstring.py
+&lt;class 'string.templatelib.Template'&gt;
+</pre>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de montar o mesmo texto</h2>
+<p>Você vai encontrar, em código mais antigo, outros dois jeitos de formatar: o método <code>format()</code> e o operador <code>%</code>. Todos dão <code>Café: R$ 4.50</code> (com <code>preco = 4.5</code>):</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Exemplo</th><th>Quando usar</th></tr>
+<tr><td>f-string</td><td><code>f"Café: R$ {preco:.2f}"</code></td><td><strong>Sempre</strong>, em código novo: é a mais clara (desde o Python 3.6)</td></tr>
+<tr><td><code>format()</code></td><td><code>"Café: R$ {:.2f}".format(preco)</code></td><td>Quando o modelo do texto é guardado antes, numa variável, e preenchido depois</td></tr>
+<tr><td><code>%</code></td><td><code>"Café: R$ %.2f" % preco</code></td><td>Só para ler código antigo</td></tr>
+<tr><td><code>+</code> e <code>str()</code></td><td><code>"Café: R$ " + str(preco)</code></td><td>Para emendar poucos textos, sem formato (e aqui não daria o <code>.50</code>)</td></tr>
+</table>
+</div>
+
+<p>Os formatos depois dos dois-pontos (<code>.2f</code>, <code>&gt;8</code>, <code>,</code>) são os mesmos na f-string e no <code>format()</code>. A tabela completa está na <a href="ref-formatacao.html">Referência de Formatação</a>.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Esqueceu o <code>f</code></strong>
+<pre class="file" data-file="sem-f.py">nome = "Ana"
+print("Olá, {nome}!")
+</pre>
+<pre class="term">$ python3 sem-f.py
+Olá, {nome}!
+</pre>
+<p>Nenhum erro, e a lacuna não foi preenchida: saiu <code>{nome}</code>, com chaves e tudo. Sem o <code>f</code>, é um texto comum, e as chaves são só caracteres. <strong>Como consertar:</strong> <code>print(f"Olá, {nome}!")</code>, com o <code>f</code> colado nas aspas.</p>
+</div>
+
+<div class="cenario">
+<strong>Chave sem fechar</strong>
+<pre class="file" data-file="chave-aberta.py">nome = "Ana"
+print(f"Olá, {nome")
+</pre>
+<pre class="term">$ python3 chave-aberta.py
+  File "/home/ana/chave-aberta.py", line 2
+    print(f"Olá, {nome")
+                      ^
+SyntaxError: f-string: expecting '}'
+</pre>
+<p><code>f-string: expecting '}'</code>: "na f-string, esperava um <code>}</code>". O <code>^</code> aponta a aspa que fechou o texto antes da chave. Não há <code>Traceback</code>: o Python achou o erro só de ler o código. <strong>Como consertar:</strong> feche a chave, <code>f"Olá, {nome}"</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Nome errado dentro das chaves</strong>
+<pre class="file" data-file="nome-errado.py">nome = "Ana"
+print(f"Olá, {nomee}!")
+</pre>
+<pre class="term">$ python3 nome-errado.py
+Traceback (most recent call last):
+  File "/home/ana/nome-errado.py", line 2, in &lt;module&gt;
+    print(f"Olá, {nomee}!")
+                  ^^^^^
+NameError: name 'nomee' is not defined. Did you mean: 'nome'?
+</pre>
+<p>O que está nas chaves é código Python de verdade, e tem as mesmas regras: um nome que não existe dá <code>NameError</code>, com os <code>^</code> embaixo dele e a dica <code>Did you mean: 'nome'?</code>. <strong>Como consertar:</strong> corrija o nome.</p>
+</div>
+
+<div class="cenario">
+<strong>Formato de número num texto: <code>Unknown format code 'f'</code></strong>
+<p>A Ana lê o preço do teclado e quer mostrar com duas casas:</p>
+<pre class="file" data-file="formato-texto.py">preco = input("Preço: ")
+print(f"R$ {preco:.2f}")
+</pre>
+<pre class="term">$ python3 formato-texto.py
+Preço: 12.5
+Traceback (most recent call last):
+  File "/home/ana/formato-texto.py", line 2, in &lt;module&gt;
+    print(f"R$ {preco:.2f}")
+               ^^^^^^^^^^^
+ValueError: Unknown format code 'f' for object of type 'str'
+</pre>
+<dl class="anatomy">
+  <dt>ValueError:</dt><dd>"Erro de valor".</dd>
+  <dt>Unknown format code 'f'</dt><dd>"Código de formato desconhecido: <code>f</code>".</dd>
+  <dt>for object of type 'str'</dt><dd>"…para um objeto do tipo <code>str</code>". O <code>.2f</code> é um formato de <strong>número</strong>, e o <code>input()</code> sempre devolve <strong>texto</strong>: <code>"12.5"</code>, com aspas.</dd>
+</dl>
+<p><strong>Como consertar:</strong> converta antes, com <code>float()</code> (aula <a href="conversao.html">Conversão de Tipos</a>):</p>
+<pre class="file" data-file="formato-texto2.py">preco = float(input("Preço: "))
+print(f"R$ {preco:.2f}")
+</pre>
+<pre class="term">$ python3 formato-texto2.py
+Preço: 12.5
+R$ 12.50
+</pre>
+</div>
+
+<div class="cenario">
+<strong>Formato na ordem errada</strong>
+<p>A Ana quis o separador de milhar e pôs a vírgula no fim:</p>
+<pre class="file" data-file="virgula-errada.py">total = 1234.5
+print(f"{total:.2f,}")
+</pre>
+<pre class="term">$ python3 virgula-errada.py
+Traceback (most recent call last):
+  File "/home/ana/virgula-errada.py", line 2, in &lt;module&gt;
+    print(f"{total:.2f,}")
+            ^^^^^^^^^^^^
+ValueError: Invalid format specifier '.2f,' for object of type 'float'
+</pre>
+<p><code>Invalid format specifier '.2f,'</code>: "pedido de formato inválido". As partes do formato têm uma ordem fixa: alinhamento e largura, depois o separador, depois as casas e o tipo. <strong>Como consertar:</strong> <code>{total:,.2f}</code>, com a vírgula antes do ponto.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<p>Com <code>x = 3.14159</code>, <code>n = 42</code> e <code>t = "oi"</code>:</p>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Resultado</th></tr>
+<tr><td><code>f"{x}"</code></td><td>Põe o valor</td><td><code>3.14159</code></td></tr>
+<tr><td><code>f"{x:.2f}"</code></td><td>2 casas decimais</td><td><code>3.14</code></td></tr>
+<tr><td><code>f"{1234567:,}"</code></td><td>Separador de milhar</td><td><code>1,234,567</code></td></tr>
+<tr><td><code>f"[{n:&gt;6}]"</code></td><td>Largura 6, à direita</td><td><code>[&nbsp;&nbsp;&nbsp;&nbsp;42]</code></td></tr>
+<tr><td><code>f"[{t:&lt;6}]"</code></td><td>Largura 6, à esquerda</td><td><code>[oi&nbsp;&nbsp;&nbsp;&nbsp;]</code></td></tr>
+<tr><td><code>f"[{t:^6}]"</code></td><td>Largura 6, centralizado</td><td><code>[&nbsp;&nbsp;oi&nbsp;&nbsp;]</code></td></tr>
+<tr><td><code>f"{t:*^6}"</code></td><td>Centralizado, com <code>*</code></td><td><code>**oi**</code></td></tr>
+<tr><td><code>f"{n:05}"</code></td><td>Zeros à esquerda</td><td><code>00042</code></td></tr>
+<tr><td><code>f"{0.5:.0%}"</code></td><td>Porcentagem</td><td><code>50%</code></td></tr>
+<tr><td><code>f"{n=}"</code></td><td>Nome e valor</td><td><code>n=42</code></td></tr>
+<tr><td><code>f"{{ }}"</code></td><td>Chaves de verdade</td><td><code>{ }</code></td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td>Saiu <code>{nome}</code> no texto</td><td>Faltou o <code>f</code> antes das aspas</td></tr>
+<tr><td><code>SyntaxError: f-string: expecting '}'</code></td><td>Chave sem fechar</td></tr>
+<tr><td><code>ValueError: Unknown format code 'f' for object of type 'str'</code></td><td>Formato de número num texto: converta com <code>float()</code></td></tr>
+<tr><td><code>ValueError: Invalid format specifier</code></td><td>Partes do formato na ordem errada (é <code>:,.2f</code>)</td></tr>
+<tr><td><code>1,234.50</code> no lugar de <code>1.234,50</code></td><td>O formato é o americano: troque os sinais com <code>replace()</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A letra mágica</h3>
+<p>Complete para que <code>{nome}</code> seja trocado pelo valor da variável:</p>
+<div class="ex-code">print(<input data-answer="f" aria-label="letra">"Olá, {nome}!")</div>
+</div>
+
+<div class="exercise">
+<h3>2. Duas casas</h3>
+<p>Complete o formato para mostrar <code>3.14</code> a partir de <code>x = 3.14159</code>:</p>
+<div class="ex-code">print(f"{x:<input data-answer=".2f" aria-label="formato">}")</div>
+</div>
+
+<div class="exercise">
+<h3>3. O resultado</h3>
+<p>O que <code>print(f"{2 + 3 = }")</code> mostra?</p>
+<div class="ex-code"><input data-answer="2 + 3 = 5" aria-label="resultado"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Com <code>preco = 7</code>, o que <code>print(f"R$ {preco:.2f}")</code> mostra?</p>
+<label><input type="radio" name="q4"> <code>R$ 7</code></label>
+<label><input type="radio" name="q4"> <code>R$ 7.2f</code></label>
+<label><input type="radio" name="q4"> <code>R$ 7.00</code></label>
+<label><input type="radio" name="q4"> Dá erro: 7 não tem casas decimais</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Qual formato encosta o texto à <strong>direita</strong>, em 10 caracteres?</p>
+<label><input type="radio" name="q5"> <code>{nome:&gt;10}</code></label>
+<label><input type="radio" name="q5"> <code>{nome:&lt;10}</code></label>
+<label><input type="radio" name="q5"> <code>{nome:^10}</code></label>
+<label><input type="radio" name="q5"> <code>{nome:10&gt;}</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. <code>preco = input("Preço: ")</code> e depois <code>f"{preco:.2f}"</code> deu <code>ValueError: Unknown format code 'f' for object of type 'str'</code>. Por quê?</p>
+<label><input type="radio" name="q6"> Faltou o <code>f</code> antes das aspas</label>
+<label><input type="radio" name="q6"> O <code>.2f</code> só funciona com números inteiros</label>
+<label><input type="radio" name="q6"> A chave não foi fechada</label>
+<label><input type="radio" name="q6"> O <code>input()</code> devolve texto; precisa converter com <code>float()</code></label>
+</div>
+
+<h3>Missão final: o total em reais</h3>
+
+<div class="trypy" data-stdin="1234.5" data-goal="out:Total: R$ 3.703,50;;semerro">
+<p class="try-task"><strong>Missão:</strong> a Ana vende 3 cestas de café da manhã. O preço de cada uma é digitado (aqui, o editor digita <code>1234.5</code> por você). O total sai como <code>R$ 3703.5</code>. Faça sair no jeito brasileiro, com separador de milhar e duas casas: <code>Total: R$ 3.703,50</code>.</p>
+<pre class="script" data-file="main.py">preco = float(input("Preço da cesta: "))
+quantidade = 3
+total = preco * quantidade
+print(f"Total: R$ {total}")
+</pre>
+<pre class="solucao" data-file="main.py">preco = float(input("Preço da cesta: "))
+quantidade = 3
+total = preco * quantidade
+texto = f"{total:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+print(f"Total: R$ {texto}")
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Uma <strong>f-string</strong> tem um <code>f</code> antes das aspas e lacunas entre chaves: <code>f"Olá, {nome}!"</code>. Dentro das chaves vale qualquer expressão, e números entram sem <code>str()</code>.</li>
+  <li>Depois de dois-pontos vem o formato: <code>{x:.2f}</code> (casas decimais), <code>{x:,}</code> (milhar), <code>{t:&lt;10}</code> / <code>{t:&gt;10}</code> / <code>{t:^10}</code> (alinhamento), <code>{n:03}</code> (zeros), <code>{p:.1%}</code> (porcentagem).</li>
+  <li>O formato de milhar é o americano; para o brasileiro, troque os sinais com <code>replace()</code> (passando por um caractere provisório).</li>
+  <li><code>{x=}</code> mostra o nome e o valor: ótimo para conferir.</li>
+  <li>Desde o 3.12, as aspas de dentro podem ser iguais às de fora, e f-strings podem ficar uma dentro da outra.</li>
+  <li>Sem o <code>f</code>, as chaves aparecem no texto; formato de número em texto dá <code>ValueError: Unknown format code 'f'</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
