@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Encapsulamento — _protegido, __privado e o combinado | Guia Python</title>
+<meta name="description" content="Encapsulamento em Python para quem está começando: por que esconder os dados de um objeto, o atributo _protegido (um sublinhado, um combinado), o __privado e o name mangling de verdade (_ContaBancaria__saldo), o 'somos todos adultos aqui', métodos internos, e os erros reais (AttributeError com Did you mean, o __saldo criado de fora, a filha que não enxerga o __ da mãe).">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Encapsulamento</span></h1>
+
+<p class="intro">Na aula <a href="atributos-metodos.html">Atributos e Métodos</a>, a conta bancária ganhou um <code>sacar</code> que nega o saque quando falta dinheiro. Mas nada impede alguém de pular o método e escrever direto <code>conta.saldo = -1000</code>. A regra do saque fica lá, bonitinha, e ninguém é obrigado a passar por ela. <strong>Encapsulamento</strong> (de "pôr numa cápsula") é a ideia de <strong>proteger os dados de dentro</strong> do objeto e deixar quem está de fora usar só os métodos. Nesta aula você vai ver como o Python faz isso, e por que o jeito dele é diferente do de outras linguagens: em Python, a proteção é um <strong>combinado</strong>, não um cadeado.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>Por que esconder os dados de um objeto, e o que é a "interface" de uma classe.</li>
+  <li>O atributo <strong>protegido</strong>, com um sublinhado: <code>self._saldo</code>.</li>
+  <li>O atributo <strong>privado</strong>, com dois: <code>self.__saldo</code>, e o que o Python faz com ele por baixo (o <em>name mangling</em>).</li>
+  <li>Por que, mesmo assim, nada é "trancado" em Python: "somos todos adultos aqui".</li>
+  <li>A escrever métodos internos, como <code>_registrar</code>.</li>
+  <li>Os erros reais: o <code>AttributeError</code> do <code>__saldo</code>, o <code>__saldo</code> criado de fora sem querer, e a filha que não enxerga o <code>__</code> da mãe.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: o caixa eletrônico</h2>
+<p>No caixa eletrônico, a Ana aperta botões: "saque", "depósito", "saldo". Ela não abre a máquina para pegar as notas com a mão, nem escreve o saldo novo numa folha lá dentro. Os botões são o jeito <strong>combinado</strong> de usar a máquina, e é por eles que o banco confere tudo: se há saldo, se o valor faz sentido, se o cartão é dela.</p>
+
+<p>Uma classe bem feita funciona igual. Os <strong>métodos</strong> são os botões: o jeito combinado de usar o objeto. Os <strong>atributos internos</strong> (o saldo, o extrato) são as peças de dentro da máquina. O conjunto dos botões se chama <strong>interface</strong> da classe: é o que quem está de fora precisa conhecer. O resto é assunto da própria classe.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>No caixa eletrônico</th><th>Na classe</th></tr>
+<tr><td>Os botões</td><td>Os métodos públicos: <code>depositar</code>, <code>sacar</code>, <code>ver_saldo</code></td></tr>
+<tr><td>O cofre e as peças de dentro</td><td>Os atributos internos: <code>_saldo</code>, <code>_extrato</code></td></tr>
+<tr><td>"Não abra a máquina"</td><td>O sublinhado no começo do nome</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. O problema: qualquer um mexe em tudo</h2>
+
+<pre class="file" data-file="problema.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self.saldo = saldo
+
+    def sacar(self, valor):
+        if valor &gt; self.saldo:
+            print("Saldo insuficiente.")
+        else:
+            self.saldo -= valor
+
+
+conta = ContaBancaria("Ana", 100)
+conta.sacar(500)
+conta.saldo = -1000
+print(conta.saldo)
+</pre>
+
+<pre class="term">$ python3 problema.py
+Saldo insuficiente.
+-1000                              « ninguém conferiu nada
+</pre>
+
+<p>O <code>sacar(500)</code> foi negado, como devia. Mas a linha seguinte passou por cima da regra e deixou a conta com <strong>menos mil reais</strong>, sem erro nenhum. Num programa pequeno, quem escreveu isso foi você mesmo, e você sabe que não devia. Num programa grande, com muita gente mexendo, é questão de tempo alguém fazer isso sem querer.</p>
+
+<hr>
+
+<h2>2. Um sublinhado: "isto é de uso interno"</h2>
+<p>O primeiro passo é avisar. Em Python, um nome que começa com <strong>um sublinhado</strong> (<code>_saldo</code>) quer dizer: "isto é de uso interno da classe; de fora, use os métodos". Os programadores chamam de atributo <strong>protegido</strong>.</p>
+
+<pre class="file" data-file="protegido.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self._saldo = saldo
+
+    def depositar(self, valor):
+        if valor &lt;= 0:
+            print("Depósito precisa ser maior que zero.")
+            return
+        self._saldo += valor
+
+    def ver_saldo(self):
+        return self._saldo
+
+
+conta = ContaBancaria("Ana", 100)
+conta.depositar(50)
+conta.depositar(-30)
+print(conta.ver_saldo())
+print(conta._saldo)
+</pre>
+
+<dl class="anatomy">
+  <dt>self._saldo</dt><dd>O sublinhado faz parte do nome, como uma letra. Para o Python, <code>_saldo</code> é um atributo como outro qualquer. O sublinhado é um <strong>recado</strong> para as pessoas.</dd>
+  <dt>def depositar(self, valor):</dt><dd>Um "botão": confere o valor antes de mexer no saldo. O <code>return</code> sozinho encerra o método mais cedo, sem depositar.</dd>
+  <dt>def ver_saldo(self):</dt><dd>O jeito combinado de <strong>ler</strong> o saldo de fora: só devolve, não deixa mudar.</dd>
+  <dt>conta._saldo</dt><dd>Funciona! O Python não impede. Mas quem escreve isso de fora da classe está desrespeitando o combinado, e os editores de código e os colegas vão reclamar.</dd>
+</dl>
+
+<pre class="term">$ python3 protegido.py
+Depósito precisa ser maior que zero.
+150
+150                                « o _saldo continua acessível: é só um aviso
+</pre>
+
+<div class="note">
+<strong>"Somos todos adultos aqui"</strong>
+<p>Em linguagens como Java e C++, um atributo <code>private</code> é trancado: tentar usá-lo de fora é erro antes mesmo de o programa rodar. O Python escolheu outro caminho, resumido num ditado famoso da comunidade: <strong>"somos todos adultos aqui"</strong> (em inglês, <em>we are all consenting adults here</em>). O sublinhado avisa "não mexa"; se mesmo assim alguém mexer, é porque sabe o que está fazendo (por exemplo, num teste, ou para investigar um problema) e assume a responsabilidade. O Python confia no programador, em vez de trancar a porta.</p>
+</div>
+
+<hr>
+
+<h2>3. Dois sublinhados: o <code>__privado</code> e o <em>name mangling</em></h2>
+<p>Com <strong>dois</strong> sublinhados no começo (<code>__saldo</code>), o Python faz algo a mais: <strong>troca o nome</strong> do atributo por baixo dos panos. Veja:</p>
+
+<pre class="file" data-file="privado.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self.__saldo = saldo
+
+    def ver_saldo(self):
+        return self.__saldo
+
+
+conta = ContaBancaria("Ana", 100)
+print(conta.ver_saldo())
+print(vars(conta))
+print(conta.__saldo)
+</pre>
+
+<pre class="term">$ python3 privado.py
+100
+{'titular': 'Ana', '_ContaBancaria__saldo': 100}
+Traceback (most recent call last):
+  File "/home/ana/privado.py", line 13, in &lt;module&gt;
+    print(conta.__saldo)
+          ^^^^^^^^^^^^^
+AttributeError: 'ContaBancaria' object has no attribute '__saldo'. Did you mean: 'ver_saldo'?
+</pre>
+
+<p>Três coisas aconteceram:</p>
+<ol class="passo">
+  <li><strong>Dentro da classe</strong>, tudo funcionou: o <code>ver_saldo</code> leu o <code>self.__saldo</code> e devolveu 100.</li>
+  <li>O <code>vars(conta)</code> mostra o segredo: o atributo não se chama <code>__saldo</code>. Ele foi guardado como <strong><code>_ContaBancaria__saldo</code></strong>: um sublinhado, o nome da classe, e o nome que você escreveu. Essa troca de nome se chama <strong><em>name mangling</em></strong> ("embaralhamento de nome"). O Python faz a troca em todo <code>__nome</code> escrito <strong>dentro</strong> da classe.</li>
+  <li><strong>De fora</strong>, <code>conta.__saldo</code> não existe, e dá <code>AttributeError</code>. O Python 3.14 ainda sugere o caminho certo: "Você quis dizer <code>ver_saldo</code>?". Use o botão.</li>
+</ol>
+
+<h3>Mas não é um cadeado</h3>
+<p>Sabendo o nome trocado, dá para ler e até mudar o atributo de fora:</p>
+
+<pre class="file" data-file="mangling.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self.__saldo = saldo
+
+    def ver_saldo(self):
+        return self.__saldo
+
+
+conta = ContaBancaria("Ana", 100)
+print(conta._ContaBancaria__saldo)
+conta._ContaBancaria__saldo = 1_000_000
+print(conta.ver_saldo())
+</pre>
+
+<pre class="term">$ python3 mangling.py
+100
+1000000                            « "privado", mas mudou
+</pre>
+
+<p>De novo: somos todos adultos. O <code>__</code> não é segurança (nunca guarde uma senha achando que o <code>__</code> a protege); é uma forma de deixar <strong>bem difícil</strong> mexer sem querer. Ninguém escreve <code>_ContaBancaria__saldo</code> por acidente. (O <code>1_000_000</code> é só um jeito de escrever um milhão com separadores, para ler melhor: o Python ignora os sublinhados dentro de números.)</p>
+
+<h3>Para que serve, então, o <code>__</code>?</h3>
+<p>O motivo de verdade do <em>name mangling</em> é a <strong>herança</strong>: evitar que uma classe filha, sem saber, use o mesmo nome de um atributo interno da mãe e estrague o dela.</p>
+
+<pre class="file" data-file="colisao.py">class Produto:
+    def __init__(self, nome):
+        self.__codigo = "P-001"
+        self.nome = nome
+
+    def codigo(self):
+        return self.__codigo
+
+
+class ProdutoImportado(Produto):
+    def __init__(self, nome, pais):
+        super().__init__(nome)
+        self.__codigo = "IMP-77"
+        self.pais = pais
+
+
+vinho = ProdutoImportado("Vinho", "Chile")
+print(vinho.codigo())
+print(vars(vinho))
+</pre>
+
+<pre class="term">$ python3 colisao.py
+P-001
+{'_Produto__codigo': 'P-001', 'nome': 'Vinho', '_ProdutoImportado__codigo': 'IMP-77', 'pais': 'Chile'}
+</pre>
+
+<p>A mãe e a filha escreveram <code>self.__codigo</code>, mas cada uma ganhou o seu: <code>_Produto__codigo</code> e <code>_ProdutoImportado__codigo</code>. O método <code>codigo()</code> da mãe continua lendo o dela (<code>P-001</code>), sem ser atrapalhado pela filha. Sem os dois sublinhados, o <code>__init__</code> da filha teria sobrescrito o código da mãe.</p>
+
+<div class="tip">
+<strong>E o <code>__init__</code>? Ele também começa com dois sublinhados…</strong>
+<p>O <em>name mangling</em> só vale para nomes que <strong>começam</strong> com dois sublinhados e <strong>não terminam</strong> com dois. <code>__saldo</code> é trocado; <code>__init__</code>, <code>__class__</code> e os outros "dunder" (com dois sublinhados dos dois lados) são nomes especiais do Python e ficam como estão. Eles não são privados: são públicos, só que especiais (aula <a href="metodos-especiais.html">Métodos Especiais</a>).</p>
+</div>
+
+<hr>
+
+<h2>4. Métodos internos</h2>
+<p>O sublinhado vale também para métodos. Um método com <code>_</code> é uma "peça de dentro": a classe usa para se organizar, mas quem está de fora não precisa chamar.</p>
+
+<pre class="file" data-file="metodo_interno.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self._saldo = saldo
+        self._extrato = []
+
+    def _registrar(self, texto):
+        self._extrato.append(texto)
+
+    def depositar(self, valor):
+        self._saldo += valor
+        self._registrar(f"Depósito: +{valor:.2f}")
+
+    def sacar(self, valor):
+        if valor &gt; self._saldo:
+            self._registrar(f"Saque negado: {valor:.2f}")
+            return False
+        self._saldo -= valor
+        self._registrar(f"Saque: -{valor:.2f}")
+        return True
+
+    def extrato(self):
+        for linha in self._extrato:
+            print(linha)
+        print(f"Saldo: R$ {self._saldo:.2f}")
+
+
+conta = ContaBancaria("Ana", 100)
+conta.depositar(50)
+conta.sacar(500)
+conta.sacar(30)
+conta.extrato()
+</pre>
+
+<pre class="term">$ python3 metodo_interno.py
+Depósito: +50.00
+Saque negado: 500.00
+Saque: -30.00
+Saldo: R$ 120.00
+</pre>
+
+<p>A interface da conta são três botões: <code>depositar</code>, <code>sacar</code> e <code>extrato</code>. O <code>_registrar</code>, o <code>_saldo</code> e o <code>_extrato</code> são da cozinha. A vantagem aparece no dia em que o banco quiser guardar o extrato num arquivo, em vez de numa lista: muda só o <code>_registrar</code>, por dentro, e quem usa a conta nem fica sabendo. Isso é o que o encapsulamento compra: <strong>liberdade para mudar o lado de dentro sem quebrar o lado de fora</strong>.</p>
+
+<div class="trypy" data-goal="out:Saldo insuficiente;;out:Saldo: R$ 70.00;;semerro">
+<p class="try-task"><strong>Missão:</strong> o <code>sacar</code> desta conta não confere nada, e o saque de 500 deixa o saldo negativo. Faça o método recusar o saque quando o valor for maior que o <code>self._saldo</code>, mostrando <code>Saldo insuficiente</code>. No fim, o programa deve mostrar <code>Saldo: R$ 70.00</code>.</p>
+<pre class="script" data-file="main.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self._saldo = saldo
+
+    def sacar(self, valor):
+        self._saldo -= valor
+
+    def mostrar(self):
+        print(f"Saldo: R$ {self._saldo:.2f}")
+
+
+conta = ContaBancaria("Ana", 100)
+conta.sacar(500)
+conta.sacar(30)
+conta.mostrar()
+</pre>
+<pre class="solucao" data-file="main.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self._saldo = saldo
+
+    def sacar(self, valor):
+        if valor &gt; self._saldo:
+            print("Saldo insuficiente")
+        else:
+            self._saldo -= valor
+
+    def mostrar(self):
+        print(f"Saldo: R$ {self._saldo:.2f}")
+
+
+conta = ContaBancaria("Ana", 100)
+conta.sacar(500)
+conta.sacar(30)
+conta.mostrar()
+</pre>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de proteger um atributo</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Nome</th><th>Chamado de</th><th>O que o Python faz</th><th>Quando usar</th></tr>
+<tr><td><code>saldo</code></td><td>Público</td><td>Nada</td><td>Dados que qualquer um pode ler e mudar sem regra: <code>nome</code>, <code>cidade</code></td></tr>
+<tr><td><code>_saldo</code></td><td>Protegido (interno)</td><td>Nada: é só um combinado entre pessoas</td><td><strong>O normal</strong> para dados internos. É o que o guia recomenda</td></tr>
+<tr><td><code>__saldo</code></td><td>Privado</td><td>Troca o nome para <code>_ContaBancaria__saldo</code></td><td>Quando a classe vai ter filhas e você quer evitar que um nome delas atrapalhe o seu. Fora disso, o <code>_</code> basta</td></tr>
+<tr><td><code>__init__</code></td><td>Especial (dunder)</td><td>Nada: o Python usa esses nomes por conta própria</td><td>Só os que o Python já define. Não invente nomes novos assim</td></tr>
+</table>
+</div>
+
+<p>E quando um atributo precisa ser lido e mudado de fora, mas <strong>com regra</strong> (o preço não pode ser negativo)? Os métodos <code>ver_saldo()</code> e companhia funcionam, mas o Python tem um jeito mais elegante, em que <code>conta.saldo</code> parece um atributo comum e por baixo chama um método. É o <code>@property</code>, a próxima aula: <a href="property.html">@property</a>.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Ler o <code>__saldo</code> de fora: <code>AttributeError</code></strong>
+<p>Você viu acima: <code>print(conta.__saldo)</code> dá</p>
+<pre class="term">AttributeError: 'ContaBancaria' object has no attribute '__saldo'. Did you mean: 'ver_saldo'?
+</pre>
+<p>O atributo existe, mas com o nome trocado (<code>_ContaBancaria__saldo</code>), e a troca só acontece no código escrito <strong>dentro</strong> da classe. De fora, <code>__saldo</code> é só um nome que não existe. <strong>Como consertar:</strong> use o método que a classe oferece (o Python até sugere: <code>ver_saldo</code>). Se a classe não oferece nenhum, é porque ela não quer que aquele dado seja usado de fora.</p>
+</div>
+
+<div class="cenario">
+<strong>"Mudei o <code>__saldo</code> de fora e não mudou nada"</strong>
+<p>Este é traiçoeiro, porque não dá erro nenhum:</p>
+<pre class="file" data-file="fora.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self.__saldo = saldo
+
+    def ver_saldo(self):
+        return self.__saldo
+
+
+conta = ContaBancaria("Ana", 100)
+conta.__saldo = 999
+print(conta.__saldo)
+print(conta.ver_saldo())
+print(vars(conta))
+</pre>
+<pre class="term">$ python3 fora.py
+999                                « parece que mudou…
+100                                « …mas o saldo de verdade continua 100
+{'titular': 'Ana', '_ContaBancaria__saldo': 100, '__saldo': 999}
+</pre>
+<p>Fora da classe não há troca de nome, então <code>conta.__saldo = 999</code> <strong>criou um atributo novo</strong>, chamado <code>__saldo</code> mesmo, ao lado do verdadeiro (<code>_ContaBancaria__saldo</code>). O <code>vars</code> mostra os dois convivendo. A classe continua usando o dela, e o 999 fica lá, enganando quem olha. <strong>Como consertar:</strong> não escreva atributos internos de fora. Para mudar o saldo, use os métodos (<code>depositar</code>, <code>sacar</code>).</p>
+</div>
+
+<div class="cenario">
+<strong>A filha não enxerga o <code>__</code> da mãe</strong>
+<pre class="file" data-file="filha.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self.__saldo = saldo
+
+
+class ContaPoupanca(ContaBancaria):
+    def render(self):
+        self.__saldo += self.__saldo * 0.01
+
+
+poupanca = ContaPoupanca("Bia", 1000)
+poupanca.render()
+</pre>
+<pre class="term">$ python3 filha.py
+Traceback (most recent call last):
+  File "/home/ana/filha.py", line 13, in &lt;module&gt;
+    poupanca.render()
+    ~~~~~~~~~~~~~~~^^
+  File "/home/ana/filha.py", line 9, in render
+    self.__saldo += self.__saldo * 0.01
+    ^^^^^^^^^^^^
+AttributeError: 'ContaPoupanca' object has no attribute '_ContaPoupanca__saldo'. Did you mean: '_ContaBancaria__saldo'?
+</pre>
+<p>Leia a mensagem com calma: "o objeto <code>ContaPoupanca</code> não tem o atributo <strong><code>_ContaPoupanca__saldo</code></strong>. Você quis dizer <strong><code>_ContaBancaria__saldo</code></strong>?". Dentro da <code>ContaPoupanca</code>, o <code>self.__saldo</code> virou <code>_ContaPoupanca__saldo</code> (o nome da classe <strong>onde o código está escrito</strong>), mas o saldo foi guardado pela mãe como <code>_ContaBancaria__saldo</code>. O <code>__</code> fez exatamente o seu trabalho: separou os nomes da mãe e da filha. Só que aqui a filha <strong>queria</strong> o da mãe. <strong>Como consertar:</strong> se as filhas precisam usar o atributo, use <strong>um</strong> sublinhado (<code>self._saldo</code>) na mãe e nas filhas:</p>
+<pre class="file" data-file="filha_ok.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self._saldo = saldo
+
+    def ver_saldo(self):
+        return self._saldo
+
+
+class ContaPoupanca(ContaBancaria):
+    def render(self):
+        self._saldo += self._saldo * 0.01
+
+
+poupanca = ContaPoupanca("Bia", 1000)
+poupanca.render()
+print(poupanca.ver_saldo())
+</pre>
+<pre class="term">$ python3 filha_ok.py
+1010.0
+</pre>
+<p>É por isso que o <code>_</code> é a escolha normal: as filhas fazem parte da "família" da classe e costumam precisar dos dados internos.</p>
+</div>
+
+<div class="cenario">
+<strong>O sublinhado não impede nada</strong>
+<p>Não é um erro do Python, é um erro de expectativa: quem acha que <code>_saldo</code> está "protegido" se surpreende quando <code>conta._saldo = -1000</code> funciona. Funciona mesmo, como você viu na seção 2. O <code>_</code> é um aviso para pessoas, e quem decide respeitar é quem escreve o código. Se a regra precisa valer <strong>sempre</strong>, mesmo quando alguém escreve <code>conta.saldo = …</code>, o caminho é o <a href="property.html">@property</a>, que roda uma validação a cada mudança.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que quer dizer</th></tr>
+<tr><td><code>self.saldo</code></td><td>Público: qualquer um usa</td></tr>
+<tr><td><code>self._saldo</code></td><td>Protegido: "uso interno; de fora, use os métodos". O Python não impede</td></tr>
+<tr><td><code>self.__saldo</code></td><td>Privado: dentro da classe vira <code>self._ContaBancaria__saldo</code> (<em>name mangling</em>)</td></tr>
+<tr><td><code>def _registrar(self, …):</code></td><td>Método interno, para a própria classe usar</td></tr>
+<tr><td><code>obj._Classe__nome</code></td><td>O nome "trocado": dá acesso ao privado de fora (só para investigar, nunca no dia a dia)</td></tr>
+<tr><td><code>vars(obj)</code></td><td>Mostra os atributos com os nomes de verdade, inclusive os trocados</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>AttributeError: … has no attribute '__saldo'</code> (de fora)</td><td>O atributo é privado: o nome de verdade é <code>_Classe__saldo</code>. Use um método</td></tr>
+<tr><td>Mudei o <code>__saldo</code> de fora, e a classe continua com o valor antigo</td><td>De fora não há troca de nome: você criou um atributo novo</td></tr>
+<tr><td><code>has no attribute '_Filha__saldo'. Did you mean: '_Mae__saldo'?</code></td><td>A filha usou o <code>__</code> da mãe. Troque por um sublinhado só</td></tr>
+<tr><td>Alguém mudou o <code>_saldo</code> de fora e nada reclamou</td><td>O <code>_</code> é só um combinado. Para validar sempre, use <code>@property</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O nome trocado</h3>
+<p>Na classe <code>Aluno</code>, o <code>__init__</code> tem <code>self.__nota = 10</code>. Com que nome esse atributo aparece no <code>vars()</code> do objeto?</p>
+<div class="ex-code"><input data-answer="_Aluno__nota" aria-label="nome trocado"></div>
+</div>
+
+<div class="exercise">
+<h3>2. O combinado</h3>
+<p>Quantos sublinhados o guia recomenda, normalmente, no começo do nome de um atributo interno?</p>
+<div class="ex-code"><input data-answer="1|um" aria-label="quantidade"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">3. O que acontece com <code>conta._saldo = -1000</code>, escrito fora da classe?</p>
+<label><input type="radio" name="q3"> <code>AttributeError</code></label>
+<label><input type="radio" name="q3"> <code>SyntaxError</code></label>
+<label><input type="radio" name="q3"> Funciona: o sublinhado é só um aviso, o Python não impede</label>
+<label><input type="radio" name="q3"> O Python ignora a linha</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">4. Para que o <em>name mangling</em> do <code>__</code> serve de verdade?</p>
+<label><input type="radio" name="q4"> Para evitar que um atributo de uma classe filha atrapalhe um atributo interno da mãe com o mesmo nome</label>
+<label><input type="radio" name="q4"> Para guardar senhas com segurança</label>
+<label><input type="radio" name="q4"> Para deixar o programa mais rápido</label>
+<label><input type="radio" name="q4"> Para tornar o atributo impossível de acessar</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. A conta tem <code>self.__saldo = 100</code>. De fora, a Ana escreve <code>conta.__saldo = 999</code> e depois chama <code>conta.ver_saldo()</code>, que devolve <code>self.__saldo</code>. O que aparece?</p>
+<label><input type="radio" name="q5"> <code>999</code></label>
+<label><input type="radio" name="q5"> <code>AttributeError</code></label>
+<label><input type="radio" name="q5"> <code>1099</code></label>
+<label><input type="radio" name="q5"> <code>100</code>: a linha de fora criou outro atributo, e a classe continua usando o dela</label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">6. O que quer dizer "somos todos adultos aqui", no Python?</p>
+<label><input type="radio" name="q6"> Que só adultos podem programar em Python</label>
+<label><input type="radio" name="q6"> Que o Python não tranca os atributos: avisa com o sublinhado e confia que o programador respeite o combinado</label>
+<label><input type="radio" name="q6"> Que todo atributo deve ter dois sublinhados</label>
+<label><input type="radio" name="q6"> Que as classes não podem ter filhas</label>
+</div>
+
+<h3>Missão final: fechando o cofre</h3>
+
+<div class="trypy" data-goal="out:Antes: R$ 150.00;;out:Depois: R$ 150.00;;src:self\.__saldo;;semerro">
+<p class="try-task"><strong>Missão:</strong> nesta conta, o saldo é público, e a linha da "fraude" lá embaixo consegue mudá-lo para um milhão. Sem mexer no código de baixo, troque o atributo por um <strong>privado</strong>, <code>self.__saldo</code>, em todos os lugares da classe. Depois disso, a fraude não atinge mais o saldo de verdade, e o programa mostra <code>Antes: R$ 150.00</code> e <code>Depois: R$ 150.00</code>.</p>
+<pre class="script" data-file="main.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self.saldo = saldo
+
+    def depositar(self, valor):
+        if valor &gt; 0:
+            self.saldo += valor
+
+    def ver_saldo(self):
+        return self.saldo
+
+
+conta = ContaBancaria("Ana", 100)
+conta.depositar(50)
+print(f"Antes: R$ {conta.ver_saldo():.2f}")
+
+conta.saldo = 1_000_000  # a fraude
+print(f"Depois: R$ {conta.ver_saldo():.2f}")
+</pre>
+<pre class="solucao" data-file="main.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self.__saldo = saldo
+
+    def depositar(self, valor):
+        if valor &gt; 0:
+            self.__saldo += valor
+
+    def ver_saldo(self):
+        return self.__saldo
+
+
+conta = ContaBancaria("Ana", 100)
+conta.depositar(50)
+print(f"Antes: R$ {conta.ver_saldo():.2f}")
+
+conta.saldo = 1_000_000  # a fraude
+print(f"Depois: R$ {conta.ver_saldo():.2f}")
+</pre>
+</div>
+
+<p>Repare: a "fraude" não deu erro. Ela criou um atributo novo, <code>saldo</code>, que a classe nem olha. Experimente acrescentar um <code>print(vars(conta))</code> no fim para ver os dois lado a lado. Um <code>_saldo</code> com um sublinhado só também teria resolvido esta missão, já que a fraude escreve <code>saldo</code>, sem sublinhado nenhum.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><strong>Encapsulamento</strong>: proteger os dados de dentro do objeto e deixar quem está de fora usar os métodos (a <strong>interface</strong>), como os botões do caixa eletrônico.</li>
+  <li><code>_nome</code> (um sublinhado) = "uso interno". É só um combinado: o Python não impede ninguém. É a escolha normal.</li>
+  <li><code>__nome</code> (dois sublinhados) dentro da classe vira <code>_Classe__nome</code>: o <em>name mangling</em>. De fora, <code>obj.__nome</code> dá <code>AttributeError</code>.</li>
+  <li>O <code>__</code> não é cadeado nem segurança: <code>obj._Classe__nome</code> ainda funciona. Ele serve para a mãe e as filhas não pisarem nos nomes umas das outras.</li>
+  <li>Escrever <code>obj.__nome = …</code> de fora cria um atributo novo, sem erro e sem mudar o de verdade.</li>
+  <li>"Somos todos adultos aqui": o Python avisa e confia, em vez de trancar.</li>
+  <li>Nomes com dois sublinhados dos dois lados (<code>__init__</code>) são especiais, não privados.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
