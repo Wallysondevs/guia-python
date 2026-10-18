@@ -382,7 +382,7 @@ somar_ate_rapido levou 0.0102 s
 <p>Os dois jeitos de somar dão o mesmo resultado, mas o <code>sum(range(n))</code> foi umas três vezes mais rápido: o laço do <code>sum</code> roda dentro do próprio Python, escrito em C, sem passar pelas linhas do seu programa a cada número. Os tempos <strong>mudam</strong> de uma execução para outra e de um computador para outro; o que vale é a comparação. O <code>{… :.4f}</code> mostra 4 casas decimais (aula <a href="f-strings.html">f-strings</a>).</p>
 
 <div class="trypy">
-<p class="try-task"><strong>Experimente:</strong> rode e compare os tempos do editor com os do terminal da Ana (no navegador, as duas versões costumam ficar mais parecidas). Depois troque o <code>1_000_000</code> por <code>5_000_000</code> e veja o tempo crescer.</p>
+<p class="try-task"><strong>Experimente:</strong> rode e compare os tempos do editor com os do terminal da Ana (o editor, que roda dentro do navegador, costuma ser algumas vezes mais lento). Depois troque o <code>1_000_000</code> por <code>5_000_000</code> e veja o tempo crescer.</p>
 <pre class="script" data-file="main.py">import time
 from functools import wraps
 
