@@ -104,7 +104,7 @@ $ python3 c_textos.py
 {'manga', 'goiaba', 'acerola', 'caju'}
 </pre>
 
-<p>Três ordens diferentes, sem mudar uma letra do programa. Por quê? Para achar um texto rápido, o Python transforma cada texto num número (o <em>hash</em>, uma espécie de "impressão digital" do valor), e por segurança essa conta usa um <strong>sorteio novo a cada execução</strong>. Mudou o sorteio, mudou a arrumação, mudou a ordem do <code>print</code>. Os números inteiros não passam por esse sorteio, por isso <code>{10, 3, 7, 1}</code> sai sempre igual, mas mesmo assim fora de ordem.</p>
+<p>Três ordens diferentes, sem mudar uma letra do programa. Por quê? Para achar um texto rápido, o Python transforma cada texto num número (o <em>hash</em>, uma espécie de "impressão digital" do valor), e por segurança essa conta usa um <strong>sorteio novo a cada execução</strong>. Mudou o sorteio, mudou a arrumação, mudou a ordem do <code>print</code>. Os números inteiros não passam por esse sorteio, por isso <code>{10, 3, 7, 1}</code> sai sempre igual, mas mesmo assim fora de ordem. (No editor do guia, a ordem dos textos também muda, mas pode se repetir entre um Rodar e outro na mesma página. Não conte com ela em nenhum dos dois.)</p>
 
 <div class="warning">
 <strong>Nunca conte com a ordem de um conjunto</strong>
