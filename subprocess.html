@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python subprocess — rodando outros programas | Guia Python</title>
+<meta name="description" content="O módulo subprocess para quem está começando: subprocess.run com a lista de argumentos, o returncode, capture_output e text=True para pegar a saída, check=True e o CalledProcessError real, timeout, input, shlex.split e shell=True, com as saídas e os tracebacks reais do terminal.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">subprocess</span></h1>
+
+<p class="intro">O terminal da Ana tem centenas de programas prontos: <code>ls</code> lista arquivos, <code>grep</code> procura texto, <code>sqlite3</code> abre bancos de dados, <code>git</code> guarda versões. Às vezes, o jeito mais rápido de um programa Python fazer alguma coisa é <strong>pedir a um desses programas</strong> que faça. O módulo <code>subprocess</code> ("subprocesso", um processo filho) serve para isso: rodar outro programa, esperar ele terminar, saber se deu certo e pegar o que ele escreveu.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A rodar um programa com <code>subprocess.run</code>, passando o comando como uma <strong>lista</strong>.</li>
+  <li>A ler o <strong>código de saída</strong> com <code>returncode</code>.</li>
+  <li>A pegar o que o programa escreveu com <code>capture_output=True</code> e <code>text=True</code>.</li>
+  <li>A fazer o Python reclamar quando o comando falha, com <code>check=True</code>, e a ler o <code>CalledProcessError</code>.</li>
+  <li>A pôr um limite de tempo (<code>timeout</code>), mandar dados para o programa (<code>input</code>) e montar a lista com <code>shlex.split</code>.</li>
+  <li>Quando (quase nunca) usar <code>shell=True</code>, e os erros reais: programa que não existe, comando como texto, o <code>grep</code> que "falha" sem falhar.</li>
+</ul>
+</div>
+
+<div class="warning">
+<strong>Esta é uma aula de terminal</strong>
+<p>O <code>subprocess</code> chama programas do <strong>seu computador</strong>. O editor do guia roda o Python dentro do navegador, onde não existem <code>ls</code>, <code>grep</code> nem outros programas para chamar: lá o <code>subprocess</code> não funciona. Por isso os exemplos desta aula aparecem em janelas de terminal, com o que o Ubuntu da Ana respondeu de verdade, e as caixas "Experimente" treinam só a parte que é Python puro: montar a lista do comando e interpretar a resposta. Para rodar os exemplos, crie os arquivos no seu computador e use <code>python3 arquivo.py</code> (aula <a href="executar.html">Rodando um Programa</a>).</p>
+</div>
+
+<hr>
+
+<h2>A ideia: pedir um serviço a um colega</h2>
+<p>A Ana não faz tudo sozinha na padaria. Quando precisa de um bolo de casamento, ela liga para a Dona Rosa, que é especialista: diz exatamente o que quer ("bolo, três andares, de coco"), espera ficar pronto e recebe duas coisas de volta: o bolo e um "deu tudo certo" (ou "faltou coco, não deu"). Ela não precisa saber como a Dona Rosa trabalha.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Na padaria</th><th>No <code>subprocess</code></th></tr>
+<tr><td>Ligar para a Dona Rosa</td><td><code>subprocess.run(…)</code></td></tr>
+<tr><td>O pedido, item por item</td><td>A lista do comando: <code>["ls", "-1"]</code></td></tr>
+<tr><td>Esperar ficar pronto</td><td>O <code>run</code> espera o programa terminar</td></tr>
+<tr><td>O bolo que volta</td><td>O que o programa escreveu: <code>stdout</code></td></tr>
+<tr><td>"Deu certo" ou "não deu"</td><td>O código de saída: <code>returncode</code> (0 = deu certo)</td></tr>
+<tr><td>O bilhete de reclamação</td><td>A saída de erros: <code>stderr</code></td></tr>
+</table>
+</div>
+
+<p>Nos exemplos, a Ana está na pasta da lojinha, que tem estes arquivos (e os <code>.py</code> que ela vai criando):</p>
+
+<pre class="file" data-file="estoque.csv">farinha,12
+ovos,0
+leite,5
+acucar,0
+</pre>
+
+<hr>
+
+<h2>1. O primeiro <code>subprocess.run</code></h2>
+
+<pre class="file" data-file="rodar1.py">import subprocess
+
+resultado = subprocess.run(["ls", "-1"])
+print("Terminou com o código", resultado.returncode)
+</pre>
+
+<pre class="term" data-cwd="~/loja">$ python3 rodar1.py
+clientes.json
+estoque.csv
+rodar1.py
+vendas.py
+Terminou com o código 0
+</pre>
+
+<dl class="anatomy">
+  <dt>import subprocess</dt><dd>O módulo vem com o Python.</dd>
+  <dt>subprocess.run(…)</dt><dd>"Rode": inicia o programa, <strong>espera</strong> ele terminar e só depois segue para a linha de baixo.</dd>
+  <dt>["ls", "-1"]</dt><dd>O comando, como uma <strong>lista de textos</strong>: o nome do programa e cada argumento num item separado. É o mesmo que digitar <code>ls -1</code> no terminal (o <code>-1</code> pede um nome por linha).</dd>
+  <dt>resultado</dt><dd>O <code>run</code> devolve um objeto <code>CompletedProcess</code> ("processo concluído") com tudo o que aconteceu.</dd>
+  <dt>resultado.returncode</dt><dd>O <strong>código de saída</strong> do programa: 0 é "deu certo" (aula <a href="os-sys.html">Os Módulos os e sys</a>).</dd>
+</dl>
+
+<p>Os nomes dos arquivos apareceram na tela porque, por padrão, o programa chamado escreve direto no mesmo terminal do Python. O seu programa não "viu" esses nomes: só ficou sabendo do código 0. Para pegar o que o programa escreveu, é preciso pedir.</p>
+
+<hr>
+
+<h2>2. Pegando a saída: <code>capture_output=True</code> e <code>text=True</code></h2>
+
+<pre class="file" data-file="rodar2.py">import subprocess
+
+resultado = subprocess.run(["ls", "-1"], capture_output=True)
+print(resultado.stdout)
+</pre>
+
+<pre class="term" data-cwd="~/loja">$ python3 rodar2.py
+b'clientes.json\nestoque.csv\nrodar1.py\nrodar2.py\nvendas.py\n'
+</pre>
+
+<p>Com <code>capture_output=True</code> ("capturar a saída"), nada foi para a tela: o que o <code>ls</code> escreveu ficou guardado em <code>resultado.stdout</code>. Mas veio estranho: um <code>b</code> na frente e os <code>\n</code> à mostra. É um valor do tipo <code>bytes</code>, os bytes crus que o programa mandou, ainda sem virar texto. Para receber um texto normal (<code>str</code>), acrescente <code>text=True</code>:</p>
+
+<pre class="file" data-file="rodar3.py">import subprocess
+
+resultado = subprocess.run(["ls", "-1"], capture_output=True, text=True)
+print(repr(resultado.stdout))
+arquivos = resultado.stdout.splitlines()
+print("São", len(arquivos), "arquivos:", arquivos)
+</pre>
+
+<pre class="term" data-cwd="~/loja">$ python3 rodar3.py
+'clientes.json\nestoque.csv\nrodar1.py\nrodar2.py\nrodar3.py\nvendas.py\n'
+São 6 arquivos: ['clientes.json', 'estoque.csv', 'rodar1.py', 'rodar2.py', 'rodar3.py', 'vendas.py']
+</pre>
+
+<dl class="anatomy">
+  <dt>capture_output=True</dt><dd>Guarda a saída normal em <code>resultado.stdout</code> e a de erros em <code>resultado.stderr</code>, em vez de mostrar na tela.</dd>
+  <dt>text=True</dt><dd>Converte os bytes em texto (<code>str</code>), usando a codificação do sistema (UTF-8 na Ana). Agora dá para usar os métodos de texto.</dd>
+  <dt>.splitlines()</dt><dd>Quebra o texto numa lista, uma linha por item (aula <a href="strings-metodos.html">Métodos de Texto</a>).</dd>
+</dl>
+
+<p>Um exemplo mais útil: quais produtos acabaram? O <code>grep</code> procura as linhas que terminam em <code>,0</code> (o <code>$</code>, para o <code>grep</code>, quer dizer "fim da linha"):</p>
+
+<pre class="file" data-file="zerados.py">import subprocess
+
+resultado = subprocess.run(
+    ["grep", ",0$", "estoque.csv"],
+    capture_output=True,
+    text=True,
+)
+print("Código:", resultado.returncode)
+print("Acabaram:")
+print(resultado.stdout, end="")
+</pre>
+
+<pre class="term" data-cwd="~/loja">$ python3 zerados.py
+Código: 0
+Acabaram:
+ovos,0
+acucar,0
+</pre>
+
+<p>Repare na lista: <code>",0$"</code> foi escrito sem aspas extras. No terminal, você digitaria <code>grep ',0$' estoque.csv</code>, com as aspas simples para o terminal não mexer no <code>$</code>. Na lista do <code>subprocess</code> não tem terminal no meio: cada item já chega ao programa exatamente como está.</p>
+
+<div class="tip">
+<strong>Este era só um exemplo</strong>
+<p>Ler um arquivo e procurar linhas, o Python faz sozinho (aula <a href="arquivos-ler.html">Lendo Arquivos</a>), sem depender de o <code>grep</code> existir no computador. O <code>subprocess</code> vale a pena quando o programa de fora faz algo que o Python não faz fácil: o <code>git</code>, um conversor de vídeo, o <code>sqlite3</code>, um script de outra pessoa.</p>
+</div>
+
+<hr>
+
+<h2>3. Quando o comando dá errado: <code>returncode</code> e <code>stderr</code></h2>
+<p>A pasta <code>fotos</code> não existe. O que o <code>subprocess</code> conta quando o <code>ls</code> falha?</p>
+
+<pre class="file" data-file="falha.py">import subprocess
+
+resultado = subprocess.run(["ls", "fotos"], capture_output=True, text=True)
+print("Código:", resultado.returncode)
+print("stdout:", repr(resultado.stdout))
+print("stderr:", repr(resultado.stderr))
+</pre>
+
+<pre class="term" data-cwd="~/loja">$ python3 falha.py
+Código: 2
+stdout: ''
+stderr: "ls: não é possível acessar 'fotos': Arquivo ou diretório inexistente\n"
+</pre>
+
+<p>Nenhum erro do Python! O <code>run</code> fez a parte dele: rodou o <code>ls</code> e trouxe a resposta. Quem falhou foi o <code>ls</code>, e ele avisou do jeito dos programas de terminal: código <strong>2</strong> (diferente de zero) e a mensagem na saída de erros (<code>stderr</code>), em português, porque o <code>ls</code> segue o idioma do sistema. A saída normal veio vazia.</p>
+
+<div class="warning">
+<strong>Por padrão, falha é silenciosa</strong>
+<p>Se você não olhar o <code>returncode</code>, o seu programa segue em frente como se tudo tivesse dado certo. É o erro mais comum com <code>subprocess</code>. Ou confira o código, ou use o <code>check=True</code>, logo abaixo.</p>
+</div>
+
+<hr>
+
+<h2>4. <code>check=True</code>: falhou, para tudo</h2>
+<p>Com <code>check=True</code> ("conferir"), o próprio <code>run</code> olha o código de saída. Se não for 0, ele lança uma exceção, a <code>CalledProcessError</code> ("erro do processo chamado"):</p>
+
+<pre class="file" data-file="falha2.py">import subprocess
+
+subprocess.run(["ls", "fotos"], check=True)
+print("Esta linha não roda.")
+</pre>
+
+<pre class="term" data-cwd="~/loja">$ python3 falha2.py
+ls: não é possível acessar 'fotos': Arquivo ou diretório inexistente
+Traceback (most recent call last):
+  File "/home/ana/loja/falha2.py", line 3, in &lt;module&gt;
+    subprocess.run(["ls", "fotos"], check=True)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['ls', 'fotos']' returned non-zero exit status 2.
+$ echo $?
+1
+</pre>
+
+<p>Leia por partes, de cima para baixo:</p>
+
+<dl class="anatomy">
+  <dt>ls: não é possível acessar 'fotos'…</dt><dd>A mensagem do próprio <code>ls</code>. Sem <code>capture_output</code>, ela foi direto para a tela.</dd>
+  <dt>Traceback (most recent call last):</dt><dd>Começa a mensagem de erro do Python.</dd>
+  <dt>File "/home/ana/loja/falha2.py", line 3</dt><dd>A linha do <strong>seu</strong> programa: o <code>subprocess.run</code> da linha 3.</dd>
+  <dt>File "/usr/lib/python3.14/subprocess.py", line 578, in run</dt><dd>Uma linha de dentro do módulo <code>subprocess</code>: é lá que fica o <code>raise CalledProcessError(...)</code> que lançou o erro. Você não mexe nesse arquivo; a causa está na sua linha.</dd>
+  <dt>subprocess.CalledProcessError</dt><dd>O tipo da exceção. Ela mora dentro do módulo, por isso o nome completo é <code>subprocess.CalledProcessError</code>.</dd>
+  <dt>Command '['ls', 'fotos']' returned non-zero exit status 2.</dt><dd>"O comando <code>['ls', 'fotos']</code> devolveu o código de saída 2, diferente de zero".</dd>
+  <dt>echo $?</dt><dd>O Python terminou com 1, como em toda exceção não tratada. O <code>print</code> da linha 4 não rodou.</dd>
+</dl>
+
+<h3>Tratando o erro com <code>try</code></h3>
+<p>Uma exceção se trata com <code>try</code> e <code>except</code> (aula <a href="try-except.html">try e except</a>). O objeto do erro traz o comando, o código e, se você capturou a saída, a mensagem:</p>
+
+<pre class="file" data-file="falha3.py">import subprocess
+
+try:
+    subprocess.run(["ls", "fotos"], capture_output=True, text=True, check=True)
+except subprocess.CalledProcessError as erro:
+    print("O comando falhou!")
+    print("Comando:", erro.cmd)
+    print("Código:", erro.returncode)
+    print("Mensagem:", erro.stderr.strip())
+</pre>
+
+<pre class="term" data-cwd="~/loja">$ python3 falha3.py
+O comando falhou!
+Comando: ['ls', 'fotos']
+Código: 2
+Mensagem: ls: não é possível acessar 'fotos': Arquivo ou diretório inexistente
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Atributo</th><th>No <code>CompletedProcess</code> (resultado)</th><th>No <code>CalledProcessError</code> (erro)</th></tr>
+<tr><td>O comando</td><td><code>resultado.args</code></td><td><code>erro.cmd</code></td></tr>
+<tr><td>O código de saída</td><td><code>resultado.returncode</code></td><td><code>erro.returncode</code></td></tr>
+<tr><td>A saída normal</td><td><code>resultado.stdout</code></td><td><code>erro.stdout</code></td></tr>
+<tr><td>A saída de erros</td><td><code>resultado.stderr</code></td><td><code>erro.stderr</code></td></tr>
+</table>
+</div>
+
+<p>(<code>stdout</code> e <code>stderr</code> só têm conteúdo com <code>capture_output=True</code>; sem ele, valem <code>None</code>.)</p>
+
+<hr>
+
+<h2>5. Mais três opções: <code>timeout</code>, <code>input</code> e <code>sys.executable</code></h2>
+
+<h3><code>timeout</code>: não esperar para sempre</h3>
+<p>O <code>run</code> espera o programa terminar. E se ele travar? <code>timeout=2</code> diz "espere no máximo 2 segundos". O <code>sleep 10</code> abaixo é um programa que só fica parado 10 segundos:</p>
+
+<pre class="file" data-file="demora.py">import subprocess
+
+subprocess.run(["sleep", "10"], timeout=2)
+</pre>
+
+<pre class="term" data-cwd="~/loja">$ python3 demora.py
+Traceback (most recent call last):
+  File "/home/ana/loja/demora.py", line 3, in &lt;module&gt;
+    subprocess.run(["sleep", "10"], timeout=2)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 557, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1221, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 2179, in _communicate
+    self.wait(timeout=self._remaining_time(endtime))
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1279, in wait
+    return self._wait(timeout=timeout)
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 2076, in _wait
+    raise TimeoutExpired(self.args, timeout)
+subprocess.TimeoutExpired: Command '['sleep', '10']' timed out after 2 seconds
+</pre>
+
+<p>O traceback é comprido, mas segue a regra de sempre: a primeira linha <code>File</code> é a <strong>sua</strong> (linha 3 do <code>demora.py</code>); as outras são o caminho por dentro do módulo; a última diz o que houve. <code>TimeoutExpired</code>: "o tempo acabou", depois de 2 segundos. O <code>run</code> encerra o programa atrasado antes de lançar o erro. Dá para tratar com <code>except subprocess.TimeoutExpired:</code>.</p>
+
+<h3><code>input</code> e <code>sys.executable</code>: conversar com outro programa Python</h3>
+<p>Um programa pode receber dados pela entrada padrão (o "teclado" dele). A Ana tem um <code>soma.py</code> que lê linhas do estoque e soma as quantidades:</p>
+
+<pre class="file" data-file="soma.py">import sys
+
+total = 0
+for linha in sys.stdin:
+    total += int(linha.split(",")[1])
+print("Itens no estoque:", total)
+</pre>
+
+<p>E outro programa que chama o <code>soma.py</code>, mandando o conteúdo do arquivo como se alguém tivesse digitado:</p>
+
+<pre class="file" data-file="chama_python.py">import subprocess
+import sys
+
+with open("estoque.csv", encoding="utf-8") as arquivo:
+    conteudo = arquivo.read()
+
+resultado = subprocess.run(
+    [sys.executable, "soma.py"],
+    input=conteudo,
+    capture_output=True,
+    text=True,
+    check=True,
+)
+print("O soma.py respondeu:", resultado.stdout.strip())
+</pre>
+
+<pre class="term" data-cwd="~/loja">$ python3 chama_python.py
+O soma.py respondeu: Itens no estoque: 17
+</pre>
+
+<dl class="anatomy">
+  <dt>sys.executable</dt><dd>O caminho do Python que está rodando agora (aula <a href="os-sys.html">os e sys</a>). Melhor que escrever <code>"python3"</code>: se você estiver num ambiente virtual, o filho usa o mesmo Python, com os mesmos pacotes.</dd>
+  <dt>input=conteudo</dt><dd>O texto que o programa filho vai ler na entrada padrão (com <code>text=True</code>, um <code>str</code>).</dd>
+  <dt>check=True</dt><dd>Se o <code>soma.py</code> quebrar, o pai fica sabendo na hora.</dd>
+</dl>
+
+<p>(12 + 0 + 5 + 0 = 17.) Na vida real, para usar o código de outro arquivo Python, o normal é <strong>importar</strong> (aula <a href="modulos-proprios.html">Criando seu Módulo</a>). Chamar com <code>subprocess</code> faz sentido quando o outro programa precisa rodar separado, como um programa à parte.</p>
+
+<hr>
+
+<h2>6. Montando a lista: <code>shlex.split</code> e o <code>shell=True</code></h2>
+<p>Escrever <code>["grep", ",0$", "estoque.csv"]</code> à mão cansa. Se você já tem o comando do jeito que digitaria no terminal, o módulo <code>shlex</code> (de <em>shell lexer</em>, "separador do terminal") quebra o texto do mesmo jeito que o terminal quebraria, respeitando as aspas:</p>
+
+<pre class="file" data-file="dividir.py">import shlex
+
+print(shlex.split("grep -c ',0$' estoque.csv"))
+print(shlex.split('ls -l "Área de trabalho"'))
+</pre>
+
+<pre class="term" data-cwd="~/loja">$ python3 dividir.py
+['grep', '-c', ',0$', 'estoque.csv']
+['ls', '-l', 'Área de trabalho']
+</pre>
+
+<p>As aspas sumiram e <code>"Área de trabalho"</code> ficou num item só, como o terminal faria. Um simples <code>.split()</code> quebraria nos espaços e erraria. O <code>shlex</code> é Python puro, então dá para treinar aqui:</p>
+
+<div class="trypy" data-goal="out:['ls', '-l', 'Área de trabalho'];;src:shlex\.split">
+<p class="try-task"><strong>Missão:</strong> o <code>.split()</code> quebrou <code>"Área de trabalho"</code> em três pedaços, e as aspas vieram junto. Troque por <code>shlex.split(comando)</code> para a lista sair <code>['ls', '-l', 'Área de trabalho']</code>, pronta para o <code>subprocess.run</code>.</p>
+<pre class="script" data-file="main.py">import shlex
+
+comando = 'ls -l "Área de trabalho"'
+partes = comando.split()
+print(partes)
+print(len(partes), "partes")
+</pre>
+<pre class="solucao" data-file="main.py">import shlex
+
+comando = 'ls -l "Área de trabalho"'
+partes = shlex.split(comando)
+print(partes)
+print(len(partes), "partes")
+</pre>
+</div>
+
+<h3><code>shell=True</code>: deixar o terminal interpretar</h3>
+<p>Com <code>shell=True</code>, você passa <strong>um texto</strong>, e quem lê é um terminal (o <code>/bin/sh</code>), com todos os poderes dele: <code>*</code>, <code>|</code>, <code>&gt;</code>…</p>
+
+<pre class="file" data-file="concha.py">import subprocess
+
+resultado = subprocess.run("ls *.csv | wc -l", shell=True, capture_output=True, text=True)
+print("Arquivos .csv:", resultado.stdout.strip())
+</pre>
+
+<pre class="term" data-cwd="~/loja">$ python3 concha.py
+Arquivos .csv: 1
+</pre>
+
+<div class="warning">
+<strong>Evite o <code>shell=True</code> com dados de fora</strong>
+<p>Se uma parte do texto vier do usuário (um <code>input()</code>, um argumento, um nome de arquivo), alguém pode escrever <code>bolo; rm -rf ~</code>, e o terminal vai obedecer aos dois comandos: o <code>;</code> separa comandos. Com a <strong>lista</strong>, isso não acontece: <code>"bolo; rm -rf ~"</code> chega ao programa como um argumento só, um nome estranho, e nada mais. Prefira sempre a lista; use <code>shell=True</code> só com textos fixos, escritos por você, quando precisar mesmo de <code>|</code> ou <code>*</code>.</p>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de rodar um comando</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Jeito</th><th>Quando usar</th></tr>
+<tr><td><code>subprocess.run([...])</code></td><td>Só rodar e deixar a saída ir para a tela</td></tr>
+<tr><td><code>subprocess.run([...], capture_output=True, text=True)</code></td><td>Você quer <strong>ler</strong> o que o programa respondeu</td></tr>
+<tr><td>… <code>check=True</code></td><td>Quase sempre: falhou, você fica sabendo</td></tr>
+<tr><td>… <code>timeout=N</code></td><td>O programa pode travar (rede, programa de outra pessoa)</td></tr>
+<tr><td><code>subprocess.run("…", shell=True)</code></td><td>Só com texto fixo e quando precisa de <code>|</code>, <code>*</code>, <code>&gt;</code></td></tr>
+<tr><td><code>os.system("…")</code></td><td>Evite: é a forma antiga, com os riscos do <code>shell=True</code> e sem como pegar a saída</td></tr>
+<tr><td>Fazer em Python mesmo</td><td>Sempre que der: ler arquivos, listar pastas (<code>os.listdir</code>), copiar (<code>shutil</code>). Funciona em qualquer sistema</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>O programa não existe: <code>FileNotFoundError</code></strong>
+<pre class="file" data-file="errado1.py">import subprocess
+
+subprocess.run(["lss", "-1"])
+</pre>
+<pre class="term" data-cwd="~/loja">$ python3 errado1.py
+Traceback (most recent call last):
+  File "/home/ana/loja/errado1.py", line 3, in &lt;module&gt;
+    subprocess.run(["lss", "-1"])
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...&lt;5 lines&gt;...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1990, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'lss'
+</pre>
+<p>Diferente do <code>ls fotos</code>: ali o <code>ls</code> rodou e falhou (código 2). Aqui, o programa <code>lss</code> nem existe, então não há código de saída nenhum, e o Python lança <code>FileNotFoundError</code> ("arquivo não encontrado") com o nome que ele procurou: <code>'lss'</code>. O <code>...&lt;5 lines&gt;...</code> é o Python resumindo um trecho comprido do código interno. <strong>Como consertar:</strong> confira o nome do programa (<code>ls</code>) e se ele está instalado (<code>which ls</code> no terminal).</p>
+</div>
+
+<div class="cenario">
+<strong>O comando como um texto só, sem <code>shell=True</code></strong>
+<pre class="file" data-file="errado2.py">import subprocess
+
+subprocess.run("ls -1")
+</pre>
+<pre class="term" data-cwd="~/loja">$ python3 errado2.py
+Traceback (most recent call last):
+  File "/home/ana/loja/errado2.py", line 3, in &lt;module&gt;
+    subprocess.run("ls -1")
+    ~~~~~~~~~~~~~~^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...&lt;5 lines&gt;...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1990, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'ls -1'
+</pre>
+<p>Olhe o nome no fim: <code>'ls -1'</code>, com o espaço. Sem terminal no meio, ninguém separou o texto, e o Python procurou um programa chamado, literalmente, "ls espaço traço um". <strong>Como consertar:</strong> passe a lista, <code>["ls", "-1"]</code> (ou <code>shlex.split("ls -1")</code>).</p>
+</div>
+
+<div class="cenario">
+<strong>O código diferente de zero que não é erro: o <code>grep</code></strong>
+<pre class="file" data-file="nada.py">import subprocess
+
+resultado = subprocess.run(["grep", "chocolate", "estoque.csv"], capture_output=True, text=True)
+print("Código:", resultado.returncode)
+print("Achou:", repr(resultado.stdout))
+</pre>
+<pre class="term" data-cwd="~/loja">$ python3 nada.py
+Código: 1
+Achou: ''
+</pre>
+<p>Nenhuma linha tem "chocolate", e o <code>grep</code> respondeu com o código <strong>1</strong>. Para o <code>grep</code>, 1 não é falha: quer dizer "procurei e não achei" (o erro de verdade, como arquivo inexistente, é o 2). Se esse <code>run</code> tivesse <code>check=True</code>, um simples "não achei" virava <code>CalledProcessError</code>. <strong>Como lidar:</strong> leia a documentação do programa (<code>man grep</code>, no fim, explica os códigos) e, nesses casos, confira o <code>returncode</code> você mesmo, sem <code>check=True</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu o <code>text=True</code></strong>
+<p>Você viu na seção 2: sem <code>text=True</code>, a saída vem como <code>bytes</code> (<code>b'clientes.json\n…'</code>), e métodos como <code>.splitlines()</code> devolvem bytes também; juntar com um texto normal dá <code>TypeError</code>. <strong>Como consertar:</strong> acrescente <code>text=True</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>No editor do guia</strong>
+<p>Rodar <code>subprocess</code> no "Experimente" não funciona: o Python do navegador não tem outros programas para chamar. Não é erro no seu código. Rode esses exemplos no terminal do seu computador.</p>
+</div>
+
+<p>Para fechar: a parte de <strong>interpretar</strong> a resposta é Python puro, e é onde moram os erros mais sutis. A missão final treina isso com respostas que o <code>grep</code> poderia dar.</p>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Código</th><th>O que faz</th></tr>
+<tr><td><code>subprocess.run(["prog", "arg1", "arg2"])</code></td><td>Roda o programa e espera terminar</td></tr>
+<tr><td><code>resultado.returncode</code></td><td>Código de saída (0 = deu certo)</td></tr>
+<tr><td><code>capture_output=True</code></td><td>Guarda as saídas em <code>.stdout</code> e <code>.stderr</code></td></tr>
+<tr><td><code>text=True</code></td><td>Saídas (e <code>input</code>) como texto, não bytes</td></tr>
+<tr><td><code>check=True</code></td><td>Código diferente de 0 vira <code>subprocess.CalledProcessError</code></td></tr>
+<tr><td><code>timeout=N</code></td><td>Mais de N segundos vira <code>subprocess.TimeoutExpired</code></td></tr>
+<tr><td><code>input="…"</code></td><td>Manda o texto para a entrada padrão do programa</td></tr>
+<tr><td><code>cwd="pasta"</code></td><td>Roda o programa dentro de outra pasta</td></tr>
+<tr><td><code>[sys.executable, "outro.py"]</code></td><td>Roda outro script com o mesmo Python</td></tr>
+<tr><td><code>shlex.split("cmd 'a b'")</code></td><td>Texto → lista, como o terminal separaria</td></tr>
+<tr><td><code>shell=True</code></td><td>Passa um texto para o <code>/bin/sh</code> interpretar (cuidado)</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>FileNotFoundError: … 'lss'</code></td><td>O programa não existe ou o nome está errado</td></tr>
+<tr><td><code>FileNotFoundError: … 'ls -1'</code> (com espaço)</td><td>Comando passado como texto: use a lista</td></tr>
+<tr><td><code>CalledProcessError: … returned non-zero exit status N</code></td><td>Com <code>check=True</code>, o programa terminou com código N</td></tr>
+<tr><td><code>TimeoutExpired: … timed out after N seconds</code></td><td>Passou do <code>timeout</code></td></tr>
+<tr><td>A saída começa com <code>b'</code></td><td>Faltou <code>text=True</code></td></tr>
+<tr><td><code>resultado.stdout</code> é <code>None</code></td><td>Faltou <code>capture_output=True</code></td></tr>
+<tr><td>O programa falhou e o Python seguiu como se nada fosse</td><td>Ninguém olhou o <code>returncode</code> (ou faltou <code>check=True</code>)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Pegar a saída como texto</h3>
+<p>Complete as duas opções que fazem a saída do <code>ls</code> ficar em <code>resultado.stdout</code>, como texto:</p>
+<div class="ex-code">resultado = subprocess.run(["ls"], <input data-answer="capture_output" aria-label="opção 1">=True, <input data-answer="text" aria-label="opção 2">=True)</div>
+</div>
+
+<div class="exercise">
+<h3>2. O código de saída</h3>
+<p>Qual atributo do resultado guarda o código de saída?</p>
+<div class="ex-code">resultado.<input data-answer="returncode" aria-label="atributo"></div>
+</div>
+
+<div class="exercise">
+<h3>3. A exceção do <code>check=True</code></h3>
+<p>Complete o <code>except</code>:</p>
+<div class="ex-code">except subprocess.<input data-answer="CalledProcessError" aria-label="exceção"> as erro:</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Qual destas chamadas roda <code>grep -c ovos estoque.csv</code> do jeito recomendado?</p>
+<label><input type="radio" name="q4"> <code>subprocess.run("grep -c ovos estoque.csv")</code></label>
+<label><input type="radio" name="q4"> <code>subprocess.run(["grep", "-c", "ovos", "estoque.csv"])</code></label>
+<label><input type="radio" name="q4"> <code>subprocess.run(["grep -c ovos estoque.csv"])</code></label>
+<label><input type="radio" name="q4"> <code>subprocess.run(grep, -c, ovos, estoque.csv)</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. Sem <code>check=True</code>, o <code>ls fotos</code> falha (a pasta não existe). O que acontece no programa Python?</p>
+<label><input type="radio" name="q5"> O Python para com <code>FileNotFoundError</code></label>
+<label><input type="radio" name="q5"> O Python para com <code>CalledProcessError</code></label>
+<label><input type="radio" name="q5"> Nada: o programa segue, e só o <code>returncode</code> (2) mostra que falhou</label>
+<label><input type="radio" name="q5"> O computador desliga</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Por que evitar <code>shell=True</code> com um nome que o usuário digitou?</p>
+<label><input type="radio" name="q6"> Porque o terminal interpretaria símbolos como <code>;</code> e rodaria outros comandos escondidos no texto</label>
+<label><input type="radio" name="q6"> Porque fica mais lento</label>
+<label><input type="radio" name="q6"> Porque <code>shell=True</code> não aceita texto</label>
+<label><input type="radio" name="q6"> Porque só funciona no Windows</label>
+</div>
+
+<h3>Missão final: entender a resposta do <code>grep</code></h3>
+
+<div class="trypy" data-goal="out:Acabaram: ovos, acucar;;out:Nada acabou.;;out:Erro no grep (código 2).;;semerro">
+<p class="try-task"><strong>Missão:</strong> a função <code>interpretar</code> recebe o <code>returncode</code> e o <code>stdout</code> de um <code>grep ",0$" estoque.csv</code>. Complete: código <strong>0</strong> → <code>Acabaram: </code> e os nomes dos produtos (o que vem antes da vírgula em cada linha), separados por vírgula; código <strong>1</strong> → <code>Nada acabou.</code>; qualquer outro → <code>Erro no grep (código N).</code>.</p>
+<pre class="script" data-file="main.py">def interpretar(codigo, saida):
+    print("Código recebido:", codigo)
+
+
+interpretar(0, "ovos,0\nacucar,0\n")
+interpretar(1, "")
+interpretar(2, "")
+</pre>
+<pre class="solucao" data-file="main.py">def interpretar(codigo, saida):
+    if codigo == 0:
+        nomes = []
+        for linha in saida.splitlines():
+            nomes.append(linha.split(",")[0])
+        print("Acabaram:", ", ".join(nomes))
+    elif codigo == 1:
+        print("Nada acabou.")
+    else:
+        print(f"Erro no grep (código {codigo}).")
+
+
+interpretar(0, "ovos,0\nacucar,0\n")
+interpretar(1, "")
+interpretar(2, "")
+</pre>
+</div>
+
+<p>No seu computador, troque as chamadas de teste por um <code>subprocess.run(["grep", ",0$", "estoque.csv"], capture_output=True, text=True)</code> e passe <code>resultado.returncode</code> e <code>resultado.stdout</code> para a função.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>subprocess.run(["programa", "arg"])</code> roda outro programa e espera ele terminar. Passe o comando como <strong>lista</strong>.</li>
+  <li><code>returncode</code> é o código de saída: 0 deu certo; outro número, problema (ou, como no <code>grep</code>, "não achei").</li>
+  <li><code>capture_output=True</code> guarda a saída em <code>.stdout</code>/<code>.stderr</code>; <code>text=True</code> faz dela um texto.</li>
+  <li><code>check=True</code> transforma falha em <code>subprocess.CalledProcessError</code>, que se trata com <code>try</code>/<code>except</code>.</li>
+  <li><code>timeout</code> limita a espera (<code>TimeoutExpired</code>); <code>input</code> manda dados; <code>sys.executable</code> chama outro script com o mesmo Python.</li>
+  <li><code>shlex.split</code> monta a lista a partir do texto; <code>shell=True</code> só com texto fixo, nunca com dados do usuário.</li>
+  <li>Programa inexistente (ou comando como texto): <code>FileNotFoundError</code>. No editor do guia, o <code>subprocess</code> não funciona: use o terminal.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
