@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python collections — Counter, defaultdict, namedtuple e deque | Guia Python</title>
+<meta name="description" content="O módulo collections para quem está começando: Counter para contar palavras e vendas, most_common, defaultdict para agrupar sem KeyError, namedtuple para registros com nome, deque para filas com popleft e maxlen, quando usar cada um e os erros reais do Python 3.14.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">O Módulo collections</span></h1>
+
+<p class="intro">Listas, tuplas, dicionários e conjuntos resolvem quase tudo. Mas alguns trabalhos aparecem tanto que o Python já traz <strong>versões especializadas</strong> deles, prontas, no módulo <code>collections</code> ("coleções"): um dicionário que <strong>conta</strong> sozinho, um que <strong>cria</strong> a chave que falta, uma tupla com <strong>nomes</strong> nos campos e uma <strong>fila</strong> rápida dos dois lados. São quatro ferramentas, e cada uma economiza um punhado de linhas e evita um erro clássico.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li><code>Counter</code>: contar palavras, vendas e letras, e achar os mais comuns com <code>most_common</code>.</li>
+  <li><code>defaultdict</code>: agrupar e somar sem o <code>KeyError</code> da chave que ainda não existe.</li>
+  <li><code>namedtuple</code>: uma tupla em que cada campo tem nome (<code>produto.preco</code> em vez de <code>produto[1]</code>).</li>
+  <li><code>deque</code>: uma fila que entra por um lado e sai pelo outro, e que pode ter tamanho máximo.</li>
+  <li>Quando usar cada uma, e quando um dicionário ou uma lista comuns bastam.</li>
+  <li>Os erros reais: <code>KeyError</code>, <code>can't set attribute</code>, <code>missing 1 required positional argument</code>, <code>pop from an empty deque</code>, <code>first argument must be callable</code>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a caixa de ferramentas da padaria</h2>
+<p>Na padaria da Ana há uma faca comum, que corta tudo, e algumas facas especiais: a de pão (serrilhada), a de queijo, a espátula de bolo. Dá para cortar pão com a faca comum, mas a de pão faz melhor e mais rápido. O módulo <code>collections</code> é a gaveta das facas especiais:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Ferramenta</th><th>É parecida com</th><th>A especialidade</th><th>Exemplo da Ana</th></tr>
+<tr><td><code>Counter</code></td><td>dicionário</td><td>Contar quantas vezes cada coisa aparece</td><td>Qual pão vendeu mais hoje?</td></tr>
+<tr><td><code>defaultdict</code></td><td>dicionário</td><td>Criar sozinho o valor de uma chave nova</td><td>Separar os alunos por turno</td></tr>
+<tr><td><code>namedtuple</code></td><td>tupla</td><td>Dar nome a cada posição</td><td>Ficha de produto: nome, preço, estoque</td></tr>
+<tr><td><code>deque</code></td><td>lista</td><td>Pôr e tirar rápido nas duas pontas</td><td>A fila do caixa</td></tr>
+</table>
+</div>
+
+<p>Todas se importam do mesmo jeito (aula <a href="modulos.html">Módulos e import</a>): <code>from collections import Counter</code>, ou várias de uma vez, <code>from collections import Counter, deque</code>.</p>
+
+<hr>
+
+<h2>1. <code>Counter</code>: contar coisas</h2>
+<p>Contar palavras de um texto é um exercício clássico. Com um dicionário comum, você precisa testar se a palavra já apareceu antes de somar 1:</p>
+
+<pre class="file" data-file="contar_mao.py">texto = "o pão da padaria é o melhor pão do bairro e o café da padaria também"
+palavras = texto.split()
+
+contagem = {}
+for palavra in palavras:
+    if palavra in contagem:
+        contagem[palavra] += 1
+    else:
+        contagem[palavra] = 1
+
+print(contagem)
+</pre>
+
+<pre class="term">$ python3 contar_mao.py
+{'o': 3, 'pão': 2, 'da': 2, 'padaria': 2, 'é': 1, 'melhor': 1, 'do': 1, 'bairro': 1, 'e': 1, 'café': 1, 'também': 1}</pre>
+
+<p>O <code>Counter</code> ("contador") faz o laço inteiro numa linha:</p>
+
+<pre class="file" data-file="contar_counter.py">from collections import Counter
+
+texto = "o pão da padaria é o melhor pão do bairro e o café da padaria também"
+palavras = texto.split()
+
+contagem = Counter(palavras)
+print(contagem)
+print(contagem["pão"])
+print(contagem["bolo"])
+print(contagem.most_common(3))
+</pre>
+
+<pre class="term">$ python3 contar_counter.py
+Counter({'o': 3, 'pão': 2, 'da': 2, 'padaria': 2, 'é': 1, 'melhor': 1, 'do': 1, 'bairro': 1, 'e': 1, 'café': 1, 'também': 1})
+2
+0
+[('o', 3), ('pão', 2), ('da', 2)]</pre>
+
+<dl class="anatomy">
+  <dt>texto.split()</dt><dd>Quebra o texto nos espaços e devolve a lista de palavras (aula <a href="strings-metodos.html">Métodos de Texto</a>).</dd>
+  <dt>Counter(palavras)</dt><dd>Percorre a lista e conta cada item. O resultado é um dicionário especial: a chave é o item, o valor é quantas vezes ele apareceu.</dd>
+  <dt>contagem["pão"]</dt><dd>Lê como num dicionário: 2.</dd>
+  <dt>contagem["bolo"]</dt><dd>Uma chave que não existe dá <strong>0</strong>, e não <code>KeyError</code>. Faz sentido: "bolo" apareceu zero vezes.</dd>
+  <dt>most_common(3)</dt><dd>"Os mais comuns": uma lista de pares <code>(item, contagem)</code>, do maior para o menor, só os 3 primeiros. Em caso de empate, vem primeiro quem apareceu primeiro no texto. Sem número, <code>most_common()</code> devolve todos.</dd>
+</dl>
+
+<div class="tip">
+<strong>Contar palavras de verdade</strong>
+<p>Num texto real, "Pão" e "pão," (com vírgula) seriam contados como palavras diferentes de "pão". Antes de contar, padronize: <code>texto.lower()</code> para minúsculas e tire a pontuação, por exemplo com as <a href="regex.html">expressões regulares</a> (<code>re.findall(r"\w+", texto.lower())</code>). O projeto <a href="projeto-palavras.html">Contador de Palavras</a> faz isso passo a passo.</p>
+</div>
+
+<h3>Somando contagens</h3>
+<p>Um <code>Counter</code> sabe somar com outro, ser atualizado e dizer o total. As vendas de dois dias da padaria:</p>
+
+<pre class="file" data-file="counter_mais.py">from collections import Counter
+
+segunda = Counter(["pão", "pão", "leite", "café"])
+terca = Counter(["pão", "café", "café", "manteiga"])
+
+print("Segunda:", segunda)
+print("Terça:  ", terca)
+print("Juntas: ", segunda + terca)
+print("Total de itens vendidos na segunda:", segunda.total())
+
+segunda.update(["leite", "leite"])
+print("Segunda depois do update:", segunda)
+print(Counter("banana"))
+</pre>
+
+<pre class="term">$ python3 counter_mais.py
+Segunda: Counter({'pão': 2, 'leite': 1, 'café': 1})
+Terça:   Counter({'café': 2, 'pão': 1, 'manteiga': 1})
+Juntas:  Counter({'pão': 3, 'café': 3, 'leite': 1, 'manteiga': 1})
+Total de itens vendidos na segunda: 4
+Segunda depois do update: Counter({'leite': 3, 'pão': 2, 'café': 1})
+Counter({'a': 3, 'n': 2, 'b': 1})</pre>
+
+<ul>
+  <li><code>segunda + terca</code> soma item por item: 2 + 1 pães, 1 + 2 cafés.</li>
+  <li><code>.total()</code> soma todas as contagens (existe desde o Python 3.10; antes, <code>sum(segunda.values())</code>).</li>
+  <li><code>.update(lista)</code> conta mais itens no mesmo contador: o leite foi de 1 para 3.</li>
+  <li><code>Counter("banana")</code> conta as <strong>letras</strong>, porque um texto é uma sequência de letras. Às vezes é o que você quer; às vezes é um erro (veja em <a href="#errado">Quando dá errado</a>).</li>
+</ul>
+
+<div class="trypy" data-goal="out:[('banana', 3)];;src:Counter\s*\(;;src:most_common\s*\(\s*1\s*\);;semerro">
+<p class="try-task"><strong>Missão:</strong> a barraca de frutas anotou cada venda numa lista. Descubra a fruta mais vendida: crie um <code>Counter</code> com a lista e mostre <code>most_common(1)</code>.</p>
+<pre class="script" data-file="main.py">from collections import Counter
+
+vendidas = ["banana", "maçã", "banana", "uva", "maçã", "banana"]
+
+print(vendidas)
+</pre>
+<pre class="solucao" data-file="main.py">from collections import Counter
+
+vendidas = ["banana", "maçã", "banana", "uva", "maçã", "banana"]
+
+contagem = Counter(vendidas)
+print(contagem.most_common(1))
+</pre>
+</div>
+
+<hr>
+
+<h2>2. <code>defaultdict</code>: a chave que se cria sozinha</h2>
+<p>A escola quer separar os alunos por turno. Com um dicionário comum, toda vez que aparece um turno novo é preciso criar a lista vazia antes de acrescentar o nome:</p>
+
+<pre class="file" data-file="agrupar_mao.py">alunos = [("Ana", "manhã"), ("Bruno", "tarde"), ("Carla", "manhã"), ("Davi", "noite"), ("Eva", "tarde")]
+
+turmas = {}
+for nome, turno in alunos:
+    if turno not in turmas:
+        turmas[turno] = []
+    turmas[turno].append(nome)
+
+print(turmas)
+</pre>
+
+<pre class="term">$ python3 agrupar_mao.py
+{'manhã': ['Ana', 'Carla'], 'tarde': ['Bruno', 'Eva'], 'noite': ['Davi']}</pre>
+
+<p>O <code>defaultdict</code> ("dicionário com valor padrão") faz o <code>if</code> por você: quando você pede uma chave que não existe, ele cria a chave com um valor inicial, e só depois devolve.</p>
+
+<pre class="file" data-file="agrupar_dd.py">from collections import defaultdict
+
+alunos = [("Ana", "manhã"), ("Bruno", "tarde"), ("Carla", "manhã"), ("Davi", "noite"), ("Eva", "tarde")]
+
+turmas = defaultdict(list)
+for nome, turno in alunos:
+    turmas[turno].append(nome)
+
+print(turmas)
+print(turmas["manhã"])
+print(dict(turmas))
+</pre>
+
+<pre class="term">$ python3 agrupar_dd.py
+defaultdict(&lt;class 'list'&gt;, {'manhã': ['Ana', 'Carla'], 'tarde': ['Bruno', 'Eva'], 'noite': ['Davi']})
+['Ana', 'Carla']
+{'manhã': ['Ana', 'Carla'], 'tarde': ['Bruno', 'Eva'], 'noite': ['Davi']}</pre>
+
+<dl class="anatomy">
+  <dt>defaultdict(list)</dt><dd>O argumento é a <strong>fábrica</strong> do valor inicial: a função <code>list</code>, sem parênteses. Toda chave nova recebe <code>list()</code>, uma lista vazia.</dd>
+  <dt>turmas[turno].append(nome)</dt><dd>Na primeira vez que aparece <code>"manhã"</code>, o <code>defaultdict</code> cria <code>turmas["manhã"] = []</code> e o <code>append</code> põe a Ana. Na segunda, a lista já existe.</dd>
+  <dt>print(turmas)</dt><dd>Mostra <code>defaultdict(&lt;class 'list'&gt;, {…})</code>: o tipo, a fábrica e o conteúdo.</dd>
+  <dt>dict(turmas)</dt><dd>Converte para um dicionário comum, que imprime mais limpo e não cria mais chaves sozinho.</dd>
+</dl>
+
+<h3>Somando por chave: <code>defaultdict(int)</code></h3>
+<p>A fábrica pode ser qualquer função sem argumentos. Com <code>int</code>, o valor inicial é <code>int()</code>, que é <strong>0</strong>: perfeito para somar.</p>
+
+<pre class="file" data-file="dd_int.py">from collections import defaultdict
+
+vendas = [("pão", 12), ("leite", 3), ("pão", 8), ("café", 1), ("leite", 2)]
+
+total = defaultdict(int)
+for produto, quantidade in vendas:
+    total[produto] += quantidade
+
+print(dict(total))
+print(int())
+print(list())
+</pre>
+
+<pre class="term">$ python3 dd_int.py
+{'pão': 20, 'leite': 5, 'café': 1}
+0
+[]</pre>
+
+<p>As duas últimas linhas mostram o que as fábricas produzem: <code>int()</code> dá <code>0</code> e <code>list()</code> dá <code>[]</code>. (Para contar <strong>ocorrências</strong>, o <code>Counter</code> é ainda mais direto; o <code>defaultdict(int)</code> brilha quando você soma <strong>quantidades</strong>, como aqui.)</p>
+
+<div class="warning">
+<strong>Só olhar já cria a chave</strong>
+<pre class="file" data-file="dd_cria.py">from collections import defaultdict
+
+turmas = defaultdict(list)
+turmas["manhã"].append("Ana")
+
+if turmas["sábado"]:
+    print("Tem aula no sábado")
+
+print(dict(turmas))
+print("domingo" in turmas)
+</pre>
+<pre class="term">$ python3 dd_cria.py
+{'manhã': ['Ana'], 'sábado': []}
+False</pre>
+<p>O <code>if turmas["sábado"]</code> só queria perguntar, mas criou a chave <code>'sábado'</code> com uma lista vazia. Para perguntar sem criar, use <code>in</code> (que não cria nada: <code>"domingo" in turmas</code> deu <code>False</code>) ou <code>turmas.get("sábado")</code>.</p>
+</div>
+
+<div class="trypy" data-goal="out:Ana [9.5, 8.0, 10.0];;out:Bruno [7.0, 6.5];;src:defaultdict\s*\(\s*list\s*\);;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa deveria juntar as notas de cada aluno, mas dá <code>KeyError</code>. Rode e veja. Depois troque o <code>{}</code> por <code>defaultdict(list)</code> (o <code>import</code> já está lá).</p>
+<pre class="script" data-file="main.py">from collections import defaultdict
+
+notas = [("Ana", 9.5), ("Bruno", 7.0), ("Ana", 8.0), ("Bruno", 6.5), ("Ana", 10.0)]
+
+por_aluno = {}
+for nome, nota in notas:
+    por_aluno[nome].append(nota)
+
+for nome, lista in por_aluno.items():
+    print(nome, lista)
+</pre>
+<pre class="solucao" data-file="main.py">from collections import defaultdict
+
+notas = [("Ana", 9.5), ("Bruno", 7.0), ("Ana", 8.0), ("Bruno", 6.5), ("Ana", 10.0)]
+
+por_aluno = defaultdict(list)
+for nome, nota in notas:
+    por_aluno[nome].append(nota)
+
+for nome, lista in por_aluno.items():
+    print(nome, lista)
+</pre>
+</div>
+
+<hr>
+
+<h2>3. <code>namedtuple</code>: tuplas com nome nos campos</h2>
+<p>Uma tupla como <code>("pão francês", 0.75, 120)</code> guarda bem uma ficha de produto, mas obriga a lembrar que o preço é a posição 1 e o estoque, a 2. Daqui a um mês, <code>produto[2]</code> não diz nada a ninguém. A <code>namedtuple</code> ("tupla com nomes") resolve:</p>
+
+<pre class="file" data-file="nt.py">from collections import namedtuple
+
+Produto = namedtuple("Produto", ["nome", "preco", "estoque"])
+
+pao = Produto("pão francês", 0.75, 120)
+leite = Produto(nome="leite", preco=5.49, estoque=30)
+
+print(pao)
+print(pao.nome, pao.preco)
+print(leite[0], leite[2])
+nome, preco, estoque = leite
+print(f"{nome}: R$ {preco:.2f} ({estoque} no estoque)")
+
+mais_caro = pao._replace(preco=0.85)
+print(mais_caro)
+print(pao._asdict())
+</pre>
+
+<pre class="term">$ python3 nt.py
+Produto(nome='pão francês', preco=0.75, estoque=120)
+pão francês 0.75
+leite 30
+leite: R$ 5.49 (30 no estoque)
+Produto(nome='pão francês', preco=0.85, estoque=120)
+{'nome': 'pão francês', 'preco': 0.75, 'estoque': 120}</pre>
+
+<dl class="anatomy">
+  <dt>Produto = namedtuple("Produto", ["nome", "preco", "estoque"])</dt><dd>Cria um <strong>tipo novo</strong>, como uma classe (aula <a href="classes.html">Classes e Objetos</a>). O primeiro argumento é o nome que aparece no <code>print</code>; a lista são os nomes dos campos, na ordem. Por costume, o nome do tipo começa com maiúscula e é igual ao da variável.</dd>
+  <dt>Produto("pão francês", 0.75, 120)</dt><dd>Cria uma ficha, pela ordem dos campos. Também vale pelo nome: <code>Produto(nome="leite", preco=5.49, estoque=30)</code>.</dd>
+  <dt>pao.nome, pao.preco</dt><dd>O acesso pelo nome, que deixa o código legível.</dd>
+  <dt>leite[0], leite[2]</dt><dd>Continua sendo uma tupla: índices e desempacotamento (aula <a href="desempacotamento.html">Desempacotamento</a>) funcionam.</dd>
+  <dt>pao._replace(preco=0.85)</dt><dd>Tuplas não mudam (aula <a href="tuplas.html">Tuplas</a>). Para "alterar", cria-se uma ficha <strong>nova</strong> com um campo trocado. O <code>pao</code> original continua com 0.75, como mostra a última linha.</dd>
+  <dt>pao._asdict()</dt><dd>Converte num dicionário comum, útil para gravar em <a href="json.html">JSON</a>. O <code>_</code> na frente desses métodos não quer dizer "privado" aqui: é só para não brigar com um campo que você chame de <code>replace</code>.</dd>
+</dl>
+
+<div class="note">
+<strong><code>namedtuple</code> ou <code>dataclass</code>?</strong>
+<p>A <a href="dataclasses.html">dataclass</a> também cria fichas com campos nomeados, e os campos dela podem mudar (<code>pao.preco = 0.85</code>). Use <code>namedtuple</code> quando a ficha não deve mudar e você quer que ela continue funcionando como tupla (índices, desempacotamento, chave de dicionário); use <code>dataclass</code> quando os dados mudam ou a ficha precisa de métodos.</p>
+</div>
+
+<hr>
+
+<h2>4. <code>deque</code>: a fila dos dois lados</h2>
+<p>A fila do caixa: quem chega entra no <strong>fim</strong>, quem é atendido sai do <strong>começo</strong>. Numa lista, tirar do começo (<code>lista.pop(0)</code>) obriga o Python a empurrar todos os outros itens uma casa para a frente, e numa fila de milhares de pessoas isso pesa. O <code>deque</code> (lê-se "déc", de <em>double-ended queue</em>, "fila de duas pontas") põe e tira nas duas pontas sem empurrar ninguém.</p>
+
+<pre class="file" data-file="fila.py">from collections import deque
+
+fila = deque(["Ana", "Bruno"])
+fila.append("Carla")
+fila.append("Davi")
+print(fila)
+
+atendido = fila.popleft()
+print("Atendendo:", atendido)
+print(fila)
+
+fila.appendleft("Dona Rosa")
+print("Prioridade:", fila)
+print("Último da fila:", fila[-1])
+print(len(fila), "pessoas")
+</pre>
+
+<pre class="term">$ python3 fila.py
+deque(['Ana', 'Bruno', 'Carla', 'Davi'])
+Atendendo: Ana
+deque(['Bruno', 'Carla', 'Davi'])
+Prioridade: deque(['Dona Rosa', 'Bruno', 'Carla', 'Davi'])
+Último da fila: Davi
+4 pessoas</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Método</th><th>Ponta</th><th>O que faz</th></tr>
+<tr><td><code>append(x)</code></td><td>direita (fim)</td><td>Entra na fila</td></tr>
+<tr><td><code>popleft()</code></td><td>esquerda (começo)</td><td>Sai da fila: tira e devolve o primeiro</td></tr>
+<tr><td><code>appendleft(x)</code></td><td>esquerda</td><td>Fura a fila (atendimento prioritário)</td></tr>
+<tr><td><code>pop()</code></td><td>direita</td><td>Tira e devolve o último (desistiu de esperar)</td></tr>
+<tr><td><code>fila[0]</code>, <code>fila[-1]</code>, <code>len(fila)</code></td><td></td><td>Olhar as pontas e o tamanho, como numa lista</td></tr>
+</table>
+</div>
+
+<h3>Tamanho máximo: os últimos N</h3>
+<p>Com <code>maxlen</code>, o <code>deque</code> guarda no máximo aquela quantidade: quando enche, cada item novo empurra para fora o mais antigo, do outro lado. Ótimo para "os 3 últimos pedidos":</p>
+
+<pre class="file" data-file="ultimos.py">from collections import deque
+
+ultimos = deque(maxlen=3)
+for pedido in [101, 102, 103, 104, 105]:
+    ultimos.append(pedido)
+    print(list(ultimos))
+</pre>
+
+<pre class="term">$ python3 ultimos.py
+[101]
+[101, 102]
+[101, 102, 103]
+[102, 103, 104]
+[103, 104, 105]</pre>
+
+<h3>Girando: <code>rotate</code></h3>
+<p>Um rodízio de quem abre a padaria a cada dia: <code>rotate(-1)</code> tira o primeiro e põe no fim.</p>
+
+<pre class="file" data-file="rotate.py">from collections import deque
+
+turnos = deque(["Ana", "Bruno", "Carla"])
+for dia in ["seg", "ter", "qua", "qui"]:
+    print(dia, "-&gt;", turnos[0])
+    turnos.rotate(-1)
+</pre>
+
+<pre class="term">$ python3 rotate.py
+seg -&gt; Ana
+ter -&gt; Bruno
+qua -&gt; Carla
+qui -&gt; Ana</pre>
+
+<hr>
+
+<h2>Formas diferentes: quando a coleção especial vale a pena</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Tarefa</th><th>Com o básico</th><th>Com <code>collections</code></th><th>Qual usar</th></tr>
+<tr><td>Contar ocorrências</td><td><code>dict</code> + <code>if</code>, ou <code>d[k] = d.get(k, 0) + 1</code></td><td><code>Counter(itens)</code></td><td><code>Counter</code>: uma linha, e ainda tem <code>most_common</code></td></tr>
+<tr><td>Agrupar em listas</td><td><code>d.setdefault(k, []).append(x)</code></td><td><code>defaultdict(list)</code></td><td>Os dois servem; <code>defaultdict</code> lê melhor num laço</td></tr>
+<tr><td>Somar por chave</td><td><code>d[k] = d.get(k, 0) + n</code></td><td><code>defaultdict(int)</code></td><td><code>defaultdict(int)</code></td></tr>
+<tr><td>Ficha com campos</td><td>tupla ou dicionário</td><td><code>namedtuple</code></td><td><code>namedtuple</code> se não muda; <a href="dataclasses.html">dataclass</a> se muda</td></tr>
+<tr><td>Fila (entra no fim, sai do começo)</td><td><code>lista.pop(0)</code></td><td><code>deque.popleft()</code></td><td><code>deque</code>; a lista serve para filas pequenas</td></tr>
+<tr><td>Pilha (entra e sai no fim)</td><td><code>lista.append</code> / <code>lista.pop()</code></td><td><code>deque</code></td><td>A lista já é ótima</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Somar numa chave que não existe (dicionário comum)</strong>
+<pre class="file" data-file="erro_keyerror.py">palavras = ["pão", "leite", "pão"]
+
+contagem = {}
+for palavra in palavras:
+    contagem[palavra] += 1
+
+print(contagem)
+</pre>
+<pre class="term">$ python3 erro_keyerror.py
+Traceback (most recent call last):
+  File "/home/ana/erro_keyerror.py", line 5, in &lt;module&gt;
+    contagem[palavra] += 1
+    ~~~~~~~~^^^^^^^^^
+KeyError: 'pão'</pre>
+<p><code>KeyError: 'pão'</code>: "erro de chave". O <code>+= 1</code> precisa <strong>ler</strong> o valor atual antes de somar, e no primeiro <code>"pão"</code> não havia valor nenhum. O <code>~~~~~~~~^^^^^^^^^</code> aponta a chave que faltou. <strong>Como consertar:</strong> <code>contagem = Counter(palavras)</code>, ou <code>contagem = defaultdict(int)</code> antes do laço.</p>
+</div>
+
+<div class="cenario">
+<strong><code>Counter</code> de um texto em vez de uma lista (sem erro nenhum)</strong>
+<pre class="file" data-file="counter_texto.py">from collections import Counter
+
+compras = "pão leite pão"
+print(Counter(compras).most_common(2))
+print(Counter(compras.split()).most_common(2))
+</pre>
+<pre class="term">$ python3 counter_texto.py
+[('p', 2), ('ã', 2)]
+[('pão', 2), ('leite', 1)]</pre>
+<p>A primeira linha contou <strong>letras</strong>: um texto é uma sequência de caracteres, e o <code>Counter</code> conta cada item da sequência. O programa roda, mas a resposta não faz sentido. <strong>Como consertar:</strong> quebre o texto em palavras com <code>.split()</code> antes de contar.</p>
+</div>
+
+<div class="cenario">
+<strong>Mudar um campo da <code>namedtuple</code></strong>
+<pre class="file" data-file="erro_nt_set.py">from collections import namedtuple
+
+Produto = namedtuple("Produto", ["nome", "preco", "estoque"])
+pao = Produto("pão francês", 0.75, 120)
+pao.preco = 0.85
+</pre>
+<pre class="term">$ python3 erro_nt_set.py
+Traceback (most recent call last):
+  File "/home/ana/erro_nt_set.py", line 5, in &lt;module&gt;
+    pao.preco = 0.85
+    ^^^^^^^^^
+AttributeError: can't set attribute</pre>
+<p>"Não é possível definir o atributo". Uma <code>namedtuple</code> é uma tupla, e tuplas são <strong>imutáveis</strong> (aula <a href="mutabilidade.html">Mutável × Imutável</a>). <strong>Como consertar:</strong> crie uma ficha nova, <code>pao = pao._replace(preco=0.85)</code>; ou, se os dados mudam o tempo todo, use uma <a href="dataclasses.html">dataclass</a>.</p>
+</div>
+
+<div class="cenario">
+<strong>Faltou um campo</strong>
+<pre class="term">$ python3 erro_nt_falta.py
+Traceback (most recent call last):
+  File "/home/ana/erro_nt_falta.py", line 4, in &lt;module&gt;
+    pao = Produto("pão francês", 0.75)
+          ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+TypeError: Produto.__new__() missing 1 required positional argument: 'estoque'</pre>
+<p>"Faltou 1 argumento posicional obrigatório: <code>estoque</code>". Todos os campos são obrigatórios. O <code>__new__</code> é o método que cria o objeto, e a mensagem diz exatamente qual campo faltou. <strong>Como consertar:</strong> passe o estoque, ou dê valores padrão ao criar o tipo: <code>namedtuple("Produto", ["nome", "preco", "estoque"], defaults=[0])</code> (o padrão vale para o último campo).</p>
+</div>
+
+<div class="cenario">
+<strong>Atender numa fila vazia</strong>
+<pre class="file" data-file="erro_deque.py">from collections import deque
+
+fila = deque(["Ana"])
+print("Atendendo:", fila.popleft())
+print("Atendendo:", fila.popleft())
+</pre>
+<pre class="term">$ python3 erro_deque.py
+Atendendo: Ana
+Traceback (most recent call last):
+  File "/home/ana/erro_deque.py", line 5, in &lt;module&gt;
+    print("Atendendo:", fila.popleft())
+                        ~~~~~~~~~~~~^^
+IndexError: pop from an empty deque</pre>
+<p>"Tirar de um deque vazio". A Ana já foi atendida, e não sobrou ninguém. <strong>Como consertar:</strong> confira antes, <code>while fila:</code> ou <code>if fila:</code> (uma fila vazia vale <code>False</code>, como uma lista vazia).</p>
+</div>
+
+<div class="cenario">
+<strong><code>defaultdict(list())</code>, com parênteses</strong>
+<pre class="term">$ python3 erro_dd.py
+Traceback (most recent call last):
+  File "/home/ana/erro_dd.py", line 3, in &lt;module&gt;
+    turmas = defaultdict(list())
+TypeError: first argument must be callable or None</pre>
+<p>"O primeiro argumento tem de ser algo que se possa chamar, ou <code>None</code>". Com os parênteses, você passou uma lista vazia (o resultado de <code>list()</code>), e não a <strong>fábrica</strong> <code>list</code>, que o <code>defaultdict</code> vai chamar a cada chave nova. É a mesma diferença entre <code>f</code> e <code>f()</code> da aula <a href="decoradores.html">Decoradores</a>. <strong>Como consertar:</strong> <code>defaultdict(list)</code>, sem parênteses.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>Counter(itens)</code></td><td>Conta cada item; chave ausente vale 0</td></tr>
+<tr><td><code>c.most_common(n)</code></td><td>Os <code>n</code> mais comuns, em pares <code>(item, contagem)</code></td></tr>
+<tr><td><code>c.update(itens)</code>, <code>c1 + c2</code>, <code>c.total()</code></td><td>Conta mais / soma contadores / soma das contagens (3.10+)</td></tr>
+<tr><td><code>defaultdict(list)</code></td><td>Chave nova começa com <code>[]</code></td></tr>
+<tr><td><code>defaultdict(int)</code></td><td>Chave nova começa com <code>0</code></td></tr>
+<tr><td><code>namedtuple("Nome", ["a", "b"])</code></td><td>Cria um tipo de tupla com campos nomeados</td></tr>
+<tr><td><code>x._replace(campo=valor)</code>, <code>x._asdict()</code></td><td>Cópia com um campo trocado / dicionário</td></tr>
+<tr><td><code>deque(itens)</code>, <code>deque(maxlen=n)</code></td><td>Fila de duas pontas / com tamanho máximo</td></tr>
+<tr><td><code>append</code>, <code>appendleft</code>, <code>pop</code>, <code>popleft</code></td><td>Pôr e tirar no fim / no começo</td></tr>
+<tr><td><code>d.rotate(n)</code></td><td>Gira <code>n</code> casas (negativo: para a esquerda)</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>KeyError</code> ao somar ou dar <code>append</code></td><td>Dicionário comum com chave nova: use <code>Counter</code> ou <code>defaultdict</code></td></tr>
+<tr><td><code>Counter</code> contou letras</td><td>Recebeu um texto: faltou o <code>.split()</code></td></tr>
+<tr><td>Apareceram chaves vazias no <code>defaultdict</code></td><td>Só ler <code>d[chave]</code> já cria: pergunte com <code>in</code> ou <code>get</code></td></tr>
+<tr><td><code>AttributeError: can't set attribute</code></td><td>Tentou mudar um campo de <code>namedtuple</code>: use <code>_replace</code></td></tr>
+<tr><td><code>__new__() missing 1 required positional argument</code></td><td>Faltou um campo da <code>namedtuple</code></td></tr>
+<tr><td><code>IndexError: pop from an empty deque</code></td><td><code>popleft</code>/<code>pop</code> com a fila vazia</td></tr>
+<tr><td><code>TypeError: first argument must be callable or None</code></td><td><code>defaultdict(list())</code>: tire os parênteses</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O mais vendido</h3>
+<p>Complete para mostrar os 2 produtos mais vendidos:</p>
+<div class="ex-code">vendas = Counter(lista)<br>print(vendas.<input data-answer="most_common(2)" aria-label="método">)</div>
+</div>
+
+<div class="exercise">
+<h3>2. A fábrica</h3>
+<p>Complete para que toda chave nova comece com uma lista vazia:</p>
+<div class="ex-code">grupos = defaultdict(<input data-answer="list" aria-label="fábrica">)</div>
+</div>
+
+<div class="exercise">
+<h3>3. A fila do caixa</h3>
+<p>Qual método do <code>deque</code> tira e devolve a primeira pessoa da fila?</p>
+<div class="ex-code">proximo = fila.<input data-answer="popleft()" aria-label="método"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. <code>c = Counter(["pão", "leite"])</code>. Quanto vale <code>c["café"]</code>?</p>
+<label><input type="radio" name="q4"> Dá <code>KeyError</code></label>
+<label><input type="radio" name="q4"> <code>0</code></label>
+<label><input type="radio" name="q4"> <code>None</code></label>
+<label><input type="radio" name="q4"> <code>1</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. <code>d = deque(maxlen=2)</code>, depois <code>d.append(1)</code>, <code>d.append(2)</code>, <code>d.append(3)</code>. O que <code>d</code> guarda?</p>
+<label><input type="radio" name="q5"> <code>[1, 2]</code></label>
+<label><input type="radio" name="q5"> Dá erro: o deque está cheio</label>
+<label><input type="radio" name="q5"> <code>deque([2, 3], maxlen=2)</code></label>
+<label><input type="radio" name="q5"> <code>deque([1, 2, 3])</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Você precisa de uma ficha de cidade (nome, estado, população) que nunca muda e que vai ser chave de um dicionário. Qual escolher?</p>
+<label><input type="radio" name="q6"> <code>namedtuple</code></label>
+<label><input type="radio" name="q6"> <code>deque</code></label>
+<label><input type="radio" name="q6"> <code>defaultdict</code></label>
+<label><input type="radio" name="q6"> <code>Counter</code></label>
+</div>
+
+<h3>Missão final: a fila do caixa</h3>
+
+<div class="trypy" data-goal="out:Atendendo: Ana;;out:Atendendo: Bruno;;out:Na fila: deque(['Carla', 'Davi']);;src:\.popleft\s*\(;;semerro">
+<p class="try-task"><strong>Missão:</strong> transforme a lista numa fila de verdade, <code>deque([…])</code>, e atenda as duas primeiras pessoas com <code>popleft()</code>, mostrando <code>Atendendo: …</code> para cada uma. A última linha deve mostrar quem sobrou: <code>Na fila: deque(['Carla', 'Davi'])</code>.</p>
+<pre class="script" data-file="main.py">from collections import deque
+
+fila = ["Ana", "Bruno", "Carla", "Davi"]
+# transforme a fila num deque e atenda as duas primeiras pessoas com popleft()
+
+print("Na fila:", fila)
+</pre>
+<pre class="solucao" data-file="main.py">from collections import deque
+
+fila = deque(["Ana", "Bruno", "Carla", "Davi"])
+
+print("Atendendo:", fila.popleft())
+print("Atendendo:", fila.popleft())
+print("Na fila:", fila)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>collections</code> traz versões especializadas das coleções básicas; importe só o que usar.</li>
+  <li><code>Counter</code> conta: <code>Counter(itens)</code>, chave ausente vale 0, <code>most_common(n)</code> dá o ranking.</li>
+  <li><code>defaultdict(fabrica)</code> cria o valor da chave nova: <code>list</code> para agrupar, <code>int</code> para somar. A fábrica vai <strong>sem parênteses</strong>, e só ler uma chave já a cria.</li>
+  <li><code>namedtuple</code> dá nome aos campos de uma tupla: <code>p.preco</code>; continua imutável (<code>_replace</code> faz uma cópia).</li>
+  <li><code>deque</code> é a fila de duas pontas: <code>append</code> e <code>popleft</code>; com <code>maxlen</code>, guarda só os últimos.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
