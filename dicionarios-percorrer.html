@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Percorrendo um Dicionário — keys, values e items | Guia Python</title>
+<meta name="description" content="Como percorrer um dicionário em Python, para quem está começando: o for nas chaves, keys(), values() e items(), desempacotar chave e valor no for, somar e achar o maior valor, percorrer em ordem alfabética com sorted(), e os erros reais dictionary changed size during iteration, too many values to unpack e not iterable, com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Percorrendo um Dicionário</span></h1>
+
+<p class="intro">Até aqui, você pegava um valor do dicionário de cada vez, pelo nome: <code>precos["leite"]</code>. Mas e para imprimir a tabela de preços inteira, somar todo o estoque ou achar o produto mais caro? Aí é preciso passar por <strong>todos</strong> os pares, um por um, com o laço <code>for</code> (aula <a href="for.html">for</a>). Esta aula mostra as três formas de percorrer um dicionário: pelas <strong>chaves</strong>, pelos <strong>valores</strong> e pelos <strong>pares</strong>.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que o <code>for</code> devolve quando você percorre um dicionário direto.</li>
+  <li>Os três métodos <code>keys()</code>, <code>values()</code> e <code>items()</code>, e quando usar cada um.</li>
+  <li>A desempacotar chave e valor no <code>for</code>: <code>for produto, preco in precos.items():</code>.</li>
+  <li>A somar, achar o maior e filtrar valores, e a percorrer em ordem alfabética.</li>
+  <li>Os erros reais: mudar o tamanho do dicionário no meio do <code>for</code>, esquecer o <code>items()</code> e esquecer os parênteses.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: ler a tabela de preços em voz alta</h2>
+<p>A Ana precisa ditar a tabela de preços para a nova funcionária. Ela pode ler de três jeitos: só os nomes dos produtos ("pão, leite, café"), só os preços ("cinquenta centavos, quatro e setenta e cinco…") ou as linhas inteiras ("pão, cinquenta centavos; leite, quatro e setenta e cinco…"). Cada jeito serve para uma coisa. Em Python, os três jeitos são <code>keys()</code>, <code>values()</code> e <code>items()</code>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Quero ler…</th><th>Método</th><th>A cada volta do <code>for</code>, recebo</th></tr>
+<tr><td>Os nomes</td><td><code>precos.keys()</code> (ou só <code>precos</code>)</td><td><code>"pão"</code></td></tr>
+<tr><td>Os preços</td><td><code>precos.values()</code></td><td><code>0.5</code></td></tr>
+<tr><td>As linhas inteiras</td><td><code>precos.items()</code></td><td><code>("pão", 0.5)</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. O <code>for</code> direto: passa pelas chaves</h2>
+
+<pre class="file" data-file="p_for.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+for produto in precos:
+    print(produto)
+</pre>
+
+<pre class="term">$ python3 p_for.py
+pão
+leite
+café
+</pre>
+
+<p>Quando você escreve <code>for produto in precos:</code>, a variável <code>produto</code> recebe, a cada volta, uma <strong>chave</strong>, na ordem em que as chaves entraram no dicionário. Os valores não aparecem. Para vê-los, use a chave para buscar o valor, como você já sabe:</p>
+
+<pre class="file" data-file="p_for_valor.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+for produto in precos:
+    print(produto, "custa", precos[produto])
+</pre>
+
+<pre class="term">$ python3 p_for_valor.py
+pão custa 0.5
+leite custa 4.75
+café custa 18.9
+</pre>
+
+<p>Funciona, mas a cada volta o Python precisa procurar a chave de novo. Há um jeito mais direto: o <code>items()</code>, na seção 3.</p>
+
+<hr>
+
+<h2>2. <code>keys()</code>, <code>values()</code> e <code>items()</code></h2>
+<p>Veja o que cada método devolve, antes de usá-lo num <code>for</code>:</p>
+
+<pre class="file" data-file="p_metodos.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+print(precos.keys())
+print(precos.values())
+print(precos.items())
+print(list(precos.keys()))
+</pre>
+
+<pre class="term">$ python3 p_metodos.py
+dict_keys(['pão', 'leite', 'café'])
+dict_values([0.5, 4.75, 18.9])
+dict_items([('pão', 0.5), ('leite', 4.75), ('café', 18.9)])
+['pão', 'leite', 'café']
+</pre>
+
+<dl class="anatomy">
+  <dt>precos.keys()</dt><dd>"Chaves": todas as chaves. O Python mostra como <code>dict_keys([…])</code>, um tipo especial que parece uma lista.</dd>
+  <dt>precos.values()</dt><dd>"Valores": todos os valores, na mesma ordem.</dd>
+  <dt>precos.items()</dt><dd>"Itens": todos os pares, cada um como uma <a href="tuplas.html">tupla</a> <code>(chave, valor)</code>.</dd>
+  <dt>list(precos.keys())</dt><dd>Para ter uma lista de verdade (com índice, <code>append</code> e tudo), converta com <code>list()</code>.</dd>
+</dl>
+
+<p>Esses três objetos se chamam <strong>visões</strong> (<em>views</em>): não são uma cópia, são uma janela para o dicionário. Se o dicionário muda, a visão mostra a mudança:</p>
+
+<pre class="file" data-file="p_vivo.py">precos = {"pão": 0.50}
+chaves = precos.keys()
+print(chaves)
+precos["leite"] = 4.75
+print(chaves)
+</pre>
+
+<pre class="term">$ python3 p_vivo.py
+dict_keys(['pão'])
+dict_keys(['pão', 'leite'])
+</pre>
+
+<p>A variável <code>chaves</code> não foi tocada, e mesmo assim agora mostra o leite.</p>
+
+<hr>
+
+<h2>3. <code>items()</code>: chave e valor juntos</h2>
+<p>Esta é a forma mais usada. Como cada item é uma tupla <code>(chave, valor)</code>, você a <a href="desempacotamento.html">desempacota</a> direto no <code>for</code>, em duas variáveis:</p>
+
+<pre class="file" data-file="p_items.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+for produto, preco in precos.items():
+    print(f"{produto:&lt;6} R$ {preco:6.2f}")
+</pre>
+
+<pre class="term">$ python3 p_items.py
+pão    R$   0.50
+leite  R$   4.75
+café   R$  18.90
+</pre>
+
+<dl class="anatomy">
+  <dt>for produto, preco in precos.items():</dt><dd>A cada volta, o <code>items()</code> entrega uma tupla, como <code>("pão", 0.5)</code>, e o <code>for</code> faz <code>produto, preco = ("pão", 0.5)</code>.</dd>
+  <dt>produto, preco</dt><dd>Os nomes são escolha sua. Escolha nomes que digam o que é a chave e o que é o valor: <code>nome, telefone</code>, <code>aluno, nota</code>. Evite <code>k, v</code> no começo.</dd>
+  <dt>{produto:&lt;6}</dt><dd>Formatação da f-string: o nome ocupa 6 casas, alinhado à esquerda, para a tabela ficar reta.</dd>
+  <dt>{preco:6.2f}</dt><dd>O preço com 2 casas decimais, ocupando 6 casas, alinhado à direita (o detalhe está em <a href="ref-formatacao.html">Formatação</a>).</dd>
+</dl>
+
+<div class="trypy" data-goal="out:pão: R$ 0.50;;out:leite: R$ 4.75;;out:café: R$ 18.90;;src:\.items\(\)">
+<p class="try-task"><strong>Missão:</strong> o programa mostra só os nomes. Mude o <code>for</code> para usar <code>items()</code> e mostre cada linha como <code>leite: R$ 4.75</code> (com duas casas decimais).</p>
+<pre class="script" data-file="main.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+for produto in precos:
+    print(produto)
+</pre>
+<pre class="solucao" data-file="main.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+for produto, preco in precos.items():
+    print(f"{produto}: R$ {preco:.2f}")
+</pre>
+</div>
+
+<hr>
+
+<h2>4. <code>values()</code>: quando só os valores importam</h2>
+<p>Para contas sobre os valores (somar o estoque, achar o maior), o nome das chaves nem interessa. Use <code>values()</code>, com as funções <code>sum</code> e <code>max</code>:</p>
+
+<pre class="file" data-file="p_values.py">estoque = {"pão": 40, "leite": 12, "café": 8}
+for quantidade in estoque.values():
+    print(quantidade)
+print("Total de itens:", sum(estoque.values()))
+print("Maior estoque:", max(estoque.values()))
+print(12 in estoque.values())
+</pre>
+
+<pre class="term">$ python3 p_values.py
+40
+12
+8
+Total de itens: 60
+Maior estoque: 40
+True
+</pre>
+
+<p>A última linha responde à pergunta que o <code>in</code> sozinho não respondia na aula <a href="dicionarios.html">Dicionários</a>: <code>12 in estoque</code> procura nas chaves; <code>12 in estoque.values()</code> procura nos valores.</p>
+
+<div class="trypy" data-goal="out:Total de itens: 60;;src:values\(\)">
+<p class="try-task"><strong>Missão:</strong> troque o <code>0</code> pela soma de todos os valores do estoque, usando <code>sum()</code> e <code>values()</code>.</p>
+<pre class="script" data-file="main.py">estoque = {"pão": 40, "leite": 12, "café": 8}
+print("Total de itens:", 0)
+</pre>
+<pre class="solucao" data-file="main.py">estoque = {"pão": 40, "leite": 12, "café": 8}
+print("Total de itens:", sum(estoque.values()))
+</pre>
+</div>
+
+<hr>
+
+<h2>5. Receitas do dia a dia</h2>
+
+<h3>Filtrar: só o que cumpre uma condição</h3>
+<p>Quais produtos têm menos de 5 unidades e precisam ser repostos?</p>
+
+<pre class="file" data-file="p_filtro.py">estoque = {"pão": 40, "leite": 3, "café": 8, "bolo": 2}
+for produto, quantidade in estoque.items():
+    if quantidade &lt; 5:
+        print("Repor:", produto)
+</pre>
+
+<pre class="term">$ python3 p_filtro.py
+Repor: leite
+Repor: bolo
+</pre>
+
+<h3>Achar a chave do maior valor</h3>
+<p>O <code>max(precos.values())</code> diz qual é o maior preço, mas não de qual produto. Para saber os dois, guarde o maior visto até agora enquanto percorre:</p>
+
+<pre class="file" data-file="p_maior.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90, "bolo": 12.00}
+mais_caro = None
+maior = 0
+for produto, preco in precos.items():
+    if preco &gt; maior:
+        maior = preco
+        mais_caro = produto
+print(f"O mais caro é {mais_caro}: R$ {maior:.2f}")
+</pre>
+
+<pre class="term">$ python3 p_maior.py
+O mais caro é café: R$ 18.90
+</pre>
+
+<h3>Em ordem alfabética</h3>
+<p>O <code>for</code> segue a ordem de inserção. Para a ordem alfabética das chaves, percorra o <code>sorted()</code> do dicionário, que devolve uma lista com as chaves em ordem:</p>
+
+<pre class="file" data-file="p_sorted.py">agenda = {"Caio": "99999-0003", "Ana": "99999-0001", "Bia": "99999-0002"}
+for nome in sorted(agenda):
+    print(nome, agenda[nome])
+</pre>
+
+<pre class="term">$ python3 p_sorted.py
+Ana 99999-0001
+Bia 99999-0002
+Caio 99999-0003
+</pre>
+
+<h3>Numerar as linhas</h3>
+<p>Com <code>enumerate</code> (aula <a href="enumerate-zip.html">enumerate() e zip()</a>), cada chave ganha um número:</p>
+
+<pre class="file" data-file="p_enumerate.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+for numero, produto in enumerate(precos, start=1):
+    print(numero, produto)
+</pre>
+
+<pre class="term">$ python3 p_enumerate.py
+1 pão
+2 leite
+3 café
+</pre>
+
+<h3>Mudar os valores durante o <code>for</code></h3>
+<p>Trocar o <strong>valor</strong> de chaves que já existem, enquanto percorre, é permitido. Um aumento de 10% em tudo:</p>
+
+<pre class="file" data-file="p_alterar_valor.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+for produto in precos:
+    precos[produto] = round(precos[produto] * 1.10, 2)
+print(precos)
+</pre>
+
+<pre class="term">$ python3 p_alterar_valor.py
+{'pão': 0.55, 'leite': 5.23, 'café': 20.79}
+</pre>
+
+<p>O que <strong>não</strong> pode é acrescentar ou remover chaves no meio do <code>for</code>; veja a seguir.</p>
+
+<hr>
+
+<h2>Formas diferentes de percorrer</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>A cada volta</th><th>Quando usar</th></tr>
+<tr><td><code>for k in d:</code></td><td>Uma chave</td><td>Quando só as chaves importam. É o mesmo que <code>for k in d.keys():</code>, mais curto</td></tr>
+<tr><td><code>for k in d.keys():</code></td><td>Uma chave</td><td>Igual ao de cima; alguns preferem por deixar claro que são as chaves</td></tr>
+<tr><td><code>for v in d.values():</code></td><td>Um valor</td><td>Somas, máximos, contagens dos valores</td></tr>
+<tr><td><code>for k, v in d.items():</code></td><td>Chave e valor</td><td>Quase sempre que você precisa dos dois. Prefira a <code>for k in d: … d[k]</code></td></tr>
+<tr><td><code>for k in sorted(d):</code></td><td>Uma chave, em ordem</td><td>Quando a saída precisa estar em ordem alfabética ou crescente</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Remover chaves no meio do <code>for</code></strong>
+<p>A Ana quer tirar do estoque os produtos que zeraram:</p>
+<pre class="file" data-file="p_runtime.py">estoque = {"pão": 40, "leite": 0, "café": 8, "bolo": 0}
+for produto in estoque:
+    if estoque[produto] == 0:
+        del estoque[produto]
+</pre>
+<pre class="term">$ python3 p_runtime.py
+Traceback (most recent call last):
+  File "/home/ana/p_runtime.py", line 2, in &lt;module&gt;
+    for produto in estoque:
+                   ^^^^^^^
+RuntimeError: dictionary changed size during iteration
+</pre>
+<dl class="anatomy">
+  <dt>line 2 … for produto in estoque:</dt><dd>Repare que o erro aponta para a linha do <code>for</code>, e não para o <code>del</code>. O <code>del</code> funcionou; foi o <code>for</code>, ao tentar pegar a próxima chave, que percebeu a mudança.</dd>
+  <dt>RuntimeError</dt><dd>"Erro de execução": um problema que só aparece com o programa rodando.</dd>
+  <dt>dictionary changed size during iteration</dt><dd>"O dicionário mudou de tamanho durante a iteração" (durante o <code>for</code>). O <code>for</code> estava andando pelo dicionário e o chão mudou debaixo dele.</dd>
+</dl>
+<p><strong>Como consertar:</strong> percorra uma <strong>cópia</strong> das chaves, feita com <code>list()</code>. O <code>for</code> anda pela lista, que não muda, e você apaga à vontade no dicionário:</p>
+<pre class="file" data-file="p_runtime_ok.py">estoque = {"pão": 40, "leite": 0, "café": 8, "bolo": 0}
+for produto in list(estoque):
+    if estoque[produto] == 0:
+        del estoque[produto]
+print(estoque)
+</pre>
+<pre class="term">$ python3 p_runtime_ok.py
+{'pão': 40, 'café': 8}
+</pre>
+<p>Outro jeito é criar um dicionário novo só com o que fica, com a <a href="dict-comprehension.html">dict comprehension</a>.</p>
+</div>
+
+<div class="cenario">
+<strong>Esquecer o <code>items()</code></strong>
+<pre class="file" data-file="p_sem_items.py">precos = {"pão": 0.50, "leite": 4.75}
+for produto, preco in precos:
+    print(produto, preco)
+</pre>
+<pre class="term">$ python3 p_sem_items.py
+Traceback (most recent call last):
+  File "/home/ana/p_sem_items.py", line 2, in &lt;module&gt;
+    for produto, preco in precos:
+        ^^^^^^^^^^^^^^
+ValueError: too many values to unpack (expected 2)
+</pre>
+<p>Este engana. Sem <code>items()</code>, o <code>for</code> entrega só as chaves. A primeira é o texto <code>"pão"</code>, e o Python tenta desempacotar esse texto em <code>produto, preco</code>, letra por letra: são 3 letras para 2 variáveis, "valores demais para desempacotar". (Se a chave tivesse exatamente 2 letras, nem daria erro: <code>produto</code> e <code>preco</code> receberiam uma letra cada.) <strong>Como consertar:</strong> <code>for produto, preco in precos.items():</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Esquecer os parênteses do <code>items</code></strong>
+<pre class="file" data-file="p_items_sem_parenteses.py">precos = {"pão": 0.50, "leite": 4.75}
+for produto, preco in precos.items:
+    print(produto, preco)
+</pre>
+<pre class="term">$ python3 p_items_sem_parenteses.py
+Traceback (most recent call last):
+  File "/home/ana/p_items_sem_parenteses.py", line 2, in &lt;module&gt;
+    for produto, preco in precos.items:
+                          ^^^^^^^^^^^^
+TypeError: 'builtin_function_or_method' object is not iterable
+</pre>
+<p>Sem os parênteses, <code>precos.items</code> é o próprio <strong>método</strong>, e não o resultado dele: é como dar ao <code>for</code> o nome da receita em vez do bolo. "Um objeto <code>builtin_function_or_method</code> (uma função embutida) não é iterável", ou seja, não dá para percorrer. <strong>Como consertar:</strong> <code>precos.items()</code>, com os parênteses que <strong>chamam</strong> o método.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>for k in d:</code></td><td>Percorre as chaves, na ordem de inserção</td></tr>
+<tr><td><code>d.keys()</code></td><td>Visão das chaves</td></tr>
+<tr><td><code>d.values()</code></td><td>Visão dos valores</td></tr>
+<tr><td><code>d.items()</code></td><td>Visão dos pares <code>(chave, valor)</code></td></tr>
+<tr><td><code>for k, v in d.items():</code></td><td>Percorre chave e valor juntos</td></tr>
+<tr><td><code>sum(d.values())</code>, <code>max(d.values())</code></td><td>Soma e maior dos valores</td></tr>
+<tr><td><code>x in d.values()</code></td><td>Procura nos valores (o <code>x in d</code> procura nas chaves)</td></tr>
+<tr><td><code>for k in sorted(d):</code></td><td>Percorre as chaves em ordem</td></tr>
+<tr><td><code>for k in list(d):</code></td><td>Percorre uma cópia das chaves (para poder remover)</td></tr>
+<tr><td><code>list(d.keys())</code></td><td>Lista de verdade com as chaves</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>RuntimeError: dictionary changed size during iteration</code></td><td>Acrescentou ou removeu chave dentro do <code>for</code>: percorra <code>list(d)</code></td></tr>
+<tr><td><code>ValueError: too many values to unpack (expected 2)</code> no <code>for</code></td><td>Faltou o <code>.items()</code>: o <code>for</code> está desempacotando a chave</td></tr>
+<tr><td><code>TypeError: 'builtin_function_or_method' object is not iterable</code></td><td>Faltaram os parênteses: <code>items()</code>, <code>values()</code>, <code>keys()</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Os pares</h3>
+<p>Complete o método que entrega chave e valor juntos:</p>
+<div class="ex-code">for nome, nota in notas.<input data-answer="items" aria-label="método">():</div>
+</div>
+
+<div class="exercise">
+<h3>2. Só os valores</h3>
+<p>Complete para somar todas as notas do dicionário <code>notas</code>:</p>
+<div class="ex-code">total = sum(notas.<input data-answer="values()" aria-label="método">)</div>
+</div>
+
+<div class="exercise">
+<h3>3. Em ordem</h3>
+<p>Complete a função que faz o <code>for</code> passar pelas chaves em ordem alfabética:</p>
+<div class="ex-code">for nome in <input data-answer="sorted" aria-label="função">(agenda):</div>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">4. Em <code>for x in {"a": 1, "b": 2}:</code>, o que <code>x</code> recebe?</p>
+<label><input type="radio" name="q4"> As chaves: <code>"a"</code> e depois <code>"b"</code></label>
+<label><input type="radio" name="q4"> Os valores: <code>1</code> e depois <code>2</code></label>
+<label><input type="radio" name="q4"> As tuplas <code>("a", 1)</code> e <code>("b", 2)</code></label>
+<label><input type="radio" name="q4"> O dicionário inteiro, uma vez</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. Qual destas linhas dá <code>RuntimeError: dictionary changed size during iteration</code>?</p>
+<label><input type="radio" name="q5"> <code>for k in d: print(d[k])</code></label>
+<label><input type="radio" name="q5"> <code>for k in d: d[k] = 0</code></label>
+<label><input type="radio" name="q5"> <code>for k in d: del d[k]</code></label>
+<label><input type="radio" name="q5"> <code>for k in list(d): del d[k]</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">6. Com <code>estoque = {"pão": 40, "leite": 12}</code>, como perguntar se algum produto tem exatamente 12 unidades?</p>
+<label><input type="radio" name="q6"> <code>12 in estoque</code></label>
+<label><input type="radio" name="q6"> <code>12 in estoque.values()</code></label>
+<label><input type="radio" name="q6"> <code>12 in estoque.keys()</code></label>
+<label><input type="radio" name="q6"> <code>estoque[12]</code></label>
+</div>
+
+<h3>Missão final: o caixa da padaria</h3>
+
+<div class="trypy" data-goal="out:Total: R$ 14.50;;src:\.items\(\)">
+<p class="try-task"><strong>Missão:</strong> o <code>carrinho</code> diz quantas unidades de cada produto o cliente levou, e <code>precos</code> diz quanto custa cada um. Percorra o carrinho com <code>items()</code>, somando em <code>total</code> o preço de cada produto vezes a quantidade, para o programa mostrar <code>Total: R$ 14.50</code>.</p>
+<pre class="script" data-file="main.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+carrinho = {"pão": 10, "leite": 2}
+total = 0
+# percorra o carrinho aqui
+print(f"Total: R$ {total:.2f}")
+</pre>
+<pre class="solucao" data-file="main.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+carrinho = {"pão": 10, "leite": 2}
+total = 0
+for produto, quantidade in carrinho.items():
+    total += precos[produto] * quantidade
+print(f"Total: R$ {total:.2f}")
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>for k in d:</code> passa pelas <strong>chaves</strong>, na ordem de inserção.</li>
+  <li><code>keys()</code>, <code>values()</code> e <code>items()</code> dão as chaves, os valores e os pares; são "visões" que acompanham as mudanças do dicionário.</li>
+  <li><code>for chave, valor in d.items():</code> é a forma mais usada: desempacota cada par em duas variáveis.</li>
+  <li><code>sum(d.values())</code>, <code>max(d.values())</code> e <code>x in d.values()</code> trabalham com os valores; <code>sorted(d)</code> dá as chaves em ordem.</li>
+  <li>Trocar valores no <code>for</code> pode; acrescentar ou remover chaves dá <code>RuntimeError</code>: percorra <code>list(d)</code>.</li>
+  <li>Sem <code>.items()</code>, o <code>for</code> tenta desempacotar a chave; sem os parênteses, tenta percorrer o próprio método.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
