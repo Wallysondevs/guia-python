@@ -37,11 +37,93 @@
 <h2>O que vamos construir</h2>
 <p>A lista pronta, no terminal da Ana. Ela abre o programa, cadastra três tarefas, conclui uma e sai. <strong>O que vem depois de <code>Escolha:</code>, <code>Nova tarefa:</code> e <code>Número da tarefa:</code> foi digitado por ela.</strong> Depois, o <code>cat</code> mostra o arquivo que o programa gravou:</p>
 
-<pre class="term" data-cwd="~/projetos/tarefas"></pre>
+<pre class="term" data-cwd="~/projetos/tarefas">$ python3 tarefas.py
+=== Lista de Tarefas da Ana ===
+0 tarefa(s) carregada(s) de tarefas.txt.
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 1
+Nova tarefa: Comprar pão
+Tarefa adicionada: Comprar pão
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 1
+Nova tarefa: Pagar a conta de luz
+Tarefa adicionada: Pagar a conta de luz
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 1
+Nova tarefa: Levar o Rex ao veterinário
+Tarefa adicionada: Levar o Rex ao veterinário
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 3
+Número da tarefa: 2
+Concluída: Pagar a conta de luz
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 0
+Até mais!
+$ cat tarefas.txt
+[ ] Comprar pão
+[x] Pagar a conta de luz
+[ ] Levar o Rex ao veterinário</pre>
 
 <p>No dia seguinte, a Ana abre o programa de novo, e as tarefas estão lá:</p>
 
-<pre class="term" data-cwd="~/projetos/tarefas"></pre>
+<pre class="term" data-cwd="~/projetos/tarefas">$ python3 tarefas.py
+=== Lista de Tarefas da Ana ===
+3 tarefa(s) carregada(s) de tarefas.txt.
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 2
+1. [ ] Comprar pão
+2. [x] Pagar a conta de luz
+3. [ ] Levar o Rex ao veterinário
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 4
+Número da tarefa: 1
+Removida: Comprar pão
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 0
+Até mais!
+$ cat tarefas.txt
+[x] Pagar a conta de luz
+[ ] Levar o Rex ao veterinário</pre>
 
 <p>Quatro versões:</p>
 
@@ -112,7 +194,55 @@ Type "help", "copyright", "credits" or "license" for more information.
 
 <p>Sem o <code>start=1</code>, a contagem começaria em 0, que é como o Python numera as posições de uma lista (o primeiro item está na posição 0). Para mostrar à Ana, 1 é melhor. Guarde essa diferença: ela vai importar na versão 2.</p>
 
-<pre class="term" data-cwd="~/projetos/tarefas"></pre>
+<pre class="term" data-cwd="~/projetos/tarefas">$ python3 tarefas.py
+=== Lista de Tarefas da Ana ===
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+0 - Sair
+Escolha: 2
+Nenhuma tarefa ainda.
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+0 - Sair
+Escolha: 1
+Nova tarefa: Comprar pão
+Tarefa adicionada: Comprar pão
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+0 - Sair
+Escolha: 1
+Nova tarefa: Pagar a conta de luz
+Tarefa adicionada: Pagar a conta de luz
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+0 - Sair
+Escolha: 1
+Nova tarefa: Levar o Rex ao veterinário
+Tarefa adicionada: Levar o Rex ao veterinário
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+0 - Sair
+Escolha: 2
+1. Comprar pão
+2. Pagar a conta de luz
+3. Levar o Rex ao veterinário
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+0 - Sair
+Escolha: 5
+Opção inválida.
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+0 - Sair
+Escolha: 0
+Até mais!</pre>
 
 <div class="trypy" data-stdin="1\nComprar pão\n1\nPagar a conta de luz\n2\n0" data-goal="out:1. Comprar pão;;out:2. Pagar a conta de luz;;semerro">
 <p class="try-task"><strong>Missão (versão 1):</strong> a opção 2 mostra a lista "crua", com colchetes e aspas: <code>['Comprar pão', 'Pagar a conta de luz']</code>. Troque o <code>print(tarefas)</code> por um <code>for</code> com <code>enumerate(tarefas, start=1)</code> que mostre <code>1. Comprar pão</code>, <code>2. Pagar a conta de luz</code>. A entrada da missão cadastra as duas tarefas, escolhe 2 e sai.</p>
@@ -230,7 +360,70 @@ while True:
 </table>
 </div>
 
-<pre class="term" data-cwd="~/projetos/tarefas"></pre>
+<pre class="term" data-cwd="~/projetos/tarefas">$ python3 tarefas.py
+=== Lista de Tarefas da Ana ===
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 1
+Nova tarefa: Comprar pão
+Tarefa adicionada: Comprar pão
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 1
+Nova tarefa: Pagar a conta de luz
+Tarefa adicionada: Pagar a conta de luz
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 1
+Nova tarefa: Levar o Rex ao veterinário
+Tarefa adicionada: Levar o Rex ao veterinário
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 3
+Número da tarefa: 2
+Concluída: Pagar a conta de luz
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 4
+Número da tarefa: 1
+Removida: Comprar pão
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 2
+1. [x] Pagar a conta de luz
+2. [ ] Levar o Rex ao veterinário
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 0
+Até mais!</pre>
 
 <p>Repare na última listagem: depois de remover a tarefa 1 (Comprar pão), as outras <strong>subiram</strong> uma posição. A conta de luz, que era a 2, virou a 1. Os números da tela são só a posição atual na lista.</p>
 
@@ -238,13 +431,86 @@ while True:
 
 <div class="cenario">
 <strong>Um número que não existe: <code>IndexError</code></strong>
-<pre class="term" data-cwd="~/projetos/tarefas"></pre>
+<pre class="term" data-cwd="~/projetos/tarefas">$ python3 tarefas.py
+=== Lista de Tarefas da Ana ===
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 1
+Nova tarefa: Comprar pão
+Tarefa adicionada: Comprar pão
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 3
+Número da tarefa: 5
+Traceback (most recent call last):
+  File "/home/ana/projetos/tarefas/tarefas.py", line 26, in &lt;module&gt;
+    tarefa = tarefas[numero - 1]
+             ~~~~~~~^^^^^^^^^^^^
+IndexError: list index out of range</pre>
 <p>Só existe a tarefa 1, e a Ana pediu a 5. <code>IndexError: list index out of range</code> = "erro de índice: a posição está fora da lista". A lista tem uma posição só (a 0), e o programa pediu a posição 4 (<code>5 - 1</code>). O sublinhado aponta o <code>tarefas[numero - 1]</code>, na linha 26. Com <code>pop</code>, a mensagem seria parecida: <code>IndexError: pop index out of range</code>.</p>
 </div>
 
 <div class="cenario">
 <strong>O número 0 conclui a tarefa errada, sem erro nenhum</strong>
-<pre class="term" data-cwd="~/projetos/tarefas"></pre>
+<pre class="term" data-cwd="~/projetos/tarefas">$ python3 tarefas.py
+=== Lista de Tarefas da Ana ===
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 1
+Nova tarefa: Comprar pão
+Tarefa adicionada: Comprar pão
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 1
+Nova tarefa: Pagar a conta de luz
+Tarefa adicionada: Pagar a conta de luz
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 3
+Número da tarefa: 0
+Concluída: Pagar a conta de luz
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 2
+1. [ ] Comprar pão
+2. [x] Pagar a conta de luz
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 3
+Número da tarefa: dois
+Traceback (most recent call last):
+  File "/home/ana/projetos/tarefas/tarefas.py", line 25, in &lt;module&gt;
+    numero = int(input("Número da tarefa: "))
+             ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: invalid literal for int() with base 10: 'dois'</pre>
 <p>Este é o pior tipo de defeito: o programa não reclamou, mas fez a coisa errada. A Ana digitou <code>0</code> e a <strong>última</strong> tarefa (a conta de luz) foi concluída. O motivo: <code>0 - 1</code> é <code>-1</code>, e, numa lista, o índice <code>-1</code> é válido: quer dizer "o último item" (o <code>-2</code> é o penúltimo, e assim por diante; veja <a href="listas-acessar.html">Acessando Itens</a>). Logo depois, o <code>dois</code> por extenso derrubou o programa com o <code>ValueError</code> que você já conhece da <a href="projeto-calculadora.html">Calculadora</a>. A versão 3 cuida dos três casos.</p>
 </div>
 
@@ -419,7 +685,86 @@ False
 
 <p>O espaço também conta: <code>" 3".isdigit()</code> é <code>False</code>. Por isso o <code>texto</code> passa pelo <code>strip()</code> antes do teste.</p>
 
-<pre class="term" data-cwd="~/projetos/tarefas"></pre>
+<pre class="term" data-cwd="~/projetos/tarefas">$ python3 tarefas.py
+=== Lista de Tarefas da Ana ===
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 3
+Nenhuma tarefa ainda.
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 1
+Nova tarefa: 
+A tarefa precisa de um nome.
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 1
+Nova tarefa: Comprar pão
+Tarefa adicionada: Comprar pão
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 3
+Número da tarefa: 5
+Não existe a tarefa 5. Escolha de 1 a 1.
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 3
+Número da tarefa: 0
+Não existe a tarefa 0. Escolha de 1 a 1.
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 3
+Número da tarefa: dois
+"dois" não é um número.
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 3
+Número da tarefa: 1
+Concluída: Comprar pão
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 2
+1. [x] Comprar pão
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 0
+Até mais!</pre>
 
 <div class="cenario">
 <strong>Chave com o nome errado: <code>KeyError</code></strong>
@@ -700,13 +1045,57 @@ while True:
 <div class="cenario">
 <strong><code>"a"</code> no lugar de <code>"w"</code>: as tarefas se duplicam</strong>
 <p>O modo <code>"a"</code> (de <em>append</em>, "acrescentar") escreve no <strong>fim</strong> do arquivo, sem apagar o que já havia. Parece mais seguro, mas olhe o que acontece com a função <code>salvar</code>, que grava a lista inteira:</p>
-<pre class="term" data-cwd="~/projetos/tarefas"></pre>
+<pre class="term" data-cwd="~/projetos/tarefas">$ python3 tarefas.py
+=== Lista de Tarefas da Ana ===
+2 tarefa(s) carregada(s) de tarefas.txt.
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 1
+Nova tarefa: Regar as plantas
+Tarefa adicionada: Regar as plantas
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 0
+Até mais!
+$ cat tarefas.txt
+[x] Pagar a conta de luz
+[ ] Levar o Rex ao veterinário
+[x] Pagar a conta de luz
+[ ] Levar o Rex ao veterinário
+[ ] Regar as plantas</pre>
 <p>O arquivo tinha 2 tarefas; o programa carregou as 2, a Ana acrescentou uma, e o <code>salvar</code> escreveu as 3 <strong>depois</strong> das 2 que já estavam lá: 5 linhas, com repetições. Na próxima vez, seriam 5 carregadas, e o arquivo cresceria a cada mudança. Não há traceback, porque para o Python está tudo certo. <strong>Como consertar:</strong> quando a função grava a lista inteira, use <code>"w"</code>.</p>
 </div>
 
 <div class="cenario">
 <strong>Esquecer o modo: <code>io.UnsupportedOperation: not writable</code></strong>
-<pre class="term" data-cwd="~/projetos/tarefas"></pre>
+<pre class="term" data-cwd="~/projetos/tarefas">$ python3 tarefas.py
+=== Lista de Tarefas da Ana ===
+5 tarefa(s) carregada(s) de tarefas.txt.
+
+1 - Adicionar tarefa
+2 - Ver tarefas
+3 - Concluir tarefa
+4 - Remover tarefa
+0 - Sair
+Escolha: 1
+Nova tarefa: Lavar a louça
+Tarefa adicionada: Lavar a louça
+Traceback (most recent call last):
+  File "/home/ana/projetos/tarefas/tarefas.py", line 75, in &lt;module&gt;
+    salvar(tarefas)
+    ~~~~~~^^^^^^^^^
+  File "/home/ana/projetos/tarefas/tarefas.py", line 25, in salvar
+    arquivo.write(f"[{marca}] {tarefa['titulo']}\n")
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+io.UnsupportedOperation: not writable</pre>
 <p>Sem o <code>"w"</code>, o <code>open</code> abriu o arquivo só para leitura, e o <code>write</code> falhou: <code>io.UnsupportedOperation: not writable</code> = "operação não suportada: (o arquivo) não aceita escrita". O traceback tem dois trechos: o programa principal chamou <code>salvar</code> na linha 75, e dentro dela o <code>write</code> da linha 25 deu o erro. (Repare que o programa chegou a dizer "Tarefa adicionada", mas não conseguiu gravar.) <strong>Como consertar:</strong> <code>open(ARQUIVO, "w", encoding="utf-8")</code>.</p>
 </div>
 
