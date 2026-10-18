@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python CSV — lendo e gravando planilhas em texto | Guia Python</title>
+<meta name="description" content="Arquivos CSV em Python para quem está começando: o que é um CSV por dentro, csv.reader, csv.writer, DictReader e DictWriter, por que abrir com newline=&quot;&quot;, as aspas automáticas, o ponto e vírgula e a vírgula decimal do Excel brasileiro (delimiter=&quot;;&quot;), o BOM do utf-8-sig e os erros reais do Python 3.14.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">CSV</span></h1>
+
+<p class="intro">A professora da escola do bairro mandou para a Ana as notas da turma numa planilha. A lojinha exporta o estoque do sistema de vendas. O banco deixa baixar o extrato. Os três chegam no mesmo formato: um arquivo <strong>CSV</strong>, a maneira mais simples e mais comum de guardar uma <strong>tabela</strong> num arquivo de texto. Nesta aula você aprende a ler e gravar esses arquivos com o módulo <code>csv</code> do Python, inclusive os que saem do Excel em português, que têm um jeitinho próprio.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que tem dentro de um arquivo CSV.</li>
+  <li>A ler as linhas como listas com <code>csv.reader</code> e pular o cabeçalho com <code>next()</code>.</li>
+  <li>Que tudo o que vem do CSV é <strong>texto</strong>, e como converter para número.</li>
+  <li>A gravar com <code>csv.writer</code>, <code>writerow</code> e <code>writerows</code>.</li>
+  <li>Por que sempre abrir com <code>newline=""</code>.</li>
+  <li>A ler cada linha como um dicionário com <code>DictReader</code> e gravar com <code>DictWriter</code>.</li>
+  <li>O CSV do Excel brasileiro: ponto e vírgula (<code>delimiter=";"</code>), vírgula decimal e o <code>utf-8-sig</code>.</li>
+  <li>Os erros reais: <code>KeyError</code>, <code>ValueError</code>, arquivo fechado, leitor que "secou".</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: uma tabela escrita em texto</h2>
+<p>Pense na tabela de notas no caderno da professora: cada <strong>linha</strong> é um aluno, cada <strong>coluna</strong> é uma informação (nome, turma, nota), e a primeira linha diz o nome de cada coluna. Para guardar isso num arquivo de texto simples, basta uma regra: <strong>uma linha da tabela por linha do arquivo, e uma vírgula entre uma coluna e outra</strong>. É isso que quer dizer CSV: <em>Comma-Separated Values</em>, "valores separados por vírgula".</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>nome</th><th>turma</th><th>nota</th></tr>
+<tr><td>Bia</td><td>A</td><td>8.5</td></tr>
+<tr><td>Caio</td><td>B</td><td>6.0</td></tr>
+<tr><td>Duda</td><td>A</td><td>9.5</td></tr>
+<tr><td>Enzo</td><td>B</td><td>7.0</td></tr>
+</table>
+</div>
+
+<p>A mesma tabela, como arquivo <code>notas.csv</code>, vista com o <code>cat</code> do terminal:</p>
+
+<pre class="term">$ cat notas.csv
+nome,turma,nota
+Bia,A,8.5
+Caio,B,6.0
+Duda,A,9.5
+Enzo,B,7.0
+</pre>
+
+<p>É só texto: dá para abrir no editor de textos, no Excel, no LibreOffice Calc ou no Google Planilhas. A primeira linha é o <strong>cabeçalho</strong> (os nomes das colunas); as outras são os dados.</p>
+
+<p>Você poderia ler esse arquivo com o que já sabe (<code>open</code>, um <code>for</code> e <code>split(",")</code>). Mas o CSV tem casos chatos, como um nome que tem vírgula dentro, e o módulo <code>csv</code>, que já vem com o Python, resolve todos eles. A seção <a href="#formas">Formas diferentes</a> mostra o <code>split</code> quebrando.</p>
+
+<hr>
+
+<h2>1. Lendo: <code>csv.reader</code></h2>
+
+<pre class="file" data-file="ler1.py">import csv
+
+with open("notas.csv", newline="", encoding="utf-8") as arquivo:
+    leitor = csv.reader(arquivo)
+    for linha in leitor:
+        print(linha)
+</pre>
+
+<pre class="term">$ python3 ler1.py
+['nome', 'turma', 'nota']
+['Bia', 'A', '8.5']
+['Caio', 'B', '6.0']
+['Duda', 'A', '9.5']
+['Enzo', 'B', '7.0']
+</pre>
+
+<dl class="anatomy">
+  <dt>import csv</dt><dd>Traz o módulo <code>csv</code>, que já vem com o Python (não precisa instalar nada).</dd>
+  <dt>open("notas.csv", newline="", encoding="utf-8")</dt><dd>Abre o arquivo para leitura, como na aula <a href="arquivos.html">Abrindo Arquivos</a>. A novidade é o <code>newline=""</code>: ele deixa o módulo <code>csv</code> cuidar sozinho das quebras de linha (a seção 4 explica o porquê).</dd>
+  <dt>csv.reader(arquivo)</dt><dd>Cria um <strong>leitor</strong> (<em>reader</em>) de CSV em cima do arquivo aberto.</dd>
+  <dt>for linha in leitor:</dt><dd>A cada volta, o leitor entrega uma linha do arquivo já <strong>separada</strong>: uma <a href="listas.html">lista</a> com uma posição para cada coluna.</dd>
+</dl>
+
+<p>O cabeçalho veio junto, como se fosse um aluno chamado "nome". Quase sempre você quer separá-lo dos dados. O jeito é pedir a primeira linha ao leitor com <code>next()</code> ("próximo") <strong>antes</strong> do <code>for</code>:</p>
+
+<pre class="file" data-file="ler2.py">import csv
+
+with open("notas.csv", newline="", encoding="utf-8") as arquivo:
+    leitor = csv.reader(arquivo)
+    cabecalho = next(leitor)
+    print("Colunas:", cabecalho)
+    soma = 0
+    quantos = 0
+    for nome, turma, nota in leitor:
+        print(f"{nome} (turma {turma}): {nota}")
+        soma = soma + float(nota)
+        quantos = quantos + 1
+
+print(f"Média da turma: {soma / quantos:.2f}")
+</pre>
+
+<pre class="term">$ python3 ler2.py
+Colunas: ['nome', 'turma', 'nota']
+Bia (turma A): 8.5
+Caio (turma B): 6.0
+Duda (turma A): 9.5
+Enzo (turma B): 7.0
+Média da turma: 7.75
+</pre>
+
+<dl class="anatomy">
+  <dt>cabecalho = next(leitor)</dt><dd>Tira a <strong>primeira</strong> linha do leitor e guarda. O <code>for</code> que vem depois continua de onde o <code>next</code> parou: começa no Bia.</dd>
+  <dt>for nome, turma, nota in leitor:</dt><dd>Cada linha é uma lista de 3 itens, e o <a href="desempacotamento.html">desempacotamento</a> dá um nome a cada um.</dd>
+  <dt>float(nota)</dt><dd>Converte o texto <code>"8.5"</code> em número para poder somar. Veja abaixo por quê.</dd>
+</dl>
+
+<h3>Tudo o que vem do CSV é texto</h3>
+<p>O arquivo é texto puro, e o leitor não tenta adivinhar o que é número: <strong>toda coluna chega como <code>str</code></strong>. Olhe:</p>
+
+<pre class="file" data-file="tipo.py">import csv
+
+with open("notas.csv", newline="", encoding="utf-8") as arquivo:
+    leitor = csv.reader(arquivo)
+    next(leitor)
+    primeira = next(leitor)
+
+print(primeira)
+print(type(primeira[2]))
+print(primeira[2] + 1)
+</pre>
+
+<pre class="term">$ python3 tipo.py
+['Bia', 'A', '8.5']
+&lt;class 'str'&gt;
+Traceback (most recent call last):
+  File "/home/ana/tipo.py", line 10, in &lt;module&gt;
+    print(primeira[2] + 1)
+          ~~~~~~~~~~~~^~~
+TypeError: can only concatenate str (not "int") to str
+</pre>
+
+<p>A nota é o texto <code>'8.5'</code> (repare nas aspas na lista), e somar texto com número dá <code>TypeError</code>: "só dá para concatenar (juntar) <code>str</code> com <code>str</code>, não com <code>int</code>". Sempre converta: <code>float(...)</code> para números com casas decimais, <code>int(...)</code> para inteiros (aula <a href="conversao.html">Conversão de Tipos</a>).</p>
+
+<div class="trypy" data-goal="out:Bia tirou 8.5;;out:Enzo tirou 7.0;;outre:^(?![\s\S]*nome tirou)">
+<p class="try-task"><strong>Missão:</strong> a caixa tem duas abas, o programa e o <code>notas.csv</code>. Faça o programa mostrar uma frase por aluno, como <code>Bia tirou 8.5</code>, <strong>sem</strong> mostrar a linha do cabeçalho (nada de <code>nome tirou nota</code>).</p>
+<pre class="script" data-file="main.py">import csv
+
+with open("notas.csv", newline="", encoding="utf-8") as arquivo:
+    leitor = csv.reader(arquivo)
+    for linha in leitor:
+        print(linha)
+</pre>
+<pre class="script" data-file="notas.csv">nome,turma,nota
+Bia,A,8.5
+Caio,B,6.0
+Duda,A,9.5
+Enzo,B,7.0
+</pre>
+<pre class="solucao" data-file="main.py">import csv
+
+with open("notas.csv", newline="", encoding="utf-8") as arquivo:
+    leitor = csv.reader(arquivo)
+    next(leitor)
+    for nome, turma, nota in leitor:
+        print(f"{nome} tirou {nota}")
+</pre>
+</div>
+
+<hr>
+
+<h2>2. Gravando: <code>csv.writer</code></h2>
+<p>O caminho de volta: você tem os dados numa lista de listas e quer um <code>.csv</code> para abrir na planilha.</p>
+
+<pre class="file" data-file="escrever1.py">import csv
+
+produtos = [
+    ["produto", "preco", "estoque"],
+    ["café", "18.90", "12"],
+    ["pão de queijo", "2.50", "40"],
+    ["açúcar", "5.99", "0"],
+]
+
+with open("estoque.csv", "w", newline="", encoding="utf-8") as arquivo:
+    escritor = csv.writer(arquivo)
+    escritor.writerow(produtos[0])
+    escritor.writerows(produtos[1:])
+
+print("Gravei estoque.csv")
+</pre>
+
+<pre class="term">$ python3 escrever1.py
+Gravei estoque.csv
+$ cat estoque.csv
+produto,preco,estoque
+café,18.90,12
+pão de queijo,2.50,40
+açúcar,5.99,0
+</pre>
+
+<dl class="anatomy">
+  <dt>open("estoque.csv", "w", newline="", …)</dt><dd>Abre para <strong>escrita</strong> (<code>"w"</code>: cria o arquivo ou apaga o que havia). Mais uma vez, <code>newline=""</code>.</dd>
+  <dt>csv.writer(arquivo)</dt><dd>Cria um <strong>escritor</strong> (<em>writer</em>) de CSV.</dd>
+  <dt>escritor.writerow(lista)</dt><dd>"Escreva uma linha" (<em>write row</em>): junta os itens com vírgulas e acrescenta a quebra de linha.</dd>
+  <dt>escritor.writerows(lista_de_listas)</dt><dd>"Escreva as linhas": o mesmo, para várias linhas de uma vez.</dd>
+</dl>
+
+<p>Os itens não precisam ser textos: <code>writerow(["café", 18.9, 12])</code> também funciona, e o escritor transforma cada um em texto (o <code>18.9</code> sai como <code>18.9</code>, sem o zero do fim; se a aparência importar, formate antes: <code>f"{preco:.2f}"</code>).</p>
+
+<h3>As aspas que aparecem sozinhas</h3>
+<p>E se um valor tiver uma <strong>vírgula dentro</strong>? Um cliente cadastrado como "Silva, Ana" quebraria a regra "vírgula separa colunas". O escritor resolve: põe o valor entre aspas duplas. Se o valor tiver aspas, ele as dobra.</p>
+
+<pre class="file" data-file="aspas.py">import csv
+
+clientes = [
+    ["nome", "cidade"],
+    ["Silva, Ana", "Teresina"],
+    ['Bia "Baixinha" Costa', "Recife"],
+]
+
+with open("clientes.csv", "w", newline="", encoding="utf-8") as arquivo:
+    csv.writer(arquivo).writerows(clientes)
+
+with open("clientes.csv", newline="", encoding="utf-8") as arquivo:
+    for linha in csv.reader(arquivo):
+        print(linha)
+</pre>
+
+<pre class="term">$ python3 aspas.py
+['nome', 'cidade']
+['Silva, Ana', 'Teresina']
+['Bia "Baixinha" Costa', 'Recife']
+$ cat clientes.csv
+nome,cidade
+"Silva, Ana",Teresina
+"Bia ""Baixinha"" Costa",Recife
+</pre>
+
+<p>Dentro do arquivo, <code>"Silva, Ana"</code> ficou entre aspas, e as aspas do apelido viraram <code>""</code>. Na hora de ler, o <code>csv.reader</code> desfaz tudo e devolve os valores originais. Você não precisa pensar nisso: é exatamente para essas coisas que o módulo existe.</p>
+
+<hr>
+
+<h2>3. Cada linha como dicionário: <code>DictReader</code></h2>
+<p>Com o <code>reader</code>, você lembra que a nota é a posição <code>[2]</code>. Se um dia a professora acrescentar uma coluna no meio, o programa passa a ler a coluna errada. O <code>csv.DictReader</code> usa o cabeçalho para dar <strong>nome</strong> a cada valor: cada linha vira um <a href="dicionarios.html">dicionário</a>.</p>
+
+<pre class="file" data-file="dict1.py">import csv
+
+with open("notas.csv", newline="", encoding="utf-8") as arquivo:
+    for aluno in csv.DictReader(arquivo):
+        print(aluno)
+        print("  ->", aluno["nome"], "tirou", aluno["nota"])
+</pre>
+
+<pre class="term">$ python3 dict1.py
+{'nome': 'Bia', 'turma': 'A', 'nota': '8.5'}
+  -&gt; Bia tirou 8.5
+{'nome': 'Caio', 'turma': 'B', 'nota': '6.0'}
+  -&gt; Caio tirou 6.0
+{'nome': 'Duda', 'turma': 'A', 'nota': '9.5'}
+  -&gt; Duda tirou 9.5
+{'nome': 'Enzo', 'turma': 'B', 'nota': '7.0'}
+  -&gt; Enzo tirou 7.0
+</pre>
+
+<dl class="anatomy">
+  <dt>csv.DictReader(arquivo)</dt><dd>Um leitor que usa a <strong>primeira linha</strong> como as chaves. Não precisa de <code>next()</code>: o cabeçalho já foi consumido e não aparece como dado.</dd>
+  <dt>aluno["nota"]</dt><dd>O valor pelo <strong>nome</strong> da coluna, e não pela posição. Continua sendo texto: <code>float(aluno["nota"])</code> para fazer contas.</dd>
+</dl>
+
+<h3>Gravando dicionários: <code>DictWriter</code></h3>
+
+<pre class="file" data-file="dict2.py">import csv
+
+pedidos = [
+    {"cliente": "Bia", "produto": "café", "quantidade": 2},
+    {"cliente": "Caio", "produto": "pão de queijo", "quantidade": 10},
+]
+
+with open("pedidos.csv", "w", newline="", encoding="utf-8") as arquivo:
+    escritor = csv.DictWriter(arquivo, fieldnames=["cliente", "produto", "quantidade"])
+    escritor.writeheader()
+    escritor.writerows(pedidos)
+
+print("Gravei pedidos.csv")
+</pre>
+
+<pre class="term">$ python3 dict2.py
+Gravei pedidos.csv
+$ cat pedidos.csv
+cliente,produto,quantidade
+Bia,café,2
+Caio,pão de queijo,10
+</pre>
+
+<dl class="anatomy">
+  <dt>fieldnames=[…]</dt><dd>Os nomes das colunas (<em>field names</em>, "nomes dos campos"), <strong>na ordem</strong> em que vão aparecer no arquivo. É obrigatório: o escritor precisa saber quais chaves procurar em cada dicionário.</dd>
+  <dt>escritor.writeheader()</dt><dd>"Escreva o cabeçalho": grava a linha com os nomes das colunas. Sem ela, o arquivo sai só com os dados.</dd>
+  <dt>escritor.writerows(pedidos)</dt><dd>Grava um dicionário por linha (para um só, <code>writerow</code>).</dd>
+</dl>
+
+<hr>
+
+<h2>4. Por que <code>newline=""</code>?</h2>
+<p>Todos os <code>open</code> desta aula têm <code>newline=""</code>. É a recomendação da documentação oficial do módulo <code>csv</code>, e o motivo aparece quando se olha o arquivo gravado com <code>cat -A</code>, que mostra os caracteres invisíveis:</p>
+
+<pre class="term">$ head -n 1 estoque.csv | cat -A
+produto,preco,estoque^M$
+</pre>
+
+<p>O <code>$</code> é o fim da linha, e o <code>^M</code> antes dele é um caractere a mais, o <code>\r</code> ("retorno de carro"). O escritor de CSV termina cada linha com <code>\r\n</code>, que é o que o padrão do CSV pede e o que o Excel espera. Ou seja: <strong>o módulo <code>csv</code> já cuida das quebras de linha sozinho</strong>. O <code>newline=""</code> diz ao <code>open</code>: "não mexa nelas, deixe passar como estão".</p>
+
+<p>Sem ele, o <code>open</code> também tenta "ajudar" com as quebras de linha, e os dois ajudando ao mesmo tempo atrapalham:</p>
+<ul>
+  <li><strong>No Windows</strong>, gravando: o <code>open</code> troca cada <code>\n</code> por <code>\r\n</code>, e o fim de linha vira <code>\r\r\n</code>. No Excel, aparece uma <strong>linha em branco entre cada linha</strong>. (No Linux da Ana o <code>open</code> não faz essa troca, por isso o erro não aparece aqui; mas o seu programa pode rodar no Windows de alguém.)</li>
+  <li><strong>Em qualquer sistema</strong>, lendo: um valor entre aspas pode ter uma quebra de linha dentro (um endereço em duas linhas, por exemplo). Sem <code>newline=""</code>, o <code>open</code> altera essa quebra antes de o leitor ver.</li>
+</ul>
+
+<div class="tip">
+<strong>A regra para guardar</strong>
+<p>Abriu um arquivo para usar com o módulo <code>csv</code>? Escreva <code>newline=""</code> e <code>encoding="utf-8"</code>. Sempre, lendo ou gravando.</p>
+</div>
+
+<hr>
+
+<h2>5. O CSV do Excel brasileiro: ponto e vírgula</h2>
+<p>No Brasil, a vírgula já tem dono: é a <strong>vírgula decimal</strong> (<code>8,5</code>). Por isso o Excel e o LibreOffice em português, quando salvam um CSV, separam as colunas com <strong>ponto e vírgula</strong>. A mesma tabela de notas, salva pela professora no Excel, chega assim:</p>
+
+<pre class="term">$ cat notas_excel.csv
+nome;turma;nota
+Bia;A;8,5
+Caio;B;6,0
+Duda;A;9,5
+Enzo;B;7,0
+</pre>
+
+<p>Duas diferenças: o separador é <code>;</code> e as notas têm vírgula. Para o separador, todo leitor e escritor do módulo aceita a opção <code>delimiter</code> ("delimitador", o caractere que separa as colunas). Para a vírgula decimal, troque por ponto antes de converter:</p>
+
+<pre class="file" data-file="excel.py">import csv
+
+with open("notas_excel.csv", newline="", encoding="utf-8") as arquivo:
+    alunos = list(csv.DictReader(arquivo, delimiter=";"))
+
+soma = 0
+for aluno in alunos:
+    nota = float(aluno["nota"].replace(",", "."))
+    print(f"{aluno['nome']}: {nota}")
+    soma = soma + nota
+
+media = soma / len(alunos)
+print(f"Média: {media:.2f}".replace(".", ","))
+</pre>
+
+<pre class="term">$ python3 excel.py
+Bia: 8.5
+Caio: 6.0
+Duda: 9.5
+Enzo: 7.0
+Média: 7,75
+</pre>
+
+<dl class="anatomy">
+  <dt>delimiter=";"</dt><dd>"As colunas estão separadas por ponto e vírgula." Vale também para <code>csv.reader</code>, <code>csv.writer</code> e <code>csv.DictWriter</code>.</dd>
+  <dt>list(csv.DictReader(…))</dt><dd>Lê todas as linhas de uma vez numa lista, para poder usar depois de fechar o arquivo (e saber quantos alunos são com <code>len</code>).</dd>
+  <dt>aluno["nota"].replace(",", ".")</dt><dd>Troca a vírgula decimal pelo ponto: <code>"8,5"</code> vira <code>"8.5"</code>, que o <code>float</code> entende.</dd>
+  <dt>.replace(".", ",")</dt><dd>No fim, o caminho de volta: mostra a média no jeito brasileiro.</dd>
+</dl>
+
+<h3>Os acentos e o <code>utf-8-sig</code></h3>
+<p>Quando a professora escolhe no Excel "CSV UTF-8", o arquivo ganha três bytes invisíveis bem no começo, chamados <strong>BOM</strong> (<em>byte order mark</em>, uma "marca" que avisa que o arquivo é UTF-8). Lido com <code>encoding="utf-8"</code>, o BOM gruda no nome da primeira coluna, e <code>aluno["nome"]</code> não acha nada (veja em <a href="#errado">Quando dá errado</a>). A solução é a codificação <code>"utf-8-sig"</code>, que é o UTF-8 que sabe <strong>pular</strong> o BOM se ele existir (e lê normalmente se não existir):</p>
+
+<pre class="file" data-file="bom2.py">import csv
+
+with open("notas_bom.csv", newline="", encoding="utf-8-sig") as arquivo:
+    for aluno in csv.DictReader(arquivo, delimiter=";"):
+        print(aluno["nome"], aluno["nota"])
+</pre>
+
+<pre class="term">$ python3 bom2.py
+Bia 8,5
+Caio 6,0
+</pre>
+
+<p>E no caminho contrário, para gravar um CSV que o Excel em português abra com as colunas separadas e os acentos certos, use o ponto e vírgula e grave <strong>com</strong> o BOM:</p>
+
+<pre class="file" data-file="grava_excel.py">import csv
+
+with open("para_excel.csv", "w", newline="", encoding="utf-8-sig") as arquivo:
+    escritor = csv.writer(arquivo, delimiter=";")
+    escritor.writerow(["produto", "preço"])
+    escritor.writerow(["café", "18,90"])
+
+print("Gravei para_excel.csv")
+</pre>
+
+<pre class="term">$ python3 grava_excel.py
+Gravei para_excel.csv
+$ file para_excel.csv                   « o comando file descreve o arquivo
+para_excel.csv: Unicode text, UTF-8 (with BOM) text, with CRLF line terminators
+</pre>
+
+<p>O <code>file</code> confirmou: UTF-8 com BOM, e linhas terminadas em <code>\r\n</code> (<em>CRLF</em>), como o Excel gosta.</p>
+
+<div class="trypy" data-goal="out:Maior nota: 9.5;;semerro">
+<p class="try-task"><strong>Missão:</strong> o arquivo veio do Excel brasileiro. Do jeito que está, o programa quebra. Rode, leia o erro e conserte: ele deve mostrar <code>Maior nota: 9.5</code>. (Duas coisas para arrumar: o separador e a vírgula decimal.)</p>
+<pre class="script" data-file="main.py">import csv
+
+with open("notas.csv", newline="", encoding="utf-8") as arquivo:
+    alunos = list(csv.DictReader(arquivo))
+
+maior = 0
+for aluno in alunos:
+    nota = float(aluno["nota"])
+    if nota &gt; maior:
+        maior = nota
+
+print("Maior nota:", maior)
+</pre>
+<pre class="script" data-file="notas.csv">nome;turma;nota
+Bia;A;8,5
+Caio;B;6,0
+Duda;A;9,5
+Enzo;B;7,0
+</pre>
+<pre class="solucao" data-file="main.py">import csv
+
+with open("notas.csv", newline="", encoding="utf-8") as arquivo:
+    alunos = list(csv.DictReader(arquivo, delimiter=";"))
+
+maior = 0
+for aluno in alunos:
+    nota = float(aluno["nota"].replace(",", "."))
+    if nota &gt; maior:
+        maior = nota
+
+print("Maior nota:", maior)
+</pre>
+</div>
+
+<hr>
+
+<h2 id="formas">Formas diferentes de ler um CSV</h2>
+<p>Por que não usar só o que você já sabia, <code>split(",")</code>? Para o <code>notas.csv</code> funcionaria. Agora tente com o <code>clientes.csv</code> da seção 2, o do "Silva, Ana":</p>
+
+<pre class="file" data-file="split.py">with open("clientes.csv", encoding="utf-8") as arquivo:
+    for linha in arquivo:
+        print(linha.strip().split(","))
+</pre>
+
+<pre class="term">$ python3 split.py
+['nome', 'cidade']
+['"Silva', ' Ana"', 'Teresina']
+['"Bia ""Baixinha"" Costa"', 'Recife']
+</pre>
+
+<p>O <code>split</code> não conhece as aspas: cortou "Silva, Ana" em dois pedaços, e a linha ficou com <strong>três</strong> colunas. O apelido da Bia veio com as aspas dobradas do arquivo. O <code>csv.reader</code>, na seção 2, devolveu tudo certo.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Cada linha vira</th><th>Quando usar</th></tr>
+<tr><td><code>csv.reader</code></td><td>Lista: <code>['Bia', 'A', '8.5']</code></td><td>Arquivos sem cabeçalho, ou quando você quer as colunas pela posição</td></tr>
+<tr><td><code>csv.DictReader</code></td><td>Dicionário: <code>{'nome': 'Bia', …}</code></td><td>Quase sempre, quando há cabeçalho: o código fica legível e não quebra se as colunas mudarem de lugar</td></tr>
+<tr><td><code>linha.split(",")</code></td><td>Lista</td><td>Só para arquivos que <strong>você</strong> controla e que nunca têm vírgula nem aspas nos valores. Na dúvida, use o <code>csv</code></td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Para gravar</th><th>Você entrega</th><th>Quando usar</th></tr>
+<tr><td><code>csv.writer</code> + <code>writerow</code></td><td>Listas</td><td>Os dados já estão em listas</td></tr>
+<tr><td><code>csv.DictWriter</code> + <code>writeheader</code> + <code>writerow</code></td><td>Dicionários</td><td>Os dados estão em dicionários (o caso do JSON, por exemplo)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>CSV do Excel lido sem <code>delimiter=";"</code>: <code>KeyError</code></strong>
+<pre class="file" data-file="excel_sem.py">import csv
+
+with open("notas_excel.csv", newline="", encoding="utf-8") as arquivo:
+    for aluno in csv.DictReader(arquivo):
+        print(aluno)
+        print(aluno["nota"])
+</pre>
+<pre class="term">$ python3 excel_sem.py
+{'nome;turma;nota': 'Bia;A;8', None: ['5']}
+Traceback (most recent call last):
+  File "/home/ana/excel_sem.py", line 6, in &lt;module&gt;
+    print(aluno["nota"])
+          ~~~~~^^^^^^^^
+KeyError: 'nota'
+</pre>
+<p>O <code>print(aluno)</code> da linha 5 conta a história toda. Procurando vírgulas, o leitor achou uma só: a do <code>8,5</code>! Então o cabeçalho inteiro, <code>'nome;turma;nota'</code>, virou o nome de <strong>uma</strong> coluna, com o valor <code>'Bia;A;8'</code>, e o <code>5</code> que sobrou depois da vírgula foi para uma chave <code>None</code> ("valores a mais, sem coluna"). Na linha 6, <code>KeyError: 'nota'</code>: "chave não encontrada". Não existe nenhuma coluna chamada <code>nota</code>. <strong>Como consertar:</strong> <code>csv.DictReader(arquivo, delimiter=";")</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Vírgula decimal no <code>float</code>: <code>ValueError</code></strong>
+<pre class="file" data-file="excel_float.py">import csv
+
+with open("notas_excel.csv", newline="", encoding="utf-8") as arquivo:
+    for aluno in csv.DictReader(arquivo, delimiter=";"):
+        print(float(aluno["nota"]))
+</pre>
+<pre class="term">$ python3 excel_float.py
+Traceback (most recent call last):
+  File "/home/ana/excel_float.py", line 5, in &lt;module&gt;
+    print(float(aluno["nota"]))
+          ~~~~~^^^^^^^^^^^^^^^
+ValueError: could not convert string to float: '8,5'
+</pre>
+<p>"Não consegui converter o texto <code>'8,5'</code> em <code>float</code>." O separador já está certo; o problema agora é que o Python só entende o <strong>ponto</strong> decimal. <strong>Como consertar:</strong> <code>float(aluno["nota"].replace(",", "."))</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O BOM grudado no cabeçalho: <code>KeyError</code> com a chave que "existe"</strong>
+<pre class="file" data-file="bom.py">import csv
+
+with open("notas_bom.csv", newline="", encoding="utf-8") as arquivo:
+    for aluno in csv.DictReader(arquivo, delimiter=";"):
+        print(aluno)
+        print(aluno["nome"])
+</pre>
+<pre class="term">$ python3 bom.py
+{'﻿nome': 'Bia', 'turma': 'A', 'nota': '8,5'}
+Traceback (most recent call last):
+  File "/home/ana/bom.py", line 6, in &lt;module&gt;
+    print(aluno["nome"])
+          ~~~~~^^^^^^^^
+KeyError: 'nome'
+</pre>
+<p>O mais confuso dos erros de CSV: o arquivo claramente tem a coluna <code>nome</code>, e mesmo assim <code>KeyError: 'nome'</code>. O <code>print(aluno)</code> revela o culpado: a chave é <code>'﻿nome'</code>. O <code>﻿</code> é o BOM, aquela marca invisível do começo do arquivo, que o <code>"utf-8"</code> leu como se fosse uma letra. <strong>Como consertar:</strong> <code>encoding="utf-8-sig"</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Chave que não está no <code>fieldnames</code>: <code>ValueError</code></strong>
+<pre class="file" data-file="dictw_erro.py">import csv
+
+pedido = {"cliente": "Bia", "produto": "café", "qtd": 2}
+
+with open("pedidos.csv", "w", newline="", encoding="utf-8") as arquivo:
+    escritor = csv.DictWriter(arquivo, fieldnames=["cliente", "produto", "quantidade"])
+    escritor.writeheader()
+    escritor.writerow(pedido)
+</pre>
+<pre class="term">$ python3 dictw_erro.py
+Traceback (most recent call last):
+  File "/home/ana/dictw_erro.py", line 8, in &lt;module&gt;
+    escritor.writerow(pedido)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/usr/lib/python3.14/csv.py", line 225, in writerow
+    return self.writer.writerow(self._dict_to_list(rowdict))
+                                ~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/usr/lib/python3.14/csv.py", line 220, in _dict_to_list
+    raise ValueError("dict contains fields not in fieldnames: "
+                     + ", ".join([repr(x) for x in wrong_fields]))
+ValueError: dict contains fields not in fieldnames: 'qtd'
+</pre>
+<p>"O dicionário tem campos que não estão no <code>fieldnames</code>: <code>'qtd'</code>." A sua linha é a 8; as de <code>/usr/lib/python3.14/csv.py</code> são de dentro do módulo. O dicionário usa <code>qtd</code>, e o escritor esperava <code>quantidade</code>. <strong>Como consertar:</strong> use o mesmo nome nos dois lugares. (Chave que <strong>falta</strong> no dicionário não dá erro: a coluna sai vazia.)</p>
+</div>
+
+<div class="cenario">
+<strong>Usar o leitor depois do <code>with</code>: arquivo fechado</strong>
+<pre class="file" data-file="fora_with.py">import csv
+
+with open("notas.csv", newline="", encoding="utf-8") as arquivo:
+    leitor = csv.reader(arquivo)
+
+for linha in leitor:
+    print(linha)
+</pre>
+<pre class="term">$ python3 fora_with.py
+Traceback (most recent call last):
+  File "/home/ana/fora_with.py", line 6, in &lt;module&gt;
+    for linha in leitor:
+                 ^^^^^^
+ValueError: I/O operation on closed file.
+</pre>
+<p>"Operação de entrada/saída num arquivo fechado." O leitor não guarda os dados: ele vai lendo do arquivo aos poucos, e o <code>with</code> fechou o arquivo quando o bloco acabou. <strong>Como consertar:</strong> coloque o <code>for</code> dentro do <code>with</code> (com 4 espaços), ou leia tudo para uma lista lá dentro: <code>linhas = list(leitor)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O leitor que "secou": a segunda volta vem vazia</strong>
+<pre class="file" data-file="duas_vezes.py">import csv
+
+with open("notas.csv", newline="", encoding="utf-8") as arquivo:
+    leitor = csv.reader(arquivo)
+    print("Primeira volta:", len(list(leitor)), "linhas")
+    print("Segunda volta:", len(list(leitor)), "linhas")
+</pre>
+<pre class="term">$ python3 duas_vezes.py
+Primeira volta: 5 linhas
+Segunda volta: 0 linhas
+</pre>
+<p>Sem erro nenhum, a segunda volta não achou nada. O leitor é como ler um livro: depois que chegou à última página, continuar lendo não traz mais nada. <strong>Como consertar:</strong> leia uma vez para uma lista (<code>linhas = list(leitor)</code>) e percorra a lista quantas vezes quiser.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>open(nome, newline="", encoding="utf-8")</code></td><td>Abre para ler um CSV (para gravar, acrescente <code>"w"</code>)</td></tr>
+<tr><td><code>csv.reader(arquivo)</code></td><td>Leitor: cada linha vira uma lista de textos</td></tr>
+<tr><td><code>next(leitor)</code></td><td>Tira a próxima linha (usado para pular o cabeçalho)</td></tr>
+<tr><td><code>csv.DictReader(arquivo)</code></td><td>Leitor: cada linha vira um dicionário com as chaves do cabeçalho</td></tr>
+<tr><td><code>csv.writer(arquivo)</code></td><td>Escritor de listas</td></tr>
+<tr><td><code>escritor.writerow(lista)</code> / <code>writerows(listas)</code></td><td>Grava uma linha / várias linhas</td></tr>
+<tr><td><code>csv.DictWriter(arquivo, fieldnames=[…])</code></td><td>Escritor de dicionários, com as colunas nessa ordem</td></tr>
+<tr><td><code>escritor.writeheader()</code></td><td>Grava a linha do cabeçalho</td></tr>
+<tr><td><code>delimiter=";"</code></td><td>Colunas separadas por ponto e vírgula (Excel brasileiro)</td></tr>
+<tr><td><code>encoding="utf-8-sig"</code></td><td>Lê pulando o BOM; grava com o BOM (bom para o Excel)</td></tr>
+<tr><td><code>float(texto.replace(",", "."))</code></td><td>Converte número com vírgula decimal</td></tr>
+<tr><td><code>list(leitor)</code></td><td>Todas as linhas numa lista (para usar mais de uma vez ou fora do <code>with</code>)</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td>Uma coluna só, chamada <code>'nome;turma;nota'</code>, ou <code>KeyError</code> no <code>DictReader</code></td><td>Arquivo com <code>;</code>: faltou <code>delimiter=";"</code></td></tr>
+<tr><td><code>ValueError: could not convert string to float: '8,5'</code></td><td>Vírgula decimal: <code>.replace(",", ".")</code> antes do <code>float</code></td></tr>
+<tr><td><code>KeyError</code> com uma chave que existe; a chave aparece como <code>'﻿nome'</code></td><td>BOM do Excel: use <code>encoding="utf-8-sig"</code></td></tr>
+<tr><td><code>TypeError: can only concatenate str (not "int") to str</code></td><td>Conta com um valor do CSV, que é texto: converta com <code>int()</code>/<code>float()</code></td></tr>
+<tr><td><code>ValueError: dict contains fields not in fieldnames</code></td><td>Chave do dicionário diferente das do <code>fieldnames</code></td></tr>
+<tr><td><code>ValueError: I/O operation on closed file.</code></td><td>Usou o leitor fora do <code>with</code></td></tr>
+<tr><td>Segunda leitura vazia, sem erro</td><td>O leitor só anda para a frente: guarde numa lista</td></tr>
+<tr><td>Linha em branco entre as linhas, no Excel do Windows</td><td>Faltou <code>newline=""</code> ao gravar</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O que quer dizer</h3>
+<p>CSV são as iniciais de <em>Comma-Separated Values</em>: valores separados por… (uma palavra)</p>
+<div class="ex-code"><input data-answer="vírgula|virgula|vírgulas|virgulas" aria-label="resposta"></div>
+</div>
+
+<div class="exercise">
+<h3>2. O arquivo do Excel</h3>
+<p>Complete para ler um CSV salvo pelo Excel em português:</p>
+<div class="ex-code">leitor = csv.DictReader(arquivo, <input data-answer="delimiter=&quot;;&quot;|delimiter=';'" aria-label="opção">)</div>
+</div>
+
+<div class="exercise">
+<h3>3. Pulando o cabeçalho</h3>
+<p>Complete para descartar a primeira linha antes do <code>for</code>:</p>
+<div class="ex-code">leitor = csv.reader(arquivo)<br><input data-answer="next(leitor)" aria-label="linha"><br>for linha in leitor:</div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Com <code>csv.DictReader</code>, a linha <code>Bia,A,8.5</code> vira <code>{'nome': 'Bia', 'turma': 'A', 'nota': '8.5'}</code>. Qual é o tipo de <code>aluno["nota"]</code>?</p>
+<label><input type="radio" name="q4"> <code>float</code></label>
+<label><input type="radio" name="q4"> <code>int</code></label>
+<label><input type="radio" name="q4"> <code>str</code>: tudo o que vem do CSV é texto</label>
+<label><input type="radio" name="q4"> Depende do valor</label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. A Ana gravou <code>["Silva, Ana", "Teresina"]</code> com <code>csv.writer</code>. Como a linha aparece no arquivo?</p>
+<label><input type="radio" name="q5"> <code>Silva, Ana,Teresina</code></label>
+<label><input type="radio" name="q5"> <code>"Silva, Ana",Teresina</code></label>
+<label><input type="radio" name="q5"> <code>Silva; Ana,Teresina</code></label>
+<label><input type="radio" name="q5"> Dá erro, porque o valor tem vírgula</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. O <code>DictReader</code> deu <code>KeyError: 'nome'</code>, e o <code>print</code> da linha mostra a chave <code>'﻿nome'</code>. O que resolve?</p>
+<label><input type="radio" name="q6"> <code>delimiter=";"</code></label>
+<label><input type="radio" name="q6"> <code>newline=""</code></label>
+<label><input type="radio" name="q6"> Apagar a coluna <code>nome</code></label>
+<label><input type="radio" name="q6"> <code>encoding="utf-8-sig"</code></label>
+</div>
+
+<h3>Missão final: a lista de compras em CSV</h3>
+
+<div class="trypy" data-goal="arquivo:compras.csv~produto,quantidade;;arquivo:compras.csv~arroz,2;;arquivo:compras.csv~feijão,1;;out:feijão;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa grava <code>compras.csv</code>, mas só o cabeçalho. Faça ele gravar também os itens da lista <code>compras</code> (uma linha por item) e depois mostrar o arquivo. Dica: <code>writerows</code>.</p>
+<pre class="script" data-file="main.py">import csv
+
+compras = [
+    ["arroz", 2],
+    ["feijão", 1],
+    ["café", 3],
+]
+
+with open("compras.csv", "w", newline="", encoding="utf-8") as arquivo:
+    escritor = csv.writer(arquivo)
+    escritor.writerow(["produto", "quantidade"])
+
+with open("compras.csv", newline="", encoding="utf-8") as arquivo:
+    print(arquivo.read())
+</pre>
+<pre class="solucao" data-file="main.py">import csv
+
+compras = [
+    ["arroz", 2],
+    ["feijão", 1],
+    ["café", 3],
+]
+
+with open("compras.csv", "w", newline="", encoding="utf-8") as arquivo:
+    escritor = csv.writer(arquivo)
+    escritor.writerow(["produto", "quantidade"])
+    escritor.writerows(compras)
+
+with open("compras.csv", newline="", encoding="utf-8") as arquivo:
+    print(arquivo.read())
+</pre>
+</div>
+
+<p>Quer ir além? Troque para <code>delimiter=";"</code> e <code>encoding="utf-8-sig"</code> e veja como o arquivo muda; é esse que abre direitinho no Excel em português. As notas da turma voltam no <a href="projeto-notas.html">Projeto: Notas da Turma</a>.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>CSV é uma tabela em texto: uma linha por registro, uma vírgula entre as colunas, e o cabeçalho na primeira linha.</li>
+  <li>Abra sempre com <code>newline=""</code> e <code>encoding="utf-8"</code>: o módulo <code>csv</code> cuida das quebras de linha.</li>
+  <li><code>csv.reader</code> dá listas; <code>next(leitor)</code> pula o cabeçalho. <code>csv.DictReader</code> dá dicionários com as chaves do cabeçalho.</li>
+  <li>Todo valor lido é <strong>texto</strong>: converta com <code>int()</code> ou <code>float()</code>.</li>
+  <li><code>csv.writer</code> + <code>writerow</code>/<code>writerows</code> gravam listas; <code>csv.DictWriter(…, fieldnames=…)</code> + <code>writeheader()</code> gravam dicionários. As aspas para valores com vírgula aparecem sozinhas.</li>
+  <li>Excel brasileiro: <code>delimiter=";"</code>, vírgula decimal (<code>.replace(",", ".")</code>) e <code>encoding="utf-8-sig"</code> para o BOM.</li>
+  <li>O leitor só anda para a frente e só funciona com o arquivo aberto: para usar depois, <code>list(leitor)</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
