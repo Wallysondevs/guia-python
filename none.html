@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python None — o valor que quer dizer &quot;nada&quot; | Guia Python</title>
+<meta name="description" content="O valor None em Python para quem nunca programou: o que é o &quot;nada&quot;, o tipo NoneType, por que None não é 0, nem &quot;&quot;, nem False, como testar com is None, onde o None aparece sozinho (o print devolve None) e os erros reais: TypeError com NoneType, AttributeError e o none minúsculo.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">O Valor None</span></h1>
+
+<p class="intro">Às vezes um programa precisa dizer "aqui não tem nada": o cliente não deixou telefone, a promoção ainda não tem desconto definido, a busca não achou ninguém. Para isso, o Python tem um valor especial, o <code>None</code> (em inglês, "nenhum"). Ele não é zero, não é um texto vazio, não é falso: é a <strong>ausência de valor</strong>. Nesta aula você vai ver como usá-lo, como perguntar se uma variável está "vazia" desse jeito e por que tanta mensagem de erro fala em <code>NoneType</code>.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é o <code>None</code> e qual é o tipo dele, o <code>NoneType</code>.</li>
+  <li>Quando usar <code>None</code>: o valor que "ainda não existe" ou "não foi informado".</li>
+  <li>Por que <code>None</code> não é <code>0</code>, nem <code>""</code>, nem <code>False</code>.</li>
+  <li>A perguntar "é <code>None</code>?" com <code>is None</code>.</li>
+  <li>Por que o modo interativo não mostra nada quando o resultado é <code>None</code>.</li>
+  <li>Onde o <code>None</code> aparece sem você pedir: o <code>print()</code> devolve <code>None</code>.</li>
+  <li>Os erros reais com <code>NoneType</code>, os mais comuns do Python.</li>
+</ul>
+</div>
+
+<p>Os programas desta aula rodaram no <strong>Python 3.14</strong> da máquina da Ana (usuária <code>ana</code>, computador <code>notebook</code>), e podem ser repetidos no editor do guia.</p>
+
+<hr>
+
+<h2>A ideia: o campo em branco da ficha</h2>
+<p>A padaria guarda uma ficha de cada cliente que encomenda bolo. Na ficha da Dona Lúcia, o campo "Telefone" ficou <strong>em branco</strong>: ela não quis informar. Repare: em branco não é "telefone zero" nem "telefone falso". É <strong>"sem telefone"</strong>, uma informação que não existe.</p>
+
+<p>Na ficha de papel, você deixa o espaço vazio. No Python, você escreve <code>None</code>:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Valor</th><th>O que diz</th><th>Na ficha</th></tr>
+<tr><td><code>0</code></td><td>Um número: zero</td><td>"Encomendou 0 bolos"</td></tr>
+<tr><td><code>""</code></td><td>Um texto, só que vazio</td><td>"Apelido: (escreveu nada)"</td></tr>
+<tr><td><code>False</code></td><td>Uma resposta: não</td><td>"Cliente VIP? Não"</td></tr>
+<tr><td><code>None</code></td><td><strong>Nenhum valor</strong></td><td>"Telefone: (sem informação)"</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. Escrevendo <code>None</code></h2>
+<pre class="file" data-file="ficha.py">nome = "Dona Lúcia"
+telefone = None
+print(nome)
+print(telefone)
+print(type(telefone))
+</pre>
+
+<pre class="term">$ python3 ficha.py
+Dona Lúcia
+None
+&lt;class 'NoneType'&gt;
+</pre>
+
+<dl class="anatomy">
+  <dt>telefone = None</dt><dd>A variável existe, mas guarda "nada". Assim o programa registra que o telefone <strong>não foi informado</strong>.</dd>
+  <dt>None</dt><dd>Com <strong>N maiúsculo</strong> e <strong>sem aspas</strong>, como <code>True</code> e <code>False</code>. É uma palavra reservada do Python.</dd>
+  <dt>print(telefone) → None</dt><dd>O <code>print</code> mostra a palavra <code>None</code> para você saber que ali não há valor.</dd>
+  <dt>&lt;class 'NoneType'&gt;</dt><dd>O tipo do <code>None</code> se chama <code>NoneType</code> ("tipo do nenhum"). É um tipo com um valor só: o próprio <code>None</code>. Você vai ver esse nome em muitas mensagens de erro.</dd>
+</dl>
+
+<h3>O modo interativo não mostra o <code>None</code></h3>
+<p>No modo interativo (aula <a href="repl.html">O Modo Interativo</a>), o Python mostra o resultado de tudo o que você digita, <strong>menos</strong> quando o resultado é <code>None</code>:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; None
+&gt;&gt;&gt; print(None)
+None
+&gt;&gt;&gt; telefone = None
+&gt;&gt;&gt; telefone
+&gt;&gt;&gt; type(None)
+&lt;class 'NoneType'&gt;
+</pre>
+
+<p>Digitar <code>None</code> ou <code>telefone</code> não mostrou nada: para o modo interativo, "nada" não precisa ser mostrado. Para ver, peça com <code>print()</code>. Se um dia você digitar algo no <code>&gt;&gt;&gt;</code> e não aparecer resposta nenhuma, o resultado provavelmente foi <code>None</code>.</p>
+
+<hr>
+
+<h2>2. <code>None</code> não é zero, nem vazio, nem falso</h2>
+<p>O <code>None</code> é diferente de todos os outros valores "pequenos":</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; None == 0
+False
+&gt;&gt;&gt; None == ""
+False
+&gt;&gt;&gt; None == False
+False
+&gt;&gt;&gt; bool(None)
+False
+</pre>
+
+<p>As três primeiras perguntas mostram que <code>None</code> não é igual a <code>0</code>, nem a <code>""</code>, nem a <code>False</code>. Mas a última mostra que, quando o Python precisa de um "sim ou não", o <code>None</code> conta como <strong>falso</strong>: ele é <em>falsy</em>, como o zero e o texto vazio (aula <a href="booleanos.html">Booleanos</a>).</p>
+
+<p>Por que a diferença importa? Pense no desconto da padaria. "Desconto 0" quer dizer "o desconto foi decidido e é zero". "Desconto <code>None</code>" quer dizer "ninguém decidiu o desconto ainda". São situações diferentes, e o programa pode precisar tratá-las de jeitos diferentes.</p>
+
+<hr>
+
+<h2>3. Perguntando "é <code>None</code>?": <code>is None</code></h2>
+<p>Para saber se uma variável guarda <code>None</code>, o costume do Python é usar <code>is None</code> ("é nenhum"):</p>
+
+<pre class="file" data-file="desconto.py">desconto = None
+print(desconto is None)
+desconto = 0
+print(desconto is None)
+print(desconto == 0)
+</pre>
+
+<pre class="term">$ python3 desconto.py
+True
+False
+True
+</pre>
+
+<dl class="anatomy">
+  <dt>desconto is None</dt><dd>"O desconto é o <code>None</code>?" Na primeira vez, sim: <code>True</code>.</dd>
+  <dt>desconto = 0</dt><dd>Agora alguém decidiu: o desconto é zero.</dd>
+  <dt>desconto is None → False</dt><dd>Zero não é <code>None</code>.</dd>
+  <dt>desconto == 0 → True</dt><dd>Mas é igual a zero.</dd>
+</dl>
+
+<p>O contrário é <code>is not None</code> ("não é nenhum"): <code>telefone is not None</code> responde <code>True</code> quando o telefone foi informado. O <code>is</code> tem aula própria, <a href="operadores-is-in.html">is e in</a>, que explica por que ele é o certo para o <code>None</code> e o <code>==</code> é o certo para o resto.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>telefone is None</code></td><td><strong>Sempre</strong> que a pergunta for "é <code>None</code>?". É a forma recomendada pelo guia de estilo do Python (aula <a href="estilo-pep8.html">PEP 8</a>)</td></tr>
+<tr><td><code>telefone is not None</code></td><td>"Tem valor?"</td></tr>
+<tr><td><code>telefone == None</code></td><td>Funciona quase sempre, mas não é o costume. Evite</td></tr>
+<tr><td><code>not telefone</code></td><td>Cuidado: dá <code>True</code> para <code>None</code>, mas também para <code>0</code> e <code>""</code>. Use só quando você quer tratar todos os "vazios" do mesmo jeito</td></tr>
+</table>
+</div>
+
+<div class="trypy" data-goal="out:Telefone: None;;semerro">
+<p class="try-task"><strong>Missão:</strong> a ficha do Seu Joaquim está sem telefone, mas o programa para com <code>NameError</code>. Conserte o valor que quer dizer "nada".</p>
+<pre class="script" data-file="main.py">telefone = none
+print("Telefone:", telefone)
+</pre>
+<pre class="solucao" data-file="main.py">telefone = None
+print("Telefone:", telefone)
+</pre>
+</div>
+
+<hr>
+
+<h2>4. Onde o <code>None</code> aparece sem você pedir</h2>
+<p>Toda função do Python devolve alguma coisa. As que fazem um trabalho e não têm nada para devolver, como o <code>print()</code>, devolvem <code>None</code>. O <code>print</code> <strong>mostra</strong> o texto na tela, mas não <strong>entrega</strong> nada de volta:</p>
+
+<pre class="file" data-file="retorno_print.py">resultado = print("Bom dia!")
+print(resultado)
+</pre>
+
+<pre class="term">$ python3 retorno_print.py
+Bom dia!
+None
+</pre>
+
+<p>A linha 1 mostrou "Bom dia!" e guardou na variável o que o <code>print</code> devolveu: <code>None</code>. Parece bobagem, mas é a origem de um erro muito comum. A Ana queria calcular o preço de 2 pães de queijo e somar a taxa de entrega:</p>
+
+<pre class="file" data-file="total_print.py">preco = 4.5
+total = print(preco * 2)
+print("Total com taxa:", total + 1)
+</pre>
+
+<pre class="term">$ python3 total_print.py
+9.0
+Traceback (most recent call last):
+  File "/home/ana/total_print.py", line 3, in &lt;module&gt;
+    print("Total com taxa:", total + 1)
+                             ~~~~~~^~~
+TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'
+</pre>
+
+<p>O <code>9.0</code> apareceu (o <code>print</code> mostrou a conta), mas o <code>total</code> ficou com <code>None</code>, e somar <code>None + 1</code> não existe. O conserto é guardar a <strong>conta</strong>, e não o <code>print</code>:</p>
+
+<pre class="file" data-file="total_certo.py">preco = 4.5
+total = preco * 2
+print(total)
+print("Total com taxa:", total + 1)
+</pre>
+
+<pre class="term">$ python3 total_certo.py
+9.0
+Total com taxa: 10.0
+</pre>
+
+<p>Quando você criar as suas próprias funções (aula <a href="return.html">return</a>), vai ver que uma função sem <code>return</code> também devolve <code>None</code>.</p>
+
+<hr>
+
+<h2>5. Para que usar <code>None</code></h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Situação</th><th>Exemplo</th></tr>
+<tr><td>Informação que não foi dada</td><td><code>telefone = None</code></td></tr>
+<tr><td>Valor que ainda vai ser calculado ou decidido</td><td><code>desconto = None</code>, <code>maior_nota = None</code></td></tr>
+<tr><td>"Não encontrei"</td><td>Uma busca que devolve <code>None</code> quando não acha (você vai ver isso em <a href="dicionarios.html">Dicionários</a>, com o <code>.get()</code>)</td></tr>
+<tr><td>Função que só faz um trabalho</td><td><code>print()</code> devolve <code>None</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+<p>Os erros com <code>NoneType</code> estão entre os mais comuns do Python. Quase sempre a causa é a mesma: <strong>uma variável que você achava que tinha um valor tem <code>None</code></strong>. Quando aparecer <code>NoneType</code> numa mensagem, pergunte: "de onde veio esse <code>None</code>?".</p>
+
+<div class="cenario">
+<strong>Fazer conta com <code>None</code>: <code>TypeError: unsupported operand type(s)</code></strong>
+<pre class="file" data-file="none_mais.py">telefone = None
+print(telefone + 1)
+</pre>
+<pre class="term">$ python3 none_mais.py
+Traceback (most recent call last):
+  File "/home/ana/none_mais.py", line 2, in &lt;module&gt;
+    print(telefone + 1)
+          ~~~~~~~~~^~~
+TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'
+</pre>
+<dl class="anatomy">
+  <dt>line 2</dt><dd>O erro está na linha 2.</dd>
+  <dt>~~~~~~~~~^~~</dt><dd>Os tils marcam os dois lados da conta, e o chapeuzinho, o <code>+</code>.</dd>
+  <dt>TypeError</dt><dd>"Erro de tipo".</dd>
+  <dt>unsupported operand type(s) for +</dt><dd>"Tipos de operando não suportados para <code>+</code>": o <code>+</code> não sabe trabalhar com esses tipos.</dd>
+  <dt>'NoneType' and 'int'</dt><dd>Do lado esquerdo havia um <code>NoneType</code> (o <code>None</code>) e, do lado direito, um <code>int</code> (o 1).</dd>
+</dl>
+<p><strong>Como consertar:</strong> descubra por que a variável tinha <code>None</code>. Foi guardado o resultado de um <code>print</code>? Faltou dar o valor? Se o <code>None</code> é esperado (telefone não informado), pergunte com <code>is None</code> antes de usar.</p>
+</div>
+
+<div class="cenario">
+<strong>Usar <code>None</code> como texto: <code>TypeError</code> e <code>AttributeError</code></strong>
+<pre class="file" data-file="none_len.py">apelido = None
+print(len(apelido))
+</pre>
+<pre class="term">$ python3 none_len.py
+Traceback (most recent call last):
+  File "/home/ana/none_len.py", line 2, in &lt;module&gt;
+    print(len(apelido))
+          ~~~^^^^^^^^^
+TypeError: object of type 'NoneType' has no len()
+</pre>
+<p>"Objeto do tipo <code>NoneType</code> não tem <code>len()</code>". O <code>len()</code> conta as letras de um texto (aula <a href="strings.html">Strings</a>), mas o <code>None</code> não tem letras para contar. O mesmo acontece ao chamar um método de texto:</p>
+<pre class="file" data-file="none_upper.py">apelido = None
+print(apelido.upper())
+</pre>
+<pre class="term">$ python3 none_upper.py
+Traceback (most recent call last):
+  File "/home/ana/none_upper.py", line 2, in &lt;module&gt;
+    print(apelido.upper())
+          ^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'upper'
+</pre>
+<p><code>AttributeError</code> é "erro de atributo": "objeto <code>NoneType</code> não tem o atributo <code>upper</code>". O <code>.upper()</code> deixa um texto em maiúsculas, e o <code>None</code> não é texto. <strong>Como consertar:</strong> se o apelido pode faltar, guarde <code>""</code> (texto vazio, que tem <code>len</code> 0 e aceita <code>.upper()</code>) ou confira com <code>is None</code> antes.</p>
+</div>
+
+<div class="cenario">
+<strong><code>none</code> com minúscula: <code>NameError</code></strong>
+<pre class="file" data-file="none_minusculo.py">telefone = none
+print("Telefone:", telefone)
+</pre>
+<pre class="term">$ python3 none_minusculo.py
+Traceback (most recent call last):
+  File "/home/ana/none_minusculo.py", line 1, in &lt;module&gt;
+    telefone = none
+               ^^^^
+NameError: name 'none' is not defined. Did you mean: 'None'?
+</pre>
+<p>Como com o <code>true</code> da aula <a href="booleanos.html">Booleanos</a>: <code>none</code>, com minúscula, parece o nome de uma variável que não existe, e o Python sugere <code>'None'</code>. Quem vem de outras linguagens costuma escrever <code>null</code> ou <code>nil</code>, e o resultado é o mesmo <code>NameError</code>. <strong>Como consertar:</strong> <code>None</code>, com N maiúsculo.</p>
+</div>
+
+<div class="cenario">
+<strong><code>"None"</code> entre aspas</strong>
+<p>Com aspas, <code>"None"</code> é um texto de quatro letras, e não o "nada". O <code>print</code> mostra os dois do mesmo jeito, mas <code>"None" is None</code> é <code>False</code>. (No modo interativo, o Python ainda avisa: <code>SyntaxWarning: "is" with 'str' literal. Did you mean "=="?</code>, porque usar <code>is</code> com um texto escrito no código quase sempre é engano.) <strong>Como consertar:</strong> <code>None</code>, sem aspas.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Resultado</th><th>Observação</th></tr>
+<tr><td><code>x = None</code></td><td><code>x</code> sem valor</td><td>N maiúsculo, sem aspas</td></tr>
+<tr><td><code>type(None)</code></td><td><code>&lt;class 'NoneType'&gt;</code></td><td>O tipo que só tem o <code>None</code></td></tr>
+<tr><td><code>x is None</code></td><td><code>True</code> ou <code>False</code></td><td>A forma certa de perguntar</td></tr>
+<tr><td><code>x is not None</code></td><td><code>True</code> ou <code>False</code></td><td>"Tem valor?"</td></tr>
+<tr><td><code>None == 0</code>, <code>None == ""</code>, <code>None == False</code></td><td><code>False</code></td><td><code>None</code> não é nenhum deles</td></tr>
+<tr><td><code>bool(None)</code></td><td><code>False</code></td><td><code>None</code> é <em>falsy</em></td></tr>
+<tr><td><code>print(…)</code></td><td>devolve <code>None</code></td><td>Mostra, mas não entrega valor</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'</code></td><td>Conta com uma variável que tinha <code>None</code> (muitas vezes, o resultado de um <code>print</code>)</td></tr>
+<tr><td><code>TypeError: object of type 'NoneType' has no len()</code></td><td><code>len()</code> de uma variável com <code>None</code></td></tr>
+<tr><td><code>AttributeError: 'NoneType' object has no attribute '…'</code></td><td>Método chamado numa variável com <code>None</code></td></tr>
+<tr><td><code>NameError: name 'none' is not defined. Did you mean: 'None'?</code></td><td><code>none</code>, <code>null</code> ou <code>nil</code>: o certo é <code>None</code></td></tr>
+<tr><td>No <code>&gt;&gt;&gt;</code>, nenhuma resposta</td><td>O resultado foi <code>None</code>: use <code>print()</code> para ver</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O tipo do nada</h3>
+<p>Complete o que <code>print(type(None))</code> mostra:</p>
+<div class="ex-code">&lt;class '<input data-answer="NoneType" aria-label="tipo">'&gt;</div>
+</div>
+
+<div class="exercise">
+<h3>2. A pergunta certa</h3>
+<p>Complete para perguntar se o desconto ainda não foi definido:</p>
+<div class="ex-code">print(desconto <input data-answer="is" aria-label="operador"> None)</div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">3. Quanto vale <code>None == 0</code>?</p>
+<label><input type="radio" name="q3"> <code>True</code>, porque os dois são "nada"</label>
+<label><input type="radio" name="q3"> Dá erro</label>
+<label><input type="radio" name="q3"> <code>False</code></label>
+<label><input type="radio" name="q3"> <code>None</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. O que <code>x = print("Oi")</code> guarda em <code>x</code>?</p>
+<label><input type="radio" name="q4"> O texto <code>"Oi"</code></label>
+<label><input type="radio" name="q4"> <code>None</code></label>
+<label><input type="radio" name="q4"> <code>True</code>, porque o <code>print</code> deu certo</label>
+<label><input type="radio" name="q4"> Nada: a linha dá erro</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Apareceu <code>AttributeError: 'NoneType' object has no attribute 'upper'</code>. O que isso quer dizer?</p>
+<label><input type="radio" name="q5"> A variável em que você chamou <code>.upper()</code> guardava <code>None</code>, e não um texto</label>
+<label><input type="radio" name="q5"> O <code>.upper()</code> não existe no Python 3.14</label>
+<label><input type="radio" name="q5"> O texto estava vazio</label>
+<label><input type="radio" name="q5"> Faltou importar o <code>NoneType</code></label>
+</div>
+
+<h3>Missão final: o total que sumiu</h3>
+
+<div class="trypy" data-goal="out:Total com taxa: 10.0;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa mostra <code>9.0</code> e depois para com <code>TypeError</code>, porque a variável <code>total</code> ficou com <code>None</code>. Faça o <code>total</code> guardar a <strong>conta</strong>, para a última linha mostrar <code>Total com taxa: 10.0</code>.</p>
+<pre class="script" data-file="main.py">preco = 4.5
+total = print(preco * 2)
+print("Total com taxa:", total + 1)
+</pre>
+<pre class="solucao" data-file="main.py">preco = 4.5
+total = preco * 2
+print("Total com taxa:", total + 1)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>None</code> é o valor que quer dizer "nada", "sem valor", "não informado". Escreve-se com N maiúsculo e sem aspas.</li>
+  <li>O tipo dele é <code>NoneType</code>, que só tem esse valor.</li>
+  <li><code>None</code> não é <code>0</code>, nem <code>""</code>, nem <code>False</code>, mas é <em>falsy</em>: <code>bool(None)</code> é <code>False</code>.</li>
+  <li>Para perguntar, use <code>x is None</code> e <code>x is not None</code>.</li>
+  <li>O modo interativo não mostra resultados <code>None</code>; use <code>print()</code>.</li>
+  <li>O <code>print()</code> devolve <code>None</code>: guarde a conta, não o <code>print</code>.</li>
+  <li>Erros com <code>NoneType</code> querem dizer que uma variável tinha <code>None</code> quando você esperava um valor. Procure de onde ele veio.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
