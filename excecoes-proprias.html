@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Criando suas Exceções — classes de erro próprias | Guia Python</title>
+<meta name="description" content="Exceções próprias para quem está começando: por que um ValueError genérico confunde, como criar uma exceção herdando de Exception, o nome com Error no fim, hierarquia de exceções (LojaError e suas filhas), a ordem dos except, exceções com dados e mensagem (super().__init__), raise … from e e os erros reais do Python 3.14 (exceptions must derive from BaseException, During handling of the above exception).">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Criando suas Exceções</span></h1>
+
+<p class="intro">O Python já vem com dezenas de exceções: <code>ValueError</code>, <code>KeyError</code>, <code>ZeroDivisionError</code>… Elas falam dos problemas <strong>do Python</strong>: um texto que não vira número, uma chave que não existe, uma divisão por zero. Mas o seu programa tem problemas próprios. Na lojinha da Ana, "acabou o café" e "esse produto a gente não vende" são erros que nenhuma exceção do Python descreve direito. Nesta aula você vai criar <strong>as suas exceções</strong>, com nome, mensagem e até dados, para que o resto do programa saiba exatamente o que deu errado.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>Por que usar <code>ValueError</code> para tudo acaba misturando erros diferentes.</li>
+  <li>A criar uma exceção com <code>class NomeError(Exception):</code>, e o costume do <code>Error</code> no fim do nome.</li>
+  <li>A lançá-la com <code>raise</code> e a capturá-la com <code>except</code>.</li>
+  <li>A montar uma <strong>família</strong> de exceções (uma mãe, várias filhas) e a capturar todas de uma vez.</li>
+  <li>Por que a ordem dos <code>except</code> importa.</li>
+  <li>A guardar dados dentro da exceção (o produto, a quantidade) e a montar a mensagem com <code>super().__init__</code>.</li>
+  <li>A trocar um erro do Python por um seu com <code>raise … from e</code>.</li>
+  <li>Os erros reais: <code>exceptions must derive from BaseException</code>, a mensagem que vira tupla, o <code>except</code> com nome errado.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: alarmes com etiqueta</h2>
+<p>Imagine que a lojinha tivesse um alarme só, que toca por qualquer motivo: porta aberta, fumaça, freezer quente. Quando ele toca, a Ana tem de sair procurando o que foi. Agora imagine um painel com uma luz para cada problema: "freezer", "porta dos fundos", "fumaça". Ela olha e já sabe aonde ir. E ainda dá para ter uma luz geral, "problema na loja", que acende junto com qualquer uma das outras.</p>
+<p>Cada exceção que você cria é uma dessas luzes com etiqueta. E a família de exceções (seção 4) é a luz geral.</p>
+
+<p>Antes de começar, lembre: <code>raise</code> lança uma exceção (aula <a href="raise.html">raise: Lançando Erros</a>) e <code>try</code>/<code>except</code> a captura (aula <a href="try-except.html">try e except</a>). Aqui você vai juntar as duas coisas com <a href="classes.html">classes</a> e <a href="heranca.html">herança</a>.</p>
+
+<hr>
+
+<h2>1. O problema: um <code>ValueError</code> para tudo</h2>
+<p>A função <code>vender</code> recusa a venda quando não tem estoque. Sem exceção própria, a Ana usou o <code>ValueError</code>. A quantidade vem digitada como texto, então o programa também converte com <code>int()</code>:</p>
+
+<pre class="file" data-file="generico.py">estoque = {"café": 2, "leite": 10}
+
+
+def vender(produto, quantidade):
+    if quantidade &gt; estoque[produto]:
+        raise ValueError(f"só temos {estoque[produto]} unidades de {produto}")
+    estoque[produto] -= quantidade
+
+
+for texto in ["5", "dois"]:
+    try:
+        vender("café", int(texto))
+    except ValueError as e:
+        print("Não deu:", e)
+</pre>
+
+<pre class="term">$ python3 generico.py
+Não deu: só temos 2 unidades de café
+Não deu: invalid literal for int() with base 10: 'dois'
+</pre>
+
+<p>Os dois problemas caíram no mesmo <code>except</code>. Um é "falta café" (o cliente pode levar menos); o outro é "digitaram errado" (é preciso perguntar de novo). Eles pedem reações diferentes, mas o programa não tem como separá-los, porque o <code>int("dois")</code> também lança <code>ValueError</code>. A saída é dar ao problema do estoque uma etiqueta só dele.</p>
+
+<hr>
+
+<h2>2. A primeira exceção própria</h2>
+
+<pre class="file" data-file="primeira.py">class EstoqueInsuficienteError(Exception):
+    pass
+
+
+estoque = {"café": 2, "leite": 10}
+
+
+def vender(produto, quantidade):
+    if quantidade &gt; estoque[produto]:
+        raise EstoqueInsuficienteError(f"só temos {estoque[produto]} unidades de {produto}")
+    estoque[produto] -= quantidade
+
+
+vender("leite", 3)
+print("Leite vendido. Sobraram", estoque["leite"])
+vender("café", 5)
+print("Esta linha não roda.")
+</pre>
+
+<dl class="anatomy">
+  <dt>class EstoqueInsuficienteError</dt><dd>Uma exceção é uma <strong>classe</strong>. O nome segue o costume das classes (cada palavra com maiúscula) e termina em <code>Error</code> ("erro"), como recomenda o guia de estilo do Python (aula <a href="estilo-pep8.html">PEP 8</a>), para que quem lê saiba na hora que aquilo é um erro.</dd>
+  <dt>(Exception)</dt><dd>A parte mais importante: ela <strong>herda</strong> de <code>Exception</code>, a mãe de quase todas as exceções do Python. É isso que permite usá-la com <code>raise</code> e <code>except</code>.</dd>
+  <dt>pass</dt><dd>"Não faça nada." A classe não precisa de mais nada: herdou tudo o que uma exceção sabe fazer, inclusive guardar a mensagem.</dd>
+  <dt>raise EstoqueInsuficienteError(f"…")</dt><dd>Cria um objeto da exceção, com a mensagem entre parênteses, e o lança, como você faria com <code>raise ValueError("…")</code>.</dd>
+</dl>
+
+<pre class="term">$ python3 primeira.py
+Leite vendido. Sobraram 7
+Traceback (most recent call last):
+  File "/home/ana/primeira.py", line 16, in &lt;module&gt;
+    vender("café", 5)
+    ~~~~~~^^^^^^^^^^^
+  File "/home/ana/primeira.py", line 10, in vender
+    raise EstoqueInsuficienteError(f"só temos {estoque[produto]} unidades de {produto}")
+EstoqueInsuficienteError: só temos 2 unidades de café
+</pre>
+
+<p>O leite foi vendido normalmente. No café, a sua exceção apareceu num traceback igualzinho aos do Python: a linha 16 chamou <code>vender</code>, a linha 10 lançou o erro, e a última linha traz o <strong>nome da sua classe</strong> e a sua mensagem: <code>EstoqueInsuficienteError: só temos 2 unidades de café</code>. Como ninguém capturou, o programa parou, e o último <code>print</code> não rodou.</p>
+
+<hr>
+
+<h2>3. Capturando a sua exceção</h2>
+<p>Agora cada problema tem o seu <code>except</code>:</p>
+
+<pre class="file" data-file="capturar.py">class EstoqueInsuficienteError(Exception):
+    pass
+
+
+estoque = {"café": 2, "leite": 10}
+
+
+def vender(produto, quantidade):
+    if quantidade &gt; estoque[produto]:
+        raise EstoqueInsuficienteError(f"só temos {estoque[produto]} unidades de {produto}")
+    estoque[produto] -= quantidade
+
+
+for texto in ["5", "dois", "1"]:
+    try:
+        vender("café", int(texto))
+        print(f"Vendi {texto} café. Sobraram {estoque['café']}.")
+    except EstoqueInsuficienteError as e:
+        print("Falta produto:", e)
+    except ValueError:
+        print(f"Quantidade inválida: {texto!r}")
+</pre>
+
+<pre class="term">$ python3 capturar.py
+Falta produto: só temos 2 unidades de café
+Quantidade inválida: 'dois'
+Vendi 1 café. Sobraram 1.
+</pre>
+
+<p>Três pedidos, três destinos: o "5" caiu no <code>except EstoqueInsuficienteError</code>, o "dois" caiu no <code>except ValueError</code> (lançado pelo <code>int()</code>), e o "1" foi vendido. O <code>as e</code> guarda o objeto da exceção, e <code>print(e)</code> mostra a mensagem que você passou no <code>raise</code>.</p>
+
+<div class="trypy" data-goal="out:Falta produto: só temos 2 unidades de café;;semerro;;src:class EstoqueInsuficienteError\(">
+<p class="try-task"><strong>Missão:</strong> o programa lança e captura a <code>EstoqueInsuficienteError</code>, mas esqueceram de criar a classe (rode para ver o <code>NameError</code>). Crie a exceção no começo do arquivo.</p>
+<pre class="script" data-file="main.py">estoque = {"café": 2}
+
+
+def vender(produto, quantidade):
+    if quantidade &gt; estoque[produto]:
+        raise EstoqueInsuficienteError(f"só temos {estoque[produto]} unidades de {produto}")
+    estoque[produto] -= quantidade
+
+
+try:
+    vender("café", 5)
+except EstoqueInsuficienteError as e:
+    print("Falta produto:", e)
+</pre>
+<pre class="solucao" data-file="main.py">class EstoqueInsuficienteError(Exception):
+    pass
+
+
+estoque = {"café": 2}
+
+
+def vender(produto, quantidade):
+    if quantidade &gt; estoque[produto]:
+        raise EstoqueInsuficienteError(f"só temos {estoque[produto]} unidades de {produto}")
+    estoque[produto] -= quantidade
+
+
+try:
+    vender("café", 5)
+except EstoqueInsuficienteError as e:
+    print("Falta produto:", e)
+</pre>
+</div>
+
+<hr>
+
+<h2>4. Uma família de exceções</h2>
+<p>A lojinha tem mais de um problema próprio: além do estoque, alguém pode pedir um produto que a loja não vende. A Ana cria uma exceção <strong>mãe</strong>, <code>LojaError</code>, e as outras herdam dela:</p>
+
+<pre class="file" data-file="hierarquia.py">class LojaError(Exception):
+    """Erro de qualquer regra da lojinha."""
+
+
+class EstoqueInsuficienteError(LojaError):
+    """Pediram mais do que tem no estoque."""
+
+
+class ProdutoNaoEncontradoError(LojaError):
+    """O produto não existe no cadastro."""
+
+
+estoque = {"café": 2, "leite": 10}
+
+
+def vender(produto, quantidade):
+    if produto not in estoque:
+        raise ProdutoNaoEncontradoError(f"não vendemos {produto}")
+    if quantidade &gt; estoque[produto]:
+        raise EstoqueInsuficienteError(f"só temos {estoque[produto]} unidades de {produto}")
+    estoque[produto] -= quantidade
+
+
+for produto, quantidade in [("café", 5), ("pizza", 1), ("leite", 1)]:
+    try:
+        vender(produto, quantidade)
+        print(f"Vendido: {quantidade} {produto}")
+    except LojaError as e:
+        print(f"{type(e).__name__}: {e}")
+
+print(issubclass(EstoqueInsuficienteError, LojaError))
+print(issubclass(LojaError, Exception))
+</pre>
+
+<dl class="anatomy">
+  <dt>class LojaError(Exception):</dt><dd>A mãe da família. Herda de <code>Exception</code>.</dd>
+  <dt>"""Erro de qualquer regra da lojinha."""</dt><dd>Uma docstring (aula <a href="docstrings.html">Docstrings</a>) explicando para que serve a exceção. Ela já basta como corpo da classe, no lugar do <code>pass</code>.</dd>
+  <dt>class EstoqueInsuficienteError(LojaError):</dt><dd>Uma filha: herda de <code>LojaError</code> (e, por tabela, de <code>Exception</code>).</dd>
+  <dt>except LojaError as e:</dt><dd>Captura a <code>LojaError</code> <strong>e todas as filhas dela</strong>.</dd>
+  <dt>type(e).__name__</dt><dd>O nome da classe da exceção que chegou, para mostrar qual foi.</dd>
+  <dt>issubclass(A, B)</dt><dd>"A é filha (ou neta…) de B?"</dd>
+</dl>
+
+<pre class="term">$ python3 hierarquia.py
+EstoqueInsuficienteError: só temos 2 unidades de café
+ProdutoNaoEncontradoError: não vendemos pizza
+Vendido: 1 leite
+True
+True
+</pre>
+
+<p>Um <code>except</code> só pegou os dois tipos de problema. É a luz geral do painel: quem chama <code>vender</code> e quer tratar "qualquer problema da loja" escreve <code>except LojaError</code>; quem quer tratar só a falta de estoque escreve <code>except EstoqueInsuficienteError</code>. E nenhum dos dois engole por engano um <code>ValueError</code> ou um <code>KeyError</code> que não tem nada a ver com as regras da loja.</p>
+
+<p>O Python organiza as exceções dele do mesmo jeito. Por exemplo, <code>KeyError</code> e <code>IndexError</code> são filhas de <code>LookupError</code> ("erro de busca"), e as duas são netas de <code>Exception</code>:</p>
+
+<figure>
+<pre class="file" data-file="familia.txt">Exception
+├── LookupError
+│   ├── KeyError
+│   └── IndexError
+├── ValueError
+└── LojaError
+    ├── EstoqueInsuficienteError
+    └── ProdutoNaoEncontradoError
+</pre>
+</figure>
+
+<div class="trypy" data-goal="out:ProdutoNaoEncontradoError: não vendemos pizza;;out:Vendido: 1 leite;;semerro">
+<p class="try-task"><strong>Missão:</strong> o <code>except LojaError</code> deveria pegar os dois erros da loja, mas o programa para com um traceback. O problema está na família: faça as duas exceções filhas herdarem de <code>LojaError</code>.</p>
+<pre class="script" data-file="main.py">class LojaError(Exception):
+    pass
+
+
+class EstoqueInsuficienteError(Exception):
+    pass
+
+
+class ProdutoNaoEncontradoError(Exception):
+    pass
+
+
+estoque = {"café": 2, "leite": 10}
+
+
+def vender(produto, quantidade):
+    if produto not in estoque:
+        raise ProdutoNaoEncontradoError(f"não vendemos {produto}")
+    if quantidade &gt; estoque[produto]:
+        raise EstoqueInsuficienteError(f"só temos {estoque[produto]} unidades de {produto}")
+    estoque[produto] -= quantidade
+
+
+for produto, quantidade in [("café", 5), ("pizza", 1), ("leite", 1)]:
+    try:
+        vender(produto, quantidade)
+        print(f"Vendido: {quantidade} {produto}")
+    except LojaError as e:
+        print(f"{type(e).__name__}: {e}")
+</pre>
+<pre class="solucao" data-file="main.py">class LojaError(Exception):
+    pass
+
+
+class EstoqueInsuficienteError(LojaError):
+    pass
+
+
+class ProdutoNaoEncontradoError(LojaError):
+    pass
+
+
+estoque = {"café": 2, "leite": 10}
+
+
+def vender(produto, quantidade):
+    if produto not in estoque:
+        raise ProdutoNaoEncontradoError(f"não vendemos {produto}")
+    if quantidade &gt; estoque[produto]:
+        raise EstoqueInsuficienteError(f"só temos {estoque[produto]} unidades de {produto}")
+    estoque[produto] -= quantidade
+
+
+for produto, quantidade in [("café", 5), ("pizza", 1), ("leite", 1)]:
+    try:
+        vender(produto, quantidade)
+        print(f"Vendido: {quantidade} {produto}")
+    except LojaError as e:
+        print(f"{type(e).__name__}: {e}")
+</pre>
+</div>
+
+<hr>
+
+<h2>5. A ordem dos <code>except</code>: da filha para a mãe</h2>
+<p>Quando há vários <code>except</code>, o Python testa um por um, de cima para baixo, e usa <strong>o primeiro que servir</strong>. Como a mãe serve para todas as filhas, colocá-la primeiro esconde as outras:</p>
+
+<pre class="file" data-file="ordem_except.py">class LojaError(Exception):
+    pass
+
+
+class EstoqueInsuficienteError(LojaError):
+    pass
+
+
+try:
+    raise EstoqueInsuficienteError("só temos 2 unidades de café")
+except LojaError as e:
+    print("Erro da loja:", e)
+except EstoqueInsuficienteError as e:
+    print("Falta produto:", e)
+</pre>
+
+<pre class="term">$ python3 ordem_except.py
+Erro da loja: só temos 2 unidades de café
+</pre>
+
+<p>O erro era de estoque, mas quem tratou foi o <code>except LojaError</code>. O segundo <code>except</code> nunca vai rodar, e o Python não avisa. <strong>Regra:</strong> escreva os <code>except</code> do mais específico (a filha) para o mais geral (a mãe).</p>
+
+<hr>
+
+<h2>6. Exceções que carregam dados</h2>
+<p>Uma mensagem em texto é boa para mostrar, mas ruim para fazer contas. Se o programa quiser saber <strong>quantas unidades faltaram</strong>, ele teria de ler a frase. Melhor guardar os dados na própria exceção, como atributos:</p>
+
+<pre class="file" data-file="atributos.py">class EstoqueInsuficienteError(Exception):
+    def __init__(self, produto, pedido, disponivel):
+        self.produto = produto
+        self.pedido = pedido
+        self.disponivel = disponivel
+        super().__init__(f"pediram {pedido} {produto}, mas só temos {disponivel}")
+
+
+estoque = {"café": 2}
+
+
+def vender(produto, quantidade):
+    if quantidade &gt; estoque[produto]:
+        raise EstoqueInsuficienteError(produto, quantidade, estoque[produto])
+    estoque[produto] -= quantidade
+
+
+try:
+    vender("café", 5)
+except EstoqueInsuficienteError as e:
+    print("Mensagem:", e)
+    print("Faltam", e.pedido - e.disponivel, "unidades de", e.produto)
+    print(e.args)
+
+vender("café", 7)
+</pre>
+
+<dl class="anatomy">
+  <dt>def __init__(self, produto, pedido, disponivel):</dt><dd>A exceção agora recebe três dados, em vez de uma mensagem pronta (aula <a href="init-self.html">__init__ e self</a>).</dd>
+  <dt>self.produto = produto …</dt><dd>Guarda cada dado num atributo, como em qualquer classe.</dd>
+  <dt>super().__init__(f"…")</dt><dd>Chama o <code>__init__</code> da mãe, <code>Exception</code>, com a <strong>mensagem</strong> montada a partir dos dados. É essa mensagem que o <code>print(e)</code> e o traceback mostram. O <code>super()</code> é da aula <a href="heranca.html">Herança</a>.</dd>
+  <dt>raise EstoqueInsuficienteError(produto, quantidade, estoque[produto])</dt><dd>Quem lança passa os dados; a exceção monta a frase sozinha. Assim a mensagem sai sempre no mesmo formato.</dd>
+  <dt>e.pedido - e.disponivel</dt><dd>Quem captura usa os dados direto, sem ler a frase.</dd>
+  <dt>e.args</dt><dd>Uma tupla com o que foi passado ao <code>__init__</code> da <code>Exception</code>: aqui, só a mensagem.</dd>
+</dl>
+
+<pre class="term">$ python3 atributos.py
+Mensagem: pediram 5 café, mas só temos 2
+Faltam 3 unidades de café
+('pediram 5 café, mas só temos 2',)
+Traceback (most recent call last):
+  File "/home/ana/atributos.py", line 25, in &lt;module&gt;
+    vender("café", 7)
+    ~~~~~~^^^^^^^^^^^
+  File "/home/ana/atributos.py", line 14, in vender
+    raise EstoqueInsuficienteError(produto, quantidade, estoque[produto])
+EstoqueInsuficienteError: pediram 7 café, mas só temos 2
+</pre>
+
+<p>Dentro do <code>try</code>, o programa mostrou a mensagem e fez a conta com os atributos. Na última linha, sem <code>try</code>, o traceback mostrou a mensagem montada pelo <code>super().__init__</code>. Esquecer essa linha tem um efeito estranho, que você vai ver em <a href="#errado">Quando dá errado</a>.</p>
+
+<hr>
+
+<h2>7. Trocando um erro do Python por um seu: <code>raise … from e</code></h2>
+<p>A função <code>preco_de</code> procura o preço num dicionário. Se o produto não existe, o dicionário lança <code>KeyError</code>, mas para quem usa a lojinha seria melhor receber um <code>ProdutoNaoEncontradoError</code>. Dá para capturar um e lançar o outro, deixando registrado que um causou o outro:</p>
+
+<pre class="file" data-file="from_e.py">class ProdutoNaoEncontradoError(Exception):
+    pass
+
+
+precos = {"café": 18.9, "leite": 5.49}
+
+
+def preco_de(produto):
+    try:
+        return precos[produto]
+    except KeyError as e:
+        raise ProdutoNaoEncontradoError(f"não vendemos {produto}") from e
+
+
+print(preco_de("café"))
+print(preco_de("pizza"))
+</pre>
+
+<pre class="term">$ python3 from_e.py
+18.9
+Traceback (most recent call last):
+  File "/home/ana/from_e.py", line 10, in preco_de
+    return precos[produto]
+           ~~~~~~^^^^^^^^^
+KeyError: 'pizza'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/ana/from_e.py", line 16, in &lt;module&gt;
+    print(preco_de("pizza"))
+          ~~~~~~~~^^^^^^^^^
+  File "/home/ana/from_e.py", line 12, in preco_de
+    raise ProdutoNaoEncontradoError(f"não vendemos {produto}") from e
+ProdutoNaoEncontradoError: não vendemos pizza
+</pre>
+
+<p>Agora são <strong>dois</strong> tracebacks, ligados por uma frase:</p>
+<ul>
+  <li>O primeiro é o erro original: <code>KeyError: 'pizza'</code>, na linha 10.</li>
+  <li><code>The above exception was the direct cause of the following exception</code>: "a exceção acima foi a <strong>causa direta</strong> da exceção abaixo". É o <code>from e</code> que cria essa ligação.</li>
+  <li>O segundo é o seu erro, <code>ProdutoNaoEncontradoError: não vendemos pizza</code>, lançado na linha 12. É ele que um <code>except</code> de fora vai receber.</li>
+</ul>
+<p>Sem o <code>from e</code>, o Python também mostra os dois, mas com outra frase: <code>During handling of the above exception, another exception occurred</code> ("durante o tratamento da exceção acima, aconteceu outra"). Ela dá a entender que o seu <code>except</code> é que falhou, quando na verdade você trocou o erro de propósito. O <code>from e</code> deixa clara a intenção.</p>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Situação</th><th>Use</th></tr>
+<tr><td>O problema já tem uma exceção do Python que descreve bem (um argumento com valor inválido)</td><td>A do Python: <code>raise ValueError("…")</code></td></tr>
+<tr><td>Um problema das regras do seu programa (estoque, saldo, cadastro)</td><td>Uma exceção própria: <code>class EstoqueInsuficienteError(Exception): pass</code></td></tr>
+<tr><td>Vários problemas do mesmo assunto, que às vezes são tratados juntos</td><td>Uma mãe (<code>LojaError</code>) e filhas</td></tr>
+<tr><td>Quem captura precisa de números ou nomes, não só de uma frase</td><td>Atributos no <code>__init__</code> + <code>super().__init__(mensagem)</code></td></tr>
+<tr><td>Um erro do Python que você quer apresentar como erro seu</td><td><code>raise SeuError("…") from e</code></td></tr>
+</table>
+</div>
+
+<p>Uma exceção própria também pode herdar de uma exceção do Python, em vez de <code>Exception</code>: <code>class PrecoInvalidoError(ValueError)</code>. Assim ela é capturada tanto por <code>except PrecoInvalidoError</code> quanto por um <code>except ValueError</code> que já existia no programa.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Esqueceu de herdar de <code>Exception</code></strong>
+<pre class="file" data-file="sem_heranca.py">class EstoqueInsuficienteError:
+    pass
+
+
+raise EstoqueInsuficienteError()
+</pre>
+<pre class="term">$ python3 sem_heranca.py
+Traceback (most recent call last):
+  File "/home/ana/sem_heranca.py", line 5, in &lt;module&gt;
+    raise EstoqueInsuficienteError()
+TypeError: exceptions must derive from BaseException
+</pre>
+<p>"Exceções precisam derivar de <code>BaseException</code>." Sem o <code>(Exception)</code>, é uma classe comum, e o <code>raise</code> só aceita objetos da família das exceções. (O <code>BaseException</code> é a avó de todas: a mãe da <code>Exception</code>.) Se você tentar passar uma mensagem, <code>raise EstoqueInsuficienteError("…")</code>, o erro chega antes, ao criar o objeto: <code>TypeError: EstoqueInsuficienteError() takes no arguments</code>, porque uma classe comum sem <code>__init__</code> não aceita argumentos. <strong>Como consertar:</strong> <code>class EstoqueInsuficienteError(Exception):</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>A mensagem saiu como uma tupla</strong>
+<pre class="file" data-file="sem_super.py">class EstoqueInsuficienteError(Exception):
+    def __init__(self, produto, pedido, disponivel):
+        self.produto = produto
+        self.pedido = pedido
+        self.disponivel = disponivel
+
+
+try:
+    raise EstoqueInsuficienteError("café", 5, 2)
+except EstoqueInsuficienteError as e:
+    print("Mensagem:", e)
+</pre>
+<pre class="term">$ python3 sem_super.py
+Mensagem: ('café', 5, 2)
+</pre>
+<p>Sem erro, mas a mensagem virou <code>('café', 5, 2)</code>. Faltou o <code>super().__init__(mensagem)</code>: a <code>Exception</code> não recebeu frase nenhuma e, para não ficar calada, mostra os argumentos que a exceção recebeu, numa tupla. <strong>Como consertar:</strong> no fim do <code>__init__</code>, <code>super().__init__(f"pediram {pedido} {produto}, mas só temos {disponivel}")</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Herdou de <code>BaseException</code>: o <code>except Exception</code> não pega</strong>
+<pre class="file" data-file="base_exception.py">class EstoqueInsuficienteError(BaseException):
+    pass
+
+
+try:
+    raise EstoqueInsuficienteError("só temos 2 unidades de café")
+except Exception as e:
+    print("Peguei:", e)
+print("Fim")
+</pre>
+<pre class="term">$ python3 base_exception.py
+Traceback (most recent call last):
+  File "/home/ana/base_exception.py", line 6, in &lt;module&gt;
+    raise EstoqueInsuficienteError("só temos 2 unidades de café")
+EstoqueInsuficienteError: só temos 2 unidades de café
+</pre>
+<p>O <code>except Exception</code> não pegou, e o programa parou sem chegar no <code>Fim</code>. A <code>BaseException</code> está <strong>acima</strong> da <code>Exception</code>: ela é reservada para casos especiais, como o Ctrl+C (<code>KeyboardInterrupt</code>) e o <code>sys.exit()</code> (<code>SystemExit</code>), que de propósito escapam de um <code>except Exception</code>. <strong>Como consertar:</strong> as suas exceções herdam sempre de <code>Exception</code> (ou de uma filha dela).</p>
+</div>
+
+<div class="cenario">
+<strong>Nome errado no <code>except</code>: o erro só aparece quando a exceção chega</strong>
+<pre class="file" data-file="nome_errado_except.py">class EstoqueInsuficienteError(Exception):
+    pass
+
+
+try:
+    print("Vendendo...")
+except EstoqueInsuficienteErro:
+    print("Falta produto")
+print("Sem erro, o except nem foi lido.")
+
+try:
+    raise EstoqueInsuficienteError("só temos 2 unidades de café")
+except EstoqueInsuficienteErro:
+    print("Falta produto")
+</pre>
+<pre class="term">$ python3 nome_errado_except.py
+Vendendo...
+Sem erro, o except nem foi lido.
+Traceback (most recent call last):
+  File "/home/ana/nome_errado_except.py", line 12, in &lt;module&gt;
+    raise EstoqueInsuficienteError("só temos 2 unidades de café")
+EstoqueInsuficienteError: só temos 2 unidades de café
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/ana/nome_errado_except.py", line 13, in &lt;module&gt;
+    except EstoqueInsuficienteErro:
+           ^^^^^^^^^^^^^^^^^^^^^^^
+NameError: name 'EstoqueInsuficienteErro' is not defined. Did you mean: 'EstoqueInsuficienteError'?
+</pre>
+<p>Nos dois <code>except</code>, falta o <code>r</code> final de <code>Error</code>. No primeiro <code>try</code>, nada deu errado, e o Python <strong>nem leu</strong> o nome do <code>except</code>: ele só olha o que está no <code>except</code> quando uma exceção chega. No segundo, a exceção chegou, o Python foi conferir o nome, e aí veio o <code>NameError</code>, com a frase "durante o tratamento da exceção acima, aconteceu outra" e a sugestão do nome certo. É um defeito traiçoeiro: o programa pode rodar por semanas até o dia em que o erro acontece de verdade. <strong>Como consertar:</strong> confira o nome (o "Did you mean" ajuda) e teste o caminho do erro, provocando a exceção de propósito.</p>
+</div>
+
+<div class="cenario">
+<strong>A mãe antes da filha</strong>
+<p>Você já viu na seção 5: com <code>except LojaError</code> antes de <code>except EstoqueInsuficienteError</code>, o segundo nunca roda, sem aviso nenhum. <strong>Como consertar:</strong> do mais específico para o mais geral.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>class NomeError(Exception): pass</code></td><td>Cria uma exceção própria</td></tr>
+<tr><td><code>class FilhaError(MaeError): pass</code></td><td>Cria uma exceção filha (capturada também por <code>except MaeError</code>)</td></tr>
+<tr><td><code>raise NomeError("mensagem")</code></td><td>Lança a exceção com uma mensagem</td></tr>
+<tr><td><code>except NomeError as e:</code></td><td>Captura a exceção (e as filhas dela)</td></tr>
+<tr><td><code>print(e)</code> / <code>str(e)</code></td><td>A mensagem</td></tr>
+<tr><td><code>e.args</code></td><td>A tupla do que foi passado à <code>Exception</code></td></tr>
+<tr><td><code>type(e).__name__</code></td><td>O nome da classe da exceção</td></tr>
+<tr><td><code>def __init__(self, …): … super().__init__(mensagem)</code></td><td>Exceção com atributos e mensagem montada</td></tr>
+<tr><td><code>raise NomeError("…") from e</code></td><td>Troca uma exceção por outra, registrando a causa</td></tr>
+<tr><td><code>issubclass(Filha, Mae)</code></td><td>Confere a família</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>TypeError: exceptions must derive from BaseException</code></td><td>A classe não herda de <code>Exception</code></td></tr>
+<tr><td><code>TypeError: NomeError() takes no arguments</code> no <code>raise</code></td><td>Classe comum (sem herança) recebendo mensagem</td></tr>
+<tr><td>A mensagem aparece como <code>('café', 5, 2)</code></td><td><code>__init__</code> próprio sem <code>super().__init__(mensagem)</code></td></tr>
+<tr><td>O <code>except Exception</code> não pega a sua exceção</td><td>Ela herda de <code>BaseException</code></td></tr>
+<tr><td>Um <code>except</code> nunca roda, sem aviso</td><td>Um <code>except</code> da mãe está antes dele</td></tr>
+<tr><td><code>NameError</code> no <code>except</code>, só quando o erro acontece</td><td>Nome da exceção digitado errado no <code>except</code></td></tr>
+<tr><td><code>The above exception was the direct cause…</code></td><td>Não é defeito: foi um <code>raise … from e</code> mostrando a causa</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A mãe certa</h3>
+<p>Complete para criar a exceção da lojinha:</p>
+<div class="ex-code">class PrecoInvalidoError(<input data-answer="Exception" aria-label="classe mãe">):<br>&nbsp;&nbsp;&nbsp;&nbsp;pass</div>
+</div>
+
+<div class="exercise">
+<h3>2. Lançando</h3>
+<p>Complete a palavra que lança a exceção:</p>
+<div class="ex-code"><input data-answer="raise" aria-label="palavra-chave"> PrecoInvalidoError("o preço não pode ser negativo")</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. <code>EstoqueInsuficienteError</code> e <code>ProdutoNaoEncontradoError</code> herdam de <code>LojaError</code>. Qual <code>except</code> pega as duas?</p>
+<label><input type="radio" name="q3"> <code>except EstoqueInsuficienteError:</code></label>
+<label><input type="radio" name="q3"> <code>except LojaError:</code></label>
+<label><input type="radio" name="q3"> <code>except ValueError:</code></label>
+<label><input type="radio" name="q3"> Nenhum: cada uma precisa do seu</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">4. Por que o <code>except LojaError</code> deve vir <strong>depois</strong> do <code>except EstoqueInsuficienteError</code>?</p>
+<label><input type="radio" name="q4"> Porque senão dá <code>SyntaxError</code></label>
+<label><input type="radio" name="q4"> Porque a mãe tem de ser criada depois da filha</label>
+<label><input type="radio" name="q4"> Porque o Python lê os <code>except</code> de baixo para cima</label>
+<label><input type="radio" name="q4"> Porque o Python usa o primeiro <code>except</code> que servir, e a mãe serve para todas as filhas</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. A sua exceção tem um <code>__init__</code> próprio, e <code>print(e)</code> mostra <code>('café', 5, 2)</code>. O que faltou?</p>
+<label><input type="radio" name="q5"> <code>super().__init__(mensagem)</code> no fim do <code>__init__</code></label>
+<label><input type="radio" name="q5"> Um <code>return</code> no <code>__init__</code></label>
+<label><input type="radio" name="q5"> Herdar de <code>BaseException</code></label>
+<label><input type="radio" name="q5"> O <code>from e</code> no <code>raise</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">6. Qual é o costume para o nome de uma exceção?</p>
+<label><input type="radio" name="q6"> Tudo em minúsculas: <code>estoque_insuficiente</code></label>
+<label><input type="radio" name="q6"> Tudo em maiúsculas: <code>ESTOQUE_INSUFICIENTE</code></label>
+<label><input type="radio" name="q6"> Como classe, terminando em <code>Error</code>: <code>EstoqueInsuficienteError</code></label>
+<label><input type="radio" name="q6"> Começando com <code>raise</code>: <code>raiseEstoque</code></label>
+</div>
+
+<h3>Missão final: o saque sem saldo</h3>
+
+<div class="trypy" data-goal="out:Faltam R$ 30.00;;outre:Não deu: [^(];;semerro">
+<p class="try-task"><strong>Missão:</strong> a conta tem R$ 50 e a Ana tentou sacar R$ 80. A exceção <code>SaldoInsuficienteError</code> recebe o saldo e o valor, mas não guarda nada (rode: a mensagem sai como tupla e o <code>e.valor</code> dá erro). Escreva o <code>__init__</code> dela: guarde <code>saldo</code> e <code>valor</code> em atributos e monte uma mensagem com <code>super().__init__(…)</code>.</p>
+<pre class="script" data-file="main.py">class SaldoInsuficienteError(Exception):
+    pass  # troque: guarde o saldo e o valor, e monte a mensagem
+
+
+def sacar(saldo, valor):
+    if valor &gt; saldo:
+        raise SaldoInsuficienteError(saldo, valor)
+    return saldo - valor
+
+
+try:
+    sacar(50, 80)
+except SaldoInsuficienteError as e:
+    print("Não deu:", e)
+    print(f"Faltam R$ {e.valor - e.saldo:.2f}")
+</pre>
+<pre class="solucao" data-file="main.py">class SaldoInsuficienteError(Exception):
+    def __init__(self, saldo, valor):
+        self.saldo = saldo
+        self.valor = valor
+        super().__init__(f"saque de R$ {valor:.2f}, mas o saldo é R$ {saldo:.2f}")
+
+
+def sacar(saldo, valor):
+    if valor &gt; saldo:
+        raise SaldoInsuficienteError(saldo, valor)
+    return saldo - valor
+
+
+try:
+    sacar(50, 80)
+except SaldoInsuficienteError as e:
+    print("Não deu:", e)
+    print(f"Faltam R$ {e.valor - e.saldo:.2f}")
+</pre>
+</div>
+
+<p>Com a solução, o lab mostrou:</p>
+<pre class="term">$ python3 main.py
+Não deu: saque de R$ 80.00, mas o saldo é R$ 50.00
+Faltam R$ 30.00
+</pre>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Uma exceção própria é uma classe que herda de <code>Exception</code>: <code>class EstoqueInsuficienteError(Exception): pass</code>. O nome termina em <code>Error</code>.</li>
+  <li>Ela é lançada com <code>raise</code> e capturada com <code>except</code>, como as do Python, e separa os problemas do seu programa dos problemas do Python.</li>
+  <li>Uma exceção mãe (<code>LojaError</code>) com filhas permite tratar todas juntas ou cada uma separada. Nos <code>except</code>, a filha vem antes da mãe.</li>
+  <li>Para carregar dados, escreva um <code>__init__</code> com atributos e chame <code>super().__init__(mensagem)</code>; sem isso, a mensagem vira uma tupla.</li>
+  <li><code>raise SeuError(…) from e</code> troca um erro do Python pelo seu e registra a causa ("direct cause").</li>
+  <li>Nunca herde de <code>BaseException</code>: um <code>except Exception</code> não pegaria a sua exceção.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
