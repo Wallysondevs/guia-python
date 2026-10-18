@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Operadores Aritméticos — + - * / // % ** | Guia Python</title>
+<meta name="description" content="Os operadores aritméticos do Python para quem nunca programou: soma, subtração, multiplicação, a diferença entre / e //, o resto com %, a potência com **, o que acontece com // e % em números negativos, a divisão por zero (ZeroDivisionError real) e as armadilhas do ^ e do 3(4 + 5).">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Operadores Aritméticos</span></h1>
+
+<p class="intro">O Python é uma calculadora poderosa. Soma, subtração, multiplicação e divisão funcionam como você aprendeu na escola, com alguns sinais diferentes dos do caderno: o "vezes" é <code>*</code>, e não × nem x. Além disso, o Python tem três operações que a calculadora comum não tem num botão só: a <strong>divisão inteira</strong> (<code>//</code>), o <strong>resto</strong> (<code>%</code>) e a <strong>potência</strong> (<code>**</code>). Nesta aula você vai conhecer os sete operadores aritméticos, ver o que eles fazem com números negativos e o que acontece quando alguém tenta dividir por zero.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>Os sete operadores: <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>//</code>, <code>%</code> e <code>**</code>.</li>
+  <li>A diferença entre <code>/</code> (divisão "de verdade") e <code>//</code> (divisão inteira).</li>
+  <li>A usar o resto <code>%</code> para descobrir sobras, pares e ímpares.</li>
+  <li>A potência <code>**</code>, e a raiz quadrada com <code>** 0.5</code>.</li>
+  <li>Por que <code>-7 // 2</code> dá <code>-4</code>, e não <code>-3</code>.</li>
+  <li>Qual conta o Python faz primeiro, e como os parênteses mudam isso.</li>
+  <li>Os erros reais: divisão por zero, o <code>x</code> no lugar do <code>*</code>, o <code>^</code> que não é potência.</li>
+</ul>
+</div>
+
+<p>Os programas desta aula rodaram no <strong>Python 3.14</strong> da máquina da Ana (usuária <code>ana</code>, computador <code>notebook</code>), e podem ser repetidos no editor do guia.</p>
+
+<hr>
+
+<h2>A ideia: as teclas da calculadora</h2>
+<p>Um <strong>operador</strong> é um sinal que faz uma operação com os valores que estão em volta dele. Em <code>7 + 2</code>, o <code>+</code> é o operador, e o 7 e o 2 são os <strong>operandos</strong> (os valores que entram na conta). O resultado, 9, é um valor novo, que você pode mostrar ou guardar numa variável.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Operador</th><th>Nome</th><th>Exemplo</th><th>Resultado</th><th>No caderno</th></tr>
+<tr><td><code>+</code></td><td>Soma</td><td><code>7 + 2</code></td><td><code>9</code></td><td>7 + 2</td></tr>
+<tr><td><code>-</code></td><td>Subtração</td><td><code>7 - 2</code></td><td><code>5</code></td><td>7 − 2</td></tr>
+<tr><td><code>*</code></td><td>Multiplicação</td><td><code>7 * 2</code></td><td><code>14</code></td><td>7 × 2</td></tr>
+<tr><td><code>/</code></td><td>Divisão</td><td><code>7 / 2</code></td><td><code>3.5</code></td><td>7 ÷ 2</td></tr>
+<tr><td><code>//</code></td><td>Divisão inteira</td><td><code>7 // 2</code></td><td><code>3</code></td><td>O quociente da "conta armada"</td></tr>
+<tr><td><code>%</code></td><td>Resto</td><td><code>7 % 2</code></td><td><code>1</code></td><td>O resto da "conta armada"</td></tr>
+<tr><td><code>**</code></td><td>Potência</td><td><code>7 ** 2</code></td><td><code>49</code></td><td>7²</td></tr>
+</table>
+</div>
+
+<pre class="file" data-file="contas.py">print(7 + 2)
+print(7 - 2)
+print(7 * 2)
+print(7 / 2)
+print(7 // 2)
+print(7 % 2)
+print(7 ** 2)
+</pre>
+
+<pre class="term">$ python3 contas.py
+9
+5
+14
+3.5
+3
+1
+49
+</pre>
+
+<div class="tip">
+<strong>Espaços em volta dos operadores</strong>
+<p><code>7+2</code> e <code>7 + 2</code> dão o mesmo resultado, mas o costume em Python é deixar <strong>um espaço de cada lado</strong> do operador. A conta fica mais fácil de ler, e é o que o guia de estilo oficial recomenda (aula <a href="estilo-pep8.html">PEP 8</a>).</p>
+</div>
+
+<hr>
+
+<h2>1. Soma, subtração e multiplicação</h2>
+<p>As três primeiras funcionam como na escola. A única novidade é o asterisco <code>*</code> para multiplicar: o <code>x</code> é uma letra (poderia ser o nome de uma variável), e o <code>×</code> nem existe no teclado. Lembre também da regra da aula <a href="numeros.html">Números</a>: se um dos números for <code>float</code>, o resultado é <code>float</code>.</p>
+
+<pre class="file" data-file="padaria.py">paes = 12
+preco = 0.75
+print(paes * preco)
+print(paes - 5)
+print(paes + 8)
+</pre>
+
+<pre class="term">$ python3 padaria.py
+9.0
+7
+20
+</pre>
+
+<p>O <code>+</code> e o <code>*</code> também funcionam com textos, mas com outro sentido: <code>"pão" + "zinho"</code> junta (dá <code>'pãozinho'</code>) e <code>"ha" * 3</code> repete (dá <code>'hahaha'</code>). Isso é assunto da aula <a href="strings-juntar.html">Juntar e Repetir Textos</a>.</p>
+
+<hr>
+
+<h2>2. Dois tipos de divisão: <code>/</code> e <code>//</code></h2>
+<p>O Python tem duas divisões, e é importante saber qual usar.</p>
+
+<h3>A divisão <code>/</code>: o resultado "de verdade"</h3>
+<p>Com uma barra, o Python faz a divisão completa, com as casas decimais. O resultado é <strong>sempre</strong> <code>float</code>, mesmo quando a conta é exata:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; 7 / 2
+3.5
+&gt;&gt;&gt; 6 / 3
+2.0
+&gt;&gt;&gt; 1 / 3
+0.3333333333333333
+&gt;&gt;&gt; 2 / 3
+0.6666666666666666
+</pre>
+
+<p><code>6 / 3</code> deu <code>2.0</code>, com o <code>.0</code>: é <code>float</code>. E as dízimas param em uns 16 algarismos (o limite do <code>float</code>).</p>
+
+<h3>A divisão inteira <code>//</code>: quantas vezes cabe</h3>
+<p>Com duas barras, o Python responde: "quantas vezes o segundo número cabe <strong>inteiro</strong> no primeiro?". É o quociente da conta armada da escola, sem as casas decimais. A Ana tem 20 pães e quer colocá-los em caixas de 6:</p>
+
+<pre class="file" data-file="caixas.py">paes = 20
+por_caixa = 6
+caixas = paes // por_caixa
+sobra = paes % por_caixa
+print("Caixas cheias:", caixas)
+print("Pães que sobram:", sobra)
+</pre>
+
+<pre class="term">$ python3 caixas.py
+Caixas cheias: 3
+Pães que sobram: 2
+</pre>
+
+<dl class="anatomy">
+  <dt>paes // por_caixa</dt><dd>20 dividido por 6 dá 3,33…; a divisão inteira fica só com o <strong>3</strong>: três caixas cheias.</dd>
+  <dt>paes % por_caixa</dt><dd>O <strong>resto</strong>: depois de encher 3 caixas (18 pães), sobram <strong>2</strong>. Você vai ver o <code>%</code> na próxima seção.</dd>
+</dl>
+
+<p>Pense na conta armada: 20 ÷ 6 = 3, resto 2. O <code>//</code> dá o 3 e o <code>%</code> dá o 2. Com <code>int</code> dos dois lados, o resultado do <code>//</code> é <code>int</code>; com um <code>float</code> na conta, ele continua sendo "o número inteiro de vezes", mas escrito como <code>float</code>: <code>7.0 // 2</code> dá <code>3.0</code>.</p>
+
+<div class="trypy" data-goal="outre:Caixas: 8\n;;outre:Sobram: 2\n">
+<p class="try-task"><strong>Missão:</strong> agora são 50 pães em caixas de 6. O programa mostra <code>Caixas: 8.333333333333333</code>, que não serve (não existe um terço de caixa), e a sobra está zerada. Use a divisão inteira para as caixas e o resto para a sobra.</p>
+<pre class="script" data-file="main.py">paes = 50
+caixas = paes / 6
+sobra = 0
+print("Caixas:", caixas)
+print("Sobram:", sobra)
+</pre>
+<pre class="solucao" data-file="main.py">paes = 50
+caixas = paes // 6
+sobra = paes % 6
+print("Caixas:", caixas)
+print("Sobram:", sobra)
+</pre>
+</div>
+
+<hr>
+
+<h2>3. O resto: <code>%</code></h2>
+<p>O <code>%</code> (que no Python não tem nada a ver com porcentagem!) dá o <strong>resto da divisão</strong>. Ele parece pouca coisa, mas resolve muitos problemas do dia a dia:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; 15 % 2
+1
+&gt;&gt;&gt; 14 % 2
+0
+&gt;&gt;&gt; 7.5 % 2
+1.5
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Pergunta</th><th>Conta</th><th>Como ler o resultado</th></tr>
+<tr><td>O número é par?</td><td><code>numero % 2</code></td><td><code>0</code>: par. <code>1</code>: ímpar</td></tr>
+<tr><td>Quanto sobra depois de encher as caixas?</td><td><code>paes % 6</code></td><td>Os pães fora das caixas</td></tr>
+<tr><td>Um número é múltiplo de outro?</td><td><code>ano % 4</code></td><td><code>0</code>: é múltiplo (divide certinho)</td></tr>
+<tr><td>Quantos minutos sobram depois das horas cheias?</td><td><code>135 % 60</code></td><td><code>15</code> (135 minutos = 2 h e 15 min)</td></tr>
+</table>
+</div>
+
+<p>Quando você quer as duas coisas de uma vez, o quociente e o resto, existe a função <code>divmod()</code>, que devolve os dois juntos: <code>divmod(20, 6)</code> dá <code>(3, 2)</code>.</p>
+
+<hr>
+
+<h2>4. A potência: <code>**</code></h2>
+<p>Dois asteriscos querem dizer "elevado a": <code>7 ** 2</code> é 7², sete ao quadrado, 49. O expoente também pode ser decimal ou negativo:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; 9 ** 0.5
+3.0
+&gt;&gt;&gt; 2 ** -1
+0.5
+</pre>
+
+<dl class="anatomy">
+  <dt>9 ** 0.5</dt><dd>Elevar a 0,5 (meio) é tirar a <strong>raiz quadrada</strong>: a raiz de 9 é 3. O resultado é <code>float</code>. (O módulo <code>math</code> também tem <code>math.sqrt(9)</code>; veja a aula <a href="math.html">O Módulo math</a>.)</dd>
+  <dt>2 ** -1</dt><dd>Expoente negativo é "um dividido por": 2⁻¹ = 1 ÷ 2 = 0,5.</dd>
+</dl>
+
+<p>A potência aparece muito em contas de dinheiro. A Ana guardou R$ 1.000 numa aplicação que rende 1% ao mês. Quanto ela terá depois de 12 meses? A cada mês o valor é multiplicado por 1,01, então são 12 multiplicações: <code>1.01 ** 12</code>.</p>
+
+<pre class="file" data-file="rendimento.py">valor = 1000 * 1.01 ** 12
+print(valor)
+print(round(valor, 2))
+</pre>
+
+<pre class="term">$ python3 rendimento.py
+1126.8250301319697
+1126.83
+</pre>
+
+<p>R$ 1.126,83. Repare que o Python fez a potência <strong>antes</strong> da multiplicação, como na escola. A próxima seção explica essa ordem.</p>
+
+<hr>
+
+<h2>5. Qual conta vem primeiro</h2>
+<p>O Python segue a mesma ordem da Matemática: primeiro a potência, depois multiplicação e divisões, por fim soma e subtração. Os parênteses passam na frente de tudo.</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; 2 + 3 * 4
+14
+&gt;&gt;&gt; (2 + 3) * 4
+20
+&gt;&gt;&gt; 10 - 2 - 3
+5
+&gt;&gt;&gt; 2 ** 3 ** 2
+512
+&gt;&gt;&gt; -2 ** 2
+-4
+&gt;&gt;&gt; (-2) ** 2
+4
+</pre>
+
+<dl class="anatomy">
+  <dt>2 + 3 * 4 → 14</dt><dd>A multiplicação vem antes: 3 × 4 = 12, mais 2 = 14.</dd>
+  <dt>(2 + 3) * 4 → 20</dt><dd>Os parênteses mandam fazer a soma primeiro: 5 × 4 = 20.</dd>
+  <dt>10 - 2 - 3 → 5</dt><dd>Operadores do mesmo nível vão da esquerda para a direita: (10 − 2) − 3.</dd>
+  <dt>2 ** 3 ** 2 → 512</dt><dd>A exceção: a potência vai da <strong>direita para a esquerda</strong>. É 2 ** (3 ** 2) = 2 ** 9 = 512, e não (2 ** 3) ** 2 = 64.</dd>
+  <dt>-2 ** 2 → -4</dt><dd>A potência vem antes do sinal de menos: é −(2²) = −4. Para elevar o −2, use parênteses: <code>(-2) ** 2</code> = 4.</dd>
+</dl>
+
+<p>Na dúvida, <strong>use parênteses</strong>: eles não custam nada e deixam a sua intenção clara para quem lê. A tabela completa da ordem está na aula <a href="precedencia.html">Precedência dos Operadores</a>.</p>
+
+<hr>
+
+<h2>6. <code>//</code> e <code>%</code> com números negativos</h2>
+<p>Com números negativos, a divisão inteira tem uma surpresa:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; -7 // 2
+-4
+&gt;&gt;&gt; -7 % 2
+1
+&gt;&gt;&gt; 7 // -2
+-4
+&gt;&gt;&gt; 7 % -2
+-1
+&gt;&gt;&gt; int(-7 / 2)
+-3
+</pre>
+
+<p>Por que <code>-7 // 2</code> dá <code>-4</code>, se −7 ÷ 2 = −3,5? Porque o <code>//</code> sempre arredonda <strong>para baixo</strong>, na direção do menos infinito, e não "cortando as casas". Na reta dos números, abaixo de −3,5 vem o −4:</p>
+
+<figure>
+<pre>  -5    -4    -3.5   -3    -2
+───┼─────┼──────•─────┼─────┼───
+         ▲            ▲
+       -7 // 2    int(-7 / 2)
+    (para baixo)  (corta, vai para o zero)
+</pre>
+<figcaption>Na reta, o <code>//</code> vai para o inteiro de baixo; o <code>int()</code> vai para o lado do zero.</figcaption>
+</figure>
+
+<p>O <code>%</code> acompanha o <code>//</code> para a conta continuar fechando. A regra que o Python sempre garante é: <strong>quociente × divisor + resto = o número original</strong>. Para −7 e 2: (−4) × 2 + 1 = −7. Por isso <code>-7 % 2</code> dá <code>1</code>. Uma consequência útil: com o divisor positivo, o resto é <strong>sempre positivo</strong> (ou zero), então <code>numero % 2</code> funciona para ver se um número negativo é par ou ímpar.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Conta</th><th>Resultado</th><th>Por quê</th></tr>
+<tr><td><code>7 // 2</code></td><td><code>3</code></td><td>3,5 para baixo</td></tr>
+<tr><td><code>-7 // 2</code></td><td><code>-4</code></td><td>−3,5 para baixo</td></tr>
+<tr><td><code>int(-7 / 2)</code></td><td><code>-3</code></td><td><code>int()</code> corta, em direção ao zero</td></tr>
+<tr><td><code>-7 % 2</code></td><td><code>1</code></td><td>(−4) × 2 + 1 = −7</td></tr>
+<tr><td><code>7 % -2</code></td><td><code>-1</code></td><td>(−4) × (−2) + (−1) = 7: o resto tem o sinal do divisor</td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>Outras linguagens fazem diferente</strong>
+<p>Em C e Java, a divisão inteira de −7 por 2 dá −3 (corta em direção ao zero), e o resto dá −1; no JavaScript, o resto também dá −1. Se você vier de uma delas ou for traduzir uma conta, cuidado com os negativos. No Python, o jeito de "cortar" é o <code>int(-7 / 2)</code>.</p>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma conta</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Para</th><th>Forma</th><th>Quando usar</th></tr>
+<tr><td>Quociente e resto</td><td><code>paes // 6</code> e <code>paes % 6</code></td><td>Quando você precisa de um só, ou quer deixar as duas contas claras</td></tr>
+<tr><td></td><td><code>divmod(paes, 6)</code></td><td>Quando precisa dos dois de uma vez: devolve <code>(3, 2)</code></td></tr>
+<tr><td>Raiz quadrada</td><td><code>9 ** 0.5</code></td><td>Contas rápidas, sem importar nada</td></tr>
+<tr><td></td><td><code>math.sqrt(9)</code></td><td>Quando o código já usa o módulo <code>math</code>; deixa a intenção mais clara</td></tr>
+<tr><td>Ao quadrado</td><td><code>lado ** 2</code></td><td>O costume</td></tr>
+<tr><td></td><td><code>lado * lado</code></td><td>Funciona igual; bom para quem ainda está se acostumando com o <code>**</code></td></tr>
+<tr><td>Divisão sem casas</td><td><code>a // b</code></td><td>Para "quantas vezes cabe" (arredonda para baixo)</td></tr>
+<tr><td></td><td><code>int(a / b)</code></td><td>Para cortar as casas (diferente de <code>//</code> com negativos)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Divisão por zero: <code>ZeroDivisionError</code></strong>
+<p>A Ana fez um programa para dividir a conta da festa entre as pessoas. Mas ninguém tinha confirmado presença ainda:</p>
+<pre class="file" data-file="divide_zero.py">total = 120
+pessoas = 0
+print(total / pessoas)
+</pre>
+<pre class="term">$ python3 divide_zero.py
+Traceback (most recent call last):
+  File "/home/ana/divide_zero.py", line 3, in &lt;module&gt;
+    print(total / pessoas)
+          ~~~~~~^~~~~~~~~
+ZeroDivisionError: division by zero
+</pre>
+<dl class="anatomy">
+  <dt>Traceback (most recent call last)</dt><dd>O programa começou e parou por causa de um erro.</dd>
+  <dt>line 3</dt><dd>Na linha 3.</dd>
+  <dt>~~~~~~^~~~~~~~~</dt><dd>O chapeuzinho aponta a barra da divisão; os tils, os dois lados da conta.</dd>
+  <dt>ZeroDivisionError: division by zero</dt><dd>"Erro de divisão por zero". Como na Matemática, dividir por zero não tem resposta, e o Python se recusa a continuar.</dd>
+</dl>
+<p>Acontece com as três divisões: <code>10 // 0</code> e <code>10 % 0</code> dão o mesmo erro, assim como <code>10.0 / 0</code> e até <code>0 / 0</code>. O erro raramente vem de um <code>0</code> escrito no código; quase sempre é uma <strong>variável</strong> que ficou com zero (uma lista vazia, ninguém confirmado, nenhuma venda no dia). <strong>Como consertar:</strong> confira antes se o divisor é zero, com um <a href="if.html">if</a>, ou trate o erro com <a href="try-except.html">try e except</a>.</p>
+<div class="note">
+<strong>Em versões anteriores do Python</strong> <span class="versao">3.14</span>
+<p>No Python 3.14, a mensagem é sempre <code>division by zero</code>. No 3.13 (o do Debian 13), ela muda conforme a conta: <code>integer division or modulo by zero</code> (em <code>10 // 0</code>), <code>integer modulo by zero</code> (em <code>10 % 0</code>), <code>float division by zero</code> (em <code>10.0 / 0</code>). O erro é o mesmo, <code>ZeroDivisionError</code>.</p>
+</div>
+</div>
+
+<div class="cenario">
+<strong>Um <code>x</code> no lugar do <code>*</code>: <code>SyntaxError</code></strong>
+<pre class="file" data-file="xis.py">area = 3 x 4
+</pre>
+<pre class="term">$ python3 xis.py
+  File "/home/ana/xis.py", line 1
+    area = 3 x 4
+             ^
+SyntaxError: invalid syntax
+</pre>
+<p>"Sintaxe inválida". Para o Python, <code>x</code> é uma letra, que poderia ser o nome de uma variável, e não faz sentido um nome logo depois do número 3. O chapeuzinho aponta o <code>x</code>. <strong>Como consertar:</strong> <code>area = 3 * 4</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O <code>^</code> não é potência (e não dá erro)</strong>
+<pre class="file" data-file="chapeu.py">print(2 ^ 3)
+print(2 ** 3)
+</pre>
+<pre class="term">$ python3 chapeu.py
+1
+8
+</pre>
+<p>Em calculadoras e planilhas, o <code>^</code> é a potência. No Python, ele é outro operador, que trabalha com os bits (os zeros e uns) dos números, e <code>2 ^ 3</code> dá <code>1</code>, sem aviso nenhum. É um erro silencioso: o programa roda e o resultado sai errado. <strong>Como consertar:</strong> potência no Python é <code>**</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Número colado nos parênteses: <code>TypeError: 'int' object is not callable</code></strong>
+<p>No caderno, 3(4 + 5) quer dizer "3 vezes (4 + 5)". No Python, não:</p>
+<pre class="file" data-file="colado.py">total = 3(4 + 5)
+</pre>
+<pre class="term">$ python3 colado.py
+/home/ana/colado.py:1: SyntaxWarning: 'int' object is not callable; perhaps you missed a comma?
+  total = 3(4 + 5)
+Traceback (most recent call last):
+  File "/home/ana/colado.py", line 1, in &lt;module&gt;
+    total = 3(4 + 5)
+TypeError: 'int' object is not callable
+</pre>
+<p>Primeiro vem um <strong>aviso</strong> (<code>SyntaxWarning</code>), antes de o programa rodar: "objeto <code>int</code> não pode ser chamado; você esqueceu uma vírgula?". Depois, o erro de verdade: <code>TypeError: 'int' object is not callable</code>. Parênteses logo depois de um valor querem dizer "chame esta função", como em <code>print(…)</code>, e o 3 não é uma função. <strong>Como consertar:</strong> escreva a multiplicação: <code>total = 3 * (4 + 5)</code>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Operador</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th></tr>
+<tr><td><code>+</code></td><td>Soma</td><td><code>7 + 2</code></td><td><code>9</code></td></tr>
+<tr><td><code>-</code></td><td>Subtração (ou sinal negativo)</td><td><code>7 - 2</code></td><td><code>5</code></td></tr>
+<tr><td><code>*</code></td><td>Multiplicação</td><td><code>7 * 2</code></td><td><code>14</code></td></tr>
+<tr><td><code>/</code></td><td>Divisão, sempre <code>float</code></td><td><code>6 / 3</code></td><td><code>2.0</code></td></tr>
+<tr><td><code>//</code></td><td>Divisão inteira, arredonda para baixo</td><td><code>7 // 2</code>, <code>-7 // 2</code></td><td><code>3</code>, <code>-4</code></td></tr>
+<tr><td><code>%</code></td><td>Resto da divisão</td><td><code>7 % 2</code>, <code>-7 % 2</code></td><td><code>1</code>, <code>1</code></td></tr>
+<tr><td><code>**</code></td><td>Potência</td><td><code>7 ** 2</code>, <code>9 ** 0.5</code></td><td><code>49</code>, <code>3.0</code></td></tr>
+<tr><td><code>divmod(a, b)</code></td><td>Quociente e resto juntos</td><td><code>divmod(20, 6)</code></td><td><code>(3, 2)</code></td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>ZeroDivisionError: division by zero</code></td><td>O divisor (muitas vezes uma variável) valia zero</td></tr>
+<tr><td><code>SyntaxError: invalid syntax</code> apontando um <code>x</code></td><td>Use <code>*</code> para multiplicar</td></tr>
+<tr><td>Potência dá um número estranho, sem erro</td><td>Usou <code>^</code>: o certo é <code>**</code></td></tr>
+<tr><td><code>TypeError: 'int' object is not callable</code></td><td>Número colado nos parênteses: <code>3(4 + 5)</code>. Escreva <code>3 * (4 + 5)</code></td></tr>
+<tr><td>Resultado com <code>.0</code> quando você esperava inteiro</td><td>A divisão <code>/</code> sempre dá <code>float</code>; use <code>//</code> se quer o inteiro</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Faça as contas</h3>
+<p>Escreva o que o Python mostra em cada conta:</p>
+<div class="ex-code">17 // 5 → <input data-answer="3" aria-label="17 // 5">
+17 % 5 → <input data-answer="2" aria-label="17 % 5">
+10 / 4 → <input data-answer="2.5" aria-label="10 / 4">
+2 ** 5 → <input data-answer="32" aria-label="2 ** 5"></div>
+</div>
+
+<div class="exercise">
+<h3>2. Par ou ímpar</h3>
+<p>Complete a conta que dá <code>0</code> quando o número é par:</p>
+<div class="ex-code">numero <input data-answer="%" aria-label="operador"> 2</div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">3. Quanto vale <code>8 / 2</code>?</p>
+<label><input type="radio" name="q3"> <code>4</code></label>
+<label><input type="radio" name="q3"> <code>4.5</code></label>
+<label><input type="radio" name="q3"> <code>4.0</code></label>
+<label><input type="radio" name="q3"> <code>0</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Quanto vale <code>-9 // 2</code>?</p>
+<label><input type="radio" name="q4"> <code>-4</code></label>
+<label><input type="radio" name="q4"> <code>-5</code></label>
+<label><input type="radio" name="q4"> <code>-4.5</code></label>
+<label><input type="radio" name="q4"> <code>4</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. Qual expressão calcula 5 ao cubo (5³)?</p>
+<label><input type="radio" name="q5"> <code>5 ^ 3</code></label>
+<label><input type="radio" name="q5"> <code>5 * 3</code></label>
+<label><input type="radio" name="q5"> <code>5 x 5 x 5</code></label>
+<label><input type="radio" name="q5"> <code>5 ** 3</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Quanto vale <code>2 + 3 * 2</code>?</p>
+<label><input type="radio" name="q6"> <code>8</code></label>
+<label><input type="radio" name="q6"> <code>10</code></label>
+<label><input type="radio" name="q6"> <code>12</code></label>
+<label><input type="radio" name="q6"> <code>7</code></label>
+</div>
+
+<h3>Missão final: o rendimento da poupança</h3>
+
+<div class="trypy" data-goal="out:1126.83;;src:\*\*">
+<p class="try-task"><strong>Missão:</strong> a Ana aplicou R$ 1.000 a 1% ao mês, por 12 meses. O programa multiplica por 12 em vez de <strong>elevar</strong> a 12 e mostra um valor absurdo. Troque o operador para calcular o rendimento certo.</p>
+<pre class="script" data-file="main.py">valor = 1000 * 1.01 * 12
+print(round(valor, 2))
+</pre>
+<pre class="solucao" data-file="main.py">valor = 1000 * 1.01 ** 12
+print(round(valor, 2))
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Os operadores aritméticos são <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>//</code>, <code>%</code> e <code>**</code>. Multiplicar é <code>*</code>; potência é <code>**</code> (o <code>^</code> é outra coisa).</li>
+  <li><code>/</code> faz a divisão completa e sempre devolve <code>float</code>: <code>6 / 3</code> é <code>2.0</code>.</li>
+  <li><code>//</code> diz quantas vezes cabe, arredondando <strong>para baixo</strong>; <code>%</code> dá o resto. 20 pães em caixas de 6: <code>20 // 6</code> é 3 caixas, <code>20 % 6</code> são 2 pães sobrando.</li>
+  <li>Com negativos, <code>-7 // 2</code> é <code>-4</code> e <code>-7 % 2</code> é <code>1</code>. Para cortar em direção ao zero, use <code>int(-7 / 2)</code>.</li>
+  <li><code>numero % 2</code> é <code>0</code> para pares e <code>1</code> para ímpares.</li>
+  <li>A ordem é a da Matemática: <code>**</code>, depois <code>*</code> <code>/</code> <code>//</code> <code>%</code>, depois <code>+</code> <code>-</code>. Parênteses passam na frente; na dúvida, use-os.</li>
+  <li>Dividir por zero, com qualquer das três divisões, dá <code>ZeroDivisionError: division by zero</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
