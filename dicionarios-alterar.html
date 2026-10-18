@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Adicionando e Removendo Chaves — mudando um dicionário | Guia Python</title>
+<meta name="description" content="Como mudar um dicionário em Python, para quem está começando: acrescentar e trocar valores com d[chave] = valor, juntar com update e |, remover com del, pop, popitem e clear, contar coisas com get(chave, 0) + 1, e os erros reais KeyError ao remover ou somar numa chave que não existe, com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Adicionando e Removendo Chaves</span></h1>
+
+<p class="intro">Na aula <a href="dicionarios.html">Dicionários</a>, a tabela de preços da padaria já nasceu pronta. Na vida real ela muda o tempo todo: chega um produto novo, o pão sobe de preço, o bolo sai do cardápio. Esta aula mostra como <strong>mudar</strong> um dicionário depois de criado: acrescentar pares, trocar valores e remover chaves, e um truque que você vai usar muito, o de <strong>contar coisas</strong> com um dicionário.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A acrescentar um par e a trocar um valor com a mesma escrita: <code>d[chave] = valor</code>.</li>
+  <li>A juntar dois dicionários com <code>update()</code> e com <code>|</code>.</li>
+  <li>A remover com <code>del</code>, <code>pop()</code>, <code>popitem()</code> e <code>clear()</code>, e qual escolher.</li>
+  <li>A contar quantas vezes cada coisa aparece com <code>contagem.get(item, 0) + 1</code>.</li>
+  <li>Os <code>KeyError</code> reais ao remover ou somar numa chave que não existe.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: o quadro de preços com giz</h2>
+<p>A padaria do bairro tem um quadro-negro com os preços escritos a giz. Para um produto novo, a Ana escreve uma linha nova. Para mudar um preço, ela apaga só o número e escreve o novo, na mesma linha. Para tirar um produto, apaga a linha inteira. O quadro é o dicionário; o nome do produto, que nunca se repete, é a chave.</p>
+
+<hr>
+
+<h2>1. Acrescentar e trocar: <code>d[chave] = valor</code></h2>
+<p>Você já sabe <strong>ler</strong> com <code>precos["leite"]</code>. Para <strong>escrever</strong>, é a mesma coisa do lado esquerdo do <code>=</code>:</p>
+
+<pre class="file" data-file="a_add.py">precos = {"pão": 0.50, "leite": 4.75}
+precos["bolo"] = 12.00
+print(precos)
+precos["pão"] = 0.60
+print(precos)
+print(len(precos))
+</pre>
+
+<pre class="term">$ python3 a_add.py
+{'pão': 0.5, 'leite': 4.75, 'bolo': 12.0}
+{'pão': 0.6, 'leite': 4.75, 'bolo': 12.0}
+3
+</pre>
+
+<dl class="anatomy">
+  <dt>precos["bolo"] = 12.00</dt><dd>A chave <code>"bolo"</code> <strong>não existia</strong>: o Python cria o par e o põe no fim (lembre: o dicionário guarda a ordem de chegada).</dd>
+  <dt>precos["pão"] = 0.60</dt><dd>A chave <code>"pão"</code> <strong>já existia</strong>: o valor antigo é trocado pelo novo. O pão continua no mesmo lugar, o primeiro.</dd>
+  <dt>len(precos)</dt><dd>Três pares: trocar um valor não cria chave nova.</dd>
+</dl>
+
+<p>A mesma linha faz duas coisas: <strong>se a chave existe, troca; se não existe, cria</strong>. Isso é cômodo, mas tem um lado perigoso: um erro de digitação (<code>precos["paõ"] = 0.60</code>) não dá erro nenhum; cria uma chave nova e deixa o preço do pão como estava.</p>
+
+<p>Os operadores de atribuição (aula <a href="operadores-atribuicao.html">Operadores de Atribuição</a>) também funcionam num valor que já existe. Saíram 10 pães e chegaram 6 leites:</p>
+
+<pre class="file" data-file="a_mais_igual.py">estoque = {"pão": 40, "leite": 12}
+estoque["pão"] -= 10
+estoque["leite"] += 6
+print(estoque)
+</pre>
+
+<pre class="term">$ python3 a_mais_igual.py
+{'pão': 30, 'leite': 18}
+</pre>
+
+<div class="trypy" data-goal="out:{'pão': 0.6, 'leite': 4.75, 'bolo': 12.0}">
+<p class="try-task"><strong>Missão:</strong> o pão subiu para <code>0.60</code> e a padaria passou a vender bolo a <code>12.00</code>. Antes do <code>print</code>, troque o preço do pão e acrescente o bolo.</p>
+<pre class="script" data-file="main.py">precos = {"pão": 0.50, "leite": 4.75}
+# mude o dicionário aqui
+print(precos)
+</pre>
+<pre class="solucao" data-file="main.py">precos = {"pão": 0.50, "leite": 4.75}
+precos["pão"] = 0.60
+precos["bolo"] = 12.00
+print(precos)
+</pre>
+</div>
+
+<hr>
+
+<h2>2. Vários de uma vez: <code>update()</code> e <code>|</code></h2>
+<p>Chegou a tabela nova do fornecedor, com o leite mais caro e um produto novo. Em vez de uma linha por produto, junte os dois dicionários com <code>update</code> ("atualizar"):</p>
+
+<pre class="file" data-file="a_update.py">precos = {"pão": 0.60, "leite": 4.75}
+novidades = {"leite": 5.10, "café": 18.90}
+precos.update(novidades)
+print(precos)
+precos.update(suco=7.00)
+print(precos)
+</pre>
+
+<pre class="term">$ python3 a_update.py
+{'pão': 0.6, 'leite': 5.1, 'café': 18.9}
+{'pão': 0.6, 'leite': 5.1, 'café': 18.9, 'suco': 7.0}
+</pre>
+
+<p>Cada par de <code>novidades</code> é aplicado como um <code>precos[chave] = valor</code>: o leite, que existia, foi trocado; o café, que não existia, foi acrescentado. Na segunda chamada, <code>suco=7.00</code> é um atalho para chaves de texto simples.</p>
+
+<h3>O <code>|</code>: juntar sem mexer no original</h3>
+<p>O <code>update</code> muda o próprio dicionário. Para um dicionário <strong>novo</strong>, deixando o original como está, use a barra <code>|</code>, a mesma da união de <a href="conjuntos-operacoes.html">conjuntos</a>:</p>
+
+<pre class="file" data-file="a_uniao.py">loja = {"pão": 0.60, "leite": 4.75}
+promocao = {"leite": 3.99}
+hoje = loja | promocao
+print(hoje)
+print(loja)
+loja |= {"café": 18.90}
+print(loja)
+</pre>
+
+<pre class="term">$ python3 a_uniao.py
+{'pão': 0.6, 'leite': 3.99}
+{'pão': 0.6, 'leite': 4.75}
+{'pão': 0.6, 'leite': 4.75, 'café': 18.9}
+</pre>
+
+<dl class="anatomy">
+  <dt>loja | promocao</dt><dd>Um dicionário novo com os pares dos dois. Quando a chave está nos dois (o leite), vale o valor do <strong>lado direito</strong>.</dd>
+  <dt>print(loja)</dt><dd>O original não mudou: o leite continua a 4.75.</dd>
+  <dt>loja |= {…}</dt><dd>Com o <code>=</code> junto, muda o próprio <code>loja</code>, como o <code>update</code>.</dd>
+</dl>
+
+<div class="note">
+<strong>Versões do Python</strong>
+<p>O <code>|</code> e o <code>|=</code> entre dicionários existem desde o Python 3.9. O Ubuntu 26.04 (3.14) e o Debian 13 (3.13) já têm; se você encontrar um Python muito antigo, use <code>update</code>.</p>
+</div>
+
+<hr>
+
+<h2>3. Removendo</h2>
+<p>Há quatro jeitos de tirar coisas de um dicionário. Todos de uma vez, no estoque da padaria:</p>
+
+<pre class="file" data-file="a_del.py">estoque = {"pão": 40, "leite": 12, "bolo": 3, "café": 8}
+del estoque["bolo"]
+print(estoque)
+leite = estoque.pop("leite")
+print("Tirei o leite, que tinha", leite)
+print(estoque)
+print(estoque.pop("suco", 0))
+ultimo = estoque.popitem()
+print(ultimo)
+print(estoque)
+estoque.clear()
+print(estoque)
+</pre>
+
+<pre class="term">$ python3 a_del.py
+{'pão': 40, 'leite': 12, 'café': 8}
+Tirei o leite, que tinha 12
+{'pão': 40, 'café': 8}
+0
+('café', 8)
+{'pão': 40}
+{}
+</pre>
+
+<dl class="anatomy">
+  <dt>del estoque["bolo"]</dt><dd><code>del</code> ("apagar") tira a chave e o valor. Não devolve nada.</dd>
+  <dt>estoque.pop("leite")</dt><dd>"Tirar": remove o par e <strong>devolve o valor</strong>, que você pode guardar numa variável (aqui, o 12).</dd>
+  <dt>estoque.pop("suco", 0)</dt><dd>Com um segundo valor, o <code>pop</code> não dá erro se a chave não existir: devolve esse valor (0) e não remove nada.</dd>
+  <dt>estoque.popitem()</dt><dd>Remove o <strong>último par que entrou</strong> e o devolve como tupla <code>(chave, valor)</code>: <code>('café', 8)</code>.</dd>
+  <dt>estoque.clear()</dt><dd>"Limpar": tira tudo. Sobra <code>{}</code>, o dicionário vazio.</dd>
+</dl>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Para…</th><th>Use</th><th>Se a chave não existe</th></tr>
+<tr><td>Tirar uma chave e não precisar do valor</td><td><code>del d[chave]</code></td><td><code>KeyError</code></td></tr>
+<tr><td>Tirar uma chave e usar o valor</td><td><code>d.pop(chave)</code></td><td><code>KeyError</code></td></tr>
+<tr><td>Tirar se existir, sem risco de erro</td><td><code>d.pop(chave, None)</code></td><td>Devolve <code>None</code></td></tr>
+<tr><td>Tirar o último par que entrou</td><td><code>d.popitem()</code></td><td><code>KeyError</code> se estiver vazio</td></tr>
+<tr><td>Esvaziar</td><td><code>d.clear()</code></td><td>—</td></tr>
+</table>
+</div>
+
+<h3>"Renomear" uma chave</h3>
+<p>Não existe um jeito de mudar o nome de uma chave. O truque é tirar o valor com <code>pop</code> e guardá-lo numa chave nova, numa linha só:</p>
+
+<pre class="file" data-file="a_renomear.py">precos = {"pao": 0.60, "leite": 4.75}
+precos["pão"] = precos.pop("pao")
+print(precos)
+</pre>
+
+<pre class="term">$ python3 a_renomear.py
+{'leite': 4.75, 'pão': 0.6}
+</pre>
+
+<p>O <code>"pão"</code> foi para o fim, porque é uma chave <strong>nova</strong>, que acabou de entrar.</p>
+
+<div class="trypy" data-goal="out:Bolos retirados: 3;;out:{'pão': 40, 'leite': 12};;src:\.pop\(">
+<p class="try-task"><strong>Missão:</strong> o bolo saiu do cardápio. Tire a chave <code>"bolo"</code> do estoque com <code>pop</code>, guardando quantos bolos havia, para o programa mostrar <code>Bolos retirados: 3</code> e o estoque sem o bolo.</p>
+<pre class="script" data-file="main.py">estoque = {"pão": 40, "leite": 12, "bolo": 3}
+bolos = 0
+print("Bolos retirados:", bolos)
+print(estoque)
+</pre>
+<pre class="solucao" data-file="main.py">estoque = {"pão": 40, "leite": 12, "bolo": 3}
+bolos = estoque.pop("bolo")
+print("Bolos retirados:", bolos)
+print(estoque)
+</pre>
+</div>
+
+<hr>
+
+<h2>4. O truque de contar</h2>
+<p>A Ana anotou cada venda do dia numa lista e quer saber quantas vezes cada produto saiu. O dicionário é perfeito para isso: a chave é o produto, o valor é quantas vezes ele apareceu.</p>
+
+<pre class="file" data-file="a_contar.py">vendas = ["pão", "leite", "pão", "café", "pão", "leite"]
+contagem = {}
+for item in vendas:
+    contagem[item] = contagem.get(item, 0) + 1
+print(contagem)
+</pre>
+
+<pre class="term">$ python3 a_contar.py
+{'pão': 3, 'leite': 2, 'café': 1}
+</pre>
+
+<ol class="passo">
+  <li>Começa com um dicionário vazio.</li>
+  <li>Primeiro item, <code>"pão"</code>: <code>contagem.get("pão", 0)</code> não acha a chave e devolve <strong>0</strong>; mais 1 dá 1; <code>contagem["pão"] = 1</code> cria a chave.</li>
+  <li>Segundo item, <code>"leite"</code>: o mesmo, <code>contagem["leite"] = 1</code>.</li>
+  <li>Terceiro item, <code>"pão"</code> de novo: agora <code>get</code> acha o 1; mais 1 dá 2; o valor é trocado por 2.</li>
+  <li>…e assim até o fim da lista.</li>
+</ol>
+
+<p>O segredo é o <code>get(item, 0)</code>: na primeira vez que um produto aparece, ele faz de conta que o valor era zero. A mesma conta, escrita com <code>if</code>, fica mais comprida mas talvez mais fácil de ler no começo:</p>
+
+<pre class="file" data-file="a_contar_if.py">vendas = ["pão", "leite", "pão", "café", "pão", "leite"]
+contagem = {}
+for item in vendas:
+    if item in contagem:
+        contagem[item] += 1
+    else:
+        contagem[item] = 1
+print(contagem)
+</pre>
+
+<pre class="term">$ python3 a_contar_if.py
+{'pão': 3, 'leite': 2, 'café': 1}
+</pre>
+
+<p>Mesmo resultado. Contar é tão comum que o Python tem até uma ferramenta pronta, o <code>Counter</code>, da aula <a href="collections.html">O Módulo collections</a>. Mas vale entender primeiro o jeito "na mão".</p>
+
+<div class="note">
+<strong><code>setdefault</code>: ler ou criar</strong>
+<p>Existe também <code>d.setdefault(chave, valor)</code>: se a chave existe, devolve o valor dela e não muda nada; se não existe, cria com o valor dado e o devolve.</p>
+<pre class="file" data-file="a_setdefault.py">precos = {"pão": 0.60}
+print(precos.setdefault("pão", 1.00))
+print(precos.setdefault("bolo", 12.00))
+print(precos)
+</pre>
+<pre class="term">$ python3 a_setdefault.py
+0.6
+12.0
+{'pão': 0.6, 'bolo': 12.0}
+</pre>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Objetivo</th><th>Formas</th><th>Qual usar</th></tr>
+<tr><td>Acrescentar ou trocar um par</td><td><code>d["k"] = v</code> · <code>d.update({"k": v})</code></td><td><code>d["k"] = v</code> para um par; <code>update</code> para vários</td></tr>
+<tr><td>Juntar dois dicionários</td><td><code>a.update(b)</code> · <code>a |= b</code> · <code>c = a | b</code></td><td><code>a | b</code> quando quer manter o original; os outros mudam <code>a</code></td></tr>
+<tr><td>Remover uma chave</td><td><code>del d["k"]</code> · <code>d.pop("k")</code></td><td><code>pop</code> quando vai usar o valor; <code>del</code> quando não</td></tr>
+<tr><td>Remover sem risco de erro</td><td><code>d.pop("k", None)</code> · <code>if "k" in d: del d["k"]</code></td><td>O <code>pop</code> com padrão, mais curto</td></tr>
+<tr><td>Contar</td><td><code>d[x] = d.get(x, 0) + 1</code> · <code>if</code>/<code>else</code></td><td>O <code>get</code>, que é o costume</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Somar numa chave que ainda não existe</strong>
+<p>A forma mais curta de contar parece ser <code>contagem[item] += 1</code>. Mas:</p>
+<pre class="file" data-file="a_contar_erro.py">vendas = ["pão", "leite", "pão"]
+contagem = {}
+for item in vendas:
+    contagem[item] += 1
+</pre>
+<pre class="term">$ python3 a_contar_erro.py
+Traceback (most recent call last):
+  File "/home/ana/a_contar_erro.py", line 4, in &lt;module&gt;
+    contagem[item] += 1
+    ~~~~~~~~^^^^^^
+KeyError: 'pão'
+</pre>
+<dl class="anatomy">
+  <dt>line 4</dt><dd>O erro está na linha 4, dentro do <code>for</code>, logo na primeira volta.</dd>
+  <dt>contagem[item] += 1</dt><dd>É o mesmo que <code>contagem[item] = contagem[item] + 1</code>. Para somar 1, o Python precisa primeiro <strong>ler</strong> <code>contagem["pão"]</code>…</dd>
+  <dt>KeyError: 'pão'</dt><dd>…e essa chave ainda não existe. Não há valor antigo para somar.</dd>
+</dl>
+<p><strong>Como consertar:</strong> <code>contagem[item] = contagem.get(item, 0) + 1</code>, ou o <code>if item in contagem</code> da seção 4.</p>
+</div>
+
+<div class="cenario">
+<strong>Apagar uma chave que não existe</strong>
+<pre class="file" data-file="a_del_erro.py">estoque = {"pão": 40, "leite": 12}
+del estoque["bolo"]
+</pre>
+<pre class="term">$ python3 a_del_erro.py
+Traceback (most recent call last):
+  File "/home/ana/a_del_erro.py", line 2, in &lt;module&gt;
+    del estoque["bolo"]
+        ~~~~~~~^^^^^^^^
+KeyError: 'bolo'
+</pre>
+<p>O mesmo <code>KeyError</code> da leitura: não há bolo para apagar. Com <code>pop</code> sem padrão acontece igual:</p>
+<pre class="file" data-file="a_pop_erro.py">estoque = {"pão": 40, "leite": 12}
+estoque.pop("bolo")
+</pre>
+<pre class="term">$ python3 a_pop_erro.py
+Traceback (most recent call last):
+  File "/home/ana/a_pop_erro.py", line 2, in &lt;module&gt;
+    estoque.pop("bolo")
+    ~~~~~~~~~~~^^^^^^^^
+KeyError: 'bolo'
+</pre>
+<p><strong>Como consertar:</strong> <code>estoque.pop("bolo", None)</code> remove se existir e fica quieto se não existir.</p>
+</div>
+
+<div class="cenario">
+<strong><code>popitem()</code> num dicionário vazio</strong>
+<pre class="file" data-file="a_popitem_erro.py">estoque = {}
+estoque.popitem()
+</pre>
+<pre class="term">$ python3 a_popitem_erro.py
+Traceback (most recent call last):
+  File "/home/ana/a_popitem_erro.py", line 2, in &lt;module&gt;
+    estoque.popitem()
+    ~~~~~~~~~~~~~~~^^
+KeyError: 'popitem(): dictionary is empty'
+</pre>
+<p>Aqui o <code>KeyError</code> vem com uma frase em vez do nome de uma chave: "<code>popitem()</code>: o dicionário está vazio". <strong>Como consertar:</strong> confira antes: <code>if estoque: estoque.popitem()</code> (dicionário vazio conta como falso).</p>
+</div>
+
+<div class="cenario">
+<strong>Erro de digitação na chave: sem erro, resultado errado</strong>
+<p><code>precos["paõ"] = 0.60</code> (com o til no lugar errado) não dá erro nenhum. Como a chave <code>"paõ"</code> não existe, o Python a cria, e o dicionário fica com o pão antigo e mais um "paõ" novo. <strong>Como perceber:</strong> mostre o dicionário depois de mudar, ou confira o <code>len</code>: se ele cresceu quando você só queria trocar um preço, alguma chave saiu escrita diferente.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>d[k] = v</code></td><td>Cria o par (chave nova) ou troca o valor (chave existente)</td></tr>
+<tr><td><code>d[k] += 1</code></td><td>Soma no valor existente (<code>KeyError</code> se a chave não existe)</td></tr>
+<tr><td><code>d.update(outro)</code></td><td>Aplica todos os pares de <code>outro</code> em <code>d</code></td></tr>
+<tr><td><code>a | b</code> / <code>a |= b</code></td><td>Dicionário novo com os dois / muda <code>a</code> (vale o da direita)</td></tr>
+<tr><td><code>del d[k]</code></td><td>Remove a chave</td></tr>
+<tr><td><code>d.pop(k)</code> / <code>d.pop(k, padrao)</code></td><td>Remove e devolve o valor / sem erro se não existir</td></tr>
+<tr><td><code>d.popitem()</code></td><td>Remove e devolve o último par, como tupla</td></tr>
+<tr><td><code>d.clear()</code></td><td>Esvazia</td></tr>
+<tr><td><code>d.setdefault(k, v)</code></td><td>Devolve o valor de <code>k</code>; se não existir, cria com <code>v</code></td></tr>
+<tr><td><code>d[x] = d.get(x, 0) + 1</code></td><td>Conta quantas vezes <code>x</code> aparece</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>KeyError: 'pão'</code> numa linha com <code>+=</code></td><td>Somou numa chave que ainda não existe: use <code>get(k, 0) + 1</code></td></tr>
+<tr><td><code>KeyError: 'bolo'</code> num <code>del</code> ou <code>pop</code></td><td>A chave não existe: use <code>pop(k, None)</code></td></tr>
+<tr><td><code>KeyError: 'popitem(): dictionary is empty'</code></td><td><code>popitem()</code> com o dicionário vazio</td></tr>
+<tr><td>O <code>len</code> cresceu quando era só trocar</td><td>Chave escrita diferente: virou chave nova</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Produto novo</h3>
+<p>Complete para acrescentar o suco a <code>7.00</code>:</p>
+<div class="ex-code">precos[<input data-answer="&quot;suco&quot;|'suco'" aria-label="chave">] = 7.00</div>
+</div>
+
+<div class="exercise">
+<h3>2. Apagar</h3>
+<p>Complete a palavra que apaga a chave <code>"bolo"</code>:</p>
+<div class="ex-code"><input data-answer="del" aria-label="palavra"> estoque["bolo"]</div>
+</div>
+
+<div class="exercise">
+<h3>3. Contando</h3>
+<p>Complete o valor padrão do <code>get</code> na linha que conta:</p>
+<div class="ex-code">contagem[item] = contagem.get(item, <input data-answer="0" aria-label="padrão">) + 1</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Com <code>d = {"a": 1}</code>, o que acontece em <code>d["a"] = 5</code>?</p>
+<label><input type="radio" name="q4"> Cria uma segunda chave <code>"a"</code></label>
+<label><input type="radio" name="q4"> Troca o valor de <code>"a"</code> para 5</label>
+<label><input type="radio" name="q4"> Dá <code>KeyError</code></label>
+<label><input type="radio" name="q4"> Soma 5 ao valor</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. Qual remove a chave <code>"x"</code> <strong>e devolve</strong> o valor dela?</p>
+<label><input type="radio" name="q5"> <code>del d["x"]</code></label>
+<label><input type="radio" name="q5"> <code>d.clear("x")</code></label>
+<label><input type="radio" name="q5"> <code>d.popitem("x")</code></label>
+<label><input type="radio" name="q5"> <code>d.pop("x")</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Em <code>{"leite": 4.75} | {"leite": 3.99}</code>, qual preço do leite fica?</p>
+<label><input type="radio" name="q6"> <code>3.99</code>, o do lado direito</label>
+<label><input type="radio" name="q6"> <code>4.75</code>, o do lado esquerdo</label>
+<label><input type="radio" name="q6"> Os dois, numa lista</label>
+<label><input type="radio" name="q6"> Dá erro, porque a chave se repete</label>
+</div>
+
+<h3>Missão final: a votação do sorvete</h3>
+
+<div class="trypy" data-goal="out:{'morango': 3, 'chocolate': 2, 'coco': 1};;semerro">
+<p class="try-task"><strong>Missão:</strong> a turma votou no sabor do sorvete da festa. O programa quer contar os votos de cada sabor, mas para com <code>KeyError: 'morango'</code>. Conserte a linha de dentro do <code>for</code>.</p>
+<pre class="script" data-file="main.py">votos = ["morango", "chocolate", "morango", "coco", "morango", "chocolate"]
+contagem = {}
+for sabor in votos:
+    contagem[sabor] += 1
+print(contagem)
+</pre>
+<pre class="solucao" data-file="main.py">votos = ["morango", "chocolate", "morango", "coco", "morango", "chocolate"]
+contagem = {}
+for sabor in votos:
+    contagem[sabor] = contagem.get(sabor, 0) + 1
+print(contagem)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>d[chave] = valor</code> cria o par se a chave é nova e troca o valor se ela já existe.</li>
+  <li><code>update()</code> aplica vários pares de uma vez; <code>a | b</code> cria um dicionário novo (vale o valor da direita); <code>|=</code> muda o próprio.</li>
+  <li><code>del d[k]</code> remove; <code>d.pop(k)</code> remove e devolve; <code>d.pop(k, None)</code> não dá erro; <code>popitem()</code> tira o último par; <code>clear()</code> esvazia.</li>
+  <li>Para contar: <code>contagem[x] = contagem.get(x, 0) + 1</code>. O <code>contagem[x] += 1</code> sozinho dá <code>KeyError</code> na primeira vez.</li>
+  <li>Cuidado com chave digitada errado: não dá erro, vira chave nova.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
