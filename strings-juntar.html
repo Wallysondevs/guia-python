@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Juntar e Repetir Textos — +, * e join() | Guia Python</title>
+<meta name="description" content="Como juntar e repetir textos em Python para quem está começando: concatenar com +, ir montando com +=, repetir com * (a linha de enfeite do cardápio), juntar uma lista com join(), e os erros reais: o TypeError de &quot;texto&quot; + 5, texto vezes texto, texto menos texto e join() com números, com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python: <span class="hl">Juntar</span> e <span class="hl">Repetir</span> Textos</h1>
+
+<p class="intro">Muitas vezes você tem um texto em pedaços: o nome numa variável, o sobrenome em outra; os itens da lista de compras um a um. Para montar a frase inteira, você precisa <strong>juntar</strong> os pedaços. E às vezes precisa <strong>repetir</strong> um texto, como a linha de tracinhos que enfeita o cardápio da padaria. O Python usa para isso os mesmos símbolos das contas, <code>+</code> e <code>*</code>, mais um método feito para listas, o <code>join()</code>. Esta aula mostra os três, e os erros que todo iniciante encontra no caminho, a começar pelo famoso <code>"texto" + 5</code>.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A emendar textos com <code>+</code> (a <strong>concatenação</strong>), sem esquecer o espaço.</li>
+  <li>A ir montando um texto aos poucos com <code>+=</code>.</li>
+  <li>A repetir um texto com <code>*</code>: <code>"-" * 20</code>.</li>
+  <li>A juntar uma lista de textos com um separador: <code>", ".join(compras)</code>.</li>
+  <li>Quando usar <code>+</code>, a vírgula do <code>print</code> ou uma f-string.</li>
+  <li>Os erros reais: <code>"texto" + 5</code>, <code>5 + "texto"</code>, <code>"ha" * "3"</code>, texto menos texto e <code>join()</code> com números.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: emendar e carimbar</h2>
+<p>Juntar textos é como emendar pedaços de fita: você cola o fim de um no começo do outro, e o resultado é uma fita só, mais comprida. Repetir é como usar um <strong>carimbo</strong>: você carimba a mesma figura várias vezes, uma ao lado da outra. E o <code>join()</code> é como montar um colar de contas com um nó entre elas: as contas são os textos da lista, e o nó é o separador que você escolhe.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Operação</th><th>Escrita</th><th>Exemplo</th><th>Resultado</th></tr>
+<tr><td>Emendar</td><td><code>texto + texto</code></td><td><code>"Ana" + " Souza"</code></td><td><code>'Ana Souza'</code></td></tr>
+<tr><td>Repetir</td><td><code>texto * número</code></td><td><code>"ha" * 3</code></td><td><code>'hahaha'</code></td></tr>
+<tr><td>Juntar uma lista</td><td><code>separador.join(lista)</code></td><td><code>", ".join(["pão", "leite"])</code></td><td><code>'pão, leite'</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. <code>+</code>: emendando textos</h2>
+
+<pre class="file" data-file="juntar.py">nome = "Ana"
+sobrenome = "Souza"
+
+print(nome + sobrenome)
+print(nome + " " + sobrenome)
+
+completo = nome + " " + sobrenome
+print("Olá, " + completo + "!")
+</pre>
+
+<pre class="term">$ python3 juntar.py
+AnaSouza
+Ana Souza
+Olá, Ana Souza!
+</pre>
+
+<dl class="anatomy">
+  <dt>nome + sobrenome</dt><dd>Com dois textos, o <code>+</code> não soma: ele <strong>emenda</strong> o segundo no fim do primeiro. É a <strong>concatenação</strong> (de "concatenar", encadear).</dd>
+  <dt>AnaSouza</dt><dd>Emendou exatamente o que tinha: nenhum espaço foi acrescentado. O Python não sabe que você queria um espaço.</dd>
+  <dt>nome + " " + sobrenome</dt><dd>O espaço é um texto também (<code>" "</code>, aspas com um espaço no meio). Emende-o entre os dois.</dd>
+  <dt>completo = …</dt><dd>O resultado é um texto novo, que você pode guardar numa variável e usar depois.</dd>
+</dl>
+
+<p>Repare no último <code>print</code>: o espaço depois da vírgula ficou <strong>dentro</strong> das aspas, em <code>"Olá, "</code>. É o jeito mais comum de não esquecer o espaço.</p>
+
+<h3>Montando aos poucos com <code>+=</code></h3>
+<p>O <code>+=</code> da aula <a href="operadores-atribuicao.html">Operadores de Atribuição</a> funciona com textos também: <code>recado += " pão"</code> é o mesmo que <code>recado = recado + " pão"</code>.</p>
+
+<pre class="file" data-file="mais-igual.py">recado = "Comprar"
+recado += " pão"
+recado += " e leite"
+print(recado)
+</pre>
+
+<pre class="term">$ python3 mais-igual.py
+Comprar pão e leite
+</pre>
+
+<p>Lembre da aula <a href="strings.html">Strings</a>: textos são imutáveis. O <code>+=</code> não "estica" o texto antigo; ele cria um texto novo, maior, e guarda de volta na mesma variável.</p>
+
+<div class="trypy" data-goal="out:Bia Lima;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa mostra o nome todo grudado, <code>BiaLima</code>. Conserte para sair <code>Bia Lima</code>, com um espaço no meio.</p>
+<pre class="script" data-file="main.py">nome = "Bia"
+sobrenome = "Lima"
+print(nome + sobrenome)
+</pre>
+<pre class="solucao" data-file="main.py">nome = "Bia"
+sobrenome = "Lima"
+print(nome + " " + sobrenome)
+</pre>
+</div>
+
+<hr>
+
+<h2>2. <code>*</code>: repetindo um texto</h2>
+<p>Um texto vezes um número inteiro dá o texto repetido aquele número de vezes:</p>
+
+<pre class="file" data-file="repetir.py">print("-" * 20)
+print("ha" * 3)
+print(3 * "ab")
+print("=" * 0)
+print("Fim")
+</pre>
+
+<pre class="term">$ python3 repetir.py
+--------------------
+hahaha
+ababab
+
+Fim
+</pre>
+
+<ul>
+  <li><code>"-" * 20</code>: vinte tracinhos, uma linha de enfeite.</li>
+  <li><code>"ha" * 3</code>: o texto inteiro se repete, <code>hahaha</code>.</li>
+  <li><code>3 * "ab"</code>: a ordem não importa; número vezes texto também funciona.</li>
+  <li><code>"=" * 0</code>: zero vezes dá o texto vazio, e por isso o <code>print</code> mostrou uma linha em branco. (Um número negativo também dá o texto vazio: <code>"ab" * -3</code> é <code>''</code>.)</li>
+</ul>
+
+<p>Um uso bonito: a Ana faz o cabeçalho do cardápio da padaria com uma linha <strong>do tamanho exato</strong> do título, usando o <code>len()</code>:</p>
+
+<pre class="file" data-file="cardapio.py">titulo = "PADARIA DO BAIRRO"
+linha = "=" * len(titulo)
+
+print(linha)
+print(titulo)
+print(linha)
+print("Pão francês" + "." * 10 + "R$ 0,80")
+</pre>
+
+<pre class="term">$ python3 cardapio.py
+=================
+PADARIA DO BAIRRO
+=================
+Pão francês..........R$ 0,80
+</pre>
+
+<p>O título tem 17 caracteres (contando os espaços), então a linha tem 17 sinais de igual. Se a Ana mudar o título, a linha acompanha sozinha. Na última linha, <code>+</code> e <code>*</code> trabalham juntos: o <code>*</code> vai primeiro (é mais forte, como você viu em <a href="precedencia.html">Precedência</a>) e fabrica os dez pontinhos; depois os <code>+</code> emendam tudo.</p>
+
+<hr>
+
+<h2>3. <code>join()</code>: juntando uma lista com um separador</h2>
+<p>Quando os pedaços estão numa <strong>lista</strong> (aula <a href="listas.html">Listas</a>), emendar um por um com <code>+</code> dá trabalho. O <code>join()</code> (em inglês, "juntar") faz isso de uma vez, pondo um separador entre os itens:</p>
+
+<pre class="file" data-file="join.py">compras = ["pão", "leite", "café"]
+
+print(", ".join(compras))
+print(" - ".join(compras))
+print("".join(compras))
+print(" e ".join(["Ana", "Bia"]))
+print("-".join("2026"))
+</pre>
+
+<dl class="anatomy">
+  <dt>", "</dt><dd>O <strong>separador</strong>: o texto que vai <strong>entre</strong> os itens. Ele vem primeiro, antes do ponto. Parece estranho, mas lê-se assim: "vírgula-e-espaço, junte esta lista".</dd>
+  <dt>.join</dt><dd>O método que junta. Um <strong>método</strong> é uma função que pertence a um valor e se escreve com ponto, como <code>texto.lower()</code> (aula <a href="strings-metodos.html">Métodos de Texto</a>).</dd>
+  <dt>(compras)</dt><dd>A lista de textos que vai ser juntada.</dd>
+</dl>
+
+<pre class="term">$ python3 join.py
+pão, leite, café
+pão - leite - café
+pãoleitecafé
+Ana e Bia
+2-0-2-6
+</pre>
+
+<ul>
+  <li>O separador vai só <strong>entre</strong> os itens: não sobra vírgula no fim, nem no começo. Com <code>+</code>, você teria de cuidar disso na mão.</li>
+  <li>O separador pode ser qualquer texto, até o vazio (<code>""</code>), que cola tudo.</li>
+  <li>O <code>join()</code> aceita também um texto no lugar da lista: aí cada <strong>caractere</strong> vira um item. <code>"-".join("2026")</code> pôs um tracinho entre os algarismos.</li>
+</ul>
+
+<div class="trypy" data-goal="out:Comprar: arroz, feijão, farinha;;src:\.join\(">
+<p class="try-task"><strong>Missão:</strong> o programa emenda os itens um por um, com <code>+</code>. Reescreva o <code>print</code> usando <code>", ".join(compras)</code>, para a mesma saída: <code>Comprar: arroz, feijão, farinha</code>.</p>
+<pre class="script" data-file="main.py">compras = ["arroz", "feijão", "farinha"]
+print("Comprar: " + compras[0] + ", " + compras[1])
+</pre>
+<pre class="solucao" data-file="main.py">compras = ["arroz", "feijão", "farinha"]
+print("Comprar: " + ", ".join(compras))
+</pre>
+</div>
+
+<p>Repare que o código inicial ainda esqueceu a farinha. Com o <code>join()</code>, não tem como esquecer: ele junta a lista inteira, seja qual for o tamanho.</p>
+
+<hr>
+
+<h2>4. E quando um dos pedaços é um número?</h2>
+<p>O <code>+</code> só emenda <strong>texto com texto</strong>. Se um dos pedaços for um número, há três saídas:</p>
+
+<pre class="file" data-file="virgula.py">quantidade = 3
+print("Pães:", quantidade)
+print("Pães: " + str(quantidade))
+print(f"Pães: {quantidade}")
+</pre>
+
+<pre class="term">$ python3 virgula.py
+Pães: 3
+Pães: 3
+Pães: 3
+</pre>
+
+<dl class="anatomy">
+  <dt>print("Pães:", quantidade)</dt><dd>A vírgula separa os valores do <code>print</code>, que mostra cada um e põe um espaço entre eles (aula <a href="print-sep-end.html">As Opções sep e end</a>). Não é concatenação: o <code>print</code> aceita números à vontade.</dd>
+  <dt>"Pães: " + str(quantidade)</dt><dd>O <code>str()</code> transforma o número 3 no texto <code>"3"</code>, e aí o <code>+</code> funciona. O espaço tem de estar dentro das aspas.</dd>
+  <dt>f"Pães: {quantidade}"</dt><dd>Uma <strong>f-string</strong>: o <code>f</code> antes das aspas permite escrever variáveis entre chaves, dentro do texto. É o jeito preferido para montar frases, com aula própria: <a href="f-strings.html">f-strings</a>.</dd>
+</dl>
+
+<hr>
+
+<h2>5. Textos colados sem nada no meio</h2>
+<p>Uma curiosidade, para você não se assustar quando encontrar: dois textos escritos <strong>lado a lado</strong>, sem <code>+</code>, também são emendados.</p>
+
+<pre class="file" data-file="colados.py">mensagem = "Olá, " "Ana"
+print(mensagem)
+</pre>
+
+<pre class="term">$ python3 colados.py
+Olá, Ana
+</pre>
+
+<p>Isso só funciona com textos escritos ali mesmo, entre aspas; com variáveis, não. Serve para quebrar um texto muito comprido em vários pedaços (dentro de parênteses, em várias linhas). No dia a dia, prefira o <code>+</code>, que deixa a intenção clara.</p>
+
+<hr>
+
+<h2>Formas diferentes de montar o mesmo texto</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Exemplo</th><th>Quando usar</th></tr>
+<tr><td><code>+</code></td><td><code>nome + " " + sobrenome</code></td><td>Para emendar poucos textos</td></tr>
+<tr><td><code>+=</code></td><td><code>recado += " pão"</code></td><td>Para ir montando aos poucos</td></tr>
+<tr><td>Vírgula do <code>print</code></td><td><code>print("Pães:", 3)</code></td><td>Só para mostrar na tela, com números no meio</td></tr>
+<tr><td>f-string</td><td><code>f"Olá, {nome}!"</code></td><td>Para montar frases com variáveis (o mais usado)</td></tr>
+<tr><td><code>*</code></td><td><code>"-" * 20</code></td><td>Para repetir</td></tr>
+<tr><td><code>join()</code></td><td><code>", ".join(compras)</code></td><td>Para juntar uma lista, com separador</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Texto mais número: <code>can only concatenate str</code></strong>
+<p>É o erro mais famoso de quem está começando. No modo interativo:</p>
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; "texto" + 5
+Traceback (most recent call last):
+  File "&lt;python-input-0&gt;", line 1, in &lt;module&gt;
+    "texto" + 5
+    ~~~~~~~~^~~
+TypeError: can only concatenate str (not "int") to str
+&gt;&gt;&gt; "texto" + str(5)
+'texto5'
+&gt;&gt;&gt; exit()
+</pre>
+<p>E num programa de verdade, com a idade numa variável:</p>
+<pre class="file" data-file="texto-mais-numero.py">idade = 30
+print("A Ana tem " + idade + " anos")
+</pre>
+<pre class="term">$ python3 texto-mais-numero.py
+Traceback (most recent call last):
+  File "/home/ana/texto-mais-numero.py", line 2, in &lt;module&gt;
+    print("A Ana tem " + idade + " anos")
+          ~~~~~~~~~~~~~^~~~~~~
+TypeError: can only concatenate str (not "int") to str
+</pre>
+<dl class="anatomy">
+  <dt>File "/home/ana/texto-mais-numero.py", line 2</dt><dd>O erro está na linha 2.</dd>
+  <dt>~~~~~~~~~~~~~^~~~~~~</dt><dd>O <code>^</code> aponta o <strong>primeiro</strong> <code>+</code>, e os <code>~</code> sublinham os dois lados dele: o texto <code>"A Ana tem "</code> e a variável <code>idade</code>. O segundo <code>+</code> nem chegou a ser feito.</dd>
+  <dt>TypeError:</dt><dd>"Erro de tipo".</dd>
+  <dt>can only concatenate str (not "int") to str</dt><dd>"Só dá para concatenar <code>str</code> (não <code>int</code>) a um <code>str</code>." Ao texto, você só pode emendar outro texto, e <code>idade</code> é o número 30.</dd>
+</dl>
+<p>Por que o Python não converte sozinho? Porque ele não adivinha. <code>"5" + 5</code> deveria dar <code>"55"</code> ou <code>10</code>? Em vez de chutar, ele pede que você diga. <strong>Como consertar:</strong> <code>"A Ana tem " + str(idade) + " anos"</code>, ou melhor, <code>f"A Ana tem {idade} anos"</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Número mais texto: a mensagem muda</strong>
+<pre class="file" data-file="numero-mais-texto.py">idade = 30
+print(idade + " anos")
+</pre>
+<pre class="term">$ python3 numero-mais-texto.py
+Traceback (most recent call last):
+  File "/home/ana/numero-mais-texto.py", line 2, in &lt;module&gt;
+    print(idade + " anos")
+          ~~~~~~^~~~~~~~~
+TypeError: unsupported operand type(s) for +: 'int' and 'str'
+</pre>
+<p>Com o número na frente, a mensagem é outra: <code>unsupported operand type(s) for +: 'int' and 'str'</code>, "tipos de operando não aceitos pelo <code>+</code>: <code>int</code> e <code>str</code>". O Python tentou uma <strong>soma</strong> (o lado esquerdo é um número) e não sabe somar um número com um texto. O conserto é o mesmo: <code>str(idade) + " anos"</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Texto vezes texto, ou vezes um número quebrado</strong>
+<pre class="file" data-file="vezes-texto.py">vezes = "3"
+print("ha" * vezes)
+</pre>
+<pre class="term">$ python3 vezes-texto.py
+Traceback (most recent call last):
+  File "/home/ana/vezes-texto.py", line 2, in &lt;module&gt;
+    print("ha" * vezes)
+          ~~~~~^~~~~~~
+TypeError: can't multiply sequence by non-int of type 'str'
+</pre>
+<p><code>can't multiply sequence by non-int of type 'str'</code>: "não dá para multiplicar uma sequência por algo que não é <code>int</code>, do tipo <code>str</code>". Para o Python, um texto é uma <strong>sequência</strong> (de caracteres), e uma sequência só se multiplica por um número inteiro. O <code>"3"</code> é texto. Com um número com casas decimais acontece o mesmo:</p>
+<pre class="file" data-file="vezes-float.py">print("-" * 2.5)
+</pre>
+<pre class="term">$ python3 vezes-float.py
+Traceback (most recent call last):
+  File "/home/ana/vezes-float.py", line 1, in &lt;module&gt;
+    print("-" * 2.5)
+          ~~~~^~~~~
+TypeError: can't multiply sequence by non-int of type 'float'
+</pre>
+<p>Não existe "dois tracinhos e meio". <strong>Como consertar:</strong> use um <code>int</code>: <code>"ha" * int(vezes)</code>, ou <code>"-" * 2</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Texto menos texto</strong>
+<p>Se <code>+</code> emenda, será que <code>-</code> "desemenda"?</p>
+<pre class="file" data-file="menos.py">print("pão e leite" - " e leite")
+</pre>
+<pre class="term">$ python3 menos.py
+Traceback (most recent call last):
+  File "/home/ana/menos.py", line 1, in &lt;module&gt;
+    print("pão e leite" - " e leite")
+          ~~~~~~~~~~~~~~^~~~~~~~~~~~
+TypeError: unsupported operand type(s) for -: 'str' and 'str'
+</pre>
+<p>Não: os textos só aceitam <code>+</code> e <code>*</code>. <code>/</code> e <code>-</code> dão esse <code>TypeError</code>. <strong>Como consertar:</strong> para tirar um pedaço do texto, use o <code>replace()</code> (aula <a href="strings-metodos.html">Métodos de Texto</a>) ou uma fatia (aula <a href="strings-fatias.html">Índices e Fatias</a>).</p>
+</div>
+
+<div class="cenario">
+<strong><code>join()</code> com uma lista de números</strong>
+<pre class="file" data-file="join-numeros.py">notas = [7, 9, 10]
+print(", ".join(notas))
+</pre>
+<pre class="term">$ python3 join-numeros.py
+Traceback (most recent call last):
+  File "/home/ana/join-numeros.py", line 2, in &lt;module&gt;
+    print(", ".join(notas))
+          ~~~~~~~~~^^^^^^^
+TypeError: sequence item 0: expected str instance, int found
+</pre>
+<p><code>sequence item 0: expected str instance, int found</code>: "item 0 da sequência: esperava um <code>str</code>, encontrou um <code>int</code>". O <code>join()</code> só junta <strong>textos</strong>, e já o primeiro item (o de índice 0, o <code>7</code>) é um número. <strong>Como consertar:</strong> guarde os itens como texto (<code>["7", "9", "10"]</code>). Para converter uma lista de números inteira de uma vez, você vai aprender ferramentas próprias em <a href="list-comprehension.html">List Comprehension</a> e <a href="map-filter.html">map() e filter()</a>.</p>
+<pre class="file" data-file="join-certo.py">notas = ["7", "9", "10"]
+print(", ".join(notas))
+</pre>
+<pre class="term">$ python3 join-certo.py
+7, 9, 10
+</pre>
+</div>
+
+<div class="trypy" data-goal="out:A Ana tem 30 anos;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa dá <code>TypeError</code>. Conserte a linha do <code>print</code> para mostrar <code>A Ana tem 30 anos</code> (com <code>str()</code>, com vírgulas ou com uma f-string: qualquer um vale).</p>
+<pre class="script" data-file="main.py">idade = 30
+print("A Ana tem " + idade + " anos")
+</pre>
+<pre class="solucao" data-file="main.py">idade = 30
+print("A Ana tem " + str(idade) + " anos")
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Exemplo → resultado</th></tr>
+<tr><td><code>a + b</code></td><td>Emenda dois textos</td><td><code>"Ana" + "Souza"</code> → <code>'AnaSouza'</code></td></tr>
+<tr><td><code>a += b</code></td><td>Emenda e guarda de volta em <code>a</code></td><td><code>recado += " pão"</code></td></tr>
+<tr><td><code>texto * n</code></td><td>Repete <code>n</code> vezes (<code>n</code> inteiro)</td><td><code>"ha" * 3</code> → <code>'hahaha'</code></td></tr>
+<tr><td><code>texto * 0</code></td><td>Texto vazio</td><td><code>''</code></td></tr>
+<tr><td><code>sep.join(lista)</code></td><td>Junta os textos da lista, com <code>sep</code> entre eles</td><td><code>", ".join(["a", "b"])</code> → <code>'a, b'</code></td></tr>
+<tr><td><code>str(n)</code></td><td>Transforma um número em texto, para emendar</td><td><code>"Pães: " + str(3)</code> → <code>'Pães: 3'</code></td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>TypeError: can only concatenate str (not "int") to str</code></td><td>Texto <code>+</code> número: use <code>str()</code> ou uma f-string</td></tr>
+<tr><td><code>TypeError: unsupported operand type(s) for +: 'int' and 'str'</code></td><td>Número <code>+</code> texto</td></tr>
+<tr><td><code>TypeError: can't multiply sequence by non-int of type 'str'</code></td><td>Texto vezes texto: converta com <code>int()</code></td></tr>
+<tr><td><code>TypeError: can't multiply sequence by non-int of type 'float'</code></td><td>Texto vezes número quebrado</td></tr>
+<tr><td><code>TypeError: unsupported operand type(s) for -: 'str' and 'str'</code></td><td>Textos não têm subtração: use <code>replace()</code> ou fatias</td></tr>
+<tr><td><code>TypeError: sequence item 0: expected str instance, int found</code></td><td><code>join()</code> com números na lista</td></tr>
+<tr><td>Palavras grudadas: <code>AnaSouza</code></td><td>Faltou emendar o espaço <code>" "</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Com espaço</h3>
+<p>Complete para mostrar <code>Ana Souza</code>:</p>
+<div class="ex-code">print("Ana" + <input data-answer="&quot; &quot;|' '" aria-label="o que falta"> + "Souza")</div>
+</div>
+
+<div class="exercise">
+<h3>2. A linha de enfeite</h3>
+<p>Complete para mostrar 15 asteriscos (<code>***************</code>):</p>
+<div class="ex-code">print("*" <input data-answer="*" aria-label="operador"> 15)</div>
+</div>
+
+<div class="exercise">
+<h3>3. O separador</h3>
+<p>Complete para mostrar <code>pão; leite; café</code>:</p>
+<div class="ex-code">print(<input data-answer="&quot;; &quot;|'; '" aria-label="separador">.join(["pão", "leite", "café"]))</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Quanto vale <code>("ab" + "c") * 2</code>?</p>
+<label><input type="radio" name="q4"> <code>'abcc'</code></label>
+<label><input type="radio" name="q4"> <code>'abcabc'</code></label>
+<label><input type="radio" name="q4"> <code>'abab'</code></label>
+<label><input type="radio" name="q4"> Dá <code>TypeError</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. E sem os parênteses, <code>"ab" + "c" * 2</code>?</p>
+<label><input type="radio" name="q5"> <code>'abcabc'</code></label>
+<label><input type="radio" name="q5"> <code>'abab'</code></label>
+<label><input type="radio" name="q5"> Dá <code>TypeError</code></label>
+<label><input type="radio" name="q5"> <code>'abcc'</code>, porque o <code>*</code> vai antes do <code>+</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">6. Com <code>total = 25</code>, qual linha dá <code>TypeError</code>?</p>
+<label><input type="radio" name="q6"> <code>print("Total:", total)</code></label>
+<label><input type="radio" name="q6"> <code>print("Total: " + str(total))</code></label>
+<label><input type="radio" name="q6"> <code>print("Total: " + total)</code></label>
+<label><input type="radio" name="q6"> <code>print(f"Total: {total}")</code></label>
+</div>
+
+<h3>Missão final: a etiqueta da padaria</h3>
+
+<div class="trypy" data-goal="outre:^\*{10}\nBolo de fubá\n\*{10}\n$;;src:\*\s*10|10\s*\*">
+<p class="try-task"><strong>Missão:</strong> a Ana quer uma etiqueta com o nome do bolo entre duas linhas de <strong>10 asteriscos</strong>. Ela digitou os asteriscos na mão e errou a conta. Troque as duas linhas de asteriscos por <code>"*" * 10</code>.</p>
+<pre class="script" data-file="main.py">print("********")
+print("Bolo de fubá")
+print("************")
+</pre>
+<pre class="solucao" data-file="main.py">print("*" * 10)
+print("Bolo de fubá")
+print("*" * 10)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Entre textos, <code>+</code> <strong>emenda</strong> (concatena) e não põe espaço nenhum: o espaço você emenda junto (<code>" "</code>).</li>
+  <li><code>+=</code> vai montando o texto aos poucos (criando um texto novo a cada vez).</li>
+  <li><code>texto * n</code> repete o texto <code>n</code> vezes; <code>n</code> tem de ser inteiro. Zero ou negativo dá o texto vazio.</li>
+  <li><code>separador.join(lista)</code> junta uma lista de <strong>textos</strong>, com o separador só entre eles.</li>
+  <li><code>"texto" + 5</code> dá <code>TypeError: can only concatenate str (not "int") to str</code>: converta com <code>str()</code> ou use uma f-string.</li>
+  <li>Textos não têm <code>-</code> nem <code>/</code>; para tirar pedaços, existem o <code>replace()</code> e as fatias.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
