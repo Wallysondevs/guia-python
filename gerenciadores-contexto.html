@@ -492,7 +492,7 @@ Traceback (most recent call last):
   File "/usr/lib/python3.14/contextlib.py", line 143, in __enter__
     raise RuntimeError("generator didn't yield") from None
 RuntimeError: generator didn't yield</pre>
-<p>"O gerador não fez <code>yield</code>". Para a farmácia, o <code>if</code> pulou o <code>yield</code>, e a função terminou sem entregar o ponto em que o bloco deveria rodar. O traceback tem um segundo trecho, dentro do <code>contextlib.py</code>: é o <code>__enter__</code> que o <code>@contextmanager</code> escreveu para você. (O caminho desse arquivo muda de computador para computador; no editor do guia aparece <code>/lib/python314.zip/contextlib.py</code>.) O <code>Vendendo...</code> não apareceu: o bloco nem começou. Com dois <code>yield</code> seguidos, o erro é o contrário: <code>RuntimeError: generator didn't stop</code> ("o gerador não parou"). <strong>Como consertar:</strong> o gerador de um <code>@contextmanager</code> tem de passar por <strong>exatamente um</strong> <code>yield</code>, sempre.</p>
+<p>"O gerador não fez <code>yield</code>". Para a farmácia, o <code>if</code> pulou o <code>yield</code>, e a função terminou sem entregar o ponto em que o bloco deveria rodar. O traceback tem um segundo trecho, dentro do <code>contextlib.py</code>: é o <code>__enter__</code> que o <code>@contextmanager</code> escreveu para você. O <code>Vendendo...</code> não apareceu: o bloco nem começou. Com dois <code>yield</code> seguidos, o erro é o contrário: <code>RuntimeError: generator didn't stop</code> ("o gerador não parou"). <strong>Como consertar:</strong> o gerador de um <code>@contextmanager</code> tem de passar por <strong>exatamente um</strong> <code>yield</code>, sempre.</p>
 </div>
 
 <hr>
