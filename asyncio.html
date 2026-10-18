@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python asyncio — async, await e tarefas ao mesmo tempo | Guia Python</title>
+<meta name="description" content="Programação assíncrona em Python para quem está começando: a ideia de aproveitar as esperas, async def e await, asyncio.run, corrotinas, asyncio.gather com sleep, create_task, TaskGroup, wait_for com tempo limite, erros dentro do gather, por que time.sleep trava tudo e os erros e avisos reais do Python 3.14.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Programação Assíncrona (asyncio)</span></h1>
+
+<p class="intro">Muitos programas passam a maior parte do tempo <strong>esperando</strong>: a resposta de um site, um arquivo que vem pela rede, um banco de dados que demora a responder. Enquanto espera, um programa comum fica parado, sem fazer mais nada. A <strong>programação assíncrona</strong> ensina o programa a aproveitar essas esperas: começar outra tarefa enquanto a primeira não responde. Em Python, ela se faz com duas palavras novas, <code>async</code> e <code>await</code>, e com o módulo <code>asyncio</code>. É o assunto mais avançado deste nível; vá devagar, rodando cada exemplo.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A ideia: uma pessoa só, alternando tarefas nas esperas.</li>
+  <li>A escrever uma <strong>corrotina</strong> com <code>async def</code> e a esperar com <code>await</code>.</li>
+  <li>A rodar tudo com <code>asyncio.run()</code>.</li>
+  <li>A fazer várias esperas ao mesmo tempo com <code>asyncio.gather()</code>, e por que o tempo total cai.</li>
+  <li><code>create_task</code>, <code>TaskGroup</code> e <code>wait_for</code> (tempo limite).</li>
+  <li>O que acontece quando uma das tarefas dá erro.</li>
+  <li>Os erros e avisos reais: <code>coroutine was never awaited</code>, <code>'await' outside function</code>, <code>a coroutine or an awaitable is required</code> e o <code>time.sleep</code> que trava tudo.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a cozinheira que não fica olhando o forno</h2>
+<p>A Ana prepara o café da manhã: o pão leva 2 minutos no forno, e o café leva 1 minuto para a água ferver. Há dois jeitos de fazer:</p>
+<ul>
+  <li><strong>Um de cada vez (síncrono):</strong> põe o pão no forno e fica parada olhando até ficar pronto (2 min). Só então põe a água do café e espera ferver (1 min). Total: <strong>3 minutos</strong>.</li>
+  <li><strong>Aproveitando a espera (assíncrono):</strong> põe o pão no forno e, <strong>enquanto ele assa</strong>, põe a água do café. O café fica pronto no primeiro minuto, o pão no segundo. Total: <strong>2 minutos</strong>.</li>
+</ul>
+<p>Repare: continua sendo <strong>uma pessoa só</strong>. Ela não fica mais rápida nem ganha um par de braços; ela só não desperdiça a espera. É isso que o <code>asyncio</code> faz: um programa, uma linha de execução, alternando entre tarefas toda vez que uma delas diz "agora vou esperar".</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Na cozinha</th><th>No Python</th></tr>
+<tr><td>Uma receita que tem esperas no meio</td><td>Uma <strong>corrotina</strong>: <code>async def assar_pao():</code></td></tr>
+<tr><td>"Agora vou esperar; pode cuidar de outra coisa"</td><td><code>await</code> (em inglês, "aguardar")</td></tr>
+<tr><td>Esperar o forno</td><td><code>await asyncio.sleep(2)</code></td></tr>
+<tr><td>A cozinheira, que decide o que fazer a cada momento</td><td>O <strong>laço de eventos</strong> (<em>event loop</em>) do <code>asyncio</code></td></tr>
+<tr><td>Abrir a cozinha e começar o dia</td><td><code>asyncio.run(main())</code></td></tr>
+<tr><td>"Faça o pão e o café juntos"</td><td><code>await asyncio.gather(assar_pao(), fazer_cafe())</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. O jeito de sempre: um de cada vez</h2>
+<p>Para comparar, o café da manhã com funções comuns. O <code>time.sleep(segundos)</code> faz o programa dormir (usamos segundos no lugar dos minutos, para não esperar tanto), e o <code>time.perf_counter()</code> mede o tempo, como no <code>@cronometro</code> da aula <a href="decoradores.html">Decoradores</a>:</p>
+
+<pre class="file" data-file="sincrono.py">import time
+
+
+def fazer_cafe():
+    print("Café: pus a água para ferver")
+    time.sleep(1)
+    print("Café: pronto")
+
+
+def assar_pao():
+    print("Pão: pus no forno")
+    time.sleep(2)
+    print("Pão: pronto")
+
+
+inicio = time.perf_counter()
+assar_pao()
+fazer_cafe()
+print(f"Café da manhã em {time.perf_counter() - inicio:.1f} s")
+</pre>
+
+<pre class="term">$ python3 sincrono.py
+Pão: pus no forno
+Pão: pronto
+Café: pus a água para ferver
+Café: pronto
+Café da manhã em 3.0 s</pre>
+
+<p>2 + 1 = 3 segundos. Durante os 2 segundos do forno, o programa não fez absolutamente nada.</p>
+
+<hr>
+
+<h2>2. A primeira corrotina: <code>async def</code>, <code>await</code> e <code>asyncio.run</code></h2>
+
+<pre class="file" data-file="primeira.py">import asyncio
+
+
+async def dizer_ola():
+    print("Olá...")
+    await asyncio.sleep(1)
+    print("...do mundo assíncrono!")
+
+
+asyncio.run(dizer_ola())
+</pre>
+
+<pre class="term">$ python3 primeira.py
+Olá...
+...do mundo assíncrono!</pre>
+
+<dl class="anatomy">
+  <dt>import asyncio</dt><dd>O módulo da programação assíncrona. Vem com o Python.</dd>
+  <dt>async def dizer_ola():</dt><dd><code>async</code> na frente do <code>def</code> cria uma <strong>corrotina</strong>: uma função que pode pausar no meio para esperar, e deixar outras corrotinas trabalharem enquanto isso. (Lembra o <code>yield</code> da aula <a href="geradores.html">Geradores</a>, que também pausa; as corrotinas nasceram dos geradores.)</dd>
+  <dt>await asyncio.sleep(1)</dt><dd>"Aguarde 1 segundo". É a versão assíncrona do <code>time.sleep</code>: em vez de travar o programa, ela avisa o laço de eventos "vou esperar 1 segundo; se tiver outra tarefa, cuide dela". O <code>await</code> só pode aparecer dentro de um <code>async def</code>.</dd>
+  <dt>asyncio.run(dizer_ola())</dt><dd>Liga o laço de eventos, roda a corrotina até o fim e desliga. É a porta de entrada: normalmente aparece <strong>uma vez</strong>, na última linha do programa.</dd>
+</dl>
+
+<h3>Chamar uma corrotina não a executa</h3>
+<p>Como nos geradores, chamar <code>dizer_ola()</code> não roda nenhuma linha: só cria um objeto <strong>corrotina</strong>, que precisa ser entregue ao <code>asyncio</code>:</p>
+
+<pre class="file" data-file="corrotina.py">import asyncio
+
+
+async def dizer_ola():
+    print("Olá!")
+
+
+resultado = dizer_ola()
+print(resultado)
+print(type(resultado))
+asyncio.run(resultado)
+</pre>
+
+<pre class="term">$ python3 corrotina.py
+&lt;coroutine object dizer_ola at 0x7f2eac4c1c00&gt;      « o endereço muda a cada execução
+&lt;class 'coroutine'&gt;
+Olá!</pre>
+
+<p>O <code>Olá!</code> só apareceu na última linha, quando o <code>asyncio.run</code> executou a corrotina. Esquecer o <code>asyncio.run</code> (ou o <code>await</code>) é o erro mais comum; ele está em <a href="#errado">Quando dá errado</a>.</p>
+
+<hr>
+
+<h2>3. Só <code>await</code> não basta: ainda é um de cada vez</h2>
+<p>O café da manhã com corrotinas, cada uma com o seu <code>await asyncio.sleep</code>. A <code>main</code> ("principal") é a corrotina que organiza as outras, um costume do <code>asyncio</code>:</p>
+
+<pre class="file" data-file="sequencial.py">import asyncio
+import time
+
+
+async def fazer_cafe():
+    print("Café: pus a água para ferver")
+    await asyncio.sleep(1)
+    print("Café: pronto")
+    return "café"
+
+
+async def assar_pao():
+    print("Pão: pus no forno")
+    await asyncio.sleep(2)
+    print("Pão: pronto")
+    return "pão"
+
+
+async def main():
+    inicio = time.perf_counter()
+    await assar_pao()
+    await fazer_cafe()
+    print(f"Café da manhã em {time.perf_counter() - inicio:.1f} s")
+
+
+asyncio.run(main())
+</pre>
+
+<pre class="term">$ python3 sequencial.py
+Pão: pus no forno
+Pão: pronto
+Café: pus a água para ferver
+Café: pronto
+Café da manhã em 3.0 s</pre>
+
+<p>Os mesmos 3 segundos! <code>await assar_pao()</code> quer dizer "espere o pão <strong>terminar</strong>, e só então siga para a próxima linha". A <code>main</code> esperou o pão inteiro antes de começar o café. Para fazer as duas ao mesmo tempo, é preciso dizer isso ao <code>asyncio</code>.</p>
+
+<hr>
+
+<h2>4. <code>asyncio.gather</code>: várias ao mesmo tempo</h2>
+<p><code>asyncio.gather(…)</code> ("reunir") recebe várias corrotinas, começa todas e espera <strong>todas</strong> terminarem. Só a <code>main</code> muda:</p>
+
+<pre class="file" data-file="gather.py">import asyncio
+import time
+
+
+async def fazer_cafe():
+    print("Café: pus a água para ferver")
+    await asyncio.sleep(1)
+    print("Café: pronto")
+    return "café"
+
+
+async def assar_pao():
+    print("Pão: pus no forno")
+    await asyncio.sleep(2)
+    print("Pão: pronto")
+    return "pão"
+
+
+async def main():
+    inicio = time.perf_counter()
+    resultados = await asyncio.gather(assar_pao(), fazer_cafe())
+    print("Na mesa:", resultados)
+    print(f"Café da manhã em {time.perf_counter() - inicio:.1f} s")
+
+
+asyncio.run(main())
+</pre>
+
+<pre class="term">$ python3 gather.py
+Pão: pus no forno
+Café: pus a água para ferver
+Café: pronto
+Pão: pronto
+Na mesa: ['pão', 'café']
+Café da manhã em 2.0 s</pre>
+
+<ol class="passo">
+  <li>O <code>gather</code> começa o pão: <code>Pão: pus no forno</code>. No <code>await asyncio.sleep(2)</code>, o pão diz "vou esperar".</li>
+  <li>O laço de eventos aproveita e começa o café: <code>Café: pus a água para ferver</code>. No <code>await asyncio.sleep(1)</code>, o café também espera.</li>
+  <li>Com 1 segundo, a espera do café acaba primeiro: <code>Café: pronto</code>.</li>
+  <li>Com 2 segundos, a do pão: <code>Pão: pronto</code>.</li>
+  <li>O <code>gather</code> devolve a lista com o que cada corrotina devolveu (o <code>return</code>), <strong>na ordem em que foram passadas</strong> (pão, café), e não na ordem em que terminaram.</li>
+</ol>
+
+<p>Tempo total: 2 segundos, o tempo da espera mais longa, e não a soma. (Os números do tempo podem variar um pouco, <code>2.0</code> ou <code>2.1</code>, conforme o computador.)</p>
+
+<div class="trypy" data-goal="outre:Café: pronto[\s\S]*Pão: pronto;;src:asyncio\.gather\s*\(;;semerro">
+<p class="try-task"><strong>Missão:</strong> a <code>main</code> espera o pão terminar antes de começar o café, e por isso o café fica pronto <strong>depois</strong> do pão. Troque as duas linhas de <code>await</code> por uma só: <code>await asyncio.gather(assar_pao(), fazer_cafe())</code>. O <code>Café: pronto</code> tem de aparecer antes do <code>Pão: pronto</code>.</p>
+<pre class="script" data-file="main.py">import asyncio
+
+
+async def fazer_cafe():
+    print("Café: pus a água para ferver")
+    await asyncio.sleep(1)
+    print("Café: pronto")
+
+
+async def assar_pao():
+    print("Pão: pus no forno")
+    await asyncio.sleep(2)
+    print("Pão: pronto")
+
+
+async def main():
+    await assar_pao()
+    await fazer_cafe()
+
+
+asyncio.run(main())
+</pre>
+<pre class="solucao" data-file="main.py">import asyncio
+
+
+async def fazer_cafe():
+    print("Café: pus a água para ferver")
+    await asyncio.sleep(1)
+    print("Café: pronto")
+
+
+async def assar_pao():
+    print("Pão: pus no forno")
+    await asyncio.sleep(2)
+    print("Pão: pronto")
+
+
+async def main():
+    await asyncio.gather(assar_pao(), fazer_cafe())
+
+
+asyncio.run(main())
+</pre>
+</div>
+
+<h3>Cem esperas, quase o tempo de uma</h3>
+<p>A vantagem cresce com o número de tarefas. Cem entregas, cada uma esperando 0,1, 0,2 ou 0,3 segundo (o <code>*tarefas</code> desempacota a lista em argumentos, como na aula <a href="args-kwargs.html">*args e **kwargs</a>):</p>
+
+<pre class="file" data-file="muitos.py">import asyncio
+import time
+
+
+async def entregar(pedido, minutos):
+    await asyncio.sleep(minutos / 10)
+    return f"pedido {pedido} entregue"
+
+
+async def main():
+    inicio = time.perf_counter()
+    tarefas = [entregar(n, n % 3 + 1) for n in range(1, 101)]
+    resultados = await asyncio.gather(*tarefas)
+    print(len(resultados), "entregas")
+    print(resultados[:3])
+    print(f"Tempo total: {time.perf_counter() - inicio:.1f} s")
+
+
+asyncio.run(main())
+</pre>
+
+<pre class="term">$ python3 muitos.py
+100 entregas
+['pedido 1 entregue', 'pedido 2 entregue', 'pedido 3 entregue']
+Tempo total: 0.3 s</pre>
+
+<p>Somadas, as esperas dariam uns 20 segundos. Juntas, levaram 0,3 s: o tempo da mais longa. É assim que um programa assíncrono consegue, por exemplo, baixar cem páginas da internet quase no tempo de uma: o tempo todo é espera pela rede.</p>
+
+<hr>
+
+<h2>5. Tarefas: começar agora, esperar depois</h2>
+<p>O <code>gather</code> começa e espera tudo de uma vez. Às vezes você quer <strong>começar</strong> algo e só <strong>esperar</strong> lá na frente, fazendo outras coisas no meio. Para isso existe <code>asyncio.create_task(corrotina)</code> ("criar tarefa"): ele agenda a corrotina e devolve uma <strong>tarefa</strong>, que você aguarda quando quiser.</p>
+
+<pre class="file" data-file="tarefas.py">import asyncio
+
+
+async def lavar_roupa():
+    print("Máquina: começou")
+    await asyncio.sleep(2)
+    print("Máquina: terminou")
+    return "roupa limpa"
+
+
+async def main():
+    maquina = asyncio.create_task(lavar_roupa())
+    print("Enquanto a máquina bate, a Ana arruma a cozinha.")
+    await asyncio.sleep(1)
+    print("Cozinha arrumada.")
+    roupa = await maquina
+    print("Resultado:", roupa)
+
+
+asyncio.run(main())
+</pre>
+
+<pre class="term">$ python3 tarefas.py
+Enquanto a máquina bate, a Ana arruma a cozinha.
+Máquina: começou
+Cozinha arrumada.
+Máquina: terminou
+Resultado: roupa limpa</pre>
+
+<p>Repare na ordem: a frase da Ana veio <strong>antes</strong> de <code>Máquina: começou</code>. O <code>create_task</code> só <strong>agenda</strong>; a tarefa começa de verdade no primeiro <code>await</code> da <code>main</code>, quando a <code>main</code> para de trabalhar e deixa o laço de eventos cuidar das outras. Lá no fim, <code>await maquina</code> espera a máquina terminar e pega o <code>return</code> dela.</p>
+
+<h3><code>TaskGroup</code>: um grupo de tarefas</h3>
+<p>Desde o Python 3.11, o jeito recomendado de começar várias tarefas e esperar todas é o <code>asyncio.TaskGroup</code> ("grupo de tarefas"), um gerenciador de contexto (aula <a href="gerenciadores-contexto.html">Gerenciadores de Contexto</a>) usado com <code>async with</code>:</p>
+
+<pre class="file" data-file="taskgroup.py">import asyncio
+
+
+async def preparar(item, segundos):
+    await asyncio.sleep(segundos)
+    print(f"{item} pronto")
+    return item
+
+
+async def main():
+    async with asyncio.TaskGroup() as grupo:
+        t1 = grupo.create_task(preparar("bolo", 2))
+        t2 = grupo.create_task(preparar("suco", 1))
+    print("Tudo pronto:", t1.result(), t2.result())
+
+
+asyncio.run(main())
+</pre>
+
+<pre class="term">$ python3 taskgroup.py
+suco pronto
+bolo pronto
+Tudo pronto: bolo suco</pre>
+
+<p>O bloco <code>async with</code> só termina quando todas as tarefas do grupo terminaram; depois dele, <code>.result()</code> dá o que cada uma devolveu. A diferença para o <code>gather</code> aparece quando algo dá errado: se uma tarefa do grupo falha, o <code>TaskGroup</code> cancela as outras, em vez de deixá-las rodando soltas.</p>
+
+<h3><code>wait_for</code>: tempo limite</h3>
+<p>Esperar, sim; para sempre, não. <code>asyncio.wait_for(corrotina, timeout=segundos)</code> desiste depois do tempo dado e lança <code>TimeoutError</code> ("erro de tempo esgotado"), que você trata com <code>try</code>/<code>except</code> (aula <a href="try-except.html">try e except</a>):</p>
+
+<pre class="file" data-file="timeout.py">import asyncio
+
+
+async def esperar_entregador():
+    await asyncio.sleep(5)
+    return "pizza"
+
+
+async def main():
+    try:
+        pizza = await asyncio.wait_for(esperar_entregador(), timeout=1)
+        print("Chegou:", pizza)
+    except TimeoutError:
+        print("Demorou demais: vou fazer um sanduíche.")
+
+
+asyncio.run(main())
+</pre>
+
+<pre class="term">$ python3 timeout.py
+Demorou demais: vou fazer um sanduíche.</pre>
+
+<p>O programa terminou em 1 segundo, e não em 5: o <code>wait_for</code> cancelou a espera do entregador.</p>
+
+<hr>
+
+<h2>6. Quando uma das tarefas dá erro</h2>
+
+<pre class="file" data-file="erro_gather.py">import asyncio
+
+
+async def assar_pao():
+    await asyncio.sleep(1)
+    return "pão"
+
+
+async def fazer_cafe():
+    await asyncio.sleep(0.5)
+    raise ValueError("acabou o pó de café")
+
+
+async def main():
+    resultados = await asyncio.gather(assar_pao(), fazer_cafe(), return_exceptions=True)
+    print(resultados)
+    resultados = await asyncio.gather(assar_pao(), fazer_cafe())
+    print(resultados)
+
+
+asyncio.run(main())
+</pre>
+
+<pre class="term">$ python3 erro_gather.py
+['pão', ValueError('acabou o pó de café')]
+Traceback (most recent call last):
+  File "/home/ana/erro_gather.py", line 21, in &lt;module&gt;
+    asyncio.run(main())
+    ~~~~~~~~~~~^^^^^^^^
+  File "/usr/lib/python3.14/asyncio/runners.py", line 204, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+«… mais 6 linhas de dentro do asyncio …»
+  File "/home/ana/erro_gather.py", line 17, in main
+    resultados = await asyncio.gather(assar_pao(), fazer_cafe())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ana/erro_gather.py", line 11, in fazer_cafe
+    raise ValueError("acabou o pó de café")
+ValueError: acabou o pó de café</pre>
+
+<ul>
+  <li><strong>Com <code>return_exceptions=True</code></strong> ("devolver as exceções"), o erro do café não para nada: ele vira um item da lista de resultados, no lugar do café. O pão chegou normalmente. Depois, você confere cada item.</li>
+  <li><strong>Sem essa opção</strong>, o primeiro erro sobe pelo <code>await</code> do <code>gather</code> e, como ninguém trata, encerra o programa.</li>
+  <li>O traceback passa por várias linhas de dentro do <code>asyncio</code> (o <code>asyncio.run</code>, o laço de eventos). Para entender o erro, olhe as linhas que são do <strong>seu</strong> arquivo, de baixo para cima: a linha 11, na <code>fazer_cafe</code>, lançou o erro; a linha 17, na <code>main</code>, estava esperando no <code>gather</code>. No editor do guia aparecem também linhas de <code>/lib/guia/_guia_editor.py</code> e <code>/lib/python314.zip/asyncio/…</code>: são do próprio editor e da biblioteca, e podem ser puladas do mesmo jeito.</li>
+</ul>
+
+<hr>
+
+<h2>Formas diferentes de esperar várias coisas</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>await a()</code> e depois <code>await b()</code></td><td>Quando <code>b</code> precisa do resultado de <code>a</code> (não dá para começar o recheio antes de assar a massa)</td></tr>
+<tr><td><code>await asyncio.gather(a(), b())</code></td><td>Esperas independentes, e você quer a lista dos resultados na ordem</td></tr>
+<tr><td><code>asyncio.create_task(a())</code> … <code>await tarefa</code></td><td>Começar agora e aguardar lá na frente, fazendo outra coisa no meio</td></tr>
+<tr><td><code>async with asyncio.TaskGroup()</code></td><td>Várias tarefas, e, se uma falhar, as outras devem ser canceladas (3.11+)</td></tr>
+<tr><td><code>asyncio.wait_for(a(), timeout=n)</code></td><td>Desistir depois de <code>n</code> segundos</td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>Quando o <code>asyncio</code> ajuda (e quando não)</strong>
+<p>O <code>asyncio</code> acelera programas que passam o tempo <strong>esperando</strong> coisas de fora: rede, sites, bancos de dados, muitos arquivos. Ele <strong>não</strong> acelera contas pesadas (somar um bilhão de números, processar imagens): ali não há espera para aproveitar, a cozinheira está o tempo todo com as mãos ocupadas. E só funciona com funções que sabem "esperar sem travar": o <code>asyncio.sleep</code> sim, o <code>time.sleep</code> não (veja abaixo). Para a rede, existem bibliotecas assíncronas instaláveis com o <a href="pip.html">pip</a>; elas não funcionam no editor do guia, que não tem acesso à rede.</p>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong><code>time.sleep</code> dentro de uma corrotina: trava todo mundo</strong>
+<pre class="file" data-file="bloqueia.py">import asyncio
+import time
+
+
+async def fazer_cafe():
+    print("Café: pus a água para ferver")
+    time.sleep(1)
+    print("Café: pronto")
+
+
+async def assar_pao():
+    print("Pão: pus no forno")
+    time.sleep(2)
+    print("Pão: pronto")
+
+
+async def main():
+    inicio = time.perf_counter()
+    await asyncio.gather(assar_pao(), fazer_cafe())
+    print(f"Café da manhã em {time.perf_counter() - inicio:.1f} s")
+
+
+asyncio.run(main())
+</pre>
+<pre class="term">$ python3 bloqueia.py
+Pão: pus no forno
+Pão: pronto
+Café: pus a água para ferver
+Café: pronto
+Café da manhã em 3.0 s</pre>
+<p>Tem <code>async</code>, tem <code>gather</code>, e mesmo assim levou 3 segundos, um de cada vez. Nenhum erro, nenhum aviso. O <code>time.sleep</code> não sabe nada de <code>asyncio</code>: ele trava o programa <strong>inteiro</strong>, e o laço de eventos não tem chance de começar o café. Só o <code>await</code> devolve a vez. <strong>Como consertar:</strong> dentro de <code>async def</code>, use <code>await asyncio.sleep(…)</code>. A regra vale para tudo que demora: precisa ser uma versão assíncrona, chamada com <code>await</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu o <code>await</code></strong>
+<pre class="file" data-file="sem_await.py">import asyncio
+import time
+
+
+async def main():
+    inicio = time.perf_counter()
+    print("Esperando 1 segundo...")
+    asyncio.sleep(1)
+    print(f"Esperei {time.perf_counter() - inicio:.1f} s")
+
+
+asyncio.run(main())
+</pre>
+<pre class="term">$ python3 sem_await.py
+Esperando 1 segundo...
+/home/ana/sem_await.py:8: RuntimeWarning: coroutine 'sleep' was never awaited
+  asyncio.sleep(1)
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback
+Esperei 0.0 s</pre>
+<p>"Aviso de execução: a corrotina <code>sleep</code> nunca foi aguardada". Sem <code>await</code>, <code>asyncio.sleep(1)</code> só <strong>criou</strong> uma corrotina (como na seção 2) e a jogou fora: não esperou nada, como mostra o <code>0.0 s</code>. O aviso diz o arquivo e a linha (8). A segunda linha do aviso, sobre o <code>tracemalloc</code>, é uma ferramenta de investigação de memória e pode ser ignorada. <strong>Como consertar:</strong> <code>await asyncio.sleep(1)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Chamou a <code>main()</code> sem o <code>asyncio.run</code></strong>
+<pre class="file" data-file="sem_run.py">import asyncio
+
+
+async def main():
+    print("O café da manhã começou.")
+    await asyncio.sleep(1)
+
+
+main()
+print("Fim do programa.")
+</pre>
+<pre class="term">$ python3 sem_run.py
+/home/ana/sem_run.py:9: RuntimeWarning: coroutine 'main' was never awaited
+  main()
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback
+Fim do programa.</pre>
+<p>O mesmo aviso, agora para a <code>main</code>. O <code>O café da manhã começou.</code> nunca apareceu: a corrotina foi criada na linha 9 e nunca executada. <strong>Como consertar:</strong> <code>asyncio.run(main())</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>await</code> fora de uma corrotina</strong>
+<pre class="file" data-file="await_fora.py">import asyncio
+
+print("Esperando...")
+await asyncio.sleep(1)
+</pre>
+<pre class="term">$ python3 await_fora.py
+  File "/home/ana/await_fora.py", line 4
+    await asyncio.sleep(1)
+    ^^^^^^^^^^^^^^^^^^^^^^
+SyntaxError: 'await' outside function</pre>
+<p>"<code>await</code> fora de função". É um erro de <strong>sintaxe</strong>: o Python recusa o arquivo antes de rodar qualquer linha (repare que nem o <code>Esperando...</code> apareceu, e não há a linha <code>Traceback</code>). O <code>await</code> só existe dentro de <code>async def</code>. <strong>Como consertar:</strong> ponha o código numa <code>async def main():</code> e rode com <code>asyncio.run(main())</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>asyncio.run(main)</code>, sem os parênteses</strong>
+<pre class="term">$ python3 run_sem_parenteses.py
+Traceback (most recent call last):
+  File "/home/ana/run_sem_parenteses.py", line 8, in &lt;module&gt;
+    asyncio.run(main)
+    ~~~~~~~~~~~^^^^^^
+  File "/usr/lib/python3.14/asyncio/runners.py", line 204, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "/usr/lib/python3.14/asyncio/runners.py", line 103, in run
+    raise TypeError('An asyncio.Future, a coroutine or an '
+                    'awaitable is required')
+TypeError: An asyncio.Future, a coroutine or an awaitable is required</pre>
+<p>"É preciso um <code>Future</code> do asyncio, uma corrotina ou algo aguardável". Sem parênteses, foi a <strong>função</strong> <code>main</code>, e não a corrotina que ela cria (a mesma diferença entre <code>f</code> e <code>f()</code> da aula <a href="decoradores.html">Decoradores</a>). <strong>Como consertar:</strong> <code>asyncio.run(main())</code>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>async def nome():</code></td><td>Define uma corrotina; chamá-la cria um objeto <code>coroutine</code>, sem rodar</td></tr>
+<tr><td><code>await algo</code></td><td>Espera <code>algo</code> terminar, deixando outras tarefas rodarem; só dentro de <code>async def</code></td></tr>
+<tr><td><code>asyncio.run(main())</code></td><td>Liga o laço de eventos e roda a corrotina principal até o fim</td></tr>
+<tr><td><code>await asyncio.sleep(s)</code></td><td>Espera <code>s</code> segundos sem travar as outras</td></tr>
+<tr><td><code>await asyncio.gather(a(), b())</code></td><td>Roda juntas; devolve a lista dos resultados na ordem dos argumentos</td></tr>
+<tr><td><code>gather(…, return_exceptions=True)</code></td><td>Os erros viram itens da lista, em vez de subir</td></tr>
+<tr><td><code>t = asyncio.create_task(a())</code> / <code>await t</code></td><td>Agenda agora / espera e pega o resultado depois</td></tr>
+<tr><td><code>async with asyncio.TaskGroup() as g:</code></td><td>Grupo de tarefas (<code>g.create_task</code>); espera todas no fim do bloco (3.11+)</td></tr>
+<tr><td><code>await asyncio.wait_for(a(), timeout=s)</code></td><td>Desiste depois de <code>s</code> segundos com <code>TimeoutError</code></td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>RuntimeWarning: coroutine '…' was never awaited</code></td><td>Faltou o <code>await</code>, ou o <code>asyncio.run</code></td></tr>
+<tr><td><code>&lt;coroutine object … at 0x…&gt;</code> no <code>print</code></td><td>Mostrou a corrotina sem executá-la</td></tr>
+<tr><td><code>SyntaxError: 'await' outside function</code></td><td><code>await</code> fora de um <code>async def</code></td></tr>
+<tr><td><code>TypeError: An asyncio.Future, a coroutine or an awaitable is required</code></td><td><code>asyncio.run(main)</code> sem os parênteses</td></tr>
+<tr><td>O <code>gather</code> não ficou mais rápido</td><td><code>time.sleep</code> (ou outra função que trava) dentro da corrotina</td></tr>
+<tr><td>Ainda um de cada vez</td><td><code>await a()</code> seguido de <code>await b()</code>: use <code>gather</code> ou tarefas</td></tr>
+<tr><td><code>TimeoutError</code></td><td>O <code>wait_for</code> esgotou o tempo: trate com <code>try</code>/<code>except</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A palavra da corrotina</h3>
+<p>Complete para criar uma corrotina:</p>
+<div class="ex-code"><input data-answer="async" aria-label="palavra-chave"> def baixar_pagina():</div>
+</div>
+
+<div class="exercise">
+<h3>2. Esperar sem travar</h3>
+<p>Complete a linha que espera 2 segundos dentro de uma corrotina, deixando as outras tarefas rodarem:</p>
+<div class="ex-code"><input data-answer="await asyncio.sleep(2)" aria-label="linha"></div>
+</div>
+
+<div class="exercise">
+<h3>3. A porta de entrada</h3>
+<p>Complete a última linha do programa, que roda a corrotina <code>main</code>:</p>
+<div class="ex-code"><input data-answer="asyncio.run(main())" aria-label="linha"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Três corrotinas esperam 1, 2 e 3 segundos com <code>asyncio.sleep</code> e rodam com <code>gather</code>. Quanto tempo leva, mais ou menos?</p>
+<label><input type="radio" name="q4"> 6 segundos</label>
+<label><input type="radio" name="q4"> 1 segundo</label>
+<label><input type="radio" name="q4"> 3 segundos</label>
+<label><input type="radio" name="q4"> 2 segundos</label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. <code>await asyncio.gather(pao(), cafe())</code>, em que o café termina primeiro. Em que ordem vem a lista de resultados?</p>
+<label><input type="radio" name="q5"> Café e depois pão: a ordem em que terminaram</label>
+<label><input type="radio" name="q5"> Pão e depois café: a ordem em que foram passadas</label>
+<label><input type="radio" name="q5"> Uma ordem diferente a cada execução</label>
+<label><input type="radio" name="q5"> O <code>gather</code> não devolve nada</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Em qual destes programas o <code>asyncio</code> ajuda mais?</p>
+<label><input type="radio" name="q6"> Um que baixa 200 páginas da internet</label>
+<label><input type="radio" name="q6"> Um que calcula os primeiros 10 milhões de números primos</label>
+<label><input type="radio" name="q6"> Um que soma dois números digitados</label>
+<label><input type="radio" name="q6"> Um que desenha um gráfico na tela</label>
+</div>
+
+<h3>Missão final: os pedidos da lanchonete</h3>
+
+<div class="trypy" data-goal="outre:Pronto: suco[\s\S]*Pronto: pastel[\s\S]*Pronto: pizza;;out:Pedidos prontos: ['pizza', 'pastel', 'suco'];;src:asyncio\.gather\s*\(;;src:asyncio\.run\s*\(\s*main\s*\(\s*\)\s*\);;semerro">
+<p class="try-task"><strong>Missão:</strong> a lanchonete recebeu três pedidos: pizza (3 s), pastel (2 s) e suco (1 s). Rode e leia o aviso: o programa nem começou. Conserte duas coisas: (1) a última linha deve ser <code>asyncio.run(main())</code>; (2) na <code>main</code>, prepare os três ao mesmo tempo com <code>pedidos = await asyncio.gather(…)</code>, na ordem pizza, pastel, suco, e mostre <code>Pedidos prontos:</code> com a lista. O suco deve ficar pronto primeiro.</p>
+<pre class="script" data-file="main.py">import asyncio
+
+
+async def preparar(item, segundos):
+    print(f"Começando: {item}")
+    await asyncio.sleep(segundos)
+    print(f"Pronto: {item}")
+    return item
+
+
+async def main():
+    pizza = await preparar("pizza", 3)
+    pastel = await preparar("pastel", 2)
+    suco = await preparar("suco", 1)
+    print("Pedidos prontos:", [pizza, pastel, suco])
+
+
+main()
+</pre>
+<pre class="solucao" data-file="main.py">import asyncio
+
+
+async def preparar(item, segundos):
+    print(f"Começando: {item}")
+    await asyncio.sleep(segundos)
+    print(f"Pronto: {item}")
+    return item
+
+
+async def main():
+    pedidos = await asyncio.gather(
+        preparar("pizza", 3),
+        preparar("pastel", 2),
+        preparar("suco", 1),
+    )
+    print("Pedidos prontos:", pedidos)
+
+
+asyncio.run(main())
+</pre>
+</div>
+
+<p>A solução mostra os três <code>Começando: …</code> de uma vez, depois <code>Pronto: suco</code>, <code>Pronto: pastel</code> e <code>Pronto: pizza</code>, nessa ordem, e por fim <code>Pedidos prontos: ['pizza', 'pastel', 'suco']</code>: a lista na ordem do <code>gather</code>, não na ordem em que ficaram prontos. Tudo em uns 3 segundos, em vez de 6. No terminal da Ana:</p>
+
+<pre class="term">$ python3 lanche_sol.py
+Começando: pizza
+Começando: pastel
+Começando: suco
+Pronto: suco
+Pronto: pastel
+Pronto: pizza
+Pedidos prontos: ['pizza', 'pastel', 'suco']</pre>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Programação assíncrona é <strong>aproveitar as esperas</strong>: um programa só, alternando entre tarefas sempre que uma delas espera.</li>
+  <li><code>async def</code> cria uma corrotina; chamá-la só cria o objeto. Ela roda com <code>await</code> (dentro de outra corrotina) ou com <code>asyncio.run(main())</code> (na última linha do programa).</li>
+  <li><code>await a()</code> seguido de <code>await b()</code> ainda é um de cada vez. Para juntos: <code>asyncio.gather(a(), b())</code>, que devolve os resultados na ordem dos argumentos; ou <code>create_task</code> e <code>TaskGroup</code>.</li>
+  <li><code>wait_for</code> põe tempo limite (<code>TimeoutError</code>); <code>return_exceptions=True</code> transforma os erros do <code>gather</code> em itens da lista.</li>
+  <li>Dentro de corrotina, nada de <code>time.sleep</code>: ele trava tudo. Use <code>await asyncio.sleep</code>.</li>
+  <li><code>coroutine '…' was never awaited</code> quer dizer: faltou um <code>await</code> ou o <code>asyncio.run</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
