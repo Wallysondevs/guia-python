@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Rodando um Programa — criar um arquivo .py e rodar com python3 | Guia Python</title>
+<meta name="description" content="Como criar um arquivo .py com o nano e rodá-lo com python3 arquivo.py: a pasta atual, caminhos relativos e absolutos, o erro can't open file, nomes com espaço, a ordem de cima para baixo, o código de saída, a linha #!/usr/bin/env python3 com chmod +x, e outras formas de rodar (python3 -c, python3 -i), com as saídas reais.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Rodando um Programa (.py)</span></h1>
+
+<p class="intro">Um programa Python é um arquivo de texto, com o nome terminado em <code>.py</code>, que o interpretador <code>python3</code> lê e executa. Nesta aula você vai fazer o ciclo completo pela primeira vez: criar uma pasta para os seus programas, escrever um arquivo com o editor <strong>nano</strong>, rodá-lo com <code>python3 ola.py</code> e entender o que o terminal responde, inclusive quando ele não acha o arquivo. No fim, você vai transformar o arquivo num comando que roda sozinho, com a linha <code>#!/usr/bin/env python3</code>.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A criar uma pasta para os seus programas e um arquivo <code>.py</code> com o <code>nano</code>.</li>
+  <li>A rodar o programa com <code>python3 arquivo.py</code>, e o que cada parte do comando quer dizer.</li>
+  <li>O que é a <strong>pasta atual</strong> e como chegar a um arquivo que está em outra pasta (caminhos).</li>
+  <li>Que o Python executa o arquivo <strong>de cima para baixo</strong>, e para no primeiro erro.</li>
+  <li>O que é o <strong>código de saída</strong> (<code>echo $?</code>).</li>
+  <li>A rodar o arquivo como um comando, com <code>#!/usr/bin/env python3</code> e <code>chmod +x</code>.</li>
+  <li>Outras formas de rodar: <code>python3 -c</code>, <code>python3 -i</code> e o editor do guia.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a receita e o cozinheiro</h2>
+<p>Pense numa receita escrita num caderno. Ela fica guardada na gaveta, e você pode ler, corrigir e copiar quantas vezes quiser; mas a receita não cozinha sozinha. Quando chega a hora, alguém abre o caderno na página certa e segue os passos, um por um, de cima para baixo.</p>
+
+<p>No Python é igual:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Na cozinha</th><th>No computador</th></tr>
+<tr><td>A receita escrita</td><td>O arquivo <code>ola.py</code>, com o seu programa</td></tr>
+<tr><td>O caderno guardado na gaveta</td><td>A <strong>pasta</strong> onde o arquivo está, por exemplo <code>/home/ana/python</code></td></tr>
+<tr><td>O cozinheiro</td><td>O interpretador <code>python3</code></td></tr>
+<tr><td>"Cozinheiro, faça a receita da página tal"</td><td>O comando <code>python3 ola.py</code>, digitado no terminal</td></tr>
+</table>
+</div>
+
+<p>Se você mandar o cozinheiro fazer uma receita que não está no caderno que ele tem na mão, ele responde "não achei". Você vai ver essa resposta, com as palavras do Python, logo adiante.</p>
+
+<hr>
+
+<h2>1. Uma pasta para os seus programas</h2>
+<p>Antes de escrever, crie uma pasta só para os programas do curso. Assim eles não se misturam com as fotos e os documentos. Abra o terminal (<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>T</kbd>):</p>
+
+<pre class="term">$ mkdir python                                     « cria a pasta "python"
+$ cd python                                        « entra nela
+$ pwd                                              « "onde estou?"
+/home/ana/python
+$ ls                                               « o que tem aqui? (nada, ainda)</pre>
+
+<dl class="anatomy">
+  <dt>mkdir python</dt><dd><em>make directory</em>, "crie uma pasta" chamada <code>python</code>. Ela é criada dentro da pasta onde você está; o terminal sempre começa na sua pasta pessoal, <code>/home/ana</code>.</dd>
+  <dt>cd python</dt><dd><em>change directory</em>, "mude de pasta": entre na pasta <code>python</code>. Repare que o prompt mudou de <code>~</code> para <code>~/python</code> (o <code>~</code> é o apelido da sua pasta pessoal).</dd>
+  <dt>pwd</dt><dd><em>print working directory</em>, "mostre a pasta atual".</dd>
+  <dt>ls</dt><dd><em>list</em>, "liste o que tem aqui". A pasta é nova, então não aparece nada.</dd>
+</dl>
+
+<p>A <strong>pasta atual</strong> é como o caderno que está aberto em cima da mesa: quando você fala só o nome de um arquivo, o terminal (e o Python) procuram nessa pasta. Lembre-se disso; é a causa do erro mais comum desta aula.</p>
+
+<hr>
+
+<h2>2. Escrevendo o arquivo com o nano</h2>
+<p>O <strong>nano</strong> é um editor de texto que roda dentro do próprio terminal. Ele já vem no Ubuntu. Para criar (ou abrir) o arquivo <code>ola.py</code>:</p>
+
+<pre class="term" data-cwd="~/python">$ nano ola.py</pre>
+
+<p>O terminal vira o editor. Digite as duas linhas do programa, exatamente assim (com os parênteses e as aspas):</p>
+
+<pre class="file" data-file="ola.py">print("Olá, mundo!")
+print("Meu primeiro programa em Python.")
+</pre>
+
+<p>A tela do nano fica assim (a tela inteira tem mais linhas em branco no meio):</p>
+
+<figure>
+<pre>  GNU nano 8.7.1                        ola.py
+print("Olá, mundo!")
+print("Meu primeiro programa em Python.")
+
+
+
+                               [ 2 linhas lidas ]
+^G Ajuda     ^O Gravar    ^F Onde está?^K Recortar  ^T Executar  ^C Local
+^X Sair      ^R Ler o arq ^\ Substituir^U Colar     ^J Justificar^/ Ir p/ linha
+</pre>
+<figcaption>O nano com o <code>ola.py</code> aberto. Embaixo, os atalhos; o <code>^</code> quer dizer a tecla <kbd>Ctrl</kbd>.</figcaption>
+</figure>
+
+<p>As duas linhas de baixo são a "cola" dos atalhos. O <code>^</code> quer dizer <kbd>Ctrl</kbd>: <code>^O</code> é <kbd>Ctrl</kbd>+<kbd>O</kbd>. Você só precisa de dois:</p>
+
+<ol class="passo">
+  <li><strong>Gravar:</strong> aperte <kbd>Ctrl</kbd>+<kbd>O</kbd>. Embaixo aparece <code>Escrever para o arquivo: ola.py</code>; aperte <kbd>Enter</kbd> para confirmar. O nano responde com quantas linhas gravou.</li>
+  <li><strong>Sair:</strong> aperte <kbd>Ctrl</kbd>+<kbd>X</kbd>. Você volta para o terminal. (Se você tentar sair sem gravar, o nano pergunta se quer salvar as mudanças: responda <kbd>S</kbd> para sim ou <kbd>N</kbd> para não.)</li>
+</ol>
+
+<p>De volta ao terminal, confira que o arquivo existe e o que tem dentro dele. O <code>cat</code> mostra o conteúdo de um arquivo:</p>
+
+<pre class="term" data-cwd="~/python">$ ls
+ola.py
+$ cat ola.py
+print("Olá, mundo!")
+print("Meu primeiro programa em Python.")</pre>
+
+<div class="tip">
+<strong>Por que <code>.py</code>?</strong>
+<p>A extensão <code>.py</code> é a etiqueta que diz "isto é um programa Python". Os editores usam a etiqueta para colorir o código, os outros programadores sabem o que é o arquivo só de olhar o nome, e o Python precisa dela para os <a href="modulos-proprios.html">módulos</a> que você vai criar mais tarde. Para rodar com <code>python3 arquivo</code>, a extensão nem é obrigatória (o Python lê qualquer arquivo de texto), mas use sempre: é o costume, e evita confusão.</p>
+</div>
+
+<hr>
+
+<h2>3. Rodando: <code>python3 ola.py</code></h2>
+<p>Agora, o momento esperado. Ainda dentro da pasta <code>python</code>:</p>
+
+<pre class="term" data-cwd="~/python">$ python3 ola.py
+Olá, mundo!
+Meu primeiro programa em Python.</pre>
+
+<dl class="anatomy">
+  <dt>python3</dt><dd>O interpretador: o "cozinheiro".</dd>
+  <dt>ola.py</dt><dd>O arquivo que ele deve ler e executar: a "receita". Como foi escrito só o nome, ele é procurado na <strong>pasta atual</strong>.</dd>
+</dl>
+
+<p>O Python leu a primeira linha do arquivo e mostrou <code>Olá, mundo!</code>; leu a segunda e mostrou <code>Meu primeiro programa em Python.</code>; chegou ao fim do arquivo e terminou, devolvendo o prompt (<code>$</code>) para você. As aspas e os parênteses não aparecem: eles são a "embalagem" do texto, só para o Python saber onde a frase começa e termina (aula <a href="print.html">print()</a>).</p>
+
+<p>O arquivo continua lá, guardado. Rode quantas vezes quiser; mude o texto no nano e rode de novo para ver a diferença. Esse é o ciclo de todo programador: <strong>editar → gravar → rodar → olhar o resultado</strong>.</p>
+
+<h3>No editor do guia é a mesma coisa</h3>
+<p>As caixas Experimente fazem esse ciclo para você: o código da caixa é gravado num arquivo chamado <code>main.py</code>, e o botão <strong>Rodar</strong> faz o equivalente a <code>python3 main.py</code>, com o Python 3.14 de verdade, no navegador. A aula <a href="simulador.html">O Editor do Guia</a> mostra tudo o que ele faz.</p>
+
+<div class="trypy" data-goal="out:Meu nome é;;semerro">
+<p class="try-task"><strong>Missão:</strong> acrescente uma terceira linha ao programa, com um <code>print</code> que mostre <code>Meu nome é</code> e o seu nome (por exemplo, <code>Meu nome é Ana.</code>). Rode e confira as três linhas.</p>
+<pre class="script" data-file="main.py">print("Olá, mundo!")
+print("Meu primeiro programa em Python.")
+</pre>
+<pre class="solucao" data-file="main.py">print("Olá, mundo!")
+print("Meu primeiro programa em Python.")
+print("Meu nome é Ana.")
+</pre>
+</div>
+
+<hr>
+
+<h2>4. A pasta atual e os caminhos</h2>
+<p>Agora a Ana voltou para a pasta pessoal (o <code>cd</code> sozinho leva para lá) e tentou rodar o mesmo programa:</p>
+
+<pre class="term" data-cwd="~/python">$ cd
+$ pwd
+/home/ana
+$ python3 ola.py
+python3: can't open file '/home/ana/ola.py': [Errno 2] No such file or directory</pre>
+
+<dl class="anatomy">
+  <dt>python3:</dt><dd>Quem está reclamando: o próprio <code>python3</code>, antes mesmo de começar o programa.</dd>
+  <dt>can't open file</dt><dd>"Não consigo abrir o arquivo".</dd>
+  <dt>'/home/ana/ola.py'</dt><dd>O arquivo que ele <strong>procurou</strong>: o <code>ola.py</code> da pasta atual, <code>/home/ana</code>. Esse caminho completo é a melhor pista: mostra onde o Python olhou.</dd>
+  <dt>[Errno 2]</dt><dd>O número do erro no sistema: 2 quer dizer "não existe".</dd>
+  <dt>No such file or directory</dt><dd>"Arquivo ou pasta inexistente".</dd>
+</dl>
+
+<p>O arquivo não sumiu: ele está em <code>/home/ana/python/ola.py</code>, mas o Python procurou em <code>/home/ana/ola.py</code>. Há dois jeitos de resolver. O primeiro é <strong>entrar na pasta</strong> do arquivo (<code>cd python</code>) e rodar como antes. O segundo é dizer <strong>o caminho</strong> até o arquivo:</p>
+
+<pre class="term">$ python3 python/ola.py                          « caminho a partir da pasta atual
+Olá, mundo!
+Meu primeiro programa em Python.
+$ python3 ~/python/ola.py                        « caminho a partir da pasta pessoal
+Olá, mundo!
+Meu primeiro programa em Python.</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Quer dizer</th><th>Funciona de qualquer pasta?</th></tr>
+<tr><td><code>ola.py</code></td><td>O <code>ola.py</code> da pasta atual</td><td>Não: só se você estiver na pasta dele</td></tr>
+<tr><td><code>python/ola.py</code></td><td>Dentro da pasta <code>python</code>, que está na pasta atual (caminho <strong>relativo</strong>)</td><td>Não: só a partir de <code>/home/ana</code></td></tr>
+<tr><td><code>~/python/ola.py</code></td><td>Dentro da pasta <code>python</code> da sua pasta pessoal</td><td>Sim</td></tr>
+<tr><td><code>/home/ana/python/ola.py</code></td><td>O caminho completo, desde a raiz <code>/</code> (caminho <strong>absoluto</strong>)</td><td>Sim</td></tr>
+</table>
+</div>
+
+<div class="tip">
+<strong>Deixe o terminal completar para você</strong>
+<p>Digite <code>python3 ~/py</code> e aperte <kbd>Tab</kbd>: o terminal completa o nome da pasta (<code>~/python/</code>). Aperte <kbd>Tab</kbd> de novo depois de <code>o</code> e ele completa <code>ola.py</code>. Se o <kbd>Tab</kbd> não completar, é sinal de que o arquivo não está onde você pensa. Usar o <kbd>Tab</kbd> evita a maioria dos erros de digitação em nomes de arquivo.</p>
+</div>
+
+<hr>
+
+<h2>5. De cima para baixo, e o primeiro erro para tudo</h2>
+<p>O Python executa o arquivo <strong>uma linha de cada vez, de cima para baixo</strong>, como o cozinheiro seguindo a receita. Isso fica claro quando há um erro no meio. A Ana escreveu a lista de compras e esqueceu as aspas no feijão:</p>
+
+<pre class="file" data-file="compras.py">print("Lista de compras da Ana")
+print("1. arroz")
+print("2. " + feijao)
+print("3. café")
+</pre>
+
+<pre class="term" data-cwd="~/python">$ python3 compras.py
+Lista de compras da Ana                            « linha 1: rodou
+1. arroz                                           « linha 2: rodou
+Traceback (most recent call last):
+  File "/home/ana/python/compras.py", line 3, in &lt;module&gt;
+    print("2. " + feijao)
+                  ^^^^^^
+NameError: name 'feijao' is not defined</pre>
+
+<p>As duas primeiras linhas <strong>rodaram</strong>, e as frases apareceram. Na terceira, o Python encontrou um problema e <strong>parou ali</strong>: a quarta linha (o café) nunca chegou a ser executada. A mensagem, linha por linha:</p>
+
+<dl class="anatomy">
+  <dt>Traceback (most recent call last):</dt><dd>"Rastro (a chamada mais recente por último)". É o começo de toda mensagem de erro que acontece com o programa já rodando. Por enquanto, leia como "deu erro; os detalhes vêm a seguir".</dd>
+  <dt>File "/home/ana/python/compras.py", line 3, in &lt;module&gt;</dt><dd>No arquivo <code>compras.py</code>, <strong>linha 3</strong>. O <code>in &lt;module&gt;</code> quer dizer "no corpo principal do arquivo" (e não dentro de uma função, que você vai aprender depois).</dd>
+  <dt>print("2. " + feijao)</dt><dd>A linha 3, copiada do arquivo.</dd>
+  <dt>^^^^^^</dt><dd>Embaixo de <code>feijao</code>: é ali o problema.</dd>
+  <dt>NameError: name 'feijao' is not defined</dt><dd>"Erro de nome: o nome <code>feijao</code> não está definido". Sem aspas, o Python acha que <code>feijao</code> é o nome de uma <a href="variaveis.html">variável</a>, e nenhuma variável com esse nome foi criada. Com aspas (<code>"feijão"</code>), seria um texto.</dd>
+</dl>
+
+<p>Dica de leitura: num traceback, comece pela <strong>última linha</strong> (o que deu errado) e depois suba para a linha do arquivo (onde foi). A aula <a href="erros.html">Lendo uma Mensagem de Erro</a> ensina a ler tracebacks maiores.</p>
+
+<div class="trypy" data-goal="out:2. feijão;;out:3. café;;semerro">
+<p class="try-task"><strong>Missão:</strong> rode e veja o programa parar na linha 3. Conserte a linha (o feijão é um texto: precisa de aspas) e rode de novo, até aparecerem os três itens.</p>
+<pre class="script" data-file="main.py">print("Lista de compras da Ana")
+print("1. arroz")
+print("2. " + feijao)
+print("3. café")
+</pre>
+<pre class="solucao" data-file="main.py">print("Lista de compras da Ana")
+print("1. arroz")
+print("2. feijão")
+print("3. café")
+</pre>
+</div>
+
+<h3>O código de saída</h3>
+<p>Todo programa, quando termina, devolve ao terminal um número, o <strong>código de saída</strong>: <code>0</code> quer dizer "terminei bem"; qualquer outro número quer dizer "deu problema". O terminal guarda esse número em <code>$?</code>, e o <code>echo</code> mostra:</p>
+
+<pre class="term" data-cwd="~/python">$ python3 ola.py
+Olá, mundo!
+Meu primeiro programa em Python.
+$ echo $?
+0                                                  « terminou bem
+$ python3 compras.py
+Lista de compras da Ana
+1. arroz
+Traceback (most recent call last):
+  File "/home/ana/python/compras.py", line 3, in &lt;module&gt;
+    print("2. " + feijao)
+                  ^^^^^^
+NameError: name 'feijao' is not defined
+$ echo $?
+1                                                  « terminou com erro</pre>
+
+<p>Você não precisa disso no dia a dia (a mensagem de erro já é bem clara), mas outros programas usam o código de saída para saber se o seu deu certo. O editor do guia também mostra esse número embaixo da saída de cada execução.</p>
+
+<hr>
+
+<h2>6. Rodando o arquivo como um comando</h2>
+<p>Os programas do sistema, como o <code>ls</code>, são rodados só pelo nome, sem <code>python3</code> na frente. Dá para fazer o mesmo com os seus. A Ana tentou:</p>
+
+<pre class="term" data-cwd="~/python">$ ./ola.py
+bash: ./ola.py: Permissão negada</pre>
+
+<p>O <code>./</code> quer dizer "o arquivo desta pasta" (o ponto é a pasta atual). O terminal achou o arquivo, mas recusou: no Linux, um arquivo só pode ser executado se tiver a <strong>permissão de execução</strong>, e um arquivo novo não tem. O <code>chmod +x</code> ("mude as permissões: acrescente execução") dá essa permissão:</p>
+
+<pre class="term" data-cwd="~/python">$ chmod +x ola.py
+$ ls -l ola.py
+-rwxrwxr-x 1 ana ana 64 Oct 18 11:56 ola.py           « os x quer dizer "pode executar"
+$ ./ola.py
+./ola.py: linha 1: erro de sintaxe próximo ao token inesperado `"Olá, mundo!"'
+./ola.py: linha 1: `print("Olá, mundo!")'</pre>
+
+<p>Agora ele rodou, mas deu um erro estranho, <strong>em português</strong>. Repare que não é um traceback do Python: quem reclamou foi o <strong>bash</strong>, o programa do terminal. Sem saber quem deveria ler o arquivo, o terminal tentou executá-lo como se fosse uma lista de comandos do próprio terminal, e <code>print("Olá, mundo!")</code> não faz sentido para ele. Falta dizer, dentro do arquivo, quem é o cozinheiro.</p>
+
+<h3>A linha <code>#!/usr/bin/env python3</code></h3>
+<p>Essa é a linha esquisita que você viu na <a href="introducao.html">Introdução</a>, no programa do Ubuntu. Ela vai na <strong>primeira linha</strong> do arquivo, sozinha:</p>
+
+<pre class="file" data-file="ola.py">#!/usr/bin/env python3
+print("Olá, mundo!")
+print("Meu primeiro programa em Python.")
+</pre>
+
+<dl class="anatomy">
+  <dt>#!</dt><dd>Chamado de <em>shebang</em> (lê-se "xibéngue"). Quando um arquivo executável começa com esses dois caracteres, o Linux lê o resto da linha para saber qual programa deve abrir o arquivo.</dd>
+  <dt>/usr/bin/env</dt><dd>Um programa do sistema que procura outro programa pelo nome, nas pastas de comandos. Usar o <code>env</code> em vez de escrever <code>/usr/bin/python3</code> direto faz o arquivo funcionar mesmo num computador em que o Python está em outra pasta (no macOS, por exemplo).</dd>
+  <dt>python3</dt><dd>O programa que o <code>env</code> deve procurar e chamar.</dd>
+</dl>
+
+<p>Com a linha no lugar (a permissão continua lá, porque o arquivo é o mesmo):</p>
+
+<pre class="term" data-cwd="~/python">$ cat ola.py
+#!/usr/bin/env python3
+print("Olá, mundo!")
+print("Meu primeiro programa em Python.")
+$ ./ola.py
+Olá, mundo!
+Meu primeiro programa em Python.
+$ python3 ola.py                                   « o jeito de sempre continua valendo
+Olá, mundo!
+Meu primeiro programa em Python.</pre>
+
+<p>Para o Python, a primeira linha começa com <code>#</code>, e tudo o que vem depois de um <code>#</code> é um <strong>comentário</strong>, que ele ignora (aula <a href="comentarios.html">Comentários</a>). Por isso a linha não atrapalha quando você roda com <code>python3 ola.py</code>.</p>
+
+<div class="note">
+<strong>Por que o <code>./</code>?</strong>
+<p>Sem o <code>./</code>, o terminal procura o comando só nas pastas de comandos do sistema (como <code>/usr/bin</code>), e não na pasta atual:</p>
+<pre class="term" data-cwd="~/python">$ ola.py
+ola.py: comando não encontrado</pre>
+<p>É uma proteção: assim, um arquivo qualquer numa pasta não consegue se passar por um comando do sistema. Para os seus programas, use <code>./ola.py</code> (ou <code>python3 ola.py</code>).</p>
+</div>
+
+<hr>
+
+<h2>7. Outras formas de rodar</h2>
+
+<h3><code>python3 -c</code>: uma linha, sem arquivo</h3>
+<p>Para testar uma linha só, sem criar arquivo, use <code>-c</code> (de <em>command</em>, "comando") e o código entre aspas simples:</p>
+
+<pre class="term">$ python3 -c 'print("Olá, Ana!")'
+Olá, Ana!</pre>
+
+<h3><code>python3 -i</code>: roda o arquivo e fica no Python</h3>
+<p>O <code>-i</code> (de <em>interactive</em>, "interativo") roda o arquivo e, em vez de terminar, abre o <a href="repl.html">modo interativo</a> (<code>&gt;&gt;&gt;</code>), para você continuar experimentando:</p>
+
+<pre class="term" data-cwd="~/python">$ python3 -i ola.py
+Olá, mundo!
+Meu primeiro programa em Python.
+&gt;&gt;&gt; print("Ainda estou no Python")
+Ainda estou no Python
+&gt;&gt;&gt; exit()</pre>
+
+<h3>Criar o arquivo sem abrir o editor</h3>
+<p>Para um programa de uma linha, dá até para criar o arquivo direto do terminal, com o <code>echo</code> e o <code>&gt;</code> ("mande para o arquivo"):</p>
+
+<pre class="term" data-cwd="~/python">$ echo 'print("Feito com echo!")' &gt; rapido.py
+$ python3 rapido.py
+Feito com echo!</pre>
+
+<p>Cuidado: o <code>&gt;</code> <strong>apaga</strong> o que havia no arquivo antes. Para programas de verdade, use um editor.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>python3 arquivo.py</code></td><td><strong>Quase sempre.</strong> Funciona em qualquer arquivo, sem preparar nada. É o que o guia usa</td></tr>
+<tr><td><code>./arquivo.py</code> (com <code>#!</code> e <code>chmod +x</code>)</td><td>Programas que você vai usar como ferramenta, todo dia, como um comando do sistema</td></tr>
+<tr><td><code>python3 -c '...'</code></td><td>Testar uma linha rapidinho</td></tr>
+<tr><td><code>python3 -i arquivo.py</code></td><td>Rodar e depois investigar o que o programa deixou pronto</td></tr>
+<tr><td>A caixa Experimente</td><td>Estudar as aulas e testar ideias sem sair do navegador</td></tr>
+<tr><td><code>python arquivo.py</code> ou <code>py arquivo.py</code></td><td>No Windows (aula <a href="instalar.html">Instalar o Python</a>). No Ubuntu, <code>python</code> não existe</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Nome do arquivo digitado errado</strong>
+<pre class="term" data-cwd="~/python">$ python3 ol.py
+python3: can't open file '/home/ana/python/ol.py': [Errno 2] No such file or directory</pre>
+<p><strong>O que aconteceu:</strong> o mesmo "não consigo abrir o arquivo" da seção 4, mas agora a pasta está certa e o nome, errado: <code>ol.py</code> em vez de <code>ola.py</code>. Leia o caminho entre aspas na mensagem: ele mostra exatamente o que o Python procurou.</p>
+<p><strong>Como resolver:</strong> confira com <code>ls</code> o nome exato do arquivo (maiúsculas contam: <code>Ola.py</code> e <code>ola.py</code> são arquivos diferentes no Linux) e use o <kbd>Tab</kbd> para completar.</p>
+</div>
+
+<div class="cenario">
+<strong>Arquivo com espaço no nome</strong>
+<p>A Ana salvou um programa como <code>meu programa.py</code>, com espaço:</p>
+<pre class="term" data-cwd="~/python">$ python3 meu programa.py
+python3: can't open file '/home/ana/python/meu': [Errno 2] No such file or directory
+$ python3 "meu programa.py"                        « com aspas, funciona
+Olá, mundo!
+Meu primeiro programa em Python.</pre>
+<p><strong>O que aconteceu:</strong> no terminal, o espaço separa as partes do comando. O <code>python3</code> entendeu que o arquivo era <code>meu</code> (e que <code>programa.py</code> era outra coisa, passada para o programa). Repare no caminho da mensagem: <code>/home/ana/python/meu</code>.</p>
+<p><strong>Como resolver:</strong> ponha o nome entre aspas ou, melhor, não use espaços em nomes de programas. O costume em Python é o <strong>sublinhado</strong>: <code>meu_programa.py</code>.</p>
+<pre class="term" data-cwd="~/python">$ mv "meu programa.py" meu_programa.py              « mv renomeia o arquivo
+$ python3 meu_programa.py
+Olá, mundo!
+Meu primeiro programa em Python.</pre>
+</div>
+
+<div class="cenario">
+<strong><code>Permissão negada</code> ao rodar com <code>./</code></strong>
+<pre class="term" data-cwd="~/python">$ ./ola.py
+bash: ./ola.py: Permissão negada</pre>
+<p><strong>O que aconteceu:</strong> o arquivo não tem permissão de execução. <strong>Como resolver:</strong> <code>chmod +x ola.py</code>, uma vez só; ou rode com <code>python3 ola.py</code>, que não precisa dessa permissão.</p>
+</div>
+
+<div class="cenario">
+<strong>Erro do bash em português: <code>erro de sintaxe próximo ao token inesperado</code></strong>
+<pre class="term" data-cwd="~/python">$ ./ola.py
+./ola.py: linha 1: erro de sintaxe próximo ao token inesperado `"Olá, mundo!"'
+./ola.py: linha 1: `print("Olá, mundo!")'</pre>
+<p><strong>O que aconteceu:</strong> o arquivo foi executado com <code>./</code>, mas não tem a linha <code>#!/usr/bin/env python3</code> no começo (ou ela não está na <strong>primeira</strong> linha, ou está com um espaço antes do <code>#!</code>). O terminal tentou ler o Python como se fossem comandos do terminal. A pista: a mensagem é em português e não tem <code>Traceback</code>, então não veio do Python.</p>
+<p><strong>Como resolver:</strong> coloque <code>#!/usr/bin/env python3</code> como primeira linha, sem nada antes, ou rode com <code>python3 ola.py</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Digitei <code>python3 ola.py</code> dentro do <code>&gt;&gt;&gt;</code></strong>
+<p><strong>O que aconteceu:</strong> o <code>python3 ola.py</code> é um comando do <strong>terminal</strong> (o <code>$</code>). Dentro do modo interativo (o <code>&gt;&gt;&gt;</code>), quem lê é o Python, e ele responde com um <code>SyntaxError</code>. A aula <a href="repl.html">O Modo Interativo (&gt;&gt;&gt;)</a> mostra a mensagem real e explica a diferença.</p>
+<p><strong>Como resolver:</strong> saia com <code>exit()</code> e digite o comando no <code>$</code>.</p>
+</div>
+
+<h3>Missão: a receita fora de ordem</h3>
+
+<div class="trypy" data-goal="outre:1\. Pré-aqueça o forno\n2\. Misture os ingredientes\n3\. Leve ao forno">
+<p class="try-task"><strong>Missão:</strong> o Python segue o arquivo de cima para baixo, e a receita de bolo da Ana saiu com os passos trocados. Mude a ordem das linhas (sem mudar os textos) para os passos aparecerem na ordem 1, 2, 3.</p>
+<pre class="script" data-file="main.py">print("Bolo simples da Ana")
+print("1. Pré-aqueça o forno")
+print("3. Leve ao forno por 40 minutos")
+print("2. Misture os ingredientes")
+</pre>
+<pre class="solucao" data-file="main.py">print("Bolo simples da Ana")
+print("1. Pré-aqueça o forno")
+print("2. Misture os ingredientes")
+print("3. Leve ao forno por 40 minutos")
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Comando</th><th>O que faz</th></tr>
+<tr><td><code>mkdir python</code></td><td>Cria a pasta <code>python</code></td></tr>
+<tr><td><code>cd python</code> / <code>cd</code></td><td>Entra na pasta / volta para a pasta pessoal</td></tr>
+<tr><td><code>pwd</code>, <code>ls</code></td><td>Mostra a pasta atual / lista o que tem nela</td></tr>
+<tr><td><code>nano ola.py</code></td><td>Abre (ou cria) o arquivo no editor. <kbd>Ctrl</kbd>+<kbd>O</kbd>, <kbd>Enter</kbd> grava; <kbd>Ctrl</kbd>+<kbd>X</kbd> sai</td></tr>
+<tr><td><code>cat ola.py</code></td><td>Mostra o conteúdo do arquivo</td></tr>
+<tr><td><code>python3 ola.py</code></td><td>Roda o programa (procurado na pasta atual)</td></tr>
+<tr><td><code>python3 ~/python/ola.py</code></td><td>Roda o programa pelo caminho, de qualquer pasta</td></tr>
+<tr><td><code>echo $?</code></td><td>Mostra o código de saída do último comando (0 = deu certo)</td></tr>
+<tr><td><code>#!/usr/bin/env python3</code> + <code>chmod +x ola.py</code></td><td>Permite rodar com <code>./ola.py</code></td></tr>
+<tr><td><code>python3 -c '...'</code></td><td>Roda o código entre aspas, sem arquivo</td></tr>
+<tr><td><code>python3 -i ola.py</code></td><td>Roda o arquivo e abre o <code>&gt;&gt;&gt;</code> no fim</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>python3: can't open file '...': [Errno 2] No such file or directory</code></td><td>Pasta errada ou nome errado: leia o caminho na mensagem e confira com <code>pwd</code> e <code>ls</code></td></tr>
+<tr><td><code>can't open file '.../meu'</code> com um nome cortado</td><td>Espaço no nome do arquivo: use aspas ou <code>_</code></td></tr>
+<tr><td><code>bash: ./ola.py: Permissão negada</code></td><td>Falta o <code>chmod +x</code></td></tr>
+<tr><td><code>linha 1: erro de sintaxe próximo ao token inesperado</code></td><td>Falta o <code>#!/usr/bin/env python3</code> na primeira linha</td></tr>
+<tr><td><code>ola.py: comando não encontrado</code></td><td>Faltou o <code>./</code> antes do nome</td></tr>
+<tr><td>Algumas linhas aparecem e depois vem um <code>Traceback</code></td><td>Normal: o Python rodou até a linha do erro e parou ali</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Rodar o programa</h3>
+<p>Complete o comando que roda o arquivo <code>notas.py</code> da pasta atual:</p>
+<div class="ex-code">$ <input data-answer="python3" aria-label="comando"> <input data-answer="notas.py" aria-label="arquivo"></div>
+</div>
+
+<div class="exercise">
+<h3>2. O shebang</h3>
+<p>Complete a primeira linha que permite rodar o arquivo com <code>./notas.py</code>:</p>
+<div class="ex-code"><input data-answer="#!" aria-label="dois caracteres">/usr/bin/env python3</div>
+</div>
+
+<div class="exercise">
+<h3>3. A permissão</h3>
+<p>Complete o comando que dá permissão de execução ao arquivo:</p>
+<div class="ex-code">$ chmod <input data-answer="+x" aria-label="opção"> notas.py</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. A Ana está em <code>/home/ana</code>, o programa está em <code>/home/ana/python/notas.py</code>, e ela digitou <code>python3 notas.py</code>. O que acontece?</p>
+<label><input type="radio" name="q4"> O programa roda normalmente.</label>
+<label><input type="radio" name="q4"> <code>can't open file '/home/ana/notas.py'</code>: o Python procurou na pasta atual, e o arquivo está em outra.</label>
+<label><input type="radio" name="q4"> <code>NameError: name 'notas' is not defined</code>.</label>
+<label><input type="radio" name="q4"> O Python procura o arquivo em todas as pastas e acha sozinho.</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. Um programa tem 5 linhas, e a linha 4 tem um erro. O que aparece quando a Ana roda o programa?</p>
+<label><input type="radio" name="q5"> Nada: o Python confere o arquivo inteiro e não roda nenhuma linha.</label>
+<label><input type="radio" name="q5"> As 5 linhas rodam, e o erro aparece no fim.</label>
+<label><input type="radio" name="q5"> O resultado das linhas 1 a 3 e, depois, o traceback do erro da linha 4. A linha 5 não roda.</label>
+<label><input type="radio" name="q5"> Só a linha 4 roda.</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. No nano, como você grava o arquivo?</p>
+<label><input type="radio" name="q6"> <kbd>Ctrl</kbd>+<kbd>O</kbd> e depois <kbd>Enter</kbd>.</label>
+<label><input type="radio" name="q6"> <kbd>Ctrl</kbd>+<kbd>S</kbd>.</label>
+<label><input type="radio" name="q6"> Digitando <code>save</code>.</label>
+<label><input type="radio" name="q6"> O nano grava sozinho a cada tecla.</label>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Um programa Python é um arquivo de texto <code>.py</code>; quem o executa é o <code>python3</code>, como um cozinheiro seguindo uma receita.</li>
+  <li>Crie uma pasta para os programas (<code>mkdir python</code>, <code>cd python</code>), escreva com o <code>nano</code> (<kbd>Ctrl</kbd>+<kbd>O</kbd> grava, <kbd>Ctrl</kbd>+<kbd>X</kbd> sai) e rode com <code>python3 ola.py</code>.</li>
+  <li>Só o nome do arquivo quer dizer "na <strong>pasta atual</strong>". Se der <code>can't open file</code>, leia o caminho na mensagem; entre na pasta certa ou use o caminho (<code>~/python/ola.py</code>).</li>
+  <li>O Python executa <strong>de cima para baixo</strong> e para no primeiro erro; as linhas antes dele já rodaram.</li>
+  <li>O código de saída (<code>echo $?</code>) é <code>0</code> quando deu certo e <code>1</code> quando o programa terminou com erro.</li>
+  <li>Com <code>#!/usr/bin/env python3</code> na primeira linha e <code>chmod +x</code>, o arquivo roda como comando: <code>./ola.py</code>.</li>
+  <li>Outras formas: <code>python3 -c '...'</code> (uma linha), <code>python3 -i</code> (roda e fica no <code>&gt;&gt;&gt;</code>) e as caixas Experimente, que rodam o <code>main.py</code> com um clique.</li>
+  <li>Próximo passo: conversar com o Python linha por linha, em <a href="repl.html">O Modo Interativo (&gt;&gt;&gt;)</a>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
