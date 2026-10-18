@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python map() e filter() — transformar e filtrar listas | Guia Python</title>
+<meta name="description" content="map() e filter() para quem está começando: aplicar uma função a cada item de uma lista, ficar só com os itens que passam num teste, o objeto map que precisa de list(), map(int, texto.split()) para ler vários números, filter(None, …), a comparação com list comprehension (qual usar) e os erros reais: chamar a função com parênteses, inverter a ordem e tentar usar o map como lista.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">map() e filter()</span></h1>
+
+<p class="intro">Duas tarefas aparecem o tempo todo com listas: <strong>transformar</strong> cada item (aplicar um desconto em todos os preços, passar todos os nomes para maiúsculas) e <strong>filtrar</strong> (ficar só com as notas de quem passou). Você já sabe fazer as duas com um <code>for</code> ou com uma <a href="list-comprehension.html">list comprehension</a>. O Python tem também duas funções embutidas feitas sob medida para isso: <code>map()</code> e <code>filter()</code>. Nesta aula você vai aprender a usá-las, a ler código de quem usa, e a decidir quando elas são melhores que a comprehension (e quando não são).</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li><code>map(funcao, lista)</code>: aplicar uma função a <strong>cada</strong> item.</li>
+  <li><code>filter(funcao, lista)</code>: ficar só com os itens em que a função responde <code>True</code>.</li>
+  <li>Por que o resultado aparece como <code>&lt;map object at 0x…&gt;</code> e como transformá-lo em lista.</li>
+  <li>O uso mais comum de todos: <code>list(map(int, linha.split()))</code> para ler vários números.</li>
+  <li>A comparar <code>map</code>/<code>filter</code> com list comprehension e a escolher.</li>
+  <li>Os erros reais: <code>len()</code> com parênteses, a ordem trocada e o <code>'map' object is not subscriptable</code>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a máquina da fábrica e a peneira</h2>
+<p>Numa fábrica de sucos, as laranjas passam por uma esteira e, uma por uma, entram numa <strong>máquina</strong> que as transforma em suco. Entram 10 laranjas, saem 10 copos. Isso é o <code>map()</code>: cada item entra numa função e sai transformado. A quantidade não muda.</p>
+<p>Na cozinha, a Ana passa o feijão por uma <strong>peneira</strong> para tirar as pedrinhas. Os grãos bons passam; as pedrinhas ficam. Isso é o <code>filter()</code> ("filtro"): cada item passa por um teste, e só os aprovados continuam. Nenhum item muda, mas a quantidade pode diminuir.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th><code>map()</code></th><th><code>filter()</code></th></tr>
+<tr><td>Pergunta para cada item</td><td>"Em que você vira?"</td><td>"Você passa no teste?"</td></tr>
+<tr><td>A função devolve</td><td>O item novo</td><td><code>True</code> ou <code>False</code></td></tr>
+<tr><td>Quantidade de itens</td><td>A mesma</td><td>A mesma ou menos</td></tr>
+<tr><td>Os itens</td><td>Mudam</td><td>Não mudam</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. <code>map()</code>: transformar cada item</h2>
+<p>A padaria vai dar 10% de desconto em tudo. O preço com desconto é o preço vezes 0.9:</p>
+
+<pre class="file" data-file="desconto.py">precos = [10.0, 25.0, 8.0, 40.0]
+
+def com_desconto(preco):
+    return preco * 0.9
+
+novos = list(map(com_desconto, precos))
+print("Antes:", precos)
+print("Depois:", novos)
+</pre>
+
+<pre class="term">$ python3 desconto.py
+Antes: [10.0, 25.0, 8.0, 40.0]
+Depois: [9.0, 22.5, 7.2, 36.0]
+</pre>
+
+<dl class="anatomy">
+  <dt>def com_desconto(preco):</dt><dd>A "máquina": uma função que recebe <strong>um</strong> preço e devolve o preço com desconto (aula <a href="funcoes.html">Funções</a>).</dd>
+  <dt>map(com_desconto, precos)</dt><dd>"Aplique <code>com_desconto</code> em cada item de <code>precos</code>." Primeiro a função, depois a lista. Repare: <code>com_desconto</code> <strong>sem parênteses</strong>. Você não está chamando a função; está entregando a função para o <code>map()</code>, que vai chamá-la uma vez para cada preço.</dd>
+  <dt>list(…)</dt><dd>Junta os resultados numa lista nova. (A próxima seção explica por que isso é preciso.)</dd>
+  <dt>Antes: […]</dt><dd>A lista original <strong>não mudou</strong>. O <code>map()</code> cria valores novos.</dd>
+</dl>
+
+<h3>Por que o <code>list()</code>?</h3>
+<p>Veja o que o <code>map()</code> devolve sozinho, no modo interativo:</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; nomes = ["ana", "bruno", "clara"]
+&gt;&gt;&gt; map(str.upper, nomes)
+&lt;map object at 0x7efeec788400&gt;
+&gt;&gt;&gt; list(map(str.upper, nomes))
+['ANA', 'BRUNO', 'CLARA']
+</pre>
+
+<p><code>&lt;map object at 0x7efeec788400&gt;</code> quer dizer "um objeto <code>map</code>, no endereço tal da memória" (esse número muda a cada vez). O <code>map()</code> é preguiçoso, no bom sentido: ele <strong>ainda não calculou nada</strong>. Só calcula cada item quando alguém pede, por exemplo um <code>for</code> ou o <code>list()</code>. Por isso, para ver ou guardar os resultados, use <code>list(map(…))</code>; para só percorrer, pode usar direto no <code>for</code>:</p>
+<pre class="file" data-file="map_no_for.py">for nome in map(str.upper, nomes):
+    print(nome)
+</pre>
+
+<h3>Funções prontas também servem</h3>
+<p>Qualquer função que recebe um valor e devolve outro pode ir no <code>map()</code>: as embutidas (aula <a href="funcoes-embutidas.html">Funções Embutidas</a>), os métodos de texto (aula <a href="strings-metodos.html">Métodos de Texto</a>) e as <code>lambda</code> (aula <a href="lambda.html">lambda</a>):</p>
+
+<pre class="term">&gt;&gt;&gt; list(map(len, nomes))
+[3, 5, 5]
+&gt;&gt;&gt; list(map(lambda nome: nome.title(), nomes))
+['Ana', 'Bruno', 'Clara']
+&gt;&gt;&gt; list(map(round, [2.7, 3.2, 9.9]))
+[3, 3, 10]
+</pre>
+
+<dl class="anatomy">
+  <dt>map(len, nomes)</dt><dd>O tamanho de cada nome.</dd>
+  <dt>map(str.upper, nomes)</dt><dd><code>str.upper</code> é o método <code>.upper()</code> dos textos, escrito como função: <code>str.upper("ana")</code> é o mesmo que <code>"ana".upper()</code>.</dd>
+  <dt>map(lambda nome: nome.title(), nomes)</dt><dd>Uma <code>lambda</code> é uma função de uma linha, sem nome, escrita ali mesmo. Muito comum com <code>map()</code>.</dd>
+  <dt>map(round, […])</dt><dd>Arredonda cada número.</dd>
+</dl>
+
+<h3>O uso mais comum: vários números numa linha</h3>
+<p>O <code>input()</code> sempre devolve <strong>texto</strong> (aula <a href="input.html">input()</a>). Quando a pessoa digita vários números numa linha só, o <code>.split()</code> separa os pedaços, e o <code>map(int, …)</code> converte cada pedaço em número:</p>
+
+<pre class="file" data-file="numeros_input.py">linha = input("Digite as idades, separadas por espaço: ")
+idades = list(map(int, linha.split()))
+print("Idades:", idades)
+print("Soma:", sum(idades))
+</pre>
+
+<pre class="term">$ python3 numeros_input.py
+Digite as idades, separadas por espaço: 12 35 7
+Idades: [12, 35, 7]
+Soma: 54
+</pre>
+
+<dl class="anatomy">
+  <dt>linha.split()</dt><dd>Corta o texto <code>"12 35 7"</code> nos espaços: <code>['12', '35', '7']</code>, uma lista de <strong>textos</strong>.</dd>
+  <dt>map(int, …)</dt><dd>Aplica <code>int()</code> em cada pedaço: <code>'12'</code> vira <code>12</code> (aula <a href="conversao.html">Conversão de Tipos</a>).</dd>
+  <dt>list(…)</dt><dd>Guarda tudo numa lista, para usar no <code>print</code> e no <code>sum</code>.</dd>
+</dl>
+
+<div class="trypy" data-goal="out:Soma: 54;;src:\bmap\(">
+<p class="try-task"><strong>Missão:</strong> as idades chegaram como texto, e o <code>sum()</code> dá erro (rode para ver). Use <code>map(int, …)</code> para converter todas e mostrar <code>Soma: 54</code>.</p>
+<pre class="script" data-file="main.py">idades_texto = ["12", "35", "7"]
+
+idades = idades_texto
+print("Soma:", sum(idades))
+</pre>
+<pre class="solucao" data-file="main.py">idades_texto = ["12", "35", "7"]
+
+idades = list(map(int, idades_texto))
+print("Soma:", sum(idades))
+</pre>
+</div>
+
+<div class="tip">
+<strong>Duas listas de uma vez</strong>
+<p>Se a função recebe dois valores, passe duas listas: o <code>map()</code> pega um item de cada, como o <code>zip()</code> (aula <a href="enumerate-zip.html">enumerate() e zip()</a>).</p>
+<pre class="term">&gt;&gt;&gt; list(map(lambda p, q: p * q, [25.9, 18.5], [2, 1]))
+[51.8, 18.5]
+</pre>
+<p>Preço vezes quantidade: 25.9 × 2 e 18.5 × 1.</p>
+</div>
+
+<hr>
+
+<h2>2. <code>filter()</code>: ficar só com alguns itens</h2>
+<p>A professora quer só as notas de quem passou, 7 ou mais. A "peneira" é uma função que responde <code>True</code> (passa) ou <code>False</code> (fica):</p>
+
+<pre class="file" data-file="aprovados.py">notas = [9.0, 6.5, 8.0, 5.0, 7.0]
+
+def passou(nota):
+    return nota &gt;= 7
+
+aprovadas = list(filter(passou, notas))
+print("Todas:", notas)
+print("Aprovadas:", aprovadas)
+</pre>
+
+<pre class="term">$ python3 aprovados.py
+Todas: [9.0, 6.5, 8.0, 5.0, 7.0]
+Aprovadas: [9.0, 8.0, 7.0]
+</pre>
+
+<dl class="anatomy">
+  <dt>def passou(nota):</dt><dd>A peneira: recebe uma nota e devolve <code>True</code> se ela for 7 ou mais (aula <a href="operadores-comparacao.html">Comparações</a>).</dd>
+  <dt>filter(passou, notas)</dt><dd>"Fique só com as notas em que <code>passou</code> responde <code>True</code>." De novo: primeiro a função (sem parênteses), depois a lista.</dd>
+  <dt>[9.0, 8.0, 7.0]</dt><dd>As notas que passaram, na <strong>mesma ordem</strong> em que estavam. O 6.5 e o 5.0 ficaram na peneira. O 7.0 passou, porque o teste é <code>&gt;=</code>.</dd>
+</dl>
+
+<p>Como o <code>map()</code>, o <code>filter()</code> devolve um objeto preguiçoso (<code>&lt;filter object at 0x…&gt;</code>), por isso o <code>list()</code>. Com <code>lambda</code>, cabe numa linha:</p>
+
+<pre class="term">&gt;&gt;&gt; notas = [9.0, 6.5, 8.0, 5.0, 7.0]
+&gt;&gt;&gt; list(filter(lambda nota: nota &gt;= 7, notas))
+[9.0, 8.0, 7.0]
+</pre>
+
+<h3><code>filter(None, …)</code>: tirar os vazios</h3>
+<p>Uma pesquisa teve respostas em branco. Com <code>None</code> no lugar da função, o <code>filter()</code> fica com os itens que valem <code>True</code> numa condição, e textos vazios valem <code>False</code> (aula <a href="booleanos.html">Booleanos</a>):</p>
+
+<pre class="term">&gt;&gt;&gt; respostas = ["sim", "", "não", "", "talvez"]
+&gt;&gt;&gt; list(filter(None, respostas))
+['sim', 'não', 'talvez']
+</pre>
+
+<div class="trypy" data-goal="out:[8.0, 4.25, 9.9];;src:\bfilter\(">
+<p class="try-task"><strong>Missão:</strong> a Ana quer só os produtos que custam <strong>menos de 10 reais</strong>. Use <code>filter()</code> para mostrar <code>[8.0, 4.25, 9.9]</code>.</p>
+<pre class="script" data-file="main.py">precos = [12.5, 8.0, 4.25, 30.0, 9.9]
+
+baratos = precos
+print(baratos)
+</pre>
+<pre class="solucao" data-file="main.py">precos = [12.5, 8.0, 4.25, 30.0, 9.9]
+
+baratos = list(filter(lambda preco: preco &lt; 10, precos))
+print(baratos)
+</pre>
+</div>
+
+<hr>
+
+<h2>3. <code>map</code> e <code>filter</code> × list comprehension</h2>
+<p>Tudo o que <code>map()</code> e <code>filter()</code> fazem, a list comprehension também faz. Compare, lado a lado, com os mesmos dados:</p>
+
+<pre class="term">&gt;&gt;&gt; precos = [10.0, 25.0, 8.0, 40.0]
+&gt;&gt;&gt; list(map(lambda preco: preco * 0.9, precos))
+[9.0, 22.5, 7.2, 36.0]
+&gt;&gt;&gt; [preco * 0.9 for preco in precos]
+[9.0, 22.5, 7.2, 36.0]
+&gt;&gt;&gt; list(filter(lambda nota: nota &gt;= 7, notas))
+[9.0, 8.0, 7.0]
+&gt;&gt;&gt; [nota for nota in notas if nota &gt;= 7]
+[9.0, 8.0, 7.0]
+&gt;&gt;&gt; [r for r in respostas if r]
+['sim', 'não', 'talvez']
+</pre>
+
+<p>Os resultados são iguais. E quando você precisa <strong>filtrar e transformar</strong> ao mesmo tempo (as notas de quem passou, multiplicadas por 10)? Veja a diferença na leitura:</p>
+
+<pre class="term">&gt;&gt;&gt; list(map(lambda nota: nota * 10, filter(lambda nota: nota &gt;= 7, notas)))
+[90.0, 80.0, 70.0]
+&gt;&gt;&gt; [nota * 10 for nota in notas if nota &gt;= 7]
+[90.0, 80.0, 70.0]
+</pre>
+
+<p>Com <code>map</code> e <code>filter</code>, você lê de dentro para fora, e há duas <code>lambda</code>. A comprehension se lê da esquerda para a direita, quase como uma frase: "nota vezes 10, para cada nota em notas, se a nota for 7 ou mais".</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Situação</th><th>Prefira</th><th>Por quê</th></tr>
+<tr><td>Aplicar uma função <strong>que já existe</strong> (<code>int</code>, <code>str</code>, <code>len</code>, <code>round</code>, uma <code>def</code> sua)</td><td><code>map(int, partes)</code></td><td>Curto e claro, sem <code>lambda</code></td></tr>
+<tr><td>Uma conta ou expressão (<code>preco * 0.9</code>)</td><td><code>[preco * 0.9 for preco in precos]</code></td><td>Sem <code>lambda</code>, se lê como uma frase</td></tr>
+<tr><td>Filtrar com uma condição (<code>nota &gt;= 7</code>)</td><td><code>[nota for nota in notas if nota &gt;= 7]</code></td><td>Idem</td></tr>
+<tr><td>Filtrar e transformar juntos</td><td>Comprehension</td><td>Um <code>map(filter(…))</code> com duas <code>lambda</code> fica difícil de ler</td></tr>
+<tr><td>Só percorrer, sem guardar a lista</td><td><code>for nome in map(str.upper, nomes):</code></td><td>O <code>map</code> calcula um de cada vez e não monta uma lista na memória</td></tr>
+<tr><td>Regra complicada, com vários passos</td><td>Um <code>for</code> comum</td><td>Cabe <code>if</code>/<code>else</code>, <code>print</code> e comentários</td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>O costume na comunidade Python</strong>
+<p>A maioria dos programadores Python prefere a list comprehension e reserva o <code>map()</code> para os casos com uma função pronta, como o <code>map(int, …)</code>. Mesmo assim, vale conhecer bem os dois: você vai encontrar <code>map</code> e <code>filter</code> em muito código, e em outras linguagens (JavaScript, por exemplo) eles são o jeito principal.</p>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>A função com parênteses</strong>
+<p>O erro mais comum: escrever a função com <code>()</code> dentro do <code>map()</code>.</p>
+<p>(A lista é a mesma de antes: <code>nomes = ["ana", "bruno", "clara"]</code>.)</p>
+<pre class="term">&gt;&gt;&gt; list(map(len(), nomes))
+Traceback (most recent call last):
+  File "&lt;python-input-18&gt;", line 1, in &lt;module&gt;
+    list(map(len(), nomes))
+             ~~~^^
+TypeError: len() takes exactly one argument (0 given)
+&gt;&gt;&gt; list(map(str.upper(), nomes))
+Traceback (most recent call last):
+  File "&lt;python-input-23&gt;", line 1, in &lt;module&gt;
+    list(map(str.upper(), nomes))
+             ~~~~~~~~~^^
+TypeError: unbound method str.upper() needs an argument
+</pre>
+<dl class="anatomy">
+  <dt>~~~^^ embaixo de len()</dt><dd>As marcas apontam para <code>len()</code>, e não para o <code>map</code>: o erro acontece <strong>antes</strong> de o <code>map()</code> começar.</dd>
+  <dt>TypeError: len() takes exactly one argument (0 given)</dt><dd>"<code>len()</code> recebe exatamente um argumento (0 dados)." Com os parênteses, o Python tentou <strong>chamar</strong> o <code>len</code> ali mesmo, sem nada dentro.</dd>
+  <dt>TypeError: unbound method str.upper() needs an argument</dt><dd>O mesmo problema com o método: "o método <code>str.upper()</code>, solto, precisa de um argumento" (o texto a ser convertido).</dd>
+</dl>
+<p><strong>Como consertar:</strong> passe a função <strong>sem parênteses</strong>: <code>map(len, nomes)</code>, <code>map(str.upper, nomes)</code>. Quem chama é o <code>map()</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>A ordem trocada: a lista antes da função</strong>
+<pre class="term">&gt;&gt;&gt; list(map(nomes, len))
+Traceback (most recent call last):
+  File "&lt;python-input-19&gt;", line 1, in &lt;module&gt;
+    list(map(nomes, len))
+         ~~~^^^^^^^^^^^^
+TypeError: 'builtin_function_or_method' object is not iterable
+</pre>
+<p>"Um objeto <code>builtin_function_or_method</code> (uma função embutida) não é iterável", ou seja, não dá para percorrer. O <code>map()</code> esperava a lista em segundo lugar, recebeu a função <code>len</code> e tentou percorrê-la como se fosse uma lista. <strong>Como consertar:</strong> a ordem é sempre <strong>função primeiro, lista depois</strong>: <code>map(len, nomes)</code>, <code>filter(passou, notas)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Usar o <code>map</code> como se fosse uma lista</strong>
+<pre class="file" data-file="map_objeto.py">nomes = ["ana", "bruno", "clara"]
+maiusculos = map(str.upper, nomes)
+print(maiusculos[0])
+</pre>
+<pre class="term">$ python3 map_objeto.py
+Traceback (most recent call last):
+  File "/home/ana/map_objeto.py", line 3, in &lt;module&gt;
+    print(maiusculos[0])
+          ~~~~~~~~~~^^^
+TypeError: 'map' object is not subscriptable
+</pre>
+<p>"Um objeto <code>map</code> não aceita índice" (<em>subscript</em> é o <code>[0]</code>). O <code>map</code> não é uma lista: ele entrega os itens um de cada vez e não guarda nenhum. Pela mesma razão, ele só pode ser percorrido <strong>uma vez</strong>; na segunda, vem vazio, sem erro:</p>
+<pre class="term">&gt;&gt;&gt; dobrados = map(lambda n: n * 2, [1, 2, 3])
+&gt;&gt;&gt; list(dobrados)
+[2, 4, 6]
+&gt;&gt;&gt; list(dobrados)
+[]
+</pre>
+<p><strong>Como consertar:</strong> se você vai usar o resultado mais de uma vez, ou pelo índice, transforme em lista logo de cara: <code>maiusculos = list(map(str.upper, nomes))</code>. (O mesmo vale para o <code>filter</code>. A aula <a href="iteradores.html">Iteradores</a> explica esse comportamento.)</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Comprehension equivalente</th></tr>
+<tr><td><code>list(map(f, lista))</code></td><td>Aplica <code>f</code> em cada item</td><td><code>[f(x) for x in lista]</code></td></tr>
+<tr><td><code>list(map(int, linha.split()))</code></td><td>Converte cada pedaço do texto em número</td><td><code>[int(p) for p in linha.split()]</code></td></tr>
+<tr><td><code>list(map(f, a, b))</code></td><td><code>f</code> com um item de cada lista</td><td><code>[f(x, y) for x, y in zip(a, b)]</code></td></tr>
+<tr><td><code>list(filter(f, lista))</code></td><td>Fica com os itens em que <code>f</code> dá <code>True</code></td><td><code>[x for x in lista if f(x)]</code></td></tr>
+<tr><td><code>list(filter(None, lista))</code></td><td>Tira os itens "vazios" (<code>""</code>, <code>0</code>, <code>None</code>…)</td><td><code>[x for x in lista if x]</code></td></tr>
+<tr><td><code>for x in map(f, lista):</code></td><td>Percorre os resultados sem montar uma lista</td><td>—</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>&lt;map object at 0x…&gt;</code> ou <code>&lt;filter object at 0x…&gt;</code></td><td>Faltou o <code>list(…)</code> para ver os resultados</td></tr>
+<tr><td><code>TypeError: len() takes exactly one argument (0 given)</code></td><td>Função com parênteses dentro do <code>map()</code>: tire os <code>()</code></td></tr>
+<tr><td><code>TypeError: … object is not iterable</code></td><td>Ordem trocada: a função vem primeiro, a lista depois</td></tr>
+<tr><td><code>TypeError: 'map' object is not subscriptable</code></td><td>Índice num <code>map</code>: use <code>list(map(…))</code></td></tr>
+<tr><td>A segunda volta num <code>map</code> guardado vem vazia</td><td>O <code>map</code> (e o <code>filter</code>) só pode ser percorrido uma vez</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Transformar</h3>
+<p>Complete para converter os textos em números inteiros:</p>
+<div class="ex-code">numeros = list(<input data-answer="map" aria-label="função">(int, ["4", "8", "15"]))</div>
+</div>
+
+<div class="exercise">
+<h3>2. Filtrar</h3>
+<p>Complete para ficar só com as notas maiores que 8:</p>
+<div class="ex-code">altas = list(<input data-answer="filter" aria-label="função">(lambda n: n &gt; 8, notas))</div>
+</div>
+
+<div class="exercise">
+<h3>3. A comprehension equivalente</h3>
+<p>Complete a list comprehension que faz o mesmo que <code>list(filter(lambda n: n &gt; 8, notas))</code>:</p>
+<div class="ex-code">[n for n in notas <input data-answer="if n &gt; 8|if n&gt;8" aria-label="condição">]</div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. A lista <code>precos</code> tem 5 itens. Quantos itens tem <code>list(map(round, precos))</code>?</p>
+<label><input type="radio" name="q4"> Depende dos preços</label>
+<label><input type="radio" name="q4"> 1</label>
+<label><input type="radio" name="q4"> 5</label>
+<label><input type="radio" name="q4"> Nenhum: dá erro</label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. Qual está escrito do jeito certo?</p>
+<label><input type="radio" name="q5"> <code>map(len(), nomes)</code></label>
+<label><input type="radio" name="q5"> <code>map(len, nomes)</code></label>
+<label><input type="radio" name="q5"> <code>map(nomes, len)</code></label>
+<label><input type="radio" name="q5"> <code>map(nomes, len())</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. O que <code>print(map(str.upper, ["a", "b"]))</code> mostra?</p>
+<label><input type="radio" name="q6"> Algo como <code>&lt;map object at 0x7f…&gt;</code></label>
+<label><input type="radio" name="q6"> <code>['A', 'B']</code></label>
+<label><input type="radio" name="q6"> <code>A B</code></label>
+<label><input type="radio" name="q6"> Dá erro</label>
+</div>
+
+<h3>Missão final: de <code>map</code>/<code>filter</code> para comprehension</h3>
+
+<div class="trypy" data-goal="out:[90.0, 80.0, 70.0];;src:\[\s*\w+.*\bfor\b.*\bif\b">
+<p class="try-task"><strong>Missão:</strong> o código abaixo funciona, mas é difícil de ler. Reescreva a linha do <code>resultado</code> como <strong>uma list comprehension</strong> (com <code>for</code> e <code>if</code> dentro dos colchetes), sem mudar a saída.</p>
+<pre class="script" data-file="main.py">notas = [9.0, 6.5, 8.0, 5.0, 7.0]
+
+resultado = list(map(lambda nota: nota * 10, filter(lambda nota: nota &gt;= 7, notas)))
+print(resultado)
+</pre>
+<pre class="solucao" data-file="main.py">notas = [9.0, 6.5, 8.0, 5.0, 7.0]
+
+resultado = [nota * 10 for nota in notas if nota &gt;= 7]
+print(resultado)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>map(funcao, lista)</code> aplica a função em <strong>cada</strong> item: mesma quantidade, itens transformados.</li>
+  <li><code>filter(funcao, lista)</code> fica só com os itens em que a função responde <code>True</code>: itens iguais, quantidade igual ou menor.</li>
+  <li>A função vai <strong>sem parênteses</strong> e <strong>antes</strong> da lista: <code>map(len, nomes)</code>.</li>
+  <li>Os dois devolvem objetos preguiçosos (<code>&lt;map object …&gt;</code>): use <code>list(…)</code> para ver, guardar, usar índice ou percorrer mais de uma vez.</li>
+  <li><code>list(map(int, linha.split()))</code> é o jeito clássico de ler vários números numa linha.</li>
+  <li>Com uma conta ou condição, a list comprehension costuma ser mais clara; com uma função pronta, o <code>map()</code> brilha.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
