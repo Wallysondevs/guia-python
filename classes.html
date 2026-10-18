@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Classes e Objetos — a forma e os bolos | Guia Python</title>
+<meta name="description" content="Classes e objetos em Python para quem está começando: a classe como forma de bolo ou ficha de cadastro em branco, como criar uma classe com class, como criar objetos com Produto(), o que quer dizer o &lt;__main__.Produto object at 0x…&gt;, atributos pendurados no objeto, type e isinstance, e os erros reais (AttributeError, IndentationError, NameError e o parêntese esquecido).">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Classes e Objetos</span></h1>
+
+<p class="intro">Até aqui você guardou cada informação numa variável solta: <code>nome = "Café"</code>, <code>preco = 18.90</code>, <code>estoque = 12</code>. Com um produto, tudo bem. Com os 40 produtos da lojinha da Ana, começa a bagunça: qual preço é de qual produto? A <strong>classe</strong> resolve isso. Ela é um <strong>modelo</strong> que diz como uma coisa é feita ("todo produto tem nome e preço"), e a partir dela você cria quantas coisas quiser, cada uma com os seus próprios dados. Cada coisa criada a partir da classe se chama <strong>objeto</strong>. Esta aula abre o capítulo de <strong>Orientação a Objetos</strong>: o jeito de programar em que o programa é feito de objetos que guardam dados e sabem fazer coisas.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A diferença entre <strong>classe</strong> (o modelo) e <strong>objeto</strong> (a coisa feita a partir do modelo).</li>
+  <li>A criar uma classe com <code>class</code> e um objeto com <code>Produto()</code>.</li>
+  <li>O que quer dizer <code>&lt;__main__.Produto object at 0x7f…&gt;</code>, e por que esse número muda.</li>
+  <li>A pendurar dados num objeto (os <strong>atributos</strong>) e a lê-los com o ponto: <code>cafe.nome</code>.</li>
+  <li>A perguntar de que classe é um objeto, com <code>type()</code> e <code>isinstance()</code>.</li>
+  <li>Os erros reais: <code>AttributeError</code>, <code>IndentationError</code>, <code>NameError</code> e o parêntese esquecido, que não dá erro nenhum.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a forma e os bolos</h2>
+<p>Pense numa <strong>forma de bolo</strong>. A forma não é um bolo: você não come a forma. Ela é o <strong>modelo</strong> que dá o formato. Com a mesma forma, a padaria do bairro faz um bolo de chocolate, um de cenoura e um de laranja. Os três têm o mesmo formato, mas cada um é um bolo diferente, com o seu próprio sabor. Se alguém come um pedaço do bolo de cenoura, o de chocolate continua inteiro.</p>
+
+<p>Outra comparação: a <strong>ficha de cadastro em branco</strong> da lojinha. Ela diz quais campos todo produto tem (nome, preço, estoque). Cada produto cadastrado é uma <strong>ficha preenchida</strong>, uma cópia da ficha em branco com os dados daquele produto.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>No dia a dia</th><th>Em Python</th><th>Exemplo</th></tr>
+<tr><td>A forma de bolo, a ficha em branco</td><td>A <strong>classe</strong></td><td><code>Produto</code></td></tr>
+<tr><td>Cada bolo, cada ficha preenchida</td><td>Um <strong>objeto</strong> (também chamado de <strong>instância</strong> da classe)</td><td><code>cafe</code>, <code>pao</code></td></tr>
+<tr><td>Os campos da ficha (nome, preço)</td><td>Os <strong>atributos</strong> do objeto</td><td><code>cafe.nome</code>, <code>cafe.preco</code></td></tr>
+<tr><td>Fazer um bolo com a forma</td><td><strong>Criar</strong> um objeto (instanciar)</td><td><code>Produto()</code></td></tr>
+</table>
+</div>
+
+<p>"Instância" é a palavra que os programadores usam para "objeto feito a partir de uma classe". <code>cafe</code> é uma instância de <code>Produto</code>: as duas frases querem dizer a mesma coisa.</p>
+
+<hr>
+
+<h2>1. Você já usa objetos desde a primeira aula</h2>
+<p>Em Python, <strong>tudo é objeto</strong>: textos, números, listas. Cada um deles foi feito a partir de uma classe que já vem pronta com o Python. A função <code>type()</code> mostra qual é:</p>
+
+<pre class="file" data-file="ja_conhece.py">nome = "ana"
+print(type(nome))
+print(nome.upper())
+print(type(42))
+print(type([1, 2]))
+</pre>
+
+<pre class="term">$ python3 ja_conhece.py
+&lt;class 'str'&gt;
+ANA
+&lt;class 'int'&gt;
+&lt;class 'list'&gt;
+</pre>
+
+<p><code>&lt;class 'str'&gt;</code> quer dizer: o texto <code>"ana"</code> é um objeto da classe <code>str</code> (de <em>string</em>, "texto"). E o <code>.upper()</code> que você usou na aula <a href="strings-metodos.html">Métodos de Texto</a> é uma coisa que todo objeto <code>str</code> sabe fazer. Até agora você só <strong>usou</strong> classes que outras pessoas escreveram. Nesta aula você vai <strong>escrever a sua</strong>.</p>
+
+<hr>
+
+<h2>2. A classe mais simples</h2>
+
+<pre class="file" data-file="produto.py">class Produto:
+    pass
+
+
+cafe = Produto()
+print(cafe)
+print(type(cafe))
+</pre>
+
+<dl class="anatomy">
+  <dt>class</dt><dd>A palavra-chave que cria uma classe (em inglês, "classe", no sentido de "categoria, tipo de coisa").</dd>
+  <dt>Produto</dt><dd>O nome da classe. Por costume, nomes de classe começam com <strong>letra maiúscula</strong> e, se tiverem mais de uma palavra, cada uma começa com maiúscula, sem sublinhado: <code>Produto</code>, <code>ContaBancaria</code>, <code>ItemDoPedido</code>. É o jeito de saber, só de olhar, que aquele nome é uma classe.</dd>
+  <dt>:</dt><dd>Os dois-pontos abrem o bloco da classe, como no <code>if</code> e no <code>def</code>.</dd>
+  <dt>pass</dt><dd>"Passar", não fazer nada. O bloco da classe não pode ficar vazio, e por enquanto não temos nada para pôr nele. O <code>pass</code> ocupa o lugar.</dd>
+  <dt>cafe = Produto()</dt><dd>O nome da classe seguido de <strong>parênteses</strong> cria um objeto novo (usa a forma para fazer um bolo). O objeto é guardado na variável <code>cafe</code>.</dd>
+  <dt>print(cafe)</dt><dd>Mostra o objeto. Como ainda não ensinamos o Python a mostrar um <code>Produto</code> de um jeito bonito, ele mostra do jeito padrão.</dd>
+</dl>
+
+<p>As duas linhas em branco depois da classe não são obrigatórias, mas são o costume (o guia de estilo do Python, a <a href="estilo-pep8.html">PEP 8</a>, pede duas linhas em branco em volta de uma classe). Elas separam o modelo do código que o usa.</p>
+
+<pre class="term">$ python3 produto.py
+&lt;__main__.Produto object at 0x7f7351990590&gt;
+&lt;class '__main__.Produto'&gt;
+</pre>
+
+<h3>Lendo o <code>&lt;__main__.Produto object at 0x7f7351990590&gt;</code></h3>
+<dl class="anatomy">
+  <dt>&lt; &gt;</dt><dd>Os sinais de menor e maior avisam: "isto não é um texto que você escreveu, é uma descrição do objeto".</dd>
+  <dt>__main__</dt><dd>Onde a classe foi criada. <code>__main__</code> ("principal") é o nome que o Python dá ao arquivo que você mandou rodar. Se a classe viesse de outro módulo, apareceria o nome dele.</dd>
+  <dt>Produto object</dt><dd>"Objeto da classe Produto".</dd>
+  <dt>at 0x7f7351990590</dt><dd>"No endereço 0x7f7351990590": o lugar da memória do computador onde esse objeto está guardado, escrito em hexadecimal (o <code>0x</code> avisa que o número está na base 16).</dd>
+</dl>
+
+<p>Rode o mesmo programa de novo e veja o endereço:</p>
+
+<pre class="term">$ python3 produto.py
+&lt;__main__.Produto object at 0x7f8bdaf90590&gt;
+&lt;class '__main__.Produto'&gt;
+</pre>
+
+<p><strong>Mudou.</strong> A cada execução, o Python guarda o objeto num lugar diferente da memória. Por isso, quando você rodar esses exemplos no seu computador (ou no editor do guia), vai ver outro número. Não se preocupe com ele: o endereço não diz nada sobre o produto, só onde ele está. Na aula <a href="metodos-especiais.html">Métodos Especiais</a>, você vai ensinar o Python a mostrar <code>Produto: Café</code> no lugar dessa descrição.</p>
+
+<p>A segunda linha, <code>&lt;class '__main__.Produto'&gt;</code>, é o <code>type(cafe)</code>: o objeto <code>cafe</code> é da classe <code>Produto</code>, criada no <code>__main__</code>. Repare que é o mesmo formato do <code>&lt;class 'str'&gt;</code> lá de cima: a sua classe é um tipo, igualzinho aos que já vêm com o Python.</p>
+
+<hr>
+
+<h2>3. Uma forma, vários bolos</h2>
+<p>Com a mesma classe, você cria quantos objetos quiser. Cada chamada <code>Produto()</code> faz um objeto novo:</p>
+
+<pre class="file" data-file="dois_objetos.py">class Produto:
+    pass
+
+
+cafe = Produto()
+pao = Produto()
+
+print(cafe)
+print(pao)
+print(cafe is pao)
+</pre>
+
+<pre class="term">$ python3 dois_objetos.py
+&lt;__main__.Produto object at 0x7f99bc530590&gt;
+&lt;__main__.Produto object at 0x7f99bc518690&gt;
+False
+</pre>
+
+<p>Dois endereços diferentes: são dois objetos diferentes, guardados em lugares diferentes. O <code>is</code> (aula <a href="operadores-is-in.html">is e in</a>) pergunta "é o mesmo objeto?", e a resposta é <code>False</code>. São dois bolos da mesma forma, não o mesmo bolo.</p>
+
+<hr>
+
+<h2>4. Atributos: os dados de cada objeto</h2>
+<p>Um objeto vazio não serve para muita coisa. Para guardar dados nele, use o <strong>ponto</strong>: <code>objeto.nome_do_dado = valor</code>. Cada dado guardado assim se chama <strong>atributo</strong> do objeto.</p>
+
+<pre class="file" data-file="atributos.py">class Produto:
+    pass
+
+
+cafe = Produto()
+cafe.nome = "Café"
+cafe.preco = 18.90
+
+pao = Produto()
+pao.nome = "Pão de forma"
+pao.preco = 9.50
+
+print(cafe.nome, cafe.preco)
+print(pao.nome, pao.preco)
+
+cafe.preco = 21.00
+print(cafe.nome, cafe.preco)
+print(pao.nome, pao.preco)
+</pre>
+
+<dl class="anatomy">
+  <dt>cafe.nome = "Café"</dt><dd>Cria, <strong>dentro do objeto <code>cafe</code></strong>, um atributo chamado <code>nome</code> com o valor <code>"Café"</code>. Leia o ponto como "de": "o nome do café recebe Café".</dd>
+  <dt>pao.nome = "Pão de forma"</dt><dd>O objeto <code>pao</code> tem o <strong>seu próprio</strong> <code>nome</code>. Os dois atributos têm o mesmo nome, mas moram em objetos diferentes.</dd>
+  <dt>print(cafe.nome, cafe.preco)</dt><dd>Para <strong>ler</strong> um atributo, também se usa o ponto.</dd>
+  <dt>cafe.preco = 21.00</dt><dd>Um atributo funciona como uma variável: dá para trocar o valor. O preço do café subiu.</dd>
+</dl>
+
+<pre class="term">$ python3 atributos.py
+Café 18.9
+Pão de forma 9.5
+Café 21.0                          « o preço do café mudou…
+Pão de forma 9.5                   « …e o do pão continua o mesmo
+</pre>
+
+<p>Mudar o preço do café não mexeu no pão: cada objeto guarda os seus dados. É o bolo de cenoura que perdeu um pedaço, enquanto o de chocolate continua inteiro. (O <code>18.90</code> aparece como <code>18.9</code> porque o <code>print</code> não mostra o zero do fim; para mostrar <code>18.90</code>, use uma f-string com <code>:.2f</code>, como na aula <a href="f-strings.html">f-strings</a>.)</p>
+
+<p>No modo interativo dá para ver o objeto por dentro com a função <code>vars()</code>, que mostra os atributos dele como um dicionário:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; class Produto:
+...     pass
+...
+&gt;&gt;&gt; cafe = Produto()
+&gt;&gt;&gt; cafe
+&lt;__main__.Produto object at 0x7f4e131ff0e0&gt;
+&gt;&gt;&gt; cafe.nome = "Café"
+&gt;&gt;&gt; cafe.nome
+'Café'
+&gt;&gt;&gt; vars(cafe)
+{'nome': 'Café'}
+&gt;&gt;&gt; exit()
+</pre>
+
+<p>(O <code>-q</code>, de <em>quiet</em>, "quieto", só esconde a mensagem de boas-vindas do Python.) Por dentro, os atributos de um objeto ficam guardados num dicionário: o nome do atributo é a chave.</p>
+
+<div class="trypy" data-goal="out:Leite 6.5;;semerro">
+<p class="try-task"><strong>Missão:</strong> a lojinha começou a vender leite. Crie mais um objeto <code>Produto</code>, guardado na variável <code>leite</code>, com o nome <code>"Leite"</code> e o preço <code>6.50</code>, e mostre os dois com <code>print(leite.nome, leite.preco)</code>.</p>
+<pre class="script" data-file="main.py">class Produto:
+    pass
+
+
+cafe = Produto()
+cafe.nome = "Café"
+cafe.preco = 18.90
+print(cafe.nome, cafe.preco)
+
+# crie aqui o leite
+</pre>
+<pre class="solucao" data-file="main.py">class Produto:
+    pass
+
+
+cafe = Produto()
+cafe.nome = "Café"
+cafe.preco = 18.90
+print(cafe.nome, cafe.preco)
+
+leite = Produto()
+leite.nome = "Leite"
+leite.preco = 6.50
+print(leite.nome, leite.preco)
+</pre>
+</div>
+
+<div class="tip">
+<strong>Ainda falta uma coisa</strong>
+<p>Pendurar os atributos um por um, depois de criar o objeto, funciona, mas é trabalhoso e perigoso: é fácil esquecer um. A ficha em branco de verdade já diz quais campos todo produto tem. Em Python, quem faz isso é o <code>__init__</code>, assunto da próxima aula: <a href="init-self.html">__init__ e self</a>. Lá, criar um produto vira uma linha só: <code>Produto("Café", 18.90)</code>.</p>
+</div>
+
+<hr>
+
+<h2>5. De que classe é este objeto?</h2>
+<p>Duas formas de perguntar: <code>type()</code> diz qual é a classe; <code>isinstance()</code> ("é instância de?") responde <code>True</code> ou <code>False</code>.</p>
+
+<pre class="file" data-file="isinst.py">class Produto:
+    pass
+
+
+class Aluno:
+    pass
+
+
+cafe = Produto()
+print(isinstance(cafe, Produto))
+print(isinstance(cafe, Aluno))
+print(type(cafe) == Produto)
+print(type(cafe).__name__)
+</pre>
+
+<pre class="term">$ python3 isinst.py
+True
+False
+True
+Produto
+</pre>
+
+<dl class="anatomy">
+  <dt>isinstance(cafe, Produto)</dt><dd>"O <code>cafe</code> é um <code>Produto</code>?" Sim: <code>True</code>.</dd>
+  <dt>isinstance(cafe, Aluno)</dt><dd>"O <code>cafe</code> é um <code>Aluno</code>?" Não: <code>False</code>. Um programa pode ter várias classes, cada uma com o seu nome.</dd>
+  <dt>type(cafe) == Produto</dt><dd>Compara a classe do objeto com <code>Produto</code>. Também dá <code>True</code>.</dd>
+  <dt>type(cafe).__name__</dt><dd>Só o nome da classe, como texto: <code>Produto</code>.</dd>
+</dl>
+
+<p>Para perguntar "é um produto?", prefira o <code>isinstance()</code>. Na aula <a href="heranca.html">Herança</a> você vai ver por quê: ele também aceita as classes "filhas" de <code>Produto</code>, e o <code>type() ==</code> não.</p>
+
+<hr>
+
+<h2>Formas diferentes de escrever a mesma classe</h2>
+<p>Você vai encontrar classes escritas de três jeitos em códigos e tutoriais pela internet:</p>
+
+<pre class="file" data-file="formas.py">class Produto:
+    pass
+
+
+class Aluno():
+    pass
+
+
+class Animal(object):
+    pass
+
+
+print(Produto, Aluno, Animal)
+print(Produto.__bases__, Aluno.__bases__, Animal.__bases__)
+</pre>
+
+<pre class="term">$ python3 formas.py
+&lt;class '__main__.Produto'&gt; &lt;class '__main__.Aluno'&gt; &lt;class '__main__.Animal'&gt;
+(&lt;class 'object'&gt;,) (&lt;class 'object'&gt;,) (&lt;class 'object'&gt;,)
+</pre>
+
+<p>As três dão no mesmo. O <code>__bases__</code> mostra de quem a classe "herda": nas três, é de <code>object</code>, a classe-mãe de todas as classes do Python. Escrever <code>(object)</code> era necessário no Python 2, que acabou em 2020; no Python 3, toda classe herda de <code>object</code> sozinha. Os parênteses depois do nome da classe servem para a herança, assunto da aula <a href="heranca.html">Herança</a>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>class Produto:</code></td><td>Sempre que a classe não herda de outra. É a forma do guia e a mais comum hoje</td></tr>
+<tr><td><code>class Produto():</code></td><td>Funciona, mas os parênteses vazios não acrescentam nada. Evite</td></tr>
+<tr><td><code>class Produto(object):</code></td><td>Costume do Python 2. Funciona, mas no Python 3 é desnecessário. Você vai ver em códigos antigos</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Ler um atributo que o objeto não tem: <code>AttributeError</code></strong>
+<pre class="file" data-file="sem_atributo.py">class Produto:
+    pass
+
+
+cafe = Produto()
+cafe.nome = "Café"
+print(cafe.nome)
+print(cafe.preco)
+</pre>
+<pre class="term">$ python3 sem_atributo.py
+Café
+Traceback (most recent call last):
+  File "/home/ana/sem_atributo.py", line 8, in &lt;module&gt;
+    print(cafe.preco)
+          ^^^^^^^^^^
+AttributeError: 'Produto' object has no attribute 'preco'
+</pre>
+<p>Linha por linha:</p>
+<ul>
+  <li><code>Café</code>: a linha 7 funcionou; o <code>nome</code> existe.</li>
+  <li><code>Traceback (most recent call last):</code> "rastro, a chamada mais recente por último": começa o relatório do erro.</li>
+  <li><code>File "/home/ana/sem_atributo.py", line 8, in &lt;module&gt;</code>: o erro foi no arquivo <code>sem_atributo.py</code>, na <strong>linha 8</strong>, no corpo principal do programa (<code>&lt;module&gt;</code>).</li>
+  <li><code>print(cafe.preco)</code> e os <code>^^^^^^^^^^</code>: a linha culpada, com o pedaço exato sublinhado: <code>cafe.preco</code>.</li>
+  <li><code>AttributeError: 'Produto' object has no attribute 'preco'</code>: "erro de atributo: o objeto <code>Produto</code> não tem o atributo <code>preco</code>".</li>
+</ul>
+<p>Ninguém escreveu <code>cafe.preco = …</code>, então o café não tem preço. Um nome digitado errado (<code>cafe.prego</code>) dá o mesmo erro. <strong>Como consertar:</strong> crie o atributo antes de lê-lo, ou corrija o nome. (O <code>__init__</code> da próxima aula evita esse erro: com ele, todo produto já nasce com nome e preço.)</p>
+</div>
+
+<div class="cenario">
+<strong>Esquecer os parênteses: <code>Produto</code> no lugar de <code>Produto()</code></strong>
+<p>Esse erro não dá mensagem nenhuma, e é por isso que é perigoso:</p>
+<pre class="file" data-file="sem_parenteses.py">class Produto:
+    pass
+
+
+cafe = Produto
+pao = Produto
+cafe.nome = "Café"
+print(pao.nome)
+print(cafe)
+</pre>
+<pre class="term">$ python3 sem_parenteses.py
+Café                               « o pão se chama Café?!
+&lt;class '__main__.Produto'&gt;         « cafe não é um objeto: é a própria classe
+</pre>
+<p>Sem os parênteses, <code>cafe = Produto</code> não cria bolo nenhum: só dá um segundo nome para a <strong>forma</strong>. <code>cafe</code> e <code>pao</code> viraram dois apelidos da própria classe <code>Produto</code>. Aí o <code>cafe.nome = "Café"</code> escreveu o nome <strong>na forma</strong>, e todo mundo que olha para a forma enxerga esse nome, inclusive o "pão". O <code>print(cafe)</code> entrega o problema: aparece <code>&lt;class …&gt;</code>, e não <code>&lt;… object at 0x…&gt;</code>. <strong>Como consertar:</strong> <code>cafe = Produto()</code>, com parênteses. Os parênteses são o "faça um objeto".</p>
+</div>
+
+<div class="cenario">
+<strong>Classe sem nada dentro: <code>IndentationError</code></strong>
+<pre class="file" data-file="sem_pass.py">class Produto:
+
+cafe = Produto()
+</pre>
+<pre class="term">$ python3 sem_pass.py
+  File "/home/ana/sem_pass.py", line 3
+    cafe = Produto()
+    ^^^^
+IndentationError: expected an indented block after class definition on line 1
+</pre>
+<p>"Erro de indentação: era esperado um bloco recuado depois da definição de classe da linha 1". Depois dos dois-pontos, o Python espera pelo menos uma linha recuada, e encontrou o <code>cafe</code> encostado na margem. Repare que não há a linha <code>Traceback</code>: o Python nem começou a rodar, porque o arquivo está mal escrito. <strong>Como consertar:</strong> ponha um <code>pass</code> (recuado com 4 espaços) dentro da classe.</p>
+</div>
+
+<div class="cenario">
+<strong>Esquecer os dois-pontos: <code>SyntaxError</code></strong>
+<pre class="file" data-file="sem_dois_pontos.py">class Produto
+    pass
+</pre>
+<pre class="term">$ python3 sem_dois_pontos.py
+  File "/home/ana/sem_dois_pontos.py", line 1
+    class Produto
+                 ^
+SyntaxError: expected ':'
+</pre>
+<p>"Erro de sintaxe: era esperado <code>:</code>". A setinha aponta exatamente para o fim da linha, onde faltam os dois-pontos. <strong>Como consertar:</strong> <code>class Produto:</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Usar a classe antes de criá-la: <code>NameError</code></strong>
+<pre class="file" data-file="antes.py">cafe = Produto()
+
+
+class Produto:
+    pass
+</pre>
+<pre class="term">$ python3 antes.py
+Traceback (most recent call last):
+  File "/home/ana/antes.py", line 1, in &lt;module&gt;
+    cafe = Produto()
+           ^^^^^^^
+NameError: name 'Produto' is not defined
+</pre>
+<p>"O nome <code>Produto</code> não está definido". O Python lê o arquivo de cima para baixo. Na linha 1, a classe ainda não existe: ela só é criada na linha 4. É como pedir um bolo antes de alguém ter comprado a forma. <strong>Como consertar:</strong> escreva a classe <strong>antes</strong> de usá-la, no começo do arquivo.</p>
+</div>
+
+<div class="trypy" data-goal="out:Café 18.9;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa dá <code>AttributeError</code>. Rode, leia a mensagem e conserte: o café custa <code>18.90</code>.</p>
+<pre class="script" data-file="main.py">class Produto:
+    pass
+
+
+cafe = Produto()
+cafe.nome = "Café"
+print(cafe.nome, cafe.preco)
+</pre>
+<pre class="solucao" data-file="main.py">class Produto:
+    pass
+
+
+cafe = Produto()
+cafe.nome = "Café"
+cafe.preco = 18.90
+print(cafe.nome, cafe.preco)
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>class Produto:</code> + bloco recuado</td><td>Cria a classe (o modelo) <code>Produto</code></td></tr>
+<tr><td><code>pass</code></td><td>Não faz nada; ocupa o lugar de um bloco vazio</td></tr>
+<tr><td><code>cafe = Produto()</code></td><td>Cria um objeto (uma instância) da classe e guarda em <code>cafe</code></td></tr>
+<tr><td><code>cafe.nome = "Café"</code></td><td>Cria ou troca o atributo <code>nome</code> do objeto <code>cafe</code></td></tr>
+<tr><td><code>cafe.nome</code></td><td>Lê o atributo <code>nome</code> do objeto <code>cafe</code></td></tr>
+<tr><td><code>type(cafe)</code></td><td>A classe do objeto: <code>&lt;class '__main__.Produto'&gt;</code></td></tr>
+<tr><td><code>isinstance(cafe, Produto)</code></td><td><code>True</code> se <code>cafe</code> for um <code>Produto</code></td></tr>
+<tr><td><code>vars(cafe)</code></td><td>Os atributos do objeto, como dicionário</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>AttributeError: 'Produto' object has no attribute 'preco'</code></td><td>O atributo não foi criado, ou o nome está digitado errado</td></tr>
+<tr><td><code>print(x)</code> mostra <code>&lt;class '__main__.Produto'&gt;</code>, e um objeto muda o outro</td><td>Faltaram os parênteses: <code>Produto</code> no lugar de <code>Produto()</code></td></tr>
+<tr><td><code>IndentationError: expected an indented block after class definition</code></td><td>Classe vazia: ponha um <code>pass</code></td></tr>
+<tr><td><code>SyntaxError: expected ':'</code></td><td>Faltaram os dois-pontos depois do nome da classe</td></tr>
+<tr><td><code>NameError: name 'Produto' is not defined</code></td><td>A classe foi usada antes de ser criada (ou o nome está errado: <code>produto</code> ≠ <code>Produto</code>)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Criando a classe</h3>
+<p>Complete a palavra-chave que cria uma classe:</p>
+<div class="ex-code"><input data-answer="class" aria-label="palavra-chave"> Aluno:<br>&nbsp;&nbsp;&nbsp;&nbsp;pass</div>
+</div>
+
+<div class="exercise">
+<h3>2. Fazendo um bolo com a forma</h3>
+<p>Complete para criar um objeto da classe <code>Aluno</code> (não esqueça o que transforma a forma em bolo):</p>
+<div class="ex-code">bia = Aluno<input data-answer="()" aria-label="o que falta"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. Qual é a relação entre <code>Produto</code> e <code>cafe</code> em <code>cafe = Produto()</code>?</p>
+<label><input type="radio" name="q3"> <code>cafe</code> é a classe e <code>Produto</code> é o objeto</label>
+<label><input type="radio" name="q3"> <code>Produto</code> é a classe (o modelo) e <code>cafe</code> é um objeto feito a partir dela</label>
+<label><input type="radio" name="q3"> Os dois são a mesma coisa</label>
+<label><input type="radio" name="q3"> <code>cafe</code> é um atributo de <code>Produto</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. A Ana rodou o mesmo programa duas vezes e o <code>print(cafe)</code> mostrou <code>0x7f7351990590</code> na primeira e <code>0x7f8bdaf90590</code> na segunda. O que aconteceu?</p>
+<label><input type="radio" name="q4"> O preço do café mudou</label>
+<label><input type="radio" name="q4"> O programa tem um erro</label>
+<label><input type="radio" name="q4"> Nada de errado: é o endereço da memória onde o objeto foi guardado, e ele muda a cada execução</label>
+<label><input type="radio" name="q4"> Foram criadas duas classes diferentes</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Qual destes nomes segue o costume do Python para uma classe?</p>
+<label><input type="radio" name="q5"> <code>ContaBancaria</code></label>
+<label><input type="radio" name="q5"> <code>conta_bancaria</code></label>
+<label><input type="radio" name="q5"> <code>contabancaria</code></label>
+<label><input type="radio" name="q5"> <code>CONTA_BANCARIA</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. <code>a = Aluno()</code>, <code>b = Aluno()</code>, depois <code>a.nota = 10</code>. Quanto vale <code>b.nota</code>?</p>
+<label><input type="radio" name="q6"> <code>10</code>, porque os dois são da classe <code>Aluno</code></label>
+<label><input type="radio" name="q6"> <code>0</code></label>
+<label><input type="radio" name="q6"> <code>None</code></label>
+<label><input type="radio" name="q6"> Dá <code>AttributeError</code>: o <code>b</code> é outro objeto e não tem o atributo <code>nota</code></label>
+</div>
+
+<h3>Missão final: as contas da Ana e da Bia</h3>
+
+<div class="trypy" data-goal="out:Ana: R$ 150.00;;out:Bia: R$ 80.00;;semerro">
+<p class="try-task"><strong>Missão:</strong> o banco do bairro tem a classe <code>ContaBancaria</code>. A conta da Ana já existe. (1) Crie a conta da Bia, guardada em <code>conta_bia</code>, com o titular <code>"Bia"</code> e o saldo <code>80.00</code>. (2) A Ana depositou 50 reais: aumente o saldo dela para 150. O programa deve mostrar <code>Ana: R$ 150.00</code> e <code>Bia: R$ 80.00</code>.</p>
+<pre class="script" data-file="main.py">class ContaBancaria:
+    pass
+
+
+conta_ana = ContaBancaria()
+conta_ana.titular = "Ana"
+conta_ana.saldo = 100.00
+
+# 1. crie aqui a conta da Bia
+
+
+# 2. a Ana depositou 50 reais
+
+
+print(f"{conta_ana.titular}: R$ {conta_ana.saldo:.2f}")
+print(f"{conta_bia.titular}: R$ {conta_bia.saldo:.2f}")
+</pre>
+<pre class="solucao" data-file="main.py">class ContaBancaria:
+    pass
+
+
+conta_ana = ContaBancaria()
+conta_ana.titular = "Ana"
+conta_ana.saldo = 100.00
+
+# 1. crie aqui a conta da Bia
+conta_bia = ContaBancaria()
+conta_bia.titular = "Bia"
+conta_bia.saldo = 80.00
+
+# 2. a Ana depositou 50 reais
+conta_ana.saldo = conta_ana.saldo + 50
+
+print(f"{conta_ana.titular}: R$ {conta_ana.saldo:.2f}")
+print(f"{conta_bia.titular}: R$ {conta_bia.saldo:.2f}")
+</pre>
+</div>
+
+<p>Dica: <code>conta_ana.saldo += 50</code> também funciona; o <code>+=</code> (aula <a href="operadores-atribuicao.html">Operadores de Atribuição</a>) vale para atributos como vale para variáveis. Repare que o depósito na conta da Ana não mexeu no saldo da Bia.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>A <strong>classe</strong> é o modelo (a forma de bolo, a ficha em branco); o <strong>objeto</strong>, ou <strong>instância</strong>, é a coisa feita a partir dela (o bolo, a ficha preenchida).</li>
+  <li><code>class Produto:</code> cria a classe; <code>Produto()</code>, <strong>com parênteses</strong>, cria um objeto. Sem os parênteses, você só ganha outro nome para a classe.</li>
+  <li>Nomes de classe começam com maiúscula, cada palavra com maiúscula: <code>ContaBancaria</code>.</li>
+  <li><code>&lt;__main__.Produto object at 0x7f…&gt;</code> é o jeito padrão de mostrar um objeto; o endereço muda a cada execução.</li>
+  <li>Cada objeto guarda os seus próprios <strong>atributos</strong>: <code>cafe.preco = 21.00</code> não mexe em <code>pao.preco</code>. Ler um atributo que não existe dá <code>AttributeError</code>.</li>
+  <li><code>type(cafe)</code> diz a classe; <code>isinstance(cafe, Produto)</code> responde se é um produto.</li>
+  <li>Em Python, tudo é objeto: <code>"ana"</code> é uma instância de <code>str</code>, <code>42</code> de <code>int</code>.</li>
+  <li>Próxima aula: <a href="init-self.html">__init__ e self</a>, para que todo objeto já nasça com os seus dados.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
