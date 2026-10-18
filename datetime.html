@@ -1,0 +1,869 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python datetime — datas e horas | Guia Python</title>
+<meta name="description" content="O módulo datetime para quem está começando: date, time, datetime e timedelta, a data de hoje, o formato brasileiro dd/mm/aaaa com strftime e strptime, dias até uma data, vencimento daqui a 30 dias, a idade a partir da data de nascimento, fusos com zoneinfo (America/Sao_Paulo), nomes de mês e dia em português com locale, e os erros reais do Python 3.14 (module 'datetime' has no attribute 'now', day out of range, does not match format, offset-naive and offset-aware). Com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">datetime</span></h1>
+
+<p class="intro">Quantos dias faltam para o Natal? Quando vence um boleto pago hoje com prazo de 30 dias? Quantos anos tem quem nasceu em 20/10/2000? A que horas em Lisboa começa uma reunião marcada para as 15h em São Paulo? Fazer essas contas "na mão" é cheio de armadilhas: meses de 28, 30 e 31 dias, anos bissextos, fusos horários. O módulo <code>datetime</code> ("data e hora"), que vem com o Python, já sabe tudo isso.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>Os quatro tipos do módulo: <code>date</code> (data), <code>time</code> (hora), <code>datetime</code> (data e hora) e <code>timedelta</code> (duração).</li>
+  <li>A pegar a data e a hora de agora, e por que esse valor muda a cada execução.</li>
+  <li>A mostrar uma data no formato brasileiro (<code>strftime</code>) e a ler uma data digitada (<code>strptime</code>).</li>
+  <li>A contar dias entre duas datas, somar prazos e calcular a idade de alguém.</li>
+  <li>A trabalhar com fusos horários usando <code>zoneinfo</code>.</li>
+  <li>A mostrar o nome do mês e do dia da semana em português.</li>
+  <li>Os erros reais do Python 3.14: <code>module 'datetime' has no attribute 'now'</code>, dia fora do mês, formato que não bate, somar número com data e comparar data com fuso com data sem fuso.</li>
+</ul>
+</div>
+
+<p>Todos os programas desta aula rodaram no <strong>Python 3.14</strong> do computador fictício da Ana (usuária <code>ana</code>, computador <code>notebook</code>, fuso de São Paulo), na pasta pessoal dela, com <code>python3 arquivo.py</code>. Os que usam a data de "hoje" rodaram em <strong>18/10/2026</strong>; no seu computador, essas saídas vão mostrar o seu dia e a sua hora.</p>
+
+<hr>
+
+<h2>A ideia: o calendário e o relógio da parede</h2>
+<p>Na cozinha da Ana há um <strong>calendário</strong> (que mostra o dia: 18 de outubro de 2026) e um <strong>relógio</strong> (que mostra a hora: 14h30). Juntando os dois, ela sabe o <strong>momento</strong> exato: 18/10/2026 às 14h30. E quando ela diz "o bolo leva 40 minutos" ou "o boleto vence em 30 dias", ela fala de uma <strong>duração</strong>, um pedaço de tempo que dá para somar a um momento.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Na cozinha</th><th>No <code>datetime</code></th><th>Exemplo</th></tr>
+<tr><td>O calendário</td><td><code>date</code>: ano, mês e dia</td><td><code>date(2026, 10, 18)</code></td></tr>
+<tr><td>O relógio</td><td><code>time</code>: hora, minuto, segundo</td><td><code>time(14, 30)</code></td></tr>
+<tr><td>Calendário + relógio</td><td><code>datetime</code>: um momento</td><td><code>datetime(2026, 10, 18, 14, 30)</code></td></tr>
+<tr><td>"Daqui a 30 dias", "40 minutos"</td><td><code>timedelta</code>: uma duração</td><td><code>timedelta(days=30)</code></td></tr>
+</table>
+</div>
+
+<p>Os quatro moram no módulo <code>datetime</code> (aula <a href="modulos.html">Módulos e import</a>). O jeito mais prático é importar só o que você vai usar: <code>from datetime import date, timedelta</code>.</p>
+
+<hr>
+
+<h2>1. Uma data: <code>date</code></h2>
+
+<pre class="file" data-file="criar.py">from datetime import date
+
+natal = date(2026, 12, 25)
+print(natal)
+print(natal.day, natal.month, natal.year)
+print(natal.weekday())
+print(type(natal))
+</pre>
+
+<pre class="term">$ python3 criar.py
+2026-12-25
+25 12 2026
+4                                « 0 = segunda, 1 = terça… 4 = sexta-feira
+&lt;class 'datetime.date'&gt;</pre>
+
+<dl class="anatomy">
+  <dt>from datetime import date</dt><dd>Do módulo <code>datetime</code>, traz o tipo <code>date</code>.</dd>
+  <dt>date(2026, 12, 25)</dt><dd>Cria a data. A ordem é sempre <strong>ano, mês, dia</strong> (do maior para o menor), ao contrário do nosso costume de escrever 25/12/2026. Os números vão sem zero na frente: <code>date(2026, 8, 5)</code>, nunca <code>08</code> (veja <a href="#errado">Quando dá errado</a>).</dd>
+  <dt>print(natal)</dt><dd>Mostra no formato internacional <code>AAAA-MM-DD</code> (ano-mês-dia). O formato brasileiro vem na seção 3.</dd>
+  <dt>.day, .month, .year</dt><dd>As partes da data, como números inteiros: dia, mês, ano.</dd>
+  <dt>.weekday()</dt><dd>O dia da semana como número: <strong>0 é segunda-feira</strong> e 6 é domingo. O Natal de 2026 cai numa sexta.</dd>
+</dl>
+
+<p>No modo interativo, uma data aparece de um jeito um pouco diferente: o <code>&gt;&gt;&gt;</code> mostra o valor "como se escreve em Python", e o <code>print</code> mostra o valor "para gente ler":</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; from datetime import date, timedelta
+&gt;&gt;&gt; natal = date(2026, 12, 25)
+&gt;&gt;&gt; natal
+datetime.date(2026, 12, 25)
+&gt;&gt;&gt; print(natal)
+2026-12-25
+&gt;&gt;&gt; timedelta(days=30)
+datetime.timedelta(days=30)
+&gt;&gt;&gt; natal - date(2026, 10, 18)
+datetime.timedelta(days=68)
+&gt;&gt;&gt; date(2026, 10, 18) &lt; natal
+True
+&gt;&gt;&gt; exit()</pre>
+
+<p>As duas últimas linhas já mostram o que vem a seguir: subtrair datas dá uma duração, e datas se comparam com <code>&lt;</code>, <code>&gt;</code> e <code>==</code> como números (a data anterior é a "menor").</p>
+
+<hr>
+
+<h2>2. Agora: <code>today()</code> e <code>now()</code></h2>
+
+<pre class="file" data-file="hoje.py">from datetime import date, datetime
+
+print(date.today())
+print(datetime.now())
+</pre>
+
+<pre class="term">$ python3 hoje.py
+2026-10-18
+2026-10-18 12:18:48.599638          « horas:minutos:segundos.microssegundos</pre>
+
+<ul>
+  <li><code>date.today()</code> é a data de hoje, segundo o relógio do computador.</li>
+  <li><code>datetime.now()</code> é a data <strong>e</strong> a hora deste instante, até os microssegundos (milionésimos de segundo).</li>
+</ul>
+
+<div class="warning">
+<strong>O valor de agora muda a cada execução</strong>
+<p>Rode o programa de novo e a hora já é outra; amanhã, a data também. Por isso as saídas acima são as <strong>do dia em que rodamos</strong>. E por isso as missões desta aula usam <strong>datas fixas</strong>, como <code>hoje = date(2026, 10, 18)</code>: assim o resultado é sempre o mesmo e dá para conferir. Num programa de verdade você troca a data fixa por <code>date.today()</code>. No editor do guia, <code>now()</code> e <code>today()</code> usam o <strong>relógio e o fuso do seu navegador</strong>.</p>
+</div>
+
+<div class="trypy">
+<p class="try-task"><strong>Experimente:</strong> rode várias vezes e veja os segundos mudando. Depois mostre só o ano de hoje, com <code>date.today().year</code>.</p>
+<pre class="script" data-file="main.py">from datetime import date, datetime
+
+print("Hoje:", date.today())
+print("Agora:", datetime.now())
+</pre>
+</div>
+
+<hr>
+
+<h2>3. O formato brasileiro: <code>strftime</code></h2>
+<p>Para mostrar uma data do jeito que a gente escreve, use o método <code>strftime</code> (de <em>string format time</em>, "formatar o tempo como texto"). Você passa um <strong>molde</strong>, em que cada código com <code>%</code> vira uma parte da data:</p>
+
+<pre class="file" data-file="formato.py">from datetime import datetime
+
+consulta = datetime(2026, 11, 3, 14, 30)
+print(consulta)
+print(consulta.strftime("%d/%m/%Y"))
+print(consulta.strftime("%d/%m/%Y às %H:%M"))
+print(consulta.strftime("%d/%m/%y"))
+print(f"Consulta: {consulta:%d/%m/%Y %H:%M}")
+print(consulta.isoformat())
+</pre>
+
+<pre class="term">$ python3 formato.py
+2026-11-03 14:30:00
+03/11/2026
+03/11/2026 às 14:30
+03/11/26                         « %y: o ano com 2 dígitos
+Consulta: 03/11/2026 14:30       « o mesmo molde dentro de uma f-string
+2026-11-03T14:30:00              « o formato internacional (ISO 8601)</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Código</th><th>Quer dizer</th><th>Em 03/11/2026 14:30</th></tr>
+<tr><td><code>%d</code></td><td>dia, com 2 dígitos</td><td><code>03</code></td></tr>
+<tr><td><code>%m</code></td><td>mês, com 2 dígitos (m <strong>minúsculo</strong>)</td><td><code>11</code></td></tr>
+<tr><td><code>%Y</code></td><td>ano com 4 dígitos (Y maiúsculo)</td><td><code>2026</code></td></tr>
+<tr><td><code>%y</code></td><td>ano com 2 dígitos</td><td><code>26</code></td></tr>
+<tr><td><code>%H</code></td><td>hora, de 00 a 23</td><td><code>14</code></td></tr>
+<tr><td><code>%M</code></td><td>minuto (M <strong>maiúsculo</strong>)</td><td><code>30</code></td></tr>
+<tr><td><code>%S</code></td><td>segundo</td><td><code>00</code></td></tr>
+<tr><td><code>%A</code> / <code>%a</code></td><td>nome do dia da semana / abreviado</td><td>veja a seção 8</td></tr>
+<tr><td><code>%B</code> / <code>%b</code></td><td>nome do mês / abreviado</td><td>veja a seção 8</td></tr>
+</table>
+</div>
+
+<p>Tudo o que não começa com <code>%</code> (as barras, o "às", os espaços) é copiado como está. O mesmo molde funciona dentro de uma <a href="f-strings.html">f-string</a>, depois dos dois-pontos: <code>{consulta:%d/%m/%Y}</code>.</p>
+
+<div class="trypy" data-goal="out:25/12/2026;;src:%d/%m/%Y">
+<p class="try-task"><strong>Missão:</strong> o programa mostra <code>Natal: 2026-12-25</code>. Faça ele mostrar <code>Natal: 25/12/2026</code>, com <code>strftime</code> ou com o molde dentro de uma f-string.</p>
+<pre class="script" data-file="main.py">from datetime import date
+
+natal = date(2026, 12, 25)
+print("Natal:", natal)
+</pre>
+<pre class="solucao" data-file="main.py">from datetime import date
+
+natal = date(2026, 12, 25)
+print("Natal:", natal.strftime("%d/%m/%Y"))
+</pre>
+</div>
+
+<hr>
+
+<h2>4. Lendo uma data digitada: <code>strptime</code></h2>
+<p>O caminho contrário: a pessoa digita <code>25/12/2026</code> (um texto) e o programa precisa de uma data. Para isso existe <code>datetime.strptime</code> (de <em>string parse time</em>, "interpretar o texto como tempo"), com o <strong>mesmo molde</strong>:</p>
+
+<pre class="file" data-file="ler_data.py">from datetime import datetime
+
+texto = input("Data do vencimento (dd/mm/aaaa): ")
+vencimento = datetime.strptime(texto, "%d/%m/%Y").date()
+print("Entendi:", vencimento)
+print("Dia da semana (0 = segunda):", vencimento.weekday())
+</pre>
+
+<pre class="term">$ python3 ler_data.py
+Data do vencimento (dd/mm/aaaa): 25/12/2026
+Entendi: 2026-12-25
+Dia da semana (0 = segunda): 4</pre>
+
+<dl class="anatomy">
+  <dt>datetime.strptime(texto, "%d/%m/%Y")</dt><dd>Lê o texto seguindo o molde e devolve um <code>datetime</code> (com a hora 00:00, porque o texto não tinha hora).</dd>
+  <dt>.date()</dt><dd>Fica só com a data, sem a hora. Útil quando a hora não interessa.</dd>
+</dl>
+
+<p>O molde tem de bater <strong>exatamente</strong> com o texto. Se a pessoa digitar com traços:</p>
+
+<pre class="term">$ python3 ler_data.py
+Data do vencimento (dd/mm/aaaa): 25-12-2026
+Traceback (most recent call last):
+  File "/home/ana/ler_data.py", line 4, in &lt;module&gt;
+    vencimento = datetime.strptime(texto, "%d/%m/%Y").date()
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/_strptime.py", line 815, in _strptime_datetime_datetime
+    tt, fraction, gmtoff_fraction = _strptime(data_string, format)
+                                    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/_strptime.py", line 555, in _strptime
+    raise ValueError("time data %r does not match format %r" %
+                     (data_string, format))
+ValueError: time data '25-12-2026' does not match format '%d/%m/%Y'</pre>
+
+<p>O traceback é comprido porque o erro acontece <strong>dentro</strong> do módulo (<code>_strptime.py</code>, um arquivo do próprio Python). Leia a primeira parte (a sua linha 4) e a última: <code>ValueError: time data '25-12-2026' does not match format '%d/%m/%Y'</code>, "o texto <code>'25-12-2026'</code> não bate com o molde <code>'%d/%m/%Y'</code>". Num programa de verdade, você trata esse erro com <a href="try-except.html">try e except</a> e pede a data de novo.</p>
+
+<hr>
+
+<h2>5. Contas com datas: <code>timedelta</code></h2>
+
+<h3>Quantos dias faltam</h3>
+<p>Subtrair duas datas dá uma <strong>duração</strong>, um <code>timedelta</code>. O número de dias está em <code>.days</code>:</p>
+
+<pre class="file" data-file="dias.py">from datetime import date
+
+hoje = date(2026, 10, 18)
+natal = date(2026, 12, 25)
+falta = natal - hoje
+print(falta)
+print(type(falta))
+print(f"Faltam {falta.days} dias para o Natal.")
+</pre>
+
+<pre class="term">$ python3 dias.py
+68 days, 0:00:00                 « 68 dias e 0 horas
+&lt;class 'datetime.timedelta'&gt;
+Faltam 68 dias para o Natal.</pre>
+
+<p>Se a data já passou, a diferença é <strong>negativa</strong>. Um boleto que venceu em 10/10:</p>
+
+<pre class="file" data-file="boleto.py">from datetime import date
+
+hoje = date(2026, 10, 18)
+vencimento = date(2026, 10, 10)
+diferenca = vencimento - hoje
+print(diferenca)
+print(diferenca.days)
+if vencimento &lt; hoje:
+    print(f"Boleto vencido há {-diferenca.days} dias.")
+else:
+    print(f"Faltam {diferenca.days} dias para o vencimento.")
+</pre>
+
+<pre class="term">$ python3 boleto.py
+-8 days, 0:00:00
+-8
+Boleto vencido há 8 dias.</pre>
+
+<div class="trypy" data-goal="out:Faltam 43 dias">
+<p class="try-task"><strong>Missão:</strong> o aniversário da Ana é em 30/11/2026. Com <code>hoje</code> fixo em 18/10/2026, calcule quantos dias faltam e mostre <code>Faltam N dias para o aniversário.</code> com o número certo no lugar do <code>?</code>.</p>
+<pre class="script" data-file="main.py">from datetime import date
+
+hoje = date(2026, 10, 18)
+aniversario = date(2026, 11, 30)
+print("Faltam ? dias para o aniversário.")
+</pre>
+<pre class="solucao" data-file="main.py">from datetime import date
+
+hoje = date(2026, 10, 18)
+aniversario = date(2026, 11, 30)
+falta = aniversario - hoje
+print(f"Faltam {falta.days} dias para o aniversário.")
+</pre>
+</div>
+
+<h3>Somar um prazo</h3>
+<p>Para "daqui a 30 dias", some uma duração criada com <code>timedelta(days=30)</code>. O <code>datetime</code> cuida da virada do mês (e do ano):</p>
+
+<pre class="file" data-file="vencimento.py">from datetime import date, timedelta
+
+compra = date(2026, 10, 18)
+vence = compra + timedelta(days=30)
+print("Compra:", compra.strftime("%d/%m/%Y"))
+print("Vence: ", vence.strftime("%d/%m/%Y"))
+print("Uma semana antes:", (vence - timedelta(weeks=1)).strftime("%d/%m/%Y"))
+</pre>
+
+<pre class="term">$ python3 vencimento.py
+Compra: 18/10/2026
+Vence:  17/11/2026               « outubro tem 31 dias: o Python sabe
+Uma semana antes: 10/11/2026</pre>
+
+<p>O <code>timedelta</code> aceita <code>weeks</code> (semanas), <code>days</code> (dias), <code>hours</code> (horas), <code>minutes</code> (minutos) e <code>seconds</code> (segundos), sozinhos ou juntos. Com horas, use <code>datetime</code> (data e hora):</p>
+
+<pre class="file" data-file="duracao.py">from datetime import datetime, timedelta
+
+inicio = datetime(2026, 10, 18, 22, 15)
+filme = timedelta(hours=2, minutes=20)
+fim = inicio + filme
+print("O filme acaba:", fim.strftime("%d/%m/%Y %H:%M"))
+print(filme)
+print(filme.total_seconds(), "segundos")
+</pre>
+
+<pre class="term">$ python3 duracao.py
+O filme acaba: 19/10/2026 00:35  « passou da meia-noite: virou o dia
+2:20:00
+8400.0 segundos</pre>
+
+<p>E a diferença entre dois momentos do mesmo dia dá horas e minutos. A Ana conferiu o expediente:</p>
+
+<pre class="file" data-file="expediente.py">from datetime import datetime
+
+entrada = datetime(2026, 10, 18, 8, 0)
+saida = datetime(2026, 10, 18, 17, 45)
+trabalhado = saida - entrada
+print(trabalhado)
+print(trabalhado.total_seconds() / 3600, "horas")
+</pre>
+
+<pre class="term">$ python3 expediente.py
+9:45:00
+9.75 horas                       « 3600 segundos = 1 hora</pre>
+
+<div class="note">
+<strong>Não existe <code>timedelta(months=1)</code></strong>
+<p>Um mês não tem tamanho fixo (28, 29, 30 ou 31 dias), então o <code>timedelta</code> não aceita meses nem anos (veja o erro em <a href="#errado">Quando dá errado</a>). Para "todo dia 10", crie a data direto: <code>date(2026, 11, 10)</code>. Quando o prazo é em dias ("30 dias corridos"), o <code>timedelta</code> é o certo.</p>
+</div>
+
+<div class="trypy" data-goal="out:02/12/2026;;src:timedelta">
+<p class="try-task"><strong>Missão:</strong> a loja da Ana vende com prazo de <strong>45 dias</strong>. Para uma compra em 18/10/2026, mostre a data do vencimento no formato <code>dd/mm/aaaa</code>, usando <code>timedelta</code>.</p>
+<pre class="script" data-file="main.py">from datetime import date, timedelta
+
+compra = date(2026, 10, 18)
+print("Compra:", compra.strftime("%d/%m/%Y"))
+</pre>
+<pre class="solucao" data-file="main.py">from datetime import date, timedelta
+
+compra = date(2026, 10, 18)
+print("Compra:", compra.strftime("%d/%m/%Y"))
+vence = compra + timedelta(days=45)
+print("Vence:", vence.strftime("%d/%m/%Y"))
+</pre>
+</div>
+
+<hr>
+
+<h2>6. A idade a partir da data de nascimento</h2>
+<p>Parece fácil: ano de hoje menos ano do nascimento. Mas quem ainda não fez aniversário este ano tem <strong>um ano a menos</strong>. A regra completa:</p>
+
+<pre class="file" data-file="idade.py">from datetime import date, datetime
+
+hoje = date(2026, 10, 18)
+texto = input("Data de nascimento (dd/mm/aaaa): ")
+nascimento = datetime.strptime(texto, "%d/%m/%Y").date()
+idade = hoje.year - nascimento.year
+if (hoje.month, hoje.day) &lt; (nascimento.month, nascimento.day):
+    idade -= 1
+print(f"Você tem {idade} anos.")
+</pre>
+
+<pre class="term">$ python3 idade.py
+Data de nascimento (dd/mm/aaaa): 20/10/2000
+Você tem 25 anos.                « faz 26 só daqui a dois dias
+$ python3 idade.py
+Data de nascimento (dd/mm/aaaa): 18/10/2000
+Você tem 26 anos.                « aniversário hoje: já conta
+$ python3 idade.py
+Data de nascimento (dd/mm/aaaa): 03/05/1990
+Você tem 36 anos.</pre>
+
+<dl class="anatomy">
+  <dt>hoje.year - nascimento.year</dt><dd>A conta "de cabeça": 2026 − 2000 = 26.</dd>
+  <dt>(hoje.month, hoje.day)</dt><dd>Uma <a href="tuplas.html">tupla</a> com o mês e o dia de hoje: <code>(10, 18)</code>.</dd>
+  <dt>&lt; (nascimento.month, nascimento.day)</dt><dd>Tuplas se comparam item por item: primeiro o mês; se o mês empata, o dia. <code>(10, 18) &lt; (10, 20)</code> é <code>True</code>: o aniversário deste ano ainda não chegou.</dd>
+  <dt>idade -= 1</dt><dd>Então tira um ano.</dd>
+</dl>
+
+<div class="warning">
+<strong>Dividir os dias por 365 erra</strong>
+<p>Outra ideia que parece boa é contar os dias de vida e dividir por 365. Mas os anos bissextos têm 366 dias, e a conta escorrega perto do aniversário:</p>
+<pre class="file" data-file="idade_errada.py">from datetime import date
+
+hoje = date(2026, 10, 18)
+nascimento = date(2000, 10, 20)
+dias = (hoje - nascimento).days
+print(dias, "dias")
+print("Idade (dias // 365):", dias // 365)
+</pre>
+<pre class="term">$ python3 idade_errada.py
+9494 dias
+Idade (dias // 365): 26          « errado: faltam 2 dias para os 26</pre>
+<p>Nesse período houve seis 29 de fevereiro (2004, 2008, 2012, 2016, 2020 e 2024), seis dias "a mais" que empurraram a conta para 26. A regra com o mês e o dia nunca erra.</p>
+</div>
+
+<hr>
+
+<h2>7. Só a hora: <code>time</code></h2>
+<p>O tipo <code>time</code> guarda uma hora do dia, sem data, como o horário em que a padaria abre. Com <code>datetime.combine</code>, você junta uma data e uma hora num momento:</p>
+
+<pre class="file" data-file="hora.py">from datetime import date, time, datetime
+
+abre = time(6, 30)
+print(abre)
+print(abre.hour, abre.minute)
+print(abre.strftime("%H:%M"))
+dia = date(2026, 10, 19)
+print(datetime.combine(dia, abre))
+</pre>
+
+<pre class="term">$ python3 hora.py
+06:30:00
+6 30
+06:30
+2026-10-19 06:30:00</pre>
+
+<p>Um <code>time</code> sozinho não aceita somar durações (não sabe o que fazer quando passa da meia-noite). Para contas com horas, use <code>datetime</code>, como no filme da seção 5.</p>
+
+<hr>
+
+<h2>8. Fusos horários: <code>zoneinfo</code></h2>
+<p>Às 15h em São Paulo, que horas são em Lisboa? Depende da época do ano, por causa do horário de verão de lá. O módulo <code>zoneinfo</code> (desde o Python 3.9) conhece as regras de cada lugar do mundo, pelo nome oficial do fuso, como <code>"America/Sao_Paulo"</code>:</p>
+
+<pre class="file" data-file="fuso.py">from datetime import datetime
+from zoneinfo import ZoneInfo
+
+sp = ZoneInfo("America/Sao_Paulo")
+reuniao = datetime(2026, 10, 18, 15, 0, tzinfo=sp)
+print(reuniao)
+print("Lisboa:", reuniao.astimezone(ZoneInfo("Europe/Lisbon")))
+print("Tóquio:", reuniao.astimezone(ZoneInfo("Asia/Tokyo")))
+print("Manaus:", reuniao.astimezone(ZoneInfo("America/Manaus")).strftime("%H:%M"))
+</pre>
+
+<pre class="term">$ python3 fuso.py
+2026-10-18 15:00:00-03:00        « -03:00: três horas atrás do horário universal
+Lisboa: 2026-10-18 19:00:00+01:00
+Tóquio: 2026-10-19 03:00:00+09:00   « em Tóquio já é o dia seguinte
+Manaus: 14:00</pre>
+
+<dl class="anatomy">
+  <dt>ZoneInfo("America/Sao_Paulo")</dt><dd>O fuso de São Paulo (o horário de Brasília). Os nomes são do tipo "Continente/Cidade", em inglês e com sublinhado no lugar do espaço.</dd>
+  <dt>tzinfo=sp</dt><dd>Diz a que fuso pertence esse momento. Um <code>datetime</code> com fuso é chamado de <strong>"consciente"</strong> (<em>aware</em>); sem fuso, de <strong>"ingênuo"</strong> (<em>naive</em>).</dd>
+  <dt>-03:00</dt><dd>A diferença para o horário universal (UTC). O Brasil não tem horário de verão desde 2019, então São Paulo fica em −03:00 o ano todo. Lisboa, em outubro de 2026, ainda está no horário de verão (+01:00).</dd>
+  <dt>.astimezone(outro_fuso)</dt><dd>O mesmo instante, visto no relógio de outro lugar.</dd>
+</dl>
+
+<p>Para pegar a hora de agora já com o fuso, passe o fuso para o <code>now()</code>. Sem fuso, o <code>now()</code> devolve um momento ingênuo:</p>
+
+<pre class="file" data-file="fuso_agora.py">from datetime import datetime
+from zoneinfo import ZoneInfo
+
+agora = datetime.now(ZoneInfo("America/Sao_Paulo"))
+print(agora.strftime("%d/%m/%Y %H:%M %Z"))
+print(datetime.now().tzinfo)
+</pre>
+
+<pre class="term">$ python3 fuso_agora.py
+18/10/2026 12:18 -03             « %Z: o nome curto do fuso
+None                             « sem fuso: tzinfo é None</pre>
+
+<div class="trypy" data-goal="out:14:00;;src:astimezone">
+<p class="try-task"><strong>Missão:</strong> a Ana marcou uma chamada com uma prima em Lisboa para as <strong>10:00 de São Paulo</strong> do dia 18/10/2026. Mostre que horas serão em Lisboa, no formato <code>HH:MM</code>, usando <code>astimezone</code>.</p>
+<pre class="script" data-file="main.py">from datetime import datetime
+from zoneinfo import ZoneInfo
+
+chamada = datetime(2026, 10, 18, 10, 0, tzinfo=ZoneInfo("America/Sao_Paulo"))
+print("São Paulo:", chamada.strftime("%H:%M"))
+</pre>
+<pre class="solucao" data-file="main.py">from datetime import datetime
+from zoneinfo import ZoneInfo
+
+chamada = datetime(2026, 10, 18, 10, 0, tzinfo=ZoneInfo("America/Sao_Paulo"))
+print("São Paulo:", chamada.strftime("%H:%M"))
+lisboa = chamada.astimezone(ZoneInfo("Europe/Lisbon"))
+print("Lisboa:", lisboa.strftime("%H:%M"))
+</pre>
+</div>
+
+<div class="note">
+<strong>No editor do guia</strong>
+<p>O <code>zoneinfo</code> funciona no editor: quando o programa usa <code>zoneinfo</code>, o editor baixa a tabela de fusos (cerca de 350 kB) antes de rodar. O <code>fuso.py</code> acima deu no editor exatamente a mesma saída do lab.</p>
+</div>
+
+<hr>
+
+<h2>9. Nomes de dia e mês em português</h2>
+<p>Os códigos <code>%A</code> (dia da semana) e <code>%B</code> (mês) mostram nomes. Mas, sem configuração, eles saem em <strong>inglês</strong>, mesmo num computador em português:</p>
+
+<pre class="file" data-file="nomes_ingles.py">from datetime import date
+
+d = date(2026, 10, 18)
+print(d.strftime("%A, %d de %B de %Y"))
+</pre>
+
+<pre class="term">$ python3 nomes_ingles.py
+Sunday, 18 de October de 2026</pre>
+
+<p>O Python começa sempre com o "idioma neutro" (o <em>locale</em> C). Para usar o idioma configurado no sistema, que no computador da Ana é o português do Brasil (<code>pt_BR.UTF-8</code>), chame <code>locale.setlocale</code> no começo do programa:</p>
+
+<pre class="file" data-file="nomes_locale.py">import locale
+from datetime import date
+
+locale.setlocale(locale.LC_ALL, "")
+d = date(2026, 10, 18)
+print(d.strftime("%A, %d de %B de %Y"))
+print(d.strftime("%a %d/%b"))
+</pre>
+
+<pre class="term">$ python3 nomes_locale.py
+domingo, 18 de outubro de 2026
+dom 18/out</pre>
+
+<dl class="anatomy">
+  <dt>import locale</dt><dd>O módulo das configurações regionais (idioma, moeda, formato de números).</dd>
+  <dt>locale.setlocale(locale.LC_ALL, "")</dt><dd><code>LC_ALL</code> = "todas as categorias"; o texto vazio <code>""</code> quer dizer "use o que o sistema está usando". No terminal da Ana, isso é o <code>pt_BR.UTF-8</code>.</dd>
+</dl>
+
+<div class="warning">
+<strong>Depende do computador (e não funciona no editor)</strong>
+<p>O resultado do <code>setlocale</code> depende do sistema de quem roda: num computador configurado em inglês, os nomes continuam em inglês, e num sistema sem o pacote de idioma português pode não funcionar. <strong>No editor do guia</strong>, o <code>setlocale</code> é aceito sem erro, mas os nomes continuam em inglês (no editor, o mesmo <code>nomes_locale.py</code> mostrou <code>Sunday, 18 de October de 2026</code> e <code>Sun 18/Oct</code>). Rode esse exemplo no seu terminal.</p>
+</div>
+
+<p>Quando o programa precisa mostrar português em <strong>qualquer</strong> computador (e no editor), o jeito mais seguro é ter a sua própria lista de nomes e usar o número do dia e do mês como posição (aula <a href="listas-acessar.html">Acessando Itens</a>):</p>
+
+<pre class="file" data-file="nomes_lista.py">from datetime import date
+
+DIAS = ["segunda-feira", "terça-feira", "quarta-feira", "quinta-feira",
+        "sexta-feira", "sábado", "domingo"]
+MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho",
+         "agosto", "setembro", "outubro", "novembro", "dezembro"]
+d = date(2026, 10, 18)
+print(f"{DIAS[d.weekday()]}, {d.day} de {MESES[d.month - 1]} de {d.year}")
+</pre>
+
+<pre class="term">$ python3 nomes_lista.py
+domingo, 18 de outubro de 2026</pre>
+
+<p><code>d.weekday()</code> vai de 0 (segunda) a 6 (domingo), a mesma ordem da lista <code>DIAS</code>. Os meses vão de 1 a 12, mas as posições da lista começam em 0: por isso o <code>- 1</code>. O editor mostrou a mesma linha.</p>
+
+<hr>
+
+<h2>Formas diferentes de mostrar e de ler datas</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Para</th><th>Forma</th><th>Quando usar</th></tr>
+<tr><td>Mostrar</td><td><code>d.strftime("%d/%m/%Y")</code></td><td>O jeito clássico; funciona em qualquer versão</td></tr>
+<tr><td>Mostrar</td><td><code>f"{d:%d/%m/%Y}"</code></td><td>Quando a data vai no meio de um texto maior: o molde fica dentro da f-string</td></tr>
+<tr><td>Mostrar</td><td><code>print(d)</code> ou <code>d.isoformat()</code></td><td>Para arquivos, nomes de arquivo e outros programas: <code>2026-12-25</code> é o formato internacional e se ordena certo como texto</td></tr>
+<tr><td>Ler</td><td><code>datetime.strptime(texto, "%d/%m/%Y")</code></td><td>Texto no formato brasileiro (ou qualquer outro molde)</td></tr>
+<tr><td>Ler</td><td><code>date.fromisoformat("2026-12-25")</code></td><td>Texto no formato internacional (de um arquivo, de um banco de dados)</td></tr>
+<tr><td>Criar</td><td><code>date(2026, 12, 25)</code></td><td>Quando você já tem os números</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong><code>import datetime</code> e depois <code>datetime.now()</code></strong>
+<p>O erro mais famoso do módulo. O <strong>módulo</strong> se chama <code>datetime</code>, e o <strong>tipo</strong> dentro dele também:</p>
+<pre class="file" data-file="erro_modulo.py">import datetime
+
+print(datetime.now())
+</pre>
+<pre class="term">$ python3 erro_modulo.py
+Traceback (most recent call last):
+  File "/home/ana/erro_modulo.py", line 3, in &lt;module&gt;
+    print(datetime.now())
+          ^^^^^^^^^^^^
+AttributeError: module 'datetime' has no attribute 'now'</pre>
+<p>"O módulo <code>datetime</code> não tem o atributo <code>now</code>". Com <code>import datetime</code>, o nome <code>datetime</code> é o módulo inteiro, e o <code>now</code> é do tipo que está dentro dele. <strong>Como consertar:</strong> escolha um dos dois jeitos e não misture: <code>import datetime</code> + <code>datetime.datetime.now()</code>, ou (o jeito desta aula) <code>from datetime import datetime</code> + <code>datetime.now()</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Uma data que não existe</strong>
+<pre class="file" data-file="erro_dia.py">from datetime import date
+
+print(date(2026, 2, 30))
+</pre>
+<pre class="term">$ python3 erro_dia.py
+Traceback (most recent call last):
+  File "/home/ana/erro_dia.py", line 3, in &lt;module&gt;
+    print(date(2026, 2, 30))
+          ~~~~^^^^^^^^^^^^^
+ValueError: day 30 must be in range 1..28 for month 2 in year 2026</pre>
+<p>"O dia 30 tem de estar entre 1 e 28 no mês 2 do ano 2026". O Python 3.14 diz até o limite certo daquele mês (2026 não é bissexto). Com o mês errado, a mensagem é parecida:</p>
+<pre class="term">$ python3 erro_mes.py
+Traceback (most recent call last):
+  File "/home/ana/erro_mes.py", line 3, in &lt;module&gt;
+    print(date(2026, 13, 1))
+          ~~~~^^^^^^^^^^^^^
+ValueError: month must be in 1..12, not 13</pre>
+<p>Atenção à ordem: <code>date(25, 12, 2026)</code> não é 25/12/2026. A ordem é ano, mês, dia.</p>
+</div>
+
+<div class="cenario">
+<strong>Zero na frente do número</strong>
+<pre class="file" data-file="erro_zero.py">from datetime import date
+
+print(date(2026, 08, 5))
+</pre>
+<pre class="term">$ python3 erro_zero.py
+  File "/home/ana/erro_zero.py", line 3
+    print(date(2026, 08, 5))
+                     ^
+SyntaxError: leading zeros in decimal integer literals are not permitted; use an 0o prefix for octal integers</pre>
+<p>"Zeros à esquerda em números inteiros não são permitidos" (o resto da mensagem fala de números octais, que não têm nada a ver com datas). O costume de escrever "08" vem do papel. <strong>Como consertar:</strong> <code>date(2026, 8, 5)</code>. O zero só aparece na hora de <strong>mostrar</strong>, com <code>%d</code> e <code>%m</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Sobrou texto no <code>strptime</code></strong>
+<pre class="file" data-file="erro_sobra.py">from datetime import datetime
+
+print(datetime.strptime("25/12/2026 10:00", "%d/%m/%Y"))
+</pre>
+<pre class="term">$ python3 erro_sobra.py
+Traceback (most recent call last):
+  File "/home/ana/erro_sobra.py", line 3, in &lt;module&gt;
+    print(datetime.strptime("25/12/2026 10:00", "%d/%m/%Y"))
+          ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/_strptime.py", line 815, in _strptime_datetime_datetime
+    tt, fraction, gmtoff_fraction = _strptime(data_string, format)
+                                    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/_strptime.py", line 558, in _strptime
+    raise ValueError("unconverted data remains: %s" %
+                      data_string[found.end():])
+ValueError: unconverted data remains:  10:00</pre>
+<p>"Sobrou texto sem converter: <code> 10:00</code>". O molde leu a data e encontrou mais coisa depois. <strong>Como consertar:</strong> o molde tem de cobrir o texto inteiro: <code>"%d/%m/%Y %H:%M"</code>. (O outro caso, texto com traços e molde com barras, está na seção 4: <code>does not match format</code>.)</p>
+</div>
+
+<div class="cenario">
+<strong>Somar um número a uma data</strong>
+<pre class="file" data-file="erro_soma.py">from datetime import date
+
+print(date(2026, 10, 18) + 30)
+</pre>
+<pre class="term">$ python3 erro_soma.py
+Traceback (most recent call last):
+  File "/home/ana/erro_soma.py", line 3, in &lt;module&gt;
+    print(date(2026, 10, 18) + 30)
+          ~~~~~~~~~~~~~~~~~~~^~~~
+TypeError: unsupported operand type(s) for +: 'datetime.date' and 'int'</pre>
+<p>"Tipos não suportados para <code>+</code>: <code>date</code> e <code>int</code>". 30 o quê? Dias, horas, segundos? O Python não adivinha. <strong>Como consertar:</strong> <code>date(2026, 10, 18) + timedelta(days=30)</code>. E o <code>timedelta</code> não aceita meses:</p>
+<pre class="term">$ python3 erro_meses.py
+Traceback (most recent call last):
+  File "/home/ana/erro_meses.py", line 3, in &lt;module&gt;
+    print(timedelta(months=1))
+          ~~~~~~~~~^^^^^^^^^^
+TypeError: __new__() got an unexpected keyword argument 'months'</pre>
+<p>"Recebeu um argumento inesperado, <code>months</code>". O <code>__new__()</code> é o nome interno de quem cria o <code>timedelta</code>; o que importa é o fim: <code>months</code> não existe.</p>
+</div>
+
+<div class="cenario">
+<strong><code>%M</code> no lugar de <code>%m</code> (sem mensagem de erro)</strong>
+<pre class="file" data-file="erro_minuto.py">from datetime import datetime
+
+consulta = datetime(2026, 11, 3, 14, 30)
+print(consulta.strftime("%d/%M/%Y"))
+</pre>
+<pre class="term">$ python3 erro_minuto.py
+03/30/2026                       « 30 é o minuto, não o mês!</pre>
+<p><code>%M</code> (maiúsculo) é o <strong>minuto</strong>; o mês é <code>%m</code> (minúsculo). O Python não reclama, porque as duas coisas existem. Num <code>date</code> sem hora, <code>%M</code> dá sempre <code>00</code>. Para lembrar: <strong>m</strong>inúsculo para o <strong>m</strong>ês (que é "menor" que o ano, <code>%Y</code> maiúsculo); <code>%H:%M</code> para a hora, tudo maiúsculo.</p>
+</div>
+
+<div class="cenario">
+<strong>Nome de fuso errado</strong>
+<pre class="file" data-file="erro_fuso_nome.py">from zoneinfo import ZoneInfo
+
+print(ZoneInfo("America/SaoPaulo"))
+</pre>
+<p>O traceback é enorme (quase 40 linhas, de dentro da biblioteca). As linhas que importam são as últimas:</p>
+<pre class="term">$ python3 erro_fuso_nome.py
+Traceback (most recent call last):
+  File "/usr/lib/python3.14/zoneinfo/_common.py", line 12, in load_tzdata
+    path = resources.files(package_name).joinpath(resource_name)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+…                                « (linhas de dentro da biblioteca, cortadas aqui)
+ModuleNotFoundError: No module named 'tzdata'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/ana/erro_fuso_nome.py", line 3, in &lt;module&gt;
+    print(ZoneInfo("America/SaoPaulo"))
+          ~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/zoneinfo/_common.py", line 29, in load_tzdata
+    raise ZoneInfoNotFoundError(f"No time zone found with key {key}")
+zoneinfo._common.ZoneInfoNotFoundError: 'No time zone found with key America/SaoPaulo'</pre>
+<p>São dois erros encadeados. O Python não achou o fuso nos arquivos do sistema, tentou a reserva (o pacote <code>tzdata</code>, que o Ubuntu não precisa ter instalado) e também não achou. A mensagem final é a que importa: "nenhum fuso encontrado com a chave <code>America/SaoPaulo</code>". O nome certo tem sublinhado: <code>America/Sao_Paulo</code>. Os nomes seguem a lista oficial de fusos (a "base de dados da IANA"); na dúvida, procure "lista de fusos tz database".</p>
+</div>
+
+<div class="cenario">
+<strong>Comparar um momento com fuso e outro sem fuso</strong>
+<pre class="file" data-file="erro_naive.py">from datetime import datetime
+from zoneinfo import ZoneInfo
+
+prazo = datetime(2026, 10, 18, 18, 0)
+agora = datetime(2026, 10, 18, 15, 0, tzinfo=ZoneInfo("America/Sao_Paulo"))
+print(agora &lt; prazo)
+</pre>
+<pre class="term">$ python3 erro_naive.py
+Traceback (most recent call last):
+  File "/home/ana/erro_naive.py", line 6, in &lt;module&gt;
+    print(agora &lt; prazo)
+          ^^^^^^^^^^^^^
+TypeError: can't compare offset-naive and offset-aware datetimes</pre>
+<p>"Não dá para comparar datetimes ingênuos (sem fuso) com conscientes (com fuso)". As 18h do <code>prazo</code> são 18h <strong>de onde</strong>? O Python se recusa a supor. A subtração dá um erro parecido. <strong>Como consertar:</strong> ponha o fuso nos dois (<code>tzinfo=...</code> no <code>prazo</code> também), ou em nenhum. Num programa, escolha uma regra e siga sempre.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>from datetime import date, time, datetime, timedelta</code></td><td>Traz os quatro tipos</td></tr>
+<tr><td><code>date(2026, 12, 25)</code></td><td>Uma data (ano, mês, dia)</td></tr>
+<tr><td><code>datetime(2026, 11, 3, 14, 30)</code></td><td>Data e hora</td></tr>
+<tr><td><code>time(6, 30)</code></td><td>Só a hora</td></tr>
+<tr><td><code>date.today()</code> / <code>datetime.now()</code></td><td>Hoje / agora (mudam a cada execução)</td></tr>
+<tr><td><code>d.day</code>, <code>d.month</code>, <code>d.year</code>, <code>d.weekday()</code></td><td>Dia, mês, ano, dia da semana (0 = segunda)</td></tr>
+<tr><td><code>d.strftime("%d/%m/%Y")</code> / <code>f"{d:%d/%m/%Y}"</code></td><td>Data → texto no formato brasileiro</td></tr>
+<tr><td><code>datetime.strptime(t, "%d/%m/%Y")</code></td><td>Texto → <code>datetime</code> (<code>.date()</code> para só a data)</td></tr>
+<tr><td><code>d2 - d1</code></td><td>A duração entre duas datas (<code>.days</code>, <code>.total_seconds()</code>)</td></tr>
+<tr><td><code>d + timedelta(days=30)</code></td><td>Somar um prazo (também <code>weeks</code>, <code>hours</code>, <code>minutes</code>, <code>seconds</code>)</td></tr>
+<tr><td><code>datetime.combine(d, t)</code></td><td>Junta data e hora</td></tr>
+<tr><td><code>ZoneInfo("America/Sao_Paulo")</code></td><td>Um fuso horário (<code>from zoneinfo import ZoneInfo</code>)</td></tr>
+<tr><td><code>datetime(…, tzinfo=fuso)</code> / <code>datetime.now(fuso)</code></td><td>Momento com fuso</td></tr>
+<tr><td><code>m.astimezone(outro_fuso)</code></td><td>O mesmo instante no relógio de outro lugar</td></tr>
+<tr><td><code>locale.setlocale(locale.LC_ALL, "")</code></td><td>Nomes de mês e dia no idioma do sistema (<code>%A</code>, <code>%B</code>); não funciona no editor</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>AttributeError: module 'datetime' has no attribute 'now'</code></td><td><code>import datetime</code> + <code>datetime.now()</code>: use <code>from datetime import datetime</code></td></tr>
+<tr><td><code>ValueError: day 30 must be in range 1..28 for month 2 in year 2026</code></td><td>Data que não existe (ou ordem trocada: é ano, mês, dia)</td></tr>
+<tr><td><code>ValueError: month must be in 1..12, not 13</code></td><td>Mês fora de 1 a 12</td></tr>
+<tr><td><code>SyntaxError: leading zeros in decimal integer literals are not permitted</code></td><td><code>08</code> no lugar de <code>8</code></td></tr>
+<tr><td><code>ValueError: time data '…' does not match format '…'</code></td><td>O texto não segue o molde do <code>strptime</code></td></tr>
+<tr><td><code>ValueError: unconverted data remains: …</code></td><td>O texto tem mais coisa que o molde</td></tr>
+<tr><td><code>TypeError: unsupported operand type(s) for +: 'datetime.date' and 'int'</code></td><td>Somou um número: use <code>timedelta(days=…)</code></td></tr>
+<tr><td><code>TypeError: __new__() got an unexpected keyword argument 'months'</code></td><td><code>timedelta</code> não tem meses nem anos</td></tr>
+<tr><td><code>ZoneInfoNotFoundError: 'No time zone found with key …'</code></td><td>Nome de fuso errado (é <code>America/Sao_Paulo</code>)</td></tr>
+<tr><td><code>TypeError: can't compare offset-naive and offset-aware datetimes</code></td><td>Um momento com fuso e outro sem</td></tr>
+<tr><td>Mês saiu como <code>30</code>, sem erro</td><td><code>%M</code> (minuto) no lugar de <code>%m</code> (mês)</td></tr>
+<tr><td>Nomes em inglês (<code>Sunday</code>, <code>October</code>)</td><td>Faltou o <code>locale.setlocale</code>, ou o sistema (ou o editor) não está em português</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O molde brasileiro</h3>
+<p>Complete o molde para mostrar <code>25/12/2026</code>:</p>
+<div class="ex-code">natal.strftime("<input data-answer="%d/%m/%Y" aria-label="molde">")</div>
+</div>
+
+<div class="exercise">
+<h3>2. Daqui a uma semana</h3>
+<p>Complete o argumento para somar 7 dias:</p>
+<div class="ex-code">hoje + timedelta(<input data-answer="days=7|weeks=1" aria-label="argumento">)</div>
+</div>
+
+<div class="exercise">
+<h3>3. O dia da semana</h3>
+<p>Que número <code>date(2026, 10, 19).weekday()</code> devolve, sabendo que 18/10/2026 é um domingo?</p>
+<div class="ex-code">Resposta: <input data-answer="0" aria-label="número"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Qual destas linhas cria a data 5 de agosto de 2026?</p>
+<label><input type="radio" name="q4"> <code>date(5, 8, 2026)</code></label>
+<label><input type="radio" name="q4"> <code>date(2026, 8, 5)</code></label>
+<label><input type="radio" name="q4"> <code>date(2026, 08, 05)</code></label>
+<label><input type="radio" name="q4"> <code>date("05/08/2026")</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. O que <code>(date(2026, 12, 25) - date(2026, 10, 18)).days</code> vale?</p>
+<label><input type="radio" name="q5"> <code>-68</code></label>
+<label><input type="radio" name="q5"> <code>2</code></label>
+<label><input type="radio" name="q5"> <code>68</code></label>
+<label><input type="radio" name="q5"> Dá <code>TypeError</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. Por que uma missão do guia nunca usa <code>date.today()</code> na meta?</p>
+<label><input type="radio" name="q6"> Porque <code>today()</code> não existe no editor</label>
+<label><input type="radio" name="q6"> Porque <code>today()</code> sempre dá erro</label>
+<label><input type="radio" name="q6"> Porque <code>today()</code> só funciona com fuso</label>
+<label><input type="radio" name="q6"> Porque o valor muda a cada dia, e a resposta certa mudaria junto</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">7. Com <code>import datetime</code>, como se pega a hora de agora?</p>
+<label><input type="radio" name="q7"> <code>datetime.datetime.now()</code></label>
+<label><input type="radio" name="q7"> <code>datetime.now()</code></label>
+<label><input type="radio" name="q7"> <code>now()</code></label>
+<label><input type="radio" name="q7"> <code>datetime.date.now()</code></label>
+</div>
+
+<h3>Missão final: a idade certa</h3>
+
+<div class="trypy" data-stdin="20/10/2000" data-goal="out:Você tem 25 anos.;;src:strptime">
+<p class="try-task"><strong>Missão:</strong> este programa calcula a idade dividindo os dias por 365, e erra: para quem nasceu em <code>20/10/2000</code> (a entrada preparada), com <code>hoje</code> fixo em 18/10/2026, ele diz 26 anos, mas a pessoa ainda tem 25. Troque a conta pela regra da seção 6 (ano menos ano, menos 1 se o aniversário deste ano ainda não chegou). A saída tem de ser <code>Você tem 25 anos.</code></p>
+<pre class="script" data-file="main.py">from datetime import date, datetime
+
+hoje = date(2026, 10, 18)
+texto = input("Data de nascimento (dd/mm/aaaa): ")
+nascimento = datetime.strptime(texto, "%d/%m/%Y").date()
+idade = (hoje - nascimento).days // 365
+print(f"Você tem {idade} anos.")
+</pre>
+<pre class="solucao" data-file="main.py">from datetime import date, datetime
+
+hoje = date(2026, 10, 18)
+texto = input("Data de nascimento (dd/mm/aaaa): ")
+nascimento = datetime.strptime(texto, "%d/%m/%Y").date()
+idade = hoje.year - nascimento.year
+if (hoje.month, hoje.day) &lt; (nascimento.month, nascimento.day):
+    idade -= 1
+print(f"Você tem {idade} anos.")
+</pre>
+</div>
+
+<p>Depois de cumprir, troque a entrada por <code>18/10/2000</code> (aniversário "hoje": 26 anos) e por <code>29/02/2000</code>, uma data que só existe em ano bissexto. E, no seu terminal, troque <code>date(2026, 10, 18)</code> por <code>date.today()</code> para ter a idade de verdade.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>O módulo <code>datetime</code> tem quatro tipos: <code>date</code> (data), <code>time</code> (hora), <code>datetime</code> (data e hora) e <code>timedelta</code> (duração). Importe com <code>from datetime import …</code>.</li>
+  <li>Datas se criam na ordem <strong>ano, mês, dia</strong>, sem zeros na frente: <code>date(2026, 8, 5)</code>.</li>
+  <li><code>date.today()</code> e <code>datetime.now()</code> mudam a cada execução: use datas fixas para testar.</li>
+  <li><code>strftime("%d/%m/%Y")</code> mostra no formato brasileiro; <code>strptime(texto, "%d/%m/%Y")</code> lê. O molde tem de bater com o texto. <code>%m</code> é mês, <code>%M</code> é minuto.</li>
+  <li>Data menos data dá um <code>timedelta</code> (<code>.days</code>); data mais <code>timedelta(days=30)</code> dá outra data. Não existe <code>timedelta</code> de meses.</li>
+  <li>Idade: ano menos ano, e menos 1 se o aniversário deste ano ainda não chegou. Dividir os dias por 365 erra.</li>
+  <li>Fusos: <code>ZoneInfo("America/Sao_Paulo")</code>, <code>tzinfo=…</code> e <code>.astimezone(…)</code>. Não misture momentos com e sem fuso.</li>
+  <li>Nomes de mês e dia saem em inglês; <code>locale.setlocale(locale.LC_ALL, "")</code> usa o idioma do sistema (no terminal; no editor, não). Para português em qualquer lugar, use a sua lista de nomes.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
