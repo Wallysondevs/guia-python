@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python match e case — comparar um valor com vários padrões | Guia Python</title>
+<meta name="description" content="match e case no Python (desde o 3.10) para quem nunca programou: comparar um valor com várias opções, o case _ para todo o resto, várias opções com |, capturar o valor numa variável, padrões de sequência com split() e de dicionário, condições extras com if (guard), match × if/elif, e os erros reais do Python 3.14: name capture makes remaining patterns unreachable, wildcard makes remaining patterns unreachable, or no lugar de |, case fora do match. Com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">match e case</span></h1>
+
+<p class="intro">Quando o programa precisa comparar <strong>um mesmo valor</strong> com uma lista de opções ("o cliente digitou 1, 2 ou 3?", "a resposta foi sim ou não?", "o comando foi listar, adicionar ou remover?"), uma escada <a href="elif.html">elif</a> resolve, mas repete <code>opcao ==</code> em todo degrau. O Python tem um comando feito para isso: o <code>match</code> (em inglês, "combinar", "casar") com os seus <code>case</code> ("caso"). E ele vai além de comparar valores: consegue reconhecer o <strong>formato</strong> de um comando e separar as partes dele.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A escrever um <code>match</code> com vários <code>case</code>, e o <code>case _</code> para "todo o resto".</li>
+  <li>A juntar várias opções num caso só com <code>|</code> ("ou").</li>
+  <li>A <strong>capturar</strong> o valor numa variável, e a armadilha de um nome sem aspas.</li>
+  <li>Padrões de <strong>sequência</strong> (com <code>split()</code>, para entender comandos como <code>adicionar pão</code>) e de <strong>dicionário</strong>.</li>
+  <li>A acrescentar uma condição a um caso com <code>if</code> (o "guarda").</li>
+  <li>Quando usar <code>match</code> e quando usar <code>if</code>/<code>elif</code>.</li>
+  <li>Os erros reais do Python 3.14: <code>name capture … makes remaining patterns unreachable</code>, <code>wildcard makes remaining patterns unreachable</code>, <code>or</code> no lugar de <code>|</code>, <code>case</code> fora do <code>match</code>, e o caso que nunca casa por causa do tipo.</li>
+</ul>
+</div>
+
+<div class="warning">
+<strong>Disponível desde o Python 3.10</strong>
+<p>O <code>match</code> chegou ao Python na versão <strong>3.10</strong>, lançada em outubro de 2021. O Python 3.14 deste guia (o do Ubuntu 26.04 e o do editor) tem, e o 3.13 do Debian 13 também. Num Python <strong>3.9 ou mais antigo</strong>, um programa com <code>match</code> nem começa a rodar: dá <code>SyntaxError</code> logo na linha do <code>match</code>. Se for escrever um programa que precisa rodar em computadores antigos, confira a versão com <code>python3 --version</code> (aula <a href="instalar.html">Instalar o Python</a>) ou use <code>if</code>/<code>elif</code>.</p>
+</div>
+
+<p>Todos os programas desta aula rodaram no <strong>Python 3.14</strong> do computador fictício da Ana (usuária <code>ana</code>, computador <code>notebook</code>), na pasta pessoal dela, com <code>python3 arquivo.py</code>.</p>
+
+<hr>
+
+<h2>A ideia: o atendente da padaria</h2>
+<p>No balcão da padaria, a Ana recebe o pedido e compara com o cardápio: "é o número 1? Pão francês. É o 2? Pão de queijo. É o 3? Café. Qualquer outra coisa? 'Não temos essa opção'". Ela olha <strong>uma coisa</strong> (o número pedido) e procura o <strong>primeiro caso que combina</strong>.</p>
+<p>O <code>match</code> é esse atendente: você diz <strong>qual valor</strong> olhar (<code>match opcao:</code>) e lista os casos (<code>case "1":</code>, <code>case "2":</code>…). O Python testa os casos de cima para baixo e roda o bloco do primeiro que combinar.</p>
+
+<hr>
+
+<h2>1. O primeiro <code>match</code>: o cardápio</h2>
+
+<pre class="file" data-file="menu.py">print("1 - Pão francês   2 - Pão de queijo   3 - Café")
+opcao = input("Escolha: ")
+match opcao:
+    case "1":
+        print("Pão francês: R$ 0.80")
+    case "2":
+        print("Pão de queijo: R$ 4.50")
+    case "3":
+        print("Café: R$ 3.00")
+    case _:
+        print("Opção inválida.")
+print("Obrigado!")
+</pre>
+
+<pre class="term">$ python3 menu.py
+1 - Pão francês   2 - Pão de queijo   3 - Café
+Escolha: 2
+Pão de queijo: R$ 4.50             « combinou com o case "2"
+Obrigado!
+$ python3 menu.py
+1 - Pão francês   2 - Pão de queijo   3 - Café
+Escolha: 9
+Opção inválida.                    « nenhum caso combinou: caiu no case _
+Obrigado!</pre>
+
+<dl class="anatomy">
+  <dt>match opcao:</dt><dd>"Compare <code>opcao</code> com os casos abaixo". O valor depois do <code>match</code> se chama <strong>sujeito</strong>. A linha termina com dois-pontos.</dd>
+  <dt>case "1":</dt><dd>Um caso, recuado 4 espaços. O <code>"1"</code> é o <strong>padrão</strong>: aqui, um valor fixo. O caso combina quando <code>opcao</code> é igual a <code>"1"</code>. Entre aspas porque o <code>input()</code> devolve texto.</dd>
+  <dt>o bloco do caso</dt><dd>Recuado mais 4 espaços (8 no total). Roda só se o caso combinar.</dd>
+  <dt>case _:</dt><dd>O sublinhado <code>_</code> é o <strong>coringa</strong>: combina com <strong>qualquer coisa</strong>. É o "senão" do <code>match</code>, e por isso vem sempre por último.</dd>
+  <dt>print("Obrigado!")</dt><dd>De volta à margem: fora do <code>match</code>, roda sempre.</dd>
+</dl>
+
+<div class="tip">
+<strong>Só um caso roda (e não precisa de <code>break</code>)</strong>
+<p>Como na escada <code>elif</code>, o Python para no <strong>primeiro</strong> caso que combina; os de baixo nem são testados. Se você conhece o <code>switch</code> de C, Java ou JavaScript, repare: no Python não existe <code>break</code> no fim de cada caso, e um caso nunca "escorrega" para o seguinte.</p>
+</div>
+
+<p>Para comparar, a mesma coisa com <code>if</code>/<code>elif</code> (que no lab deu exatamente a mesma saída, com a escolha 2):</p>
+
+<pre class="file" data-file="menu_elif.py">print("1 - Pão francês   2 - Pão de queijo   3 - Café")
+opcao = input("Escolha: ")
+if opcao == "1":
+    print("Pão francês: R$ 0.80")
+elif opcao == "2":
+    print("Pão de queijo: R$ 4.50")
+elif opcao == "3":
+    print("Café: R$ 3.00")
+else:
+    print("Opção inválida.")
+print("Obrigado!")
+</pre>
+
+<p>Para comparar valores simples, os dois servem. O <code>match</code> deixa claro, logo na primeira linha, que todos os casos olham para o mesmo valor. A força dele aparece nas seções 4 e 5.</p>
+
+<div class="trypy" data-stdin="3" data-goal="out:Café: R$ 3.00;;src:case\s+&quot;3&quot;">
+<p class="try-task"><strong>Missão:</strong> o cardápio mostra o café, mas o <code>match</code> não tem o caso dele. Acrescente um <code>case "3":</code> que mostre <code>Café: R$ 3.00</code>, <strong>antes</strong> do <code>case _</code>. A entrada preparada é <code>3</code>.</p>
+<pre class="script" data-file="main.py">print("1 - Pão francês   2 - Pão de queijo   3 - Café")
+opcao = input("Escolha: ")
+match opcao:
+    case "1":
+        print("Pão francês: R$ 0.80")
+    case "2":
+        print("Pão de queijo: R$ 4.50")
+    case _:
+        print("Opção inválida.")
+</pre>
+<pre class="solucao" data-file="main.py">print("1 - Pão francês   2 - Pão de queijo   3 - Café")
+opcao = input("Escolha: ")
+match opcao:
+    case "1":
+        print("Pão francês: R$ 0.80")
+    case "2":
+        print("Pão de queijo: R$ 4.50")
+    case "3":
+        print("Café: R$ 3.00")
+    case _:
+        print("Opção inválida.")
+</pre>
+</div>
+
+<hr>
+
+<h2>2. Várias opções num caso: <code>|</code></h2>
+<p>Quem responde "sim" pode escrever <code>s</code>, <code>sim</code>, <code>S</code> ou <code>Sim</code>. Em vez de um caso para cada, separe as opções com <code>|</code> (a barra vertical, que aqui quer dizer "ou"):</p>
+
+<pre class="file" data-file="confirma.py">resposta = input("Confirma o pedido? ")
+match resposta:
+    case "s" | "sim" | "S" | "Sim":
+        print("Pedido confirmado!")
+    case "n" | "não" | "nao" | "N":
+        print("Pedido cancelado.")
+    case _:
+        print("Não entendi. Responda sim ou não.")
+</pre>
+
+<pre class="term">$ python3 confirma.py
+Confirma o pedido? Sim
+Pedido confirmado!
+$ python3 confirma.py
+Confirma o pedido? nao
+Pedido cancelado.
+$ python3 confirma.py
+Confirma o pedido? talvez
+Não entendi. Responda sim ou não.</pre>
+
+<p>O caso combina se o valor for igual a <strong>qualquer uma</strong> das opções. A barra fica no teclado brasileiro (ABNT2) na tecla à esquerda do Z, com Shift.</p>
+
+<h3>Sem <code>case _</code>: pode não rodar nada</h3>
+<p>Como o <code>else</code> da escada <code>elif</code>, o <code>case _</code> é opcional. Sem ele, se nenhum caso combinar, o <code>match</code> não faz nada:</p>
+
+<pre class="file" data-file="dia.py">dia = input("Dia da semana: ")
+match dia:
+    case "sábado" | "domingo":
+        print("Fim de semana: a padaria abre às 7h.")
+    case "segunda" | "terça" | "quarta" | "quinta" | "sexta":
+        print("Dia útil: a padaria abre às 6h.")
+</pre>
+
+<pre class="term">$ python3 dia.py
+Dia da semana: domingo
+Fim de semana: a padaria abre às 7h.
+$ python3 dia.py
+Dia da semana: feriado             « nenhum caso combinou: nenhuma mensagem</pre>
+
+<div class="trypy" data-stdin="S" data-goal="out:Pedido confirmado!;;src:\|">
+<p class="try-task"><strong>Missão:</strong> este programa só aceita <code>sim</code>, escrito assim. Use <code>|</code> para o primeiro caso aceitar também <code>s</code>, <code>S</code> e <code>Sim</code>. A entrada preparada é <code>S</code>.</p>
+<pre class="script" data-file="main.py">resposta = input("Confirma o pedido? ")
+match resposta:
+    case "sim":
+        print("Pedido confirmado!")
+    case _:
+        print("Não entendi.")
+</pre>
+<pre class="solucao" data-file="main.py">resposta = input("Confirma o pedido? ")
+match resposta:
+    case "s" | "sim" | "S" | "Sim":
+        print("Pedido confirmado!")
+    case _:
+        print("Não entendi.")
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Capturar o valor numa variável</h2>
+<p>No lugar de um valor fixo, um caso pode ter um <strong>nome sem aspas</strong>. Esse caso combina com qualquer coisa (como o <code>_</code>), e ainda <strong>guarda</strong> o valor numa variável com esse nome, para você usar no bloco:</p>
+
+<pre class="file" data-file="captura.py">cor = input("Cor do semáforo: ")
+match cor:
+    case "verde":
+        print("Pode seguir.")
+    case "vermelho":
+        print("Pare!")
+    case outra:
+        print(f"Não conheço a cor {outra}.")
+</pre>
+
+<pre class="term">$ python3 captura.py
+Cor do semáforo: azul
+Não conheço a cor azul.            « o case outra guardou "azul" em outra</pre>
+
+<p>Aqui não faria diferença usar <code>cor</code> no bloco, porque é o mesmo valor. A captura fica útil de verdade quando ela pega só <strong>um pedaço</strong> do valor, como você vai ver na próxima seção.</p>
+
+<div class="warning">
+<strong>A armadilha: nome sem aspas sempre captura</strong>
+<p>No <code>case</code>, um nome simples <strong>nunca</strong> é comparado com uma variável que já existe: ele sempre <strong>captura</strong>. Escrever <code>case sim:</code> (sem aspas) não compara com o texto <code>"sim"</code>; combina com tudo e guarda o valor numa variável chamada <code>sim</code>. Valores fixos vão sempre entre aspas (textos) ou como números (<code>case 0:</code>). O Python 3.14 percebe o erro quando há casos depois desse e recusa o programa; veja em <a href="#errado">Quando dá errado</a>.</p>
+</div>
+
+<hr>
+
+<h2>4. Padrões de sequência: entender comandos</h2>
+<p>A Ana quer um programinha de lista de compras que entenda comandos como <code>listar</code>, <code>adicionar manteiga</code> e <code>remover leite</code>. O primeiro passo é separar as palavras com o método <code>split()</code> ("dividir"), da aula <a href="strings-metodos.html">Métodos de Texto</a>, que devolve uma <strong>lista</strong> de palavras (as listas têm aula própria no Nível 2: <a href="listas.html">Listas</a>):</p>
+
+<pre class="term">&gt;&gt;&gt; "adicionar manteiga".split()
+['adicionar', 'manteiga']
+&gt;&gt;&gt; "listar".split()
+['listar']
+&gt;&gt;&gt; "".split()
+[]
+&gt;&gt;&gt; "adicionar ovos queijo presunto".split()
+['adicionar', 'ovos', 'queijo', 'presunto']</pre>
+
+<p>Agora o <code>match</code> pode olhar o <strong>formato</strong> da lista: quantas palavras ela tem e qual é a primeira.</p>
+
+<pre class="file" data-file="comandos.py">comando = input("Comando: ")
+match comando.split():
+    case ["listar"]:
+        print("Lista: pão, leite, café")
+    case ["adicionar", item]:
+        print(f"{item} foi para a lista.")
+    case ["adicionar", *itens]:
+        print(len(itens), "itens foram para a lista:", itens)
+    case ["remover", item]:
+        print(f"{item} saiu da lista.")
+    case []:
+        print("Você não digitou nada.")
+    case _:
+        print("Comando desconhecido.")
+</pre>
+
+<pre class="term">$ python3 comandos.py
+Comando: listar
+Lista: pão, leite, café
+$ python3 comandos.py
+Comando: adicionar manteiga
+manteiga foi para a lista.
+$ python3 comandos.py
+Comando: adicionar ovos queijo presunto
+3 itens foram para a lista: ['ovos', 'queijo', 'presunto']
+$ python3 comandos.py
+Comando: remover leite
+leite saiu da lista.
+$ python3 comandos.py
+Comando:                           « a Ana só apertou Enter
+Você não digitou nada.
+$ python3 comandos.py
+Comando: comprar pão
+Comando desconhecido.</pre>
+
+<dl class="anatomy">
+  <dt>match comando.split():</dt><dd>O sujeito é a lista de palavras, e não o texto.</dd>
+  <dt>case ["listar"]:</dt><dd>Combina com uma lista de <strong>exatamente uma</strong> palavra, que tem de ser <code>"listar"</code>.</dd>
+  <dt>case ["adicionar", item]:</dt><dd>Lista de <strong>exatamente duas</strong> palavras: a primeira tem de ser <code>"adicionar"</code>; a segunda pode ser qualquer uma e é <strong>capturada</strong> na variável <code>item</code>.</dd>
+  <dt>case ["adicionar", *itens]:</dt><dd>O <code>*</code> quer dizer "o resto, quantas forem". Combina com <code>"adicionar"</code> seguido de qualquer número de palavras, que vão todas para <code>itens</code>, uma lista. Com uma palavra só, o caso de cima já tinha combinado antes: a ordem dos casos importa, como no <code>elif</code>.</dd>
+  <dt>case []:</dt><dd>A lista vazia: a pessoa não digitou nenhuma palavra.</dd>
+  <dt>case _:</dt><dd>Todo o resto, como <code>comprar pão</code> (a primeira palavra não bate com nenhum caso).</dd>
+</dl>
+
+<p>Com <code>if</code>/<code>elif</code>, cada caso precisaria conferir o tamanho da lista, a primeira palavra e depois separar a segunda. O <code>match</code> faz as três coisas num padrão só.</p>
+
+<div class="trypy">
+<p class="try-task"><strong>Experimente:</strong> rode e digite comandos no terminal da caixa: <code>listar</code>, <code>adicionar café</code>, <code>adicionar ovos e farinha</code>, <code>remover</code> (sem item), <code>LISTAR</code>. Depois acrescente um caso para o comando <code>limpar</code>, que mostre "A lista está vazia.".</p>
+<pre class="script" data-file="main.py">comando = input("Comando: ")
+match comando.split():
+    case ["listar"]:
+        print("Lista: pão, leite, café")
+    case ["adicionar", item]:
+        print(f"{item} foi para a lista.")
+    case ["adicionar", *itens]:
+        print(len(itens), "itens foram para a lista:", itens)
+    case ["remover", item]:
+        print(f"{item} saiu da lista.")
+    case []:
+        print("Você não digitou nada.")
+    case _:
+        print("Comando desconhecido.")
+</pre>
+</div>
+
+<hr>
+
+<h2>5. Padrões de dicionário</h2>
+<p>Um <strong>dicionário</strong> guarda valores com etiquetas (as <strong>chaves</strong>): <code>{"tipo": "pizza", "sabor": "calabresa"}</code>. Ele tem aula própria no Nível 2 (<a href="dicionarios.html">Dicionários</a>); aqui basta saber que é assim que muitos programas recebem pedidos, cadastros e dados da internet. O <code>match</code> reconhece um dicionário pelas chaves e valores que ele tem:</p>
+
+<pre class="file" data-file="pedido.py">pedido = {"tipo": "pizza", "sabor": "calabresa", "tamanho": "G"}
+match pedido:
+    case {"tipo": "pizza", "sabor": sabor}:
+        print(f"Uma pizza de {sabor} saindo!")
+    case {"tipo": "suco", "fruta": fruta}:
+        print(f"Um suco de {fruta}.")
+    case _:
+        print("Pedido estranho.")
+pedido = {"tipo": "suco", "fruta": "caju"}
+match pedido:
+    case {"tipo": "pizza", "sabor": sabor}:
+        print(f"Uma pizza de {sabor} saindo!")
+    case {"tipo": "suco", "fruta": fruta}:
+        print(f"Um suco de {fruta}.")
+    case _:
+        print("Pedido estranho.")
+</pre>
+
+<pre class="term">$ python3 pedido.py
+Uma pizza de calabresa saindo!
+Um suco de caju.</pre>
+
+<dl class="anatomy">
+  <dt>{"tipo": "pizza", …}</dt><dd>O dicionário precisa ter a chave <code>"tipo"</code> com o valor <code>"pizza"</code>.</dd>
+  <dt>"sabor": sabor</dt><dd>…e também a chave <code>"sabor"</code>, com qualquer valor, que é capturado na variável <code>sabor</code>.</dd>
+  <dt>a chave "tamanho"</dt><dd>Não aparece no padrão, e mesmo assim o primeiro pedido combinou: no padrão de dicionário, <strong>chaves a mais não atrapalham</strong>. Só as chaves escritas no padrão são conferidas. (Na sequência é diferente: o tamanho da lista tem de bater.)</dd>
+</dl>
+
+<hr>
+
+<h2>6. Uma condição a mais: o guarda <code>if</code></h2>
+<p>Depois do padrão, você pode acrescentar <code>if condição</code>. O caso só combina se o padrão combinar <strong>e</strong> a condição for verdadeira. Esse <code>if</code> se chama <strong>guarda</strong> (em inglês, <em>guard</em>):</p>
+
+<pre class="file" data-file="guarda.py">temperatura = int(input("Temperatura: "))
+match temperatura:
+    case t if t &lt; 0:
+        print("Abaixo de zero: está congelando!")
+    case 0:
+        print("Exatamente zero grau.")
+    case t if t &gt;= 30:
+        print("Calor! Beba água.")
+    case _:
+        print("Temperatura agradável.")
+</pre>
+
+<pre class="term">$ python3 guarda.py
+Temperatura: -5
+Abaixo de zero: está congelando!
+$ python3 guarda.py
+Temperatura: 0
+Exatamente zero grau.
+$ python3 guarda.py
+Temperatura: 33
+Calor! Beba água.
+$ python3 guarda.py
+Temperatura: 22
+Temperatura agradável.</pre>
+
+<p><code>case t if t &lt; 0:</code> se lê: "captura o valor em <code>t</code>, <strong>se</strong> <code>t</code> for menor que zero". O <code>case 0:</code> é um valor fixo (um número, sem aspas, porque a temperatura foi convertida com <code>int()</code>). Um exemplo em que o guarda combina melhor com o <code>match</code>: o caixa eletrônico por comandos.</p>
+
+<pre class="file" data-file="saque.py">saldo = 200.0
+comando = input("Comando: ")
+match comando.split():
+    case ["saldo"]:
+        print(f"Saldo: R$ {saldo:.2f}")
+    case ["sacar", valor] if float(valor) &lt;= saldo:
+        saldo = saldo - float(valor)
+        print(f"Saque feito. Saldo: R$ {saldo:.2f}")
+    case ["sacar", valor]:
+        print(f"Saldo insuficiente para sacar R$ {float(valor):.2f}.")
+    case _:
+        print("Comando desconhecido.")
+</pre>
+
+<pre class="term">$ python3 saque.py
+Comando: saldo
+Saldo: R$ 200.00
+$ python3 saque.py
+Comando: sacar 50
+Saque feito. Saldo: R$ 150.00
+$ python3 saque.py
+Comando: sacar 500
+Saldo insuficiente para sacar R$ 500.00.   « o guarda deu False: caiu no caso de baixo</pre>
+
+<p>Os dois casos <code>["sacar", valor]</code> têm o mesmo padrão. O primeiro só vale quando o guarda é verdadeiro; quando não é, o Python continua procurando e encontra o segundo.</p>
+
+<hr>
+
+<h2>Formas diferentes: <code>match</code> × <code>if</code>/<code>elif</code></h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Situação</th><th>Use</th><th>Por quê</th></tr>
+<tr><td>Um valor comparado com várias opções fixas (menu, sim/não, dias)</td><td><code>match</code> ou <code>if</code>/<code>elif</code></td><td>Os dois servem; o <code>match</code> evita repetir <code>opcao ==</code> e o <code>|</code> junta opções</td></tr>
+<tr><td>Faixas de valores (nota ≥ 9, ≥ 7…)</td><td><code>if</code>/<code>elif</code></td><td>Com <code>match</code>, cada faixa precisaria de um guarda; a escada fica mais simples</td></tr>
+<tr><td>Comandos com partes (<code>adicionar pão</code>), listas e dicionários com formatos diferentes</td><td><code>match</code></td><td>Confere o formato e separa as partes numa linha só</td></tr>
+<tr><td>Condições sobre coisas diferentes (idade <strong>e</strong> cidade <strong>e</strong> saldo)</td><td><code>if</code>/<code>elif</code></td><td>O <code>match</code> olha um sujeito só</td></tr>
+<tr><td>Programa que precisa rodar em Python 3.9 ou mais antigo</td><td><code>if</code>/<code>elif</code></td><td>O <code>match</code> só existe a partir do 3.10</td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong><code>match</code> e <code>case</code> ainda podem ser nomes</strong>
+<p>Para não quebrar programas antigos, <code>match</code> e <code>case</code> são palavras-chave "leves" (<em>soft keywords</em>): só são especiais no começo de um <code>match</code>. Em qualquer outro lugar, ainda podem ser nomes de variáveis. No lab, <code>match = "Ana e Bia"</code>, <code>case = 3</code> e <code>print(match, case)</code> rodaram sem erro e mostraram <code>Ana e Bia 3</code>. Funciona, mas evite: confunde quem lê.</p>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Texto sem aspas no <code>case</code></strong>
+<pre class="file" data-file="sem_aspas.py">resposta = "não"
+match resposta:
+    case sim:
+        print("Confirmado!")
+    case _:
+        print("Cancelado.")
+</pre>
+<pre class="term">$ python3 sem_aspas.py
+  File "/home/ana/sem_aspas.py", line 3
+    case sim:
+         ^^^
+SyntaxError: name capture 'sim' makes remaining patterns unreachable</pre>
+<p>Linha por linha:</p>
+<ul>
+  <li><code>line 3</code> e <code>^^^</code> embaixo de <code>sim</code>: o problema é esse padrão.</li>
+  <li><code>name capture 'sim'</code>: "captura de nome <code>'sim'</code>". Sem aspas, <code>sim</code> não é o texto "sim": é um nome que <strong>captura</strong> qualquer valor (seção 3).</li>
+  <li><code>makes remaining patterns unreachable</code>: "torna os padrões seguintes inalcançáveis". Como esse caso combina com tudo, o <code>case _</code> de baixo nunca seria alcançado, e o Python recusa o programa.</li>
+</ul>
+<p><strong>Como consertar:</strong> <code>case "sim":</code>, com aspas.</p>
+</div>
+
+<div class="cenario">
+<strong>Uma "constante" no <code>case</code></strong>
+<p>O mesmo acontece com uma variável que você criou antes, mesmo com nome em maiúsculas:</p>
+<pre class="file" data-file="captura_errada.py">VERDE = "verde"
+cor = "vermelho"
+match cor:
+    case VERDE:
+        print("Pode seguir.")
+    case "vermelho":
+        print("Pare!")
+</pre>
+<pre class="term">$ python3 captura_errada.py
+  File "/home/ana/captura_errada.py", line 4
+    case VERDE:
+         ^^^^^
+SyntaxError: name capture 'VERDE' makes remaining patterns unreachable</pre>
+<p>E se não houver caso depois, o Python não tem como avisar, e o resultado é pior: o programa roda errado.</p>
+<pre class="file" data-file="captura_errada2.py">VERDE = "verde"
+cor = "vermelho"
+match cor:
+    case VERDE:
+        print("Pode seguir.")
+print("cor agora vale:", cor, "/ VERDE agora vale:", VERDE)
+</pre>
+<pre class="term">$ python3 captura_errada2.py
+Pode seguir.                                            « com o sinal vermelho!
+cor agora vale: vermelho / VERDE agora vale: vermelho   « e a "constante" foi trocada</pre>
+<p>O <code>case VERDE:</code> capturou <code>"vermelho"</code> na variável <code>VERDE</code>, por cima do valor antigo. <strong>Como consertar:</strong> escreva o valor (<code>case "verde":</code>). Valores guardados com nome só são comparados quando têm um ponto no meio, como <code>case Cor.VERDE:</code>, um recurso da aula <a href="enum.html">Enum</a>.</p>
+</div>
+
+<div class="cenario">
+<strong>O coringa antes dos outros casos</strong>
+<pre class="file" data-file="coringa_antes.py">opcao = "1"
+match opcao:
+    case _:
+        print("Opção inválida.")
+    case "1":
+        print("Pão francês")
+</pre>
+<pre class="term">$ python3 coringa_antes.py
+  File "/home/ana/coringa_antes.py", line 3
+    case _:
+         ^
+SyntaxError: wildcard makes remaining patterns unreachable</pre>
+<p>"O coringa torna os padrões seguintes inalcançáveis". Como o <code>case _</code> combina com tudo e os casos são testados em ordem, o <code>case "1"</code> nunca seria alcançado. <strong>Como consertar:</strong> o <code>case _</code> é sempre o <strong>último</strong>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>or</code> no lugar de <code>|</code></strong>
+<pre class="file" data-file="com_or.py">resposta = "s"
+match resposta:
+    case "s" or "sim":
+        print("Confirmado!")
+</pre>
+<pre class="term">$ python3 com_or.py
+  File "/home/ana/com_or.py", line 3
+    case "s" or "sim":
+             ^^
+SyntaxError: invalid syntax</pre>
+<p>Dentro de um padrão, "ou" se escreve com a barra <code>|</code>, e não com <code>or</code>. <strong>Como consertar:</strong> <code>case "s" | "sim":</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O tipo não bate: o caso nunca combina</strong>
+<pre class="file" data-file="numero_texto.py">opcao = int(input("Escolha: "))
+match opcao:
+    case "1":
+        print("Pão francês")
+    case _:
+        print("Opção inválida.")
+</pre>
+<pre class="term">$ python3 numero_texto.py
+Escolha: 1
+Opção inválida.                    « o número 1 não é igual ao texto "1"</pre>
+<p>Sem erro nenhum. A opção foi convertida para número com <code>int()</code>, e o caso compara com o <strong>texto</strong> <code>"1"</code>. Para o Python, <code>1</code> e <code>"1"</code> são diferentes. <strong>Como consertar:</strong> escolha um tipo e use nos dois lugares: sem <code>int()</code> e <code>case "1":</code>, ou com <code>int()</code> e <code>case 1:</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Os erros de escrita de sempre</strong>
+<p>O <code>match</code> segue as mesmas regras de dois-pontos e recuo do <code>if</code>. Três programas com erro:</p>
+<pre class="file" data-file="sem_dois_pontos.py">opcao = "1"
+match opcao
+    case "1":
+        print("Pão francês")
+</pre>
+<pre class="file" data-file="case_sem_recuo.py">opcao = "1"
+match opcao:
+case "1":
+    print("Pão francês")
+</pre>
+<pre class="file" data-file="case_sozinho.py">opcao = "1"
+case "1":
+    print("Pão francês")
+</pre>
+<pre class="term">$ python3 sem_dois_pontos.py
+  File "/home/ana/sem_dois_pontos.py", line 2
+    match opcao
+               ^
+SyntaxError: expected ':'
+$ python3 case_sem_recuo.py
+  File "/home/ana/case_sem_recuo.py", line 3
+    case "1":
+    ^^^^
+IndentationError: expected an indented block after 'match' statement on line 2
+$ python3 case_sozinho.py
+  File "/home/ana/case_sozinho.py", line 2
+    case "1":
+         ^^^
+SyntaxError: invalid syntax</pre>
+<ul>
+  <li><code>sem_dois_pontos.py</code>: faltaram os dois-pontos depois de <code>match opcao</code>.</li>
+  <li><code>case_sem_recuo.py</code>: o <code>case</code> ficou na margem, na mesma coluna do <code>match</code>. Os casos são o bloco do <code>match</code> e têm de estar recuados.</li>
+  <li><code>case_sozinho.py</code>: um <code>case</code> sem <code>match</code> antes. Fora de um <code>match</code>, <code>case</code> não quer dizer nada, e o Python acha a linha sem sentido.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Padrão</th><th>Combina com</th></tr>
+<tr><td><code>case "sim":</code> / <code>case 0:</code></td><td>Exatamente esse valor</td></tr>
+<tr><td><code>case "s" | "sim":</code></td><td>Qualquer uma das opções</td></tr>
+<tr><td><code>case _:</code></td><td>Qualquer coisa (o "senão"; sempre por último)</td></tr>
+<tr><td><code>case nome:</code></td><td>Qualquer coisa, e guarda o valor em <code>nome</code></td></tr>
+<tr><td><code>case ["listar"]:</code></td><td>Lista com exatamente esse item</td></tr>
+<tr><td><code>case ["adicionar", item]:</code></td><td>Lista de 2 itens, o primeiro <code>"adicionar"</code>; o segundo vai para <code>item</code></td></tr>
+<tr><td><code>case ["adicionar", *itens]:</code></td><td><code>"adicionar"</code> seguido de quantos itens forem, guardados em <code>itens</code></td></tr>
+<tr><td><code>case []:</code></td><td>Lista vazia</td></tr>
+<tr><td><code>case {"tipo": "pizza", "sabor": s}:</code></td><td>Dicionário com essas chaves (outras chaves não atrapalham)</td></tr>
+<tr><td><code>case padrão if condição:</code></td><td>O padrão, e só se a condição (o guarda) for verdadeira</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>SyntaxError: name capture 'x' makes remaining patterns unreachable</code></td><td>Um nome sem aspas no <code>case</code> (texto sem aspas ou variável): ele captura tudo</td></tr>
+<tr><td><code>SyntaxError: wildcard makes remaining patterns unreachable</code></td><td><code>case _</code> antes de outros casos</td></tr>
+<tr><td><code>SyntaxError: invalid syntax</code> num <code>case</code> com <code>or</code></td><td>Use <code>|</code> para juntar opções</td></tr>
+<tr><td><code>SyntaxError: invalid syntax</code> num <code>case</code> solto</td><td><code>case</code> sem <code>match</code> antes</td></tr>
+<tr><td><code>IndentationError: expected an indented block after 'match' statement</code></td><td>Os <code>case</code> não estão recuados</td></tr>
+<tr><td>Cai sempre no <code>case _</code></td><td>Tipos diferentes: número no sujeito e texto no <code>case</code> (ou o contrário); ou maiúsculas e minúsculas</td></tr>
+<tr><td>Um caso "sem aspas" combina com tudo, sem erro</td><td>Captura de nome no último caso: o valor foi guardado na variável</td></tr>
+<tr><td><code>SyntaxError</code> logo na linha do <code>match</code>, num computador antigo</td><td>Python 3.9 ou anterior: o <code>match</code> só existe a partir do 3.10</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Complete o <code>match</code></h3>
+<p>Complete as duas palavras-chave:</p>
+<div class="ex-code"><input data-answer="match" aria-label="palavra 1"> opcao:<br>&nbsp;&nbsp;&nbsp;&nbsp;<input data-answer="case" aria-label="palavra 2"> "1":<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print("Pão francês")</div>
+</div>
+
+<div class="exercise">
+<h3>2. O coringa</h3>
+<p>Qual caractere, no <code>case</code>, combina com qualquer valor?</p>
+<div class="ex-code">case <input data-answer="_" aria-label="coringa">:</div>
+</div>
+
+<div class="exercise">
+<h3>3. A partir de qual versão?</h3>
+<p>O <code>match</code> existe a partir de qual versão do Python? (Escreva como <code>3.x</code>.)</p>
+<div class="ex-code">Python <input data-answer="3.10" aria-label="versão"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. O que este programa mostra?</p>
+<pre class="file">fruta = "caju"
+match fruta:
+    case "maçã" | "pera":
+        print("Fruta de clima frio")
+    case "caju" | "manga":
+        print("Fruta tropical")
+    case _:
+        print("Não sei")
+</pre>
+<label><input type="radio" name="q4"> <code>Fruta de clima frio</code></label>
+<label><input type="radio" name="q4"> <code>Fruta tropical</code> e <code>Não sei</code></label>
+<label><input type="radio" name="q4"> <code>Fruta tropical</code></label>
+<label><input type="radio" name="q4"> <code>Não sei</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. Com <code>match "remover pão leite".split():</code>, qual destes casos combina?</p>
+<label><input type="radio" name="q5"> <code>case ["remover", item]:</code></label>
+<label><input type="radio" name="q5"> <code>case ["remover", *itens]:</code></label>
+<label><input type="radio" name="q5"> <code>case ["remover"]:</code></label>
+<label><input type="radio" name="q5"> <code>case []:</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. Por que <code>case sim:</code> (sem aspas) é um erro de lógica?</p>
+<label><input type="radio" name="q6"> Porque <code>sim</code> não é uma palavra do Python</label>
+<label><input type="radio" name="q6"> Porque falta o <code>|</code></label>
+<label><input type="radio" name="q6"> Porque compara com a variável <code>sim</code> criada antes</label>
+<label><input type="radio" name="q6"> Porque um nome sem aspas captura qualquer valor: o caso combina sempre</label>
+</div>
+
+<h3>Missão final: depósito no caixa</h3>
+
+<div class="trypy" data-stdin="depositar 50" data-goal="out:Depósito feito. Saldo: R$ 250.00;;src:case\s*\[\s*&quot;depositar&quot;">
+<p class="try-task"><strong>Missão:</strong> o caixa por comandos entende <code>saldo</code> e <code>sacar VALOR</code>. Acrescente um caso para <code>depositar VALOR</code> (antes do <code>case _</code>), que some o valor ao saldo e mostre <code>Depósito feito. Saldo: R$ …</code>, com duas casas decimais. A entrada preparada é <code>depositar 50</code>; com o saldo de 200, a saída tem de ser <code>Depósito feito. Saldo: R$ 250.00</code>.</p>
+<pre class="script" data-file="main.py">saldo = 200.0
+comando = input("Comando: ")
+match comando.split():
+    case ["saldo"]:
+        print(f"Saldo: R$ {saldo:.2f}")
+    case ["sacar", valor] if float(valor) &lt;= saldo:
+        saldo = saldo - float(valor)
+        print(f"Saque feito. Saldo: R$ {saldo:.2f}")
+    case ["sacar", valor]:
+        print("Saldo insuficiente.")
+    case _:
+        print("Comando desconhecido.")
+</pre>
+<pre class="solucao" data-file="main.py">saldo = 200.0
+comando = input("Comando: ")
+match comando.split():
+    case ["saldo"]:
+        print(f"Saldo: R$ {saldo:.2f}")
+    case ["sacar", valor] if float(valor) &lt;= saldo:
+        saldo = saldo - float(valor)
+        print(f"Saque feito. Saldo: R$ {saldo:.2f}")
+    case ["sacar", valor]:
+        print("Saldo insuficiente.")
+    case ["depositar", valor]:
+        saldo = saldo + float(valor)
+        print(f"Depósito feito. Saldo: R$ {saldo:.2f}")
+    case _:
+        print("Comando desconhecido.")
+</pre>
+</div>
+
+<p>Para ir além: acrescente um guarda para recusar depósitos de valor zero ou negativo (<code>case ["depositar", valor] if float(valor) &gt; 0:</code>) e um caso logo abaixo dele com a mensagem de valor inválido.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>match valor:</code> compara um valor (o sujeito) com vários <code>case</code>, de cima para baixo, e roda só o bloco do <strong>primeiro</strong> que combinar. Não existe <code>break</code>, nem "escorregar" para o caso seguinte.</li>
+  <li><strong>Só existe a partir do Python 3.10</strong>; num Python mais antigo, é <code>SyntaxError</code>.</li>
+  <li><code>case "x":</code> compara com um valor fixo; <code>case "a" | "b":</code> aceita várias opções; <code>case _:</code> é o "senão", sempre por último.</li>
+  <li>Um nome sem aspas no <code>case</code> <strong>captura</strong> o valor (e combina com tudo): textos fixos vão sempre entre aspas.</li>
+  <li>Padrões de sequência (<code>["adicionar", item]</code>, <code>*itens</code>, <code>[]</code>) conferem o formato de uma lista e separam as partes; padrões de dicionário conferem chaves e valores (chaves a mais não atrapalham).</li>
+  <li><code>case padrão if condição:</code> acrescenta um guarda: o caso só vale se a condição também for verdadeira.</li>
+  <li>Para faixas de valores ou condições sobre coisas diferentes, o <code>if</code>/<code>elif</code> continua sendo a escolha.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
