@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Nomes de Variáveis — regras e bons costumes | Guia Python</title>
+<meta name="description" content="Como dar nome a variáveis em Python: as regras (letras, números e sublinhado, não começar com número, sem espaço nem hífen), maiúsculas contam, as 35 palavras reservadas e o SyntaxError real, a convenção snake_case da PEP 8, constantes em maiúsculas, acentos que funcionam mas não são costume, e o perigo de usar print ou sum como nome, com saídas reais do Python 3.14.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Nomes de Variáveis</span></h1>
+
+<p class="intro">Na aula <a href="variaveis.html">Variáveis</a> você criou <code>preco</code>, <code>quantidade</code>, <code>estoque</code>. O nome de uma variável é você quem escolhe, mas não vale qualquer coisa: o Python tem <strong>regras</strong> (quebre uma e o programa nem roda) e os programadores Python têm <strong>costumes</strong> (quebre um e o programa roda, mas fica estranho para quem lê). Nesta aula você vai conhecer os dois.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>As regras: quais caracteres podem entrar num nome e por que ele não pode começar com número.</li>
+  <li>Que <code>preco</code>, <code>Preco</code> e <code>PRECO</code> são três variáveis diferentes.</li>
+  <li>As <strong>palavras reservadas</strong> (como <code>for</code> e <code>class</code>), que não podem ser nomes, e o erro real que aparece.</li>
+  <li>O costume do Python: <code>minusculas_com_sublinhado</code> (o <em>snake_case</em>) e as constantes em maiúsculas.</li>
+  <li>Que nomes com acento <strong>funcionam</strong>, e por que, mesmo assim, não são o costume.</li>
+  <li>A armadilha de usar <code>print</code> ou <code>sum</code> como nome de variável.</li>
+</ul>
+</div>
+
+<p>Os programas desta aula foram rodados com o <strong>Python 3.14</strong> na máquina fictícia da Ana (usuária <code>ana</code>, computador <code>notebook</code>), com <code>python3 arquivo.py</code>.</p>
+
+<hr>
+
+<h2>A ideia: etiquetas que o Python consegue ler</h2>
+<p>Imagine as etiquetas dos potes na cozinha da padaria. Elas podem ter qualquer palavra, mas precisam ser legíveis por quem vai procurar: "FARINHA", "açúcar_mascavo", "fermento2". Uma etiqueta com um desenho, ou que começa com um número de telefone, confunde.</p>
+
+<p>Com o Python é igual, só que quem lê é um programa, e ele é muito exigente. Quando o Python lê <code>2pao</code>, ele vê o algarismo 2 e acha que vem um número; quando lê <code>preco-pao</code>, vê uma conta de menos. As regras existem para que o nome nunca seja confundido com outra coisa.</p>
+
+<hr>
+
+<h2>1. As regras (obrigatórias)</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Regra</th><th>Vale</th><th>Não vale</th></tr>
+<tr><td>Só letras, algarismos e o sublinhado <code>_</code></td><td><code>preco_pao</code>, <code>total2</code></td><td><code>preco-pao</code>, <code>total$</code>, <code>preco pao</code></td></tr>
+<tr><td>Não pode <strong>começar</strong> com algarismo</td><td><code>pao2</code>, <code>_2</code></td><td><code>2pao</code></td></tr>
+<tr><td>Não pode ser uma <strong>palavra reservada</strong></td><td><code>turma</code>, <code>para</code></td><td><code>class</code>, <code>for</code>, <code>True</code></td></tr>
+<tr><td>Maiúsculas e minúsculas são diferentes</td><td colspan="2"><code>preco</code>, <code>Preco</code> e <code>PRECO</code> são três nomes</td></tr>
+</table>
+</div>
+
+<p>Todos estes nomes obedecem às regras:</p>
+
+<pre class="file" data-file="validos.py">preco = 7.5
+preco_pao = 0.75
+total2 = 30
+_rascunho = "teste"
+Preco = 99
+PRECO = 1000
+print(preco, preco_pao, total2, _rascunho)
+print(preco, Preco, PRECO)
+</pre>
+
+<pre class="term">$ python3 validos.py
+7.5 0.75 30 teste
+7.5 99 1000
+</pre>
+
+<dl class="anatomy">
+  <dt>preco_pao</dt><dd>O sublinhado (<code>_</code>, a "underline" ou "underscore") é o único sinal permitido. Ele faz o papel do espaço, que não pode.</dd>
+  <dt>total2</dt><dd>Algarismos podem aparecer, desde que não seja no começo.</dd>
+  <dt>_rascunho</dt><dd>Pode começar com sublinhado. Para o Python, é um nome como outro qualquer. (Entre programadores, o sublinhado no começo é um recado: "isto é de uso interno". Você vai ver isso em <a href="encapsulamento.html">Encapsulamento</a>.)</dd>
+  <dt>preco, Preco, PRECO</dt><dd>Três variáveis diferentes, cada uma com o seu valor, como mostra a segunda linha da saída. O Python é <strong>sensível a maiúsculas</strong> (<em>case-sensitive</em>, em inglês).</dd>
+</dl>
+
+<div class="warning">
+<strong>Poder não quer dizer dever</strong>
+<p>Ter <code>preco</code> e <code>Preco</code> no mesmo programa é permitido, mas é pedir para errar: um dia você digita um no lugar do outro e o programa usa o valor errado, sem aviso. Use sempre minúsculas (seção 3) e esse problema não existe.</p>
+</div>
+
+<hr>
+
+<h2>2. Palavras reservadas</h2>
+<p>Algumas palavras já têm um significado fixo para o Python: <code>if</code> ("se"), <code>for</code> ("para"), <code>class</code> ("classe"), <code>True</code> ("verdadeiro")… São as <strong>palavras reservadas</strong> (ou <em>palavras-chave</em>, <em>keywords</em>). Elas não podem ser nomes de variáveis. O próprio Python mostra a lista:</p>
+
+<pre class="file" data-file="palavras.py">import keyword
+print(keyword.kwlist)
+print(len(keyword.kwlist))
+</pre>
+
+<pre class="term">$ python3 palavras.py
+['False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await', 'break', 'class', 'continue', 'def', 'del', 'elif', 'else', 'except', 'finally', 'for', 'from', 'global', 'if', 'import', 'in', 'is', 'lambda', 'nonlocal', 'not', 'or', 'pass', 'raise', 'return', 'try', 'while', 'with', 'yield']
+35
+</pre>
+
+<p>São 35 no Python 3.14. O <code>import keyword</code> traz um módulo da biblioteca do Python (aula <a href="modulos.html">Módulos e import</a>), e <code>len()</code> conta quantos itens a lista tem. Não precisa decorar: você vai conhecer cada palavra na aula em que ela aparece, e a lista completa fica na referência <a href="ref-palavras-chave.html">Palavras-chave</a>. Repare que todas estão em inglês, então nomes em português, como <code>turma</code> ou <code>para</code>, nunca batem com elas.</p>
+
+<p>Tentar usar uma delas dá <code>SyntaxError</code>, e o programa nem começa:</p>
+
+<pre class="file" data-file="n-class.py">class = "3º ano"
+</pre>
+
+<pre class="term">$ python3 n-class.py
+  File "/home/ana/n-class.py", line 1
+    class = "3º ano"
+          ^
+SyntaxError: invalid syntax
+</pre>
+
+<p>"Sintaxe inválida". A mensagem não diz "palavra reservada", e isso confunde. O que aconteceu: quando o Python lê <code>class</code>, ele espera o começo de uma classe (<code>class Turma:</code>, aula <a href="classes.html">Classes e Objetos</a>), e o <code>=</code>, apontado pelo <code>^</code>, não faz sentido ali. Com <code>True</code> a mensagem é mais clara:</p>
+
+<pre class="file" data-file="n-true.py">True = 1
+</pre>
+
+<pre class="term">$ python3 n-true.py
+  File "/home/ana/n-true.py", line 1
+    True = 1
+    ^^^^
+SyntaxError: cannot assign to True
+</pre>
+
+<p>"Não dá para atribuir a <code>True</code>". <strong>Dica:</strong> se uma linha simples como <code>nome = valor</code> dá <code>invalid syntax</code> com o <code>^</code> logo depois do nome, desconfie de que o nome é uma palavra reservada. Em português, o problema some: <code>turma = "3º ano"</code>.</p>
+
+<div class="note">
+<strong>As palavras reservadas "suaves"</strong>
+<p>Existem ainda quatro palavras <strong>reservadas suaves</strong> (<em>soft keywords</em>): <code>match</code>, <code>case</code>, <code>type</code> e <code>_</code>. Elas só são especiais em certos lugares (como o <code>match</code> da aula <a href="match.html">match e case</a>) e, fora deles, funcionam como nomes comuns: <code>match = "Brasil x Argentina"</code> roda sem erro. Mesmo assim, evite: <code>type</code>, por exemplo, também é o nome de uma função que você vai usar muito (seção 5).</p>
+</div>
+
+<hr>
+
+<h2>3. O costume: <code>snake_case</code></h2>
+<p>As regras dizem o que o Python <strong>aceita</strong>. Os costumes dizem o que os programadores Python <strong>esperam ler</strong>. Eles estão escritos num documento chamado <strong>PEP 8</strong>, o guia de estilo oficial do Python (aula <a href="estilo-pep8.html">Estilo de Código</a>). Para variáveis, a regra é:</p>
+
+<p><strong>Tudo em minúsculas, com as palavras separadas por sublinhado.</strong> Esse estilo tem o apelido de <em>snake_case</em> ("caixa de cobra"), porque os sublinhados deixam o nome comprido e rasteiro como uma cobra.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Estilo</th><th>Exemplo</th><th>No Python</th></tr>
+<tr><td><em>snake_case</em></td><td><code>preco_do_pao</code></td><td><strong>Variáveis e funções.</strong> É o padrão</td></tr>
+<tr><td>MAIÚSCULAS_COM_SUBLINHADO</td><td><code>PRECO_DO_PAO</code></td><td><strong>Constantes</strong>: valores que não devem mudar durante o programa</td></tr>
+<tr><td><em>CamelCase</em> (com a primeira maiúscula)</td><td><code>ContaBancaria</code></td><td>Nomes de <strong>classes</strong> (aula <a href="classes.html">Classes e Objetos</a>)</td></tr>
+<tr><td><em>camelCase</em> (com a primeira minúscula)</td><td><code>precoDoPao</code></td><td>Funciona, mas é costume de outras linguagens (JavaScript, Java). Evite em Python</td></tr>
+</table>
+</div>
+
+<pre class="file" data-file="camel.py">precoDoPao = 0.75
+preco_do_pao = 0.75
+print(precoDoPao, preco_do_pao)
+</pre>
+
+<pre class="term">$ python3 camel.py
+0.75 0.75
+</pre>
+
+<p>Os dois funcionam igual (e são duas variáveis diferentes). O Python não reclama do <code>precoDoPao</code>; quem estranha é a pessoa que vai ler o seu código.</p>
+
+<h3>Constantes</h3>
+<p>Alguns valores não mudam durante o programa: o preço fixo do pão, a taxa de entrega, o número de dias da semana. O costume é escrevê-los em maiúsculas, no começo do arquivo:</p>
+
+<pre class="file" data-file="constante.py">PRECO_PAO = 0.75
+TAXA_ENTREGA = 5.0
+
+paes = 12
+print("Total:", paes * PRECO_PAO + TAXA_ENTREGA)
+</pre>
+
+<pre class="term">$ python3 constante.py
+Total: 14.0
+</pre>
+
+<p>Para o Python, <code>PRECO_PAO</code> é uma variável como outra qualquer: ele deixaria você trocar o valor. As maiúsculas são um <strong>recado para as pessoas</strong>: "não mude isto".</p>
+
+<h3>Nomes que se explicam</h3>
+<p>Um bom nome diz o que a variável guarda, sem que ninguém precise adivinhar:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Evite</th><th>Prefira</th><th>Por quê</th></tr>
+<tr><td><code>x = 0.75</code></td><td><code>preco_pao = 0.75</code></td><td><code>x</code> não diz nada; daqui a uma semana nem você vai lembrar</td></tr>
+<tr><td><code>qtdpcts = 3</code></td><td><code>quantidade_pacotes = 3</code></td><td>Abreviações demais viram enigma. Nome um pouco mais comprido não custa nada</td></tr>
+<tr><td><code>l = 5</code>, <code>O = 0</code>, <code>I = 1</code></td><td><code>litros = 5</code></td><td>A PEP 8 desaconselha esses três nomes: em muitas fontes, <code>l</code> e <code>I</code> se confundem com o 1, e <code>O</code> com o zero</td></tr>
+<tr><td><code>lista_de_todos_os_precos_dos_paes_da_padaria</code></td><td><code>precos_paes</code></td><td>Comprido demais também atrapalha</td></tr>
+</table>
+</div>
+
+<div class="trypy" data-goal="semerro;;out:Total: 9.0;;src:^preco_do_pao\s*=">
+<p class="try-task"><strong>Missão:</strong> o programa tem dois nomes que quebram as regras e não roda. Renomeie as variáveis seguindo o costume do Python: <code>quantidade</code> e <code>preco_do_pao</code>. Troque os nomes também na última linha.</p>
+<pre class="script" data-file="main.py">1quantidade = 12
+preco do pao = 0.75
+print("Total:", 1quantidade * preco do pao)
+</pre>
+<pre class="solucao" data-file="main.py">quantidade = 12
+preco_do_pao = 0.75
+print("Total:", quantidade * preco_do_pao)
+</pre>
+</div>
+
+<hr>
+
+<h2>4. E os acentos?</h2>
+<p>O Python 3 aceita letras de qualquer idioma nos nomes: <code>ç</code>, <code>ã</code>, <code>é</code>, até letras gregas e japonesas. Isto roda:</p>
+
+<pre class="file" data-file="acento.py">preço = 7.5
+ação = "promoção"
+print(preço, ação)
+</pre>
+
+<pre class="term">$ python3 acento.py
+7.5 promoção
+</pre>
+
+<p><strong>Funciona, mas não é o costume.</strong> Quase todo código Python do mundo usa nomes sem acento (em geral, em inglês). E há um motivo prático: <code>preço</code> e <code>preco</code> são nomes <strong>diferentes</strong>, e é muito fácil digitar um no lugar do outro:</p>
+
+<pre class="file" data-file="acento-erro.py">preço = 7.5
+print(preco)
+</pre>
+
+<pre class="term">$ python3 acento-erro.py
+Traceback (most recent call last):
+  File "/home/ana/acento-erro.py", line 2, in &lt;module&gt;
+    print(preco)
+          ^^^^^
+NameError: name 'preco' is not defined. Did you mean: 'preço'?
+</pre>
+
+<p>O "Did you mean" ajudou, mas o erro não precisava existir. Por isso o guia usa nomes em português e <strong>sem acento</strong>: <code>preco</code>, <code>acao</code>, <code>paes</code>. Os <strong>textos</strong> entre aspas, esses sim, levam acento normalmente: <code>"promoção"</code>.</p>
+
+<p>Nem todo caractere, porém, é letra. Um emoji, por exemplo, não pode ser nome:</p>
+
+<pre class="file" data-file="n-emoji.py">🍞 = 12
+</pre>
+
+<pre class="term">$ python3 n-emoji.py
+  File "/home/ana/n-emoji.py", line 1
+    🍞 = 12
+    ^
+SyntaxError: invalid character '🍞' (U+1F35E)
+</pre>
+
+<p>"Caractere inválido". O <code>U+1F35E</code> é o número desse desenho na tabela Unicode, a lista de todos os caracteres do mundo (mais sobre ela em <a href="strings.html">Strings</a>).</p>
+
+<hr>
+
+<h2>5. A armadilha: nomes que já são do Python</h2>
+<p>Além das palavras reservadas, o Python tem dezenas de <strong>funções embutidas</strong> (que já vêm prontas): <code>print</code>, <code>input</code>, <code>type</code>, <code>sum</code>, <code>len</code>, <code>list</code>, <code>str</code>… Elas <strong>não</strong> são reservadas: o Python deixa você criar uma variável com o mesmo nome. E aí a função some, escondida pela sua variável:</p>
+
+<pre class="file" data-file="sombra.py">print = "Bom dia"
+print("Olá, Ana!")
+</pre>
+
+<pre class="term">$ python3 sombra.py
+Traceback (most recent call last):
+  File "/home/ana/sombra.py", line 2, in &lt;module&gt;
+    print("Olá, Ana!")
+    ~~~~~^^^^^^^^^^^^^
+TypeError: 'str' object is not callable
+</pre>
+
+<dl class="anatomy">
+  <dt>print = "Bom dia"</dt><dd>A linha 1 não deu erro: ela prendeu a etiqueta <code>print</code> a um texto. A função <code>print</code> continua existindo, mas o nome <code>print</code> agora aponta para outra coisa.</dd>
+  <dt>print("Olá, Ana!")</dt><dd>Na linha 2, o Python pega o que está preso ao nome <code>print</code>, o texto <code>"Bom dia"</code>, e tenta chamá-lo com os parênteses, como se fosse uma função.</dd>
+  <dt>TypeError: 'str' object is not callable</dt><dd>"Erro de tipo: um objeto <code>str</code> (texto) não pode ser chamado". Um texto não é uma função; não dá para "rodar" um texto com parênteses.</dd>
+</dl>
+
+<p>O mesmo acontece com qualquer função embutida. Este erro é ainda mais traiçoeiro, porque a linha que dá problema pode estar bem longe da linha que causou:</p>
+
+<pre class="file" data-file="sombra2.py">sum = 10
+total = sum([1, 2, 3])
+</pre>
+
+<pre class="term">$ python3 sombra2.py
+Traceback (most recent call last):
+  File "/home/ana/sombra2.py", line 2, in &lt;module&gt;
+    total = sum([1, 2, 3])
+TypeError: 'int' object is not callable
+</pre>
+
+<p><code>sum</code> ("soma") é a função que soma os itens de uma lista (aula <a href="funcoes-embutidas.html">Funções Embutidas</a>), e a variável <code>sum = 10</code> a escondeu. <strong>Como evitar:</strong> não use como nome de variável <code>print</code>, <code>input</code>, <code>type</code>, <code>sum</code>, <code>len</code>, <code>list</code>, <code>str</code>, <code>int</code>, <code>max</code>, <code>min</code>. Nomes em português, como <code>soma</code> e <code>total</code>, resolvem. (A lista completa está em <a href="ref-funcoes-embutidas.html">Funções Embutidas</a>.)</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Nome que começa com algarismo</strong>
+<pre class="file" data-file="n-numero.py">2pao = 5
+</pre>
+<pre class="term">$ python3 n-numero.py
+  File "/home/ana/n-numero.py", line 1
+    2pao = 5
+    ^
+SyntaxError: invalid decimal literal
+</pre>
+<p>"Literal decimal inválido". Ao ver o <code>2</code>, o Python começou a ler um <strong>número</strong>, e um número não pode ter <code>pao</code> grudado nele. <strong>Como consertar:</strong> o algarismo vai no fim, <code>pao2</code>, ou por extenso, <code>dois_paes</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Hífen no nome</strong>
+<pre class="file" data-file="n-hifen.py">preco-pao = 0.75
+</pre>
+<pre class="term">$ python3 n-hifen.py
+  File "/home/ana/n-hifen.py", line 1
+    preco-pao = 0.75
+    ^^^^^^^^^
+SyntaxError: cannot assign to expression here. Maybe you meant '==' instead of '='?
+</pre>
+<p>"Não dá para atribuir a uma expressão aqui". Para o Python, o hífen é o sinal de <strong>menos</strong>: ele leu <code>preco - pao</code>, uma conta (uma <strong>expressão</strong>), e não dá para guardar um valor numa conta. A sugestão do <code>==</code> não serve neste caso. <strong>Como consertar:</strong> sublinhado no lugar do hífen, <code>preco_pao</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Espaço no nome</strong>
+<pre class="file" data-file="n-espaco.py">preco pao = 0.75
+</pre>
+<pre class="term">$ python3 n-espaco.py
+  File "/home/ana/n-espaco.py", line 1
+    preco pao = 0.75
+          ^^^
+SyntaxError: invalid syntax
+</pre>
+<p>O Python leu o nome <code>preco</code> e, logo depois, outro nome, <code>pao</code>, que o <code>^^^</code> aponta. Dois nomes lado a lado não formam nada. <strong>Como consertar:</strong> <code>preco_pao</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Símbolo no nome</strong>
+<pre class="file" data-file="n-cifrao.py">total$ = 30
+</pre>
+<pre class="term">$ python3 n-cifrao.py
+  File "/home/ana/n-cifrao.py", line 1
+    total$ = 30
+         ^
+SyntaxError: invalid syntax
+</pre>
+<p>O <code>$</code> não pode aparecer em nome nenhum (em outras linguagens, como PHP e Bash, ele aparece, e isso confunde quem vem delas). O mesmo vale para <code>@</code>, <code>%</code>, <code>!</code>, <code>?</code> e os outros sinais. <strong>Como consertar:</strong> <code>total_reais</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Palavra reservada como nome</strong>
+<pre class="file" data-file="n-for.py">for = 3
+</pre>
+<pre class="term">$ python3 n-for.py
+  File "/home/ana/n-for.py", line 1
+    for = 3
+        ^
+SyntaxError: invalid syntax
+</pre>
+<p>Como com o <code>class</code> da seção 2: o Python esperava o começo de uma repetição <code>for</code> (aula <a href="for.html">for</a>). <strong>Como consertar:</strong> um nome em português, <code>vezes = 3</code>.</p>
+</div>
+
+<div class="trypy" data-goal="semerro;;out:Bolo de cenoura em promoção">
+<p class="try-task"><strong>Missão:</strong> a Ana usou <code>print</code> como nome de variável e agora o programa dá <code>TypeError</code>. Troque o nome da variável por <code>aviso</code> (nas duas linhas) para o recado aparecer.</p>
+<pre class="script" data-file="main.py">print = "Bolo de cenoura em promoção"
+print(print)
+</pre>
+<pre class="solucao" data-file="main.py">aviso = "Bolo de cenoura em promoção"
+print(aviso)
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Nome</th><th>Pode?</th><th>Por quê</th></tr>
+<tr><td><code>preco_pao</code></td><td>Sim, e é o costume</td><td>Minúsculas com sublinhado (<em>snake_case</em>)</td></tr>
+<tr><td><code>PRECO_PAO</code></td><td>Sim</td><td>Costume para constantes</td></tr>
+<tr><td><code>pao2</code>, <code>_rascunho</code></td><td>Sim</td><td>Algarismo fora do começo; sublinhado em qualquer lugar</td></tr>
+<tr><td><code>precoPao</code></td><td>Sim, mas evite</td><td>Funciona; não é o estilo do Python</td></tr>
+<tr><td><code>preço</code></td><td>Sim, mas evite</td><td>Funciona; fácil de confundir com <code>preco</code></td></tr>
+<tr><td><code>print</code>, <code>sum</code>, <code>type</code></td><td>Sim, mas <strong>não faça</strong></td><td>Esconde a função do Python (<code>TypeError: … is not callable</code>)</td></tr>
+<tr><td><code>2pao</code></td><td>Não</td><td><code>SyntaxError: invalid decimal literal</code></td></tr>
+<tr><td><code>preco-pao</code></td><td>Não</td><td><code>SyntaxError: cannot assign to expression here</code></td></tr>
+<tr><td><code>preco pao</code>, <code>total$</code></td><td>Não</td><td><code>SyntaxError: invalid syntax</code></td></tr>
+<tr><td><code>class</code>, <code>for</code>, <code>if</code></td><td>Não</td><td>Palavra reservada: <code>SyntaxError: invalid syntax</code></td></tr>
+<tr><td><code>True</code>, <code>False</code>, <code>None</code></td><td>Não</td><td><code>SyntaxError: cannot assign to True</code></td></tr>
+<tr><td><code>🍞</code></td><td>Não</td><td><code>SyntaxError: invalid character</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Conserte o nome</h3>
+<p>Reescreva o nome <code>valor total</code> seguindo o costume do Python:</p>
+<div class="ex-code"><input data-answer="valor_total" aria-label="nome"> = 42</div>
+</div>
+
+<div class="exercise">
+<h3>2. Constante</h3>
+<p>Como se escreve, pelo costume, a constante "dias da semana"?</p>
+<div class="ex-code"><input data-answer="DIAS_DA_SEMANA|DIAS_SEMANA" aria-label="nome da constante"> = 7</div>
+</div>
+
+<div class="exercise">
+<h3>3. Quantas variáveis?</h3>
+<pre class="file" data-file="ex3.py">bolo = 1
+Bolo = 2
+BOLO = 3
+bolo = 4
+</pre>
+<p>Quantas variáveis diferentes existem no fim deste programa?</p>
+<div class="ex-code">Resposta: <input data-answer="3" aria-label="quantidade"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Qual destes nomes é <strong>válido</strong>?</p>
+<label><input type="radio" name="q4"> <code>3lugar</code></label>
+<label><input type="radio" name="q4"> <code>nota-final</code></label>
+<label><input type="radio" name="q4"> <code>nota_final2</code></label>
+<label><input type="radio" name="q4"> <code>if</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. Qual nome segue o costume do Python para uma variável?</p>
+<label><input type="radio" name="q5"> <code>NomeDoCliente</code></label>
+<label><input type="radio" name="q5"> <code>nome_do_cliente</code></label>
+<label><input type="radio" name="q5"> <code>nomeDoCliente</code></label>
+<label><input type="radio" name="q5"> <code>NOMEDOCLIENTE</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. Um programa começa com <code>input = 5</code>. O que acontece numa linha seguinte com <code>nome = input("Nome: ")</code>?</p>
+<label><input type="radio" name="q6"> Funciona normalmente</label>
+<label><input type="radio" name="q6"> <code>SyntaxError</code> logo na primeira linha</label>
+<label><input type="radio" name="q6"> <code>NameError</code></label>
+<label><input type="radio" name="q6"> <code>TypeError</code>, porque o nome <code>input</code> agora é um número</label>
+</div>
+
+<h3>Missão final: a etiqueta das encomendas</h3>
+
+<div class="trypy" data-goal="semerro;;out:Encomenda de Ana: 3 bolos;;src:^nome_cliente\s*=;;src:^bolos_encomendados\s*=">
+<p class="try-task"><strong>Missão:</strong> o programa funciona, mas os nomes estão fora do costume. Renomeie <code>NomeCliente</code> para <code>nome_cliente</code> e <code>bolosEncomendados</code> para <code>bolos_encomendados</code>, e troque também no <code>print</code>.</p>
+<pre class="script" data-file="main.py">NomeCliente = "Ana"
+bolosEncomendados = 3
+print("Encomenda de", NomeCliente + ":", bolosEncomendados, "bolos")
+</pre>
+<pre class="solucao" data-file="main.py">nome_cliente = "Ana"
+bolos_encomendados = 3
+print("Encomenda de", nome_cliente + ":", bolos_encomendados, "bolos")
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Um nome pode ter letras, algarismos e sublinhado (<code>_</code>), e <strong>não pode começar com algarismo</strong>. Espaço, hífen e símbolos dão <code>SyntaxError</code>.</li>
+  <li>Maiúsculas contam: <code>preco</code>, <code>Preco</code> e <code>PRECO</code> são três variáveis.</li>
+  <li>As 35 <strong>palavras reservadas</strong> (<code>if</code>, <code>for</code>, <code>class</code>, <code>True</code>…) não podem ser nomes; o erro costuma ser só <code>invalid syntax</code>.</li>
+  <li>O costume do Python (PEP 8): <code>minusculas_com_sublinhado</code> para variáveis, <code>MAIUSCULAS</code> para constantes. Nomes que dizem o que guardam.</li>
+  <li>Acentos funcionam (<code>preço</code>), mas não são o costume: o guia usa nomes em português sem acento.</li>
+  <li>Não use nomes de funções do Python (<code>print</code>, <code>input</code>, <code>sum</code>, <code>type</code>…): a função fica escondida e aparece <code>TypeError: … is not callable</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
