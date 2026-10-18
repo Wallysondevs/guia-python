@@ -101,7 +101,83 @@ No `.exercise`, `data-answer="a|b"` aceita respostas alternativas (a comparaçã
 ## 4. O editor do guia: Python real no navegador (`assets/pysim.js`)
 > **Esta seção é mantida pelo agente do simulador.** Antes de escrever uma frase do tipo "no editor…" que não esteja aqui, confira com as ferramentas dele (`tools/sim.js`).
 
-(em construção: o que funciona, o que não funciona — threads, rede, `subprocess`, `os.system`, pip —, diferenças editor × lab, as ferramentas `tools/testar-missoes.js` e `tools/sim.js`.)
+### 4.1 O que é
+- **Editor = Python 3.14.2** (CPython de verdade compilado para WebAssembly: **Pyodide 314.0.7**, em `assets/py/`, ~6 MB baixados no 1º Rodar e guardados pelo navegador). **Lab = Python 3.14.4** do Ubuntu 26.04. Mesma série 3.14; as mensagens de erro, o traceback e o comportamento da linguagem são os mesmos. Detalhes em `assets/py/VERSAO.txt`.
+- Roda num Web Worker: a página não trava. Cada **Rodar** parte do zero: `/home/ana` vazia com só os arquivos das abas, `__main__` novo, módulos do leitor esquecidos, `os.environ` e `logging`/`decimal`/`locale` reiniciados.
+- O terminal da caixa mostra `ana@notebook:~$ python3 main.py` (+ `data-args`), a saída (stderr/traceback em **vermelho**, cores ANSI desenhadas), e no fim `[código de saída: N]`.
+
+### 4.2 Números fixos (não mudam sem aviso)
+| O quê | Valor |
+|---|---|
+| Tempo máximo rodando | **10 s** (sem contar a espera pelo teclado; até 60 s de `time.sleep` não contam). Passou: `(o editor parou o programa: ele rodou mais de 10 segundos sem terminar — laço infinito?)` e `[programa interrompido]` |
+| Botão **■ Parar** (o Rodar vira Parar) e **Ctrl+C** no campo de entrada | encerram na hora: mostra `^C` e `[programa interrompido]`. **Não** há `KeyboardInterrupt`/traceback (no terminal do lab, Ctrl+C mostra o traceback do `KeyboardInterrupt`) e os `finally` não rodam |
+| Saída máxima | **2 milhões de caracteres**; o terminal desenha as primeiras **3000 linhas** e as últimas 40 (as metas veem tudo) |
+| `sys.getrecursionlimit()` | 1000, igual ao lab (`[Previous line repeated 996 more times]` nos dois) |
+
+### 4.3 Entrada (`input()`)
+- **Com `data-stdin`**: o `input()` lê dali (uma linha por `\n`); a caixa ganha um campo **Entrada** editável. A linha lida aparece no terminal em branco logo depois do prompt (como se fosse digitada), mas **não entra no `out:`**: a saída do programa é `Qual é o seu nome? Olá, Ana!` — a mesma de `python3 main.py < entrada.txt` no lab. Acabou o texto → `EOFError: EOF when reading a line`.
+- **Sem `data-stdin`**: o programa para no `input()` e o leitor **digita no terminal da caixa** (Enter envia; **Ctrl+D** = fim da entrada; Ctrl+C = Parar). Funciona em laços, com `try/except`, `sys.stdin.read()`, `for linha in sys.stdin`, `getpass.getpass()` (campo de senha: nada aparece) e `breakpoint()`/`pdb` (o depurador funciona: `p x`, `n`, `c`).
+- Como: no **Chrome/Edge** (e onde houver JSPI) o programa fica de fato parado esperando. Nos navegadores sem JSPI (Safari, Firefox antigos) o editor usa o modo **por repetição**: roda até o `input()`, o leitor digita, e roda **de novo do começo** com as linhas já digitadas, mostrando só o que é novo — parece contínuo. Limites desse modo: o programa repete o trabalho (um programa lento fica lento a cada linha); `random` dá os mesmos números a cada repetição (o editor fixa a semente por Rodar), mas **hora** (`datetime.now()`, `time.time()`) e `os.urandom`/`secrets`/`uuid4` mudam; arquivos são recriados a cada repetição.
+- **Missão que lê o teclado precisa de `data-stdin`**: o testador não digita; sem `data-stdin` ele manda "fim de entrada" e avisa.
+
+### 4.4 O que funciona e o que não funciona no editor (conferido com `tools/sim.js` e no Chromium)
+| Recurso | No editor |
+|---|---|
+| Arquivos (`open`, `with`, `pathlib`, `csv`, `json`, `os.listdir`, pastas) | ✔ funcionam, na `/home/ana` da caixa (some no próximo Rodar). Abas extras (`data-file="dados.csv"`) já estão lá |
+| Módulo próprio (`import contas` com a aba `contas.py`) | ✔ |
+| `sqlite3` | ✔ (SQLite **3.39.0** no editor; **3.46.1** no lab) |
+| `math`, `random`, `datetime`, `collections`, `itertools`, `re`, `dataclasses`, `enum`, `typing`, `decimal`, `fractions`, `statistics`, `argparse`, `logging`, `unittest`, `doctest`, `string.templatelib` | ✔ |
+| `zoneinfo` (`ZoneInfo("America/Sao_Paulo")`) | ✔ (o editor baixa os fusos, 350 kB, quando o código cita `zoneinfo`) |
+| `time.sleep` | ✔ espera de verdade e mostra a saída antes de dormir (contagem regressiva funciona) |
+| `asyncio` (`asyncio.run`, `gather`, `sleep`, `create_task`, `TaskGroup`, `wait_for`, `Queue`) | ✔ (laço do próprio asyncio); **✘** `asyncio.to_thread`/`run_in_executor` (threads) |
+| `breakpoint()` / `pdb` | ✔ (digitando os comandos no terminal da caixa) |
+| `getpass.getpass()` | ✔ (prompt no stderr, digitação escondida) |
+| `threading.Thread(...).start()`, `concurrent.futures.ThreadPoolExecutor`, `multiprocessing` | **✘** `RuntimeError: can't start new thread` |
+| `subprocess.run([...])`, `os.popen` | **✘** `OSError: [Errno 138] emscripten does not support processes.` |
+| `os.system("ls")` | **✘** não roda nada e devolve `-1` (no lab roda o comando e devolve `0`) |
+| `os.fork()` | **✘** `OSError: [Errno 52] Function not implemented` |
+| Rede: `urllib.request.urlopen`, `socket`, `http.client` | **✘** sem rede (`URLError: <urlopen error [Errno 23] Host is unreachable>`) |
+| `pip`, `venv`, `ensurepip` | **✘** `ModuleNotFoundError: No module named 'pip'` (e `'venv'`): ensine no terminal (lab) |
+| `tkinter`, `turtle`, `curses`, `readline`, `dbm`, `pwd`, `grp`, `resource`, `idlelib` | **✘** `ModuleNotFoundError: No module named 'tkinter'` (etc.) |
+| `locale.setlocale(locale.LC_ALL, "")` + `locale.currency(...)`, `f"{x:n}"` | **✘** aceita o `setlocale`, mas formata como o locale "C": `ValueError: Currency formatting is not possible using the 'C' locale.` (no lab: `R$ 1.234,50`) |
+| O modo interativo `>>>` | **✘** o editor roda arquivos (`python3 main.py`); o `>>>` se mostra com `pre.term` colhido no lab (`-t`) |
+
+### 4.5 Diferenças editor × lab (com o mesmo programa)
+| Assunto | Editor | Lab (`python3`) |
+|---|---|---|
+| `sys.version` | `3.14.2 (main, Sep 14 2026, 03:03:51) [Clang 23.0.0git (…)` | `3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]` |
+| `sys.platform`, `os.name`, `platform.system()`, `platform.machine()` | `emscripten posix Emscripten wasm32` | `linux posix Linux x86_64` |
+| `os.uname()`, `socket.gethostname()`, `platform.node()` | `Emscripten`, `emscripten` | `Linux`, `notebook` |
+| `sys.maxsize` | `2147483647` (32 bits) | `9223372036854775807` |
+| `sys.executable` | `/usr/bin/python3` (o editor imita o lab) | `/usr/bin/python3` |
+| `os.getcwd()`, `__file__`, `sys.argv`, `HOME`, `getpass.getuser()` | **iguais**: `/home/ana`, `/home/ana/main.py`, `['main.py', …]`, `ana` | iguais |
+| Traceback do programa | **igual** (`File "/home/ana/main.py", line 3, in <module>`, as setas `^^^^`, `Did you mean: 'nomes'?`) | igual |
+| Traceback que passa pela biblioteca padrão | `File "/lib/python314.zip/json/decoder.py", line 345, in decode` | `File "/usr/lib/python3.14/json/decoder.py", line 345, in decode` |
+| `print("oi", end="")` e depois um erro | `oiTraceback (most recent call last):` (igual ao lab) | igual |
+| Hora e fuso (`datetime.now()`, `time.tzname`) | o **relógio e o fuso do leitor** (do navegador) | `America/Sao_Paulo` (`-03`) |
+| `os.cpu_count()` | `1` | o número de núcleos |
+| Desempenho | ~3 a 4× mais lento (`sum(i*i for i in range(3_000_000))`: 0,64 s × 0,16 s) | — |
+| Ordem de `set` de textos, `id()`, `hash()` de texto | mudam (e podem repetir entre Rodar na mesma página) | mudam a cada execução |
+| Ctrl+C | Parar: `^C`, sem traceback | traceback do `KeyboardInterrupt`, código 130 |
+| `__pycache__` ao importar módulo próprio | não é criado | criado ao lado do módulo |
+
+Por isso: **meta e texto da aula não podem depender** de nada da tabela acima (§3). Diga "no editor…" só com o que está nesta seção; o resto, mostre no lab.
+
+### 4.6 As ferramentas (na VPS, dentro de `~/guia-python`; Node 24: `. ~/.profile` antes)
+- **`tools/sim.js`** — roda um programa **como o editor** (o mesmo Pyodide e o mesmo motor):
+  ```
+  timeout 60 node tools/sim.js main.py [contas.py precos.txt] [--stdin "Ana\n30"] [--args "a 'b c'"] [--goal "out:Olá;;semerro"]
+  timeout 60 node tools/sim.js - < programa.py          (o programa vem da entrada; vira main.py)
+  timeout 60 node tools/sim.js -c 'print(1/0)'
+  timeout 60 node tools/sim.js main.py --digitar "Ana\n30"   (o leitor digitando, sem data-stdin; --repeticao força o modo por repetição)
+  ```
+  Mostra o terminal da caixa e `[código de saída: N]`; com `--goal`, diz se a missão passaria e qual meta falhou. `--json` dá tudo em JSON. Sem `--stdin`/`--digitar`, o `input()` recebe fim de entrada.
+- **`tools/testar-missoes.js`** (ou, do notebook, `~/guia-python-lab/testar pagina.html`) — confere a página: contrato das caixas, metas, **inicial falha e solução passa**, laço infinito, `<`/`&` sem escape em `pre`, links fora da NIVEIS (aviso), privacidade (FALHA):
+  ```
+  timeout 300 node tools/testar-missoes.js pagina.html [-q]
+  timeout 600 node tools/testar-missoes.js --nativo pagina.html   (+ roda inicial e solução no python3 do lab; diferenças em tools/DIFERENCAS.md)
+  ```
+- **`tools/testar-navegador.js`** — a página num Chromium de verdade (cliques, Rodar em todas as caixas). Ver `tools/ESTADO.md`.
 
 ## 5. Fidelidade: o laboratório (`~/guia-python-lab/lab`, na VPS)
 É a máquina da Ana (usuária `ana`, computador `notebook`, `/home/ana`, pt_BR, Ubuntu 26.04) com o **Python 3.14.4 do Ubuntu, de verdade** (sem `python-is-python3`: o comando `python` não existe, só `python3`). Toda saída de terminal mostrada numa aula vem de lá (detalhes em `~/guia-python-lab/COMO-USAR.md`):
