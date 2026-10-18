@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Mutável × Imutável — o que muda e o que não muda | Guia Python</title>
+<meta name="description" content="Mutável e imutável para quem está começando: variáveis são etiquetas, id() e is, por que mudar uma lista muda a outra, strings e números imutáveis, a lista dentro da tupla (e o += que dá erro e muda mesmo assim), o que acontece ao passar listas e números para funções, chaves de dicionário (unhashable type) e os erros reais do Python 3.14.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Mutável × Imutável</span></h1>
+
+<p class="intro">A Ana copiou a lista de compras para a Bia com <code>compras_bia = compras_ana</code>. A Bia acrescentou pão na lista dela, e o pão apareceu também na lista da Ana. Não é defeito do Python: é a regra de como ele guarda as coisas. Alguns objetos podem ser <strong>modificados</strong> depois de criados (as listas, os dicionários, os conjuntos): são os <strong>mutáveis</strong>. Outros nunca mudam (os números, os textos, as tuplas): são os <strong>imutáveis</strong>. Entender essa diferença explica de uma vez vários comportamentos que, à primeira vista, parecem mágica.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>Que uma variável é uma <strong>etiqueta</strong> colada num objeto, e não uma caixa com o valor dentro.</li>
+  <li>A usar <code>is</code> e <code>id()</code> para saber se duas etiquetas estão no mesmo objeto.</li>
+  <li>Quais tipos são mutáveis e quais são imutáveis.</li>
+  <li>A diferença entre <strong>mudar</strong> um objeto e <strong>trocar</strong> a etiqueta de lugar.</li>
+  <li>Por que um texto nunca muda, e o que o <code>.upper()</code> faz de verdade.</li>
+  <li>A lista dentro da tupla, e o <code>+=</code> que dá erro e muda a lista mesmo assim.</li>
+  <li>O que acontece quando você passa uma lista ou um número para uma função.</li>
+  <li>Por que só objetos imutáveis servem de chave de dicionário.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: etiquetas, não caixas</h2>
+<p>Muitos cursos dizem que a variável é "uma caixa onde você guarda um valor". Para o Python, uma imagem melhor é a de uma <strong>etiqueta</strong>. O objeto (a lista, o número, o texto) fica guardado na memória, e a variável é uma etiqueta com um nome, colada nele. <code>compras_ana = ["café", "leite"]</code> quer dizer: "crie uma lista e cole nela a etiqueta <code>compras_ana</code>".</p>
+<p>Um objeto pode ter várias etiquetas. <code>compras_bia = compras_ana</code> não copia a lista: cola uma <strong>segunda etiqueta</strong> na mesma lista. Agora pense em dois tipos de objeto:</p>
+<ul>
+  <li>Um <strong>quadro branco</strong>: dá para apagar e escrever de novo. Quem olha para ele, por qualquer etiqueta, vê a mudança. São os <strong>mutáveis</strong>.</li>
+  <li>Uma <strong>placa de metal gravada</strong>: não muda nunca. Se você quer outro texto, manda fazer outra placa e muda a etiqueta de lugar. A placa velha continua igual. São os <strong>imutáveis</strong>.</li>
+</ul>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Imutáveis (placa gravada)</th><th>Mutáveis (quadro branco)</th></tr>
+<tr><td><code>int</code>, <code>float</code> (números)</td><td><code>list</code> (listas)</td></tr>
+<tr><td><code>bool</code> (<code>True</code>, <code>False</code>) e <code>None</code></td><td><code>dict</code> (dicionários)</td></tr>
+<tr><td><code>str</code> (textos)</td><td><code>set</code> (conjuntos)</td></tr>
+<tr><td><code>tuple</code> (tuplas)</td><td>objetos das suas classes, em geral (aula <a href="classes.html">Classes</a>)</td></tr>
+<tr><td><code>frozenset</code> (conjunto congelado)</td><td></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. Duas etiquetas, uma lista</h2>
+
+<pre class="file" data-file="etiquetas.py">compras_ana = ["café", "leite"]
+compras_bia = compras_ana
+compras_bia.append("pão")
+
+print(compras_ana)
+print(compras_bia)
+print(compras_ana is compras_bia)
+print(id(compras_ana))
+print(id(compras_bia))
+</pre>
+
+<pre class="term">$ python3 etiquetas.py
+['café', 'leite', 'pão']
+['café', 'leite', 'pão']
+True
+140568262729088
+140568262729088
+</pre>
+
+<dl class="anatomy">
+  <dt>compras_bia = compras_ana</dt><dd>Não cria lista nenhuma: cola a etiqueta <code>compras_bia</code> no <strong>mesmo</strong> objeto.</dd>
+  <dt>compras_bia.append("pão")</dt><dd>Muda a lista. Como só existe uma lista, as duas etiquetas "veem" o pão.</dd>
+  <dt>compras_ana is compras_bia</dt><dd>O <code>is</code> (aula <a href="operadores-is-in.html">is e in</a>) pergunta: "as duas etiquetas estão no mesmo objeto?" <code>True</code>.</dd>
+  <dt>id(compras_ana)</dt><dd>A função <code>id()</code> devolve um número que identifica o objeto enquanto ele existir (no Python do Ubuntu, é o endereço dele na memória). Mesmo <code>id</code>, mesmo objeto.</dd>
+</dl>
+
+<p>Rodando o mesmo programa mais uma vez:</p>
+
+<pre class="term">$ python3 etiquetas.py
+['café', 'leite', 'pão']
+['café', 'leite', 'pão']
+True
+139972417019264
+139972417019264
+</pre>
+
+<p>Os números do <code>id</code> <strong>mudaram</strong>: a cada execução, o objeto vai parar num lugar diferente da memória. No seu computador e no editor do guia, você vai ver outros números. O que importa não é o número, e sim a comparação: os dois <code>id</code> são <strong>iguais entre si</strong>. Por isso, no dia a dia, em vez de olhar números de <code>id</code>, use o <code>is</code>.</p>
+
+<h3><code>is</code> não é <code>==</code></h3>
+
+<pre class="file" data-file="is_igual.py">a = [1, 2, 3]
+b = [1, 2, 3]
+c = a
+print(a == b, a is b)
+print(a == c, a is c)
+</pre>
+
+<pre class="term">$ python3 is_igual.py
+True False
+True True
+</pre>
+
+<p><code>a</code> e <code>b</code> são duas listas <strong>iguais</strong> (mesmo conteúdo: <code>==</code> dá <code>True</code>), mas são <strong>dois objetos</strong> (<code>is</code> dá <code>False</code>): mudar uma não muda a outra. Já <code>a</code> e <code>c</code> são duas etiquetas no mesmo objeto. Resumindo: <code>==</code> compara o <strong>conteúdo</strong>; <code>is</code> compara a <strong>identidade</strong>.</p>
+
+<hr>
+
+<h2>2. Números e textos: a placa gravada</h2>
+<p>Agora o mesmo jogo com um número:</p>
+
+<pre class="file" data-file="numeros.py">preco = 10
+outro = preco
+outro += 1
+
+print(preco)
+print(outro)
+print(preco is outro)
+</pre>
+
+<pre class="term">$ python3 numeros.py
+10
+11
+False
+</pre>
+
+<p>O <code>preco</code> continuou 10. Um número não pode ser modificado: o 10 é sempre 10. O <code>outro += 1</code> não mexeu no 10; calculou um número <strong>novo</strong>, o 11, e mudou a etiqueta <code>outro</code> para ele. A etiqueta <code>preco</code> ficou onde estava. Por isso, depois, <code>preco is outro</code> é <code>False</code>.</p>
+
+<p>Com textos é igual:</p>
+
+<pre class="file" data-file="texto.py">nome = "café"
+outro = nome
+outro += " expresso"
+
+print(nome)
+print(outro)
+
+maiusculo = nome.upper()
+print(nome)
+print(maiusculo)
+</pre>
+
+<pre class="term">$ python3 texto.py
+café
+café expresso
+café
+CAFÉ
+</pre>
+
+<p>Repare no <code>.upper()</code>: o <code>nome</code> continuou <code>café</code>, em minúsculas. Os métodos de texto (aula <a href="strings-metodos.html">Métodos de Texto</a>) <strong>nunca</strong> mudam o texto original; eles devolvem um texto <strong>novo</strong>. Se você não guardar o resultado numa variável, ele se perde. E tentar trocar uma letra direto dá erro:</p>
+
+<pre class="file" data-file="texto_erro.py">nome = "ana"
+nome[0] = "A"
+</pre>
+
+<pre class="term">$ python3 texto_erro.py
+Traceback (most recent call last):
+  File "/home/ana/texto_erro.py", line 2, in &lt;module&gt;
+    nome[0] = "A"
+    ~~~~^^^
+TypeError: 'str' object does not support item assignment
+</pre>
+
+<p>Linha por linha:</p>
+<ul>
+  <li><code>File "/home/ana/texto_erro.py", line 2</code>: o erro foi na linha 2.</li>
+  <li><code>nome[0] = "A"</code>, com <code>~~~~^^^</code> embaixo: os sinais marcam o <code>nome[0]</code>, a posição que o programa tentou trocar.</li>
+  <li><code>TypeError: 'str' object does not support item assignment</code>: "o objeto do tipo <code>str</code> não aceita atribuição a um item". Em outras palavras: não dá para trocar um pedaço de um texto.</li>
+</ul>
+
+<div class="trypy" data-goal="outre:^Ana\n$;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa quer deixar a primeira letra do nome em maiúscula, mas dá <code>TypeError</code>. Conserte criando um texto <strong>novo</strong> e mudando a etiqueta <code>nome</code> para ele (dica: <code>"A" + nome[1:]</code>, como na aula <a href="strings-fatias.html">Índices e Fatias</a>, ou um método de texto).</p>
+<pre class="script" data-file="main.py">nome = "ana"
+nome[0] = "A"
+print(nome)
+</pre>
+<pre class="solucao" data-file="main.py">nome = "ana"
+nome = "A" + nome[1:]
+print(nome)
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Mudar o objeto × trocar a etiqueta</h2>
+<p>Com listas, existem os dois jeitos, e eles dão resultados diferentes:</p>
+
+<pre class="file" data-file="mudar_trocar.py">ana = ["café"]
+bia = ana
+
+ana.append("leite")      # muda a lista
+print(bia, ana is bia)
+
+ana = ana + ["pão"]      # cria outra lista e troca a etiqueta
+print(bia, ana is bia)
+print(ana)
+</pre>
+
+<pre class="term">$ python3 mudar_trocar.py
+['café', 'leite'] True
+['café', 'leite'] False
+['café', 'leite', 'pão']
+</pre>
+
+<ul>
+  <li><code>ana.append("leite")</code> <strong>mudou a lista</strong>. A Bia, que tem etiqueta na mesma lista, viu o leite.</li>
+  <li><code>ana = ana + ["pão"]</code> <strong>criou uma lista nova</strong> (o <code>+</code> sempre cria) e mudou a etiqueta <code>ana</code> para ela. A lista antiga, que a Bia continua olhando, não ganhou o pão. E agora <code>ana is bia</code> é <code>False</code>.</li>
+</ul>
+
+<div class="warning">
+<strong>O <code>+=</code> numa lista muda a lista</strong>
+<p>Você poderia esperar que <code>ana += ["pão"]</code> fosse igual a <code>ana = ana + ["pão"]</code>. Com números e textos é. Com listas, não: o <code>+=</code> de uma lista <strong>muda a própria lista</strong>, como o <code>.extend()</code>.</p>
+<pre class="file" data-file="mais_igual.py">ana = ["café"]
+bia = ana
+ana += ["leite"]
+print(bia, ana is bia)
+
+x = 10
+y = x
+x += 1
+print(y, x is y)
+</pre>
+<pre class="term">$ python3 mais_igual.py
+['café', 'leite'] True
+10 False
+</pre>
+<p>Na lista, a Bia viu o leite (mesmo objeto). No número, o <code>y</code> continuou 10 (o <code>x</code> foi para um número novo). É a mesma escrita, <code>+=</code>, com efeitos diferentes, porque um tipo é mutável e o outro não.</p>
+</div>
+
+<hr>
+
+<h2>4. A lista dentro da tupla</h2>
+<p>A tupla (aula <a href="tuplas.html">Tuplas</a>) é imutável: não dá para trocar os itens dela. Mas e se um dos itens for uma lista?</p>
+
+<pre class="file" data-file="tupla.py">aluna = ("Bia", [8.5, 7.0])
+aluna[1].append(9.0)
+print(aluna)
+aluna[0] = "Beatriz"
+</pre>
+
+<pre class="term">$ python3 tupla.py
+('Bia', [8.5, 7.0, 9.0])
+Traceback (most recent call last):
+  File "/home/ana/tupla.py", line 4, in &lt;module&gt;
+    aluna[0] = "Beatriz"
+    ~~~~~^^^
+TypeError: 'tuple' object does not support item assignment
+</pre>
+
+<p>A nota 9.0 entrou, e só depois veio o erro, ao tentar trocar o nome. O segredo está na imagem das etiquetas: a tupla não guarda a lista "dentro dela"; ela guarda <strong>quem são</strong> os seus itens, como uma ficha que diz "item 0: aquele texto; item 1: aquela lista". O que a tupla proíbe é trocar o que a ficha diz (<code>aluna[0] = …</code>). A lista do item 1 continua sendo um quadro branco, e escrever nele (<code>.append</code>) não muda a ficha da tupla.</p>
+
+<div class="note">
+<strong>Imutável não quer dizer "congelado por inteiro"</strong>
+<p>Uma tupla é imutável na <strong>primeira camada</strong>: os itens são sempre os mesmos objetos. Se algum item é mutável, ele pode mudar. Uma tupla só é imutável "até o fundo" quando todos os itens também são imutáveis, como <code>("Bia", 8.5, 7.0)</code>.</p>
+</div>
+
+<h3>O <code>+=</code> que dá erro e muda mesmo assim</h3>
+<p>Juntando as duas coisas que você viu (o <code>+=</code> de lista muda a lista; a tupla não deixa trocar itens), aparece um dos comportamentos mais curiosos do Python:</p>
+
+<pre class="file" data-file="tupla_paradoxo.py">aluna = ("Bia", [8.5, 7.0])
+try:
+    aluna[1] += [9.0]
+except TypeError as e:
+    print("Erro:", e)
+print(aluna)
+</pre>
+
+<pre class="term">$ python3 tupla_paradoxo.py
+Erro: 'tuple' object does not support item assignment
+('Bia', [8.5, 7.0, 9.0])
+</pre>
+
+<p><strong>Deu erro e a nota entrou.</strong> O <code>aluna[1] += [9.0]</code> faz duas coisas, nesta ordem: (1) muda a lista com o <code>+=</code> de lista, o que funciona; (2) tenta guardar o resultado de volta em <code>aluna[1]</code>, o que a tupla proíbe, e aí vem o <code>TypeError</code>. A lição prática: para mexer numa lista que está dentro de uma tupla, use os métodos da lista (<code>aluna[1].append(9.0)</code>), que não tentam o passo 2.</p>
+
+<hr>
+
+<h2>5. Passando para uma função</h2>
+<p>Quando você chama uma função, o parâmetro vira <strong>mais uma etiqueta</strong> no mesmo objeto que você passou (aula <a href="parametros.html">Parâmetros e Argumentos</a>). O resultado depende do tipo:</p>
+
+<pre class="file" data-file="funcao.py">def colocar_pao(lista):
+    lista.append("pão")
+
+
+def somar_um(numero):
+    numero += 1
+
+
+compras = ["café"]
+colocar_pao(compras)
+print(compras)
+
+estoque = 5
+somar_um(estoque)
+print(estoque)
+</pre>
+
+<pre class="term">$ python3 funcao.py
+['café', 'pão']
+5
+</pre>
+
+<ul>
+  <li><code>colocar_pao</code> recebeu uma etiqueta na lista <code>compras</code> e <strong>mudou a lista</strong>. Quando a função terminou, o pão continuava lá.</li>
+  <li><code>somar_um</code> recebeu uma etiqueta no número 5. O <code>numero += 1</code> criou o 6 e mudou só a etiqueta <code>numero</code>, que é da função e some quando ela termina (aula <a href="escopo.html">Escopo</a>). O <code>estoque</code> lá fora continuou 5.</li>
+</ul>
+
+<p>E se a função <strong>trocar</strong> a etiqueta de uma lista, em vez de mudar a lista?</p>
+
+<pre class="file" data-file="funcao_troca.py">def esvaziar(lista):
+    lista = []
+
+
+def esvaziar_de_verdade(lista):
+    lista.clear()
+
+
+compras = ["café", "leite"]
+esvaziar(compras)
+print(compras)
+esvaziar_de_verdade(compras)
+print(compras)
+</pre>
+
+<pre class="term">$ python3 funcao_troca.py
+['café', 'leite']
+[]
+</pre>
+
+<p><code>lista = []</code> criou uma lista vazia nova e mudou a etiqueta <strong>da função</strong> para ela; a lista de fora nem ficou sabendo. Já <code>lista.clear()</code> esvaziou o próprio objeto. A regra geral: <strong>dentro da função, mudar o objeto é visível lá fora; trocar a etiqueta, não</strong>.</p>
+
+<div class="tip">
+<strong>Boa prática: não mude o que você recebeu sem avisar</strong>
+<p>Uma função que muda a lista que recebeu pode pegar de surpresa quem a chamou. Quando a ideia é calcular algo novo, prefira <strong>devolver</strong> uma lista nova com <code>return</code> e deixar a original em paz. Quando a ideia é mesmo mudar (como <code>colocar_pao</code>), deixe isso claro no nome e na docstring. É o que o próprio Python faz: <code>sorted(lista)</code> devolve uma lista nova; <code>lista.sort()</code> muda a lista e devolve <code>None</code>.</p>
+</div>
+
+<div class="trypy" data-goal="out:Originais: [10.0, 20.0];;out:Com desconto: [9.0, 18.0]">
+<p class="try-task"><strong>Missão:</strong> a função <code>com_desconto</code> deveria devolver os preços com 10% de desconto, mas ela estraga a lista original (rode e veja os "Originais"). Reescreva a função para criar e devolver uma lista <strong>nova</strong>, sem mexer em <code>precos</code>.</p>
+<pre class="script" data-file="main.py">def com_desconto(precos):
+    for i in range(len(precos)):
+        precos[i] = precos[i] * 0.9
+    return precos
+
+
+originais = [10.0, 20.0]
+novos = com_desconto(originais)
+print("Originais:", originais)
+print("Com desconto:", novos)
+</pre>
+<pre class="solucao" data-file="main.py">def com_desconto(precos):
+    novos = []
+    for preco in precos:
+        novos.append(preco * 0.9)
+    return novos
+
+
+originais = [10.0, 20.0]
+novos = com_desconto(originais)
+print("Originais:", originais)
+print("Com desconto:", novos)
+</pre>
+</div>
+
+<hr>
+
+<h2>6. Só imutáveis servem de chave</h2>
+<p>Um dicionário acha as chaves depressa porque calcula, para cada uma, um número de "etiqueta" chamado <strong>hash</strong>. Se a chave pudesse mudar depois de guardada, o número ficaria errado e o dicionário se perderia. Por isso, chaves de dicionário e itens de conjunto têm de ser imutáveis:</p>
+
+<pre class="file" data-file="chaves.py">mapa = {(0, 0): "entrada", (2, 3): "caixa"}
+print(mapa[(2, 3)])
+mapa[[1, 1]] = "padaria"
+</pre>
+
+<pre class="term">$ python3 chaves.py
+caixa
+Traceback (most recent call last):
+  File "/home/ana/chaves.py", line 3, in &lt;module&gt;
+    mapa[[1, 1]] = "padaria"
+    ~~~~^^^^^^^^
+TypeError: cannot use 'list' as a dict key (unhashable type: 'list')
+</pre>
+
+<p>Tuplas funcionaram como chave (as posições <code>(0, 0)</code> e <code>(2, 3)</code> no mapa da loja). A lista <code>[1, 1]</code>, não: "não dá para usar <code>list</code> como chave de dicionário (tipo sem <em>hash</em>)". E a tupla precisa ser imutável até o fundo:</p>
+
+<pre class="file" data-file="chave_tupla_lista.py">vistos = set()
+vistos.add(("Bia", [8.5, 7.0]))
+</pre>
+
+<pre class="term">$ python3 chave_tupla_lista.py
+Traceback (most recent call last):
+  File "/home/ana/chave_tupla_lista.py", line 2, in &lt;module&gt;
+    vistos.add(("Bia", [8.5, 7.0]))
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+TypeError: cannot use 'tuple' as a set element (unhashable type: 'list')
+</pre>
+
+<p>A mensagem é precisa: "não dá para usar a <code>tuple</code> como item do conjunto (o tipo sem <em>hash</em> é <code>list</code>)". O problema é a lista lá dentro.</p>
+
+<p>Para conferir de uma vez quais tipos servem de chave, dá para perguntar ao Python:</p>
+
+<pre class="file" data-file="descobrir.py">from collections.abc import Hashable
+
+for valor in [10, 2.5, True, None, "café", (1, 2), frozenset({1}), [1, 2], {"a": 1}, {1, 2}]:
+    print(type(valor).__name__, isinstance(valor, Hashable))
+</pre>
+
+<pre class="term">$ python3 descobrir.py
+int True
+float True
+bool True
+NoneType True
+str True
+tuple True
+frozenset True
+list False
+dict False
+set False
+</pre>
+
+<p>Exatamente a tabela do começo da aula: os imutáveis servem de chave; os mutáveis, não.</p>
+
+<hr>
+
+<h2>Formas diferentes de evitar a surpresa</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Você quer…</th><th>Faça</th></tr>
+<tr><td>Uma lista independente, que pode mudar sem afetar a outra</td><td>Uma <strong>cópia</strong>: <code>compras_bia = compras_ana.copy()</code> (aulas <a href="listas-copiar.html">Copiando Listas</a> e <a href="copias.html">Cópia Rasa e Cópia Profunda</a>)</td></tr>
+<tr><td>Dados que ninguém deve mudar</td><td>Uma tupla em vez de uma lista</td></tr>
+<tr><td>Uma função que calcula algo a partir de uma lista</td><td>Devolva uma lista nova (<code>return</code>), não mude a recebida</td></tr>
+<tr><td>Saber se duas variáveis estão no mesmo objeto</td><td><code>a is b</code> (não compare números de <code>id()</code> de cabeça)</td></tr>
+<tr><td>Saber se duas variáveis têm o mesmo conteúdo</td><td><code>a == b</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong><code>nomes = nomes.sort()</code>: a lista virou <code>None</code></strong>
+<pre class="file" data-file="sort_none.py">nomes = ["Caio", "Ana", "Bia"]
+nomes = nomes.sort()
+print(nomes)
+</pre>
+<pre class="term">$ python3 sort_none.py
+None
+</pre>
+<p>Nenhum erro, e a lista sumiu. O <code>.sort()</code> <strong>muda</strong> a lista (ela é mutável) e devolve <code>None</code> (aula <a href="none.html">O Valor None</a>), avisando "não há nada novo para guardar". Ao escrever <code>nomes = …</code>, você colou a etiqueta <code>nomes</code> nesse <code>None</code>. <strong>Como consertar:</strong> <code>nomes.sort()</code> sozinho, ou <code>nomes = sorted(nomes)</code>, que devolve uma lista nova.</p>
+</div>
+
+<div class="cenario">
+<strong><code>nome.upper()</code> sozinho não faz nada</strong>
+<pre class="file" data-file="upper_sem.py">nome = "ana"
+nome.upper()
+print(nome)
+</pre>
+<pre class="term">$ python3 upper_sem.py
+ana
+</pre>
+<p>O erro contrário ao anterior. Textos são imutáveis: o <code>.upper()</code> criou <code>"ANA"</code> e devolveu, mas ninguém guardou. <strong>Como consertar:</strong> <code>nome = nome.upper()</code>. Regra para lembrar: métodos de <strong>texto</strong> devolvem um texto novo (guarde o resultado); métodos de <strong>lista</strong> que mudam a lista (<code>append</code>, <code>sort</code>, <code>clear</code>) devolvem <code>None</code> (não guarde).</p>
+</div>
+
+<div class="cenario">
+<strong>A lista padrão que lembra das chamadas anteriores</strong>
+<pre class="file" data-file="padrao_mutavel.py">def adicionar(item, lista=[]):
+    lista.append(item)
+    return lista
+
+
+print(adicionar("café"))
+print(adicionar("leite"))
+</pre>
+<pre class="term">$ python3 padrao_mutavel.py
+['café']
+['café', 'leite']
+</pre>
+<p>A segunda chamada deveria devolver só <code>['leite']</code>. O valor padrão <code>[]</code> é criado <strong>uma vez</strong>, quando o <code>def</code> roda, e todas as chamadas sem lista recebem uma etiqueta nesse mesmo objeto, que vai acumulando. <strong>Como consertar:</strong> use <code>None</code> como padrão e crie a lista lá dentro: <code>def adicionar(item, lista=None):</code> e <code>if lista is None: lista = []</code> (aula <a href="argumentos-padrao.html">Valores Padrão</a>). As dataclasses recusam esse padrão com um <code>ValueError</code> (aula <a href="dataclasses.html">Dataclasses</a>).</p>
+</div>
+
+<div class="cenario">
+<strong>Trocar um item de texto ou de tupla</strong>
+<p>Você viu os dois na aula: <code>TypeError: 'str' object does not support item assignment</code> (seção 2) e <code>TypeError: 'tuple' object does not support item assignment</code> (seção 4). <strong>Como consertar:</strong> crie um objeto novo e mude a etiqueta (<code>nome = "A" + nome[1:]</code>; <code>aluna = ("Beatriz",) + aluna[1:]</code>), ou use uma lista, se o dado precisa mudar.</p>
+</div>
+
+<div class="cenario">
+<strong>Lista como chave de dicionário ou item de conjunto</strong>
+<p><code>TypeError: cannot use 'list' as a dict key (unhashable type: 'list')</code> (seção 6). <strong>Como consertar:</strong> converta a lista numa tupla: <code>mapa[tuple(posicao)] = "padaria"</code>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>b = a</code></td><td>Cola mais uma etiqueta no mesmo objeto (não copia)</td></tr>
+<tr><td><code>a is b</code></td><td>As duas etiquetas estão no mesmo objeto?</td></tr>
+<tr><td><code>a == b</code></td><td>Os dois objetos têm o mesmo conteúdo?</td></tr>
+<tr><td><code>id(a)</code></td><td>Número que identifica o objeto (muda a cada execução)</td></tr>
+<tr><td><code>lista.append(x)</code>, <code>lista += […]</code>, <code>lista.sort()</code></td><td>Mudam a lista (todas as etiquetas veem)</td></tr>
+<tr><td><code>lista = lista + […]</code>, <code>sorted(lista)</code></td><td>Criam uma lista nova</td></tr>
+<tr><td><code>texto.upper()</code>, <code>texto.replace(…)</code></td><td>Devolvem um texto novo; o original não muda</td></tr>
+<tr><td><code>numero += 1</code>, <code>texto += "…"</code></td><td>Criam um objeto novo e mudam a etiqueta</td></tr>
+<tr><td><code>lista.copy()</code></td><td>Uma lista nova, com os mesmos itens</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td>Mudei uma lista e a outra mudou junto</td><td>As duas variáveis são etiquetas no mesmo objeto (<code>b = a</code>): faça uma cópia</td></tr>
+<tr><td>A função mudou a minha lista</td><td>Ela recebeu uma etiqueta na sua lista e a modificou</td></tr>
+<tr><td><code>'str' object does not support item assignment</code></td><td>Tentou trocar uma letra de um texto</td></tr>
+<tr><td><code>'tuple' object does not support item assignment</code></td><td>Tentou trocar um item de uma tupla (mesmo com <code>+=</code>)</td></tr>
+<tr><td><code>unhashable type: 'list'</code></td><td>Lista (ou tupla com lista dentro) como chave ou item de conjunto</td></tr>
+<tr><td>A variável virou <code>None</code></td><td>Guardou o resultado de um método que muda a lista (<code>x = x.sort()</code>)</td></tr>
+<tr><td>O texto não mudou</td><td>Chamou um método de texto sem guardar o resultado</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Mesmo objeto?</h3>
+<p>Complete o operador que pergunta se <code>a</code> e <code>b</code> são o <strong>mesmo objeto</strong>:</p>
+<div class="ex-code">print(a <input data-answer="is" aria-label="operador"> b)</div>
+</div>
+
+<div class="exercise">
+<h3>2. O que sai?</h3>
+<p><code>x = [1, 2]</code>, depois <code>y = x</code>, depois <code>y.append(3)</code>. O que mostra <code>print(len(x))</code>?</p>
+<div class="ex-code"><input data-answer="3" aria-label="resultado"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">3. Qual destes tipos é <strong>mutável</strong>?</p>
+<label><input type="radio" name="q3"> <code>str</code></label>
+<label><input type="radio" name="q3"> <code>tuple</code></label>
+<label><input type="radio" name="q3"> <code>dict</code></label>
+<label><input type="radio" name="q3"> <code>int</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">4. <code>a = 5</code>, <code>b = a</code>, <code>b += 1</code>. Quanto vale <code>a</code>?</p>
+<label><input type="radio" name="q4"> 5, porque o <code>b += 1</code> criou um número novo e mudou só a etiqueta <code>b</code></label>
+<label><input type="radio" name="q4"> 6, porque <code>a</code> e <code>b</code> são o mesmo objeto</label>
+<label><input type="radio" name="q4"> Dá <code>TypeError</code></label>
+<label><input type="radio" name="q4"> <code>None</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. <code>t = ("Bia", [8.5])</code> e depois <code>t[1].append(9.0)</code>. O que acontece?</p>
+<label><input type="radio" name="q5"> <code>TypeError</code>, porque tuplas são imutáveis</label>
+<label><input type="radio" name="q5"> Nada muda</label>
+<label><input type="radio" name="q5"> A tupla vira uma lista</label>
+<label><input type="radio" name="q5"> Funciona: <code>t</code> fica <code>('Bia', [8.5, 9.0])</code>, porque a lista dentro da tupla é mutável</label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">6. Por que <code>{[1, 2]: "x"}</code> dá erro?</p>
+<label><input type="radio" name="q6"> Porque dicionários não aceitam números</label>
+<label><input type="radio" name="q6"> Porque uma lista é mutável e não tem <em>hash</em>, então não serve de chave</label>
+<label><input type="radio" name="q6"> Porque faltou o <code>dict()</code></label>
+<label><input type="radio" name="q6"> Porque a chave tem dois itens</label>
+</div>
+
+<h3>Missão final: a lista da Bia</h3>
+
+<div class="trypy" data-goal="out:Ana: ['café', 'leite'];;out:Bia: ['café', 'leite', 'pão']">
+<p class="try-task"><strong>Missão:</strong> a Bia quer começar a lista dela a partir da lista da Ana e acrescentar pão, mas o pão está aparecendo na lista da Ana também. Mude <strong>uma linha</strong> para a Bia ganhar uma lista própria, com os mesmos itens.</p>
+<pre class="script" data-file="main.py">compras_ana = ["café", "leite"]
+compras_bia = compras_ana
+compras_bia.append("pão")
+
+print("Ana:", compras_ana)
+print("Bia:", compras_bia)
+</pre>
+<pre class="solucao" data-file="main.py">compras_ana = ["café", "leite"]
+compras_bia = compras_ana.copy()
+compras_bia.append("pão")
+
+print("Ana:", compras_ana)
+print("Bia:", compras_bia)
+</pre>
+</div>
+
+<p>Com a solução, o lab mostrou:</p>
+<pre class="term">$ python3 main.py
+Ana: ['café', 'leite']
+Bia: ['café', 'leite', 'pão']
+</pre>
+<p>A cópia resolve aqui porque os itens são textos, que são imutáveis. Se os itens fossem listas (a lista da turma, com as notas de cada aluno), a cópia simples não bastaria: é o assunto da próxima aula, <a href="copias.html">Cópia Rasa e Cópia Profunda</a>.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Variável é uma <strong>etiqueta</strong> num objeto. <code>b = a</code> não copia: cola mais uma etiqueta no mesmo objeto.</li>
+  <li><code>is</code> compara identidade (mesmo objeto); <code>==</code> compara conteúdo. O número do <code>id()</code> muda a cada execução: compare com <code>is</code>.</li>
+  <li><strong>Imutáveis</strong> (números, textos, tuplas, <code>bool</code>, <code>None</code>, <code>frozenset</code>) nunca mudam: toda "mudança" cria um objeto novo e troca a etiqueta. <strong>Mutáveis</strong> (listas, dicionários, conjuntos) mudam no lugar, e todas as etiquetas veem.</li>
+  <li>Métodos de texto devolvem um texto novo; métodos de lista que mudam a lista devolvem <code>None</code>.</li>
+  <li>Uma tupla com uma lista dentro pode ter a lista modificada; <code>tupla[1] += [...]</code> muda a lista <strong>e</strong> dá <code>TypeError</code>.</li>
+  <li>Numa função, mudar o objeto recebido é visível lá fora; trocar a etiqueta (<code>lista = []</code>), não.</li>
+  <li>Só objetos imutáveis (até o fundo) servem de chave de dicionário ou item de conjunto.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
