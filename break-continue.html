@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python break e continue — saindo do laço e pulando uma volta | Guia Python</title>
+<meta name="description" content="break e continue do Python para quem nunca programou: parar a busca quando achar o que procura, sair de um while True quando o usuário digitar fim, três tentativas de senha, pular itens com continue, o laço que trava com continue no while, e os erros reais ('break' outside loop e outros) no Python 3.14.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">break</span> e <span class="hl">continue</span></h1>
+
+<p class="intro">Os laços que você escreveu até aqui vão do começo ao fim: o <a href="for.html">for</a> passa por todos os itens, o <a href="while.html">while</a> repete até a condição ficar falsa. Mas às vezes você quer mudar o rumo <strong>no meio</strong> de uma volta. Achou o que procurava? Não precisa olhar o resto: <code>break</code> ("quebrar"), e o laço acaba ali. Esse item não interessa? Pule para o próximo: <code>continue</code> ("continuar"), e o laço vai direto para a volta seguinte.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A sair de um laço com <code>break</code>: parar a busca quando achar o que procura.</li>
+  <li>A usar <code>while True</code> com <code>break</code>: repetir até o usuário digitar <code>fim</code>.</li>
+  <li>A dar um número limitado de tentativas (a senha com 3 chances).</li>
+  <li>A pular uma volta com <code>continue</code>: ignorar letras, valores negativos, múltiplos de 3.</li>
+  <li>A armadilha do <code>continue</code> no <code>while</code>, que trava o programa.</li>
+  <li>Os erros reais: <code>'break' outside loop</code>, <code>'continue' not properly in loop</code> e o <code>break</code> no lugar errado.</li>
+</ul>
+</div>
+
+<p>Todos os programas desta aula rodaram no <strong>Python 3.14</strong> da máquina da Ana (usuária <code>ana</code>, computador <code>notebook</code>), com <code>python3 arquivo.py</code>.</p>
+
+<hr>
+
+<h2>A ideia: a chave na gaveta e as frutas machucadas</h2>
+<p>A Ana procura a chave do portão numa cômoda de cinco gavetas. Ela abre a primeira: nada. A segunda: nada. A terceira: <strong>achou</strong>. Ela abre a quarta e a quinta? Claro que não: ela <strong>para de procurar</strong>. Esse "pare agora" é o <code>break</code>.</p>
+<p>Depois, ela vai à feira escolher laranjas, uma por uma. Quando pega uma machucada, ela não desiste da feira: só <strong>deixa aquela de lado</strong> e pega a próxima. Esse "pule esta e siga" é o <code>continue</code>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Comando</th><th>O que faz</th><th>No dia a dia</th></tr>
+<tr><td><code>break</code></td><td>Sai do laço <strong>na hora</strong>; o programa segue na primeira linha depois do laço</td><td>Achei a chave: paro de abrir gavetas</td></tr>
+<tr><td><code>continue</code></td><td>Abandona <strong>só esta volta</strong> e vai para a próxima</td><td>Laranja machucada: deixo de lado e pego a próxima</td></tr>
+</table>
+</div>
+
+<p>Os dois só fazem sentido <strong>dentro de um laço</strong> (<code>for</code> ou <code>while</code>), e quase sempre aparecem dentro de um <code>if</code>: "<strong>se</strong> achei, pare"; "<strong>se</strong> está machucada, pule".</p>
+
+<hr>
+
+<h2>1. <code>break</code>: parar a busca quando achar</h2>
+<p>A Ana confere a lista de convidados da festa, procurando a Carla:</p>
+
+<pre class="file" data-file="convidados.py">convidados = ["Ana", "Bruno", "Carla", "Davi", "Elisa"]
+procurado = "Carla"
+for nome in convidados:
+    print(f"Conferindo {nome}...")
+    if nome == procurado:
+        print(f"Achei a {procurado}!")
+        break
+print("Fim da busca.")
+</pre>
+
+<pre class="term">$ python3 convidados.py
+Conferindo Ana...
+Conferindo Bruno...
+Conferindo Carla...
+Achei a Carla!
+Fim da busca.</pre>
+
+<dl class="anatomy">
+  <dt>for nome in convidados:</dt><dd>Passa pelos nomes, um de cada vez (veja <a href="for.html">for</a>).</dd>
+  <dt>if nome == procurado:</dt><dd>Em cada volta, pergunta: é a Carla?</dd>
+  <dt>print(f"Achei a {procurado}!")</dt><dd>Se for, avisa…</dd>
+  <dt>break</dt><dd>…e <strong>sai do laço</strong> na mesma hora. Ele está 8 espaços para dentro: faz parte do <code>if</code>, então só roda quando acha. O <code>break</code> fica sozinho na linha, sem parênteses nem dois-pontos.</dd>
+  <dt>print("Fim da busca.")</dt><dd>A primeira linha <strong>depois</strong> do laço: é para cá que o <code>break</code> pula.</dd>
+</dl>
+
+<p>Davi e Elisa nem foram conferidos. Compare com o mesmo programa <strong>sem</strong> o <code>break</code>:</p>
+
+<pre class="term">$ python3 sem_break.py
+Conferindo Ana...
+Conferindo Bruno...
+Conferindo Carla...
+Achei a Carla!
+Conferindo Davi...
+Conferindo Elisa...
+Fim da busca.</pre>
+
+<p>Sem o <code>break</code>, o laço achou a Carla e continuou olhando o resto da lista à toa. Numa lista de cinco nomes, tanto faz; numa lista de um milhão, parar cedo economiza muito trabalho.</p>
+
+<h3>Passo a passo</h3>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Volta</th><th><code>nome</code></th><th><code>nome == procurado</code>?</th><th>O que acontece</th></tr>
+<tr><td>1ª</td><td><code>"Ana"</code></td><td><code>False</code></td><td>Mostra <code>Conferindo Ana...</code> e segue</td></tr>
+<tr><td>2ª</td><td><code>"Bruno"</code></td><td><code>False</code></td><td>Mostra <code>Conferindo Bruno...</code> e segue</td></tr>
+<tr><td>3ª</td><td><code>"Carla"</code></td><td><code>True</code></td><td>Mostra <code>Conferindo Carla...</code> e <code>Achei a Carla!</code>; o <code>break</code> encerra o laço</td></tr>
+<tr><td>—</td><td>—</td><td>—</td><td>Pula para <code>Fim da busca.</code>; Davi e Elisa ficam sem conferir</td></tr>
+</table>
+</div>
+
+<div class="trypy" data-goal="out:Achei o 72!;;outre:^(?![\s\S]*Olhando 15);;src:\bbreak\b">
+<p class="try-task"><strong>Missão:</strong> o programa procura o primeiro preço acima de R$ 50 na lista, mas continua olhando depois de achar. Ponha um <code>break</code> no lugar certo para ele parar no 72 (o <code>Olhando 15</code> não deve aparecer).</p>
+<pre class="script" data-file="main.py">precos = [12, 38, 72, 15, 90]
+for preco in precos:
+    print(f"Olhando {preco}")
+    if preco &gt; 50:
+        print(f"Achei o {preco}!")
+print("Fim.")
+</pre>
+<pre class="solucao" data-file="main.py">precos = [12, 38, 72, 15, 90]
+for preco in precos:
+    print(f"Olhando {preco}")
+    if preco &gt; 50:
+        print(f"Achei o {preco}!")
+        break
+print("Fim.")
+</pre>
+</div>
+
+<hr>
+
+<h2>2. <code>while True</code> com <code>break</code>: até digitar "fim"</h2>
+<p>Na aula <a href="while.html">while</a>, você viu que <code>while True:</code> é um laço que, sozinho, nunca termina: a condição <code>True</code> é sempre verdadeira. Com um <code>break</code> lá dentro, ele vira um laço que termina <strong>quando você decidir</strong>, no ponto exato do bloco que você escolher. A Ana anota a lista de compras até digitar <code>fim</code>:</p>
+
+<pre class="file" data-file="lista_fim.py">while True:
+    produto = input("Produto (ou fim): ")
+    if produto == "fim":
+        break
+    print(f"Anotado: {produto}")
+print("Lista fechada.")
+</pre>
+
+<pre class="term">$ python3 lista_fim.py
+Produto (ou fim): pão
+Anotado: pão
+Produto (ou fim): leite
+Anotado: leite
+Produto (ou fim): fim
+Lista fechada.</pre>
+
+<p>A ordem das linhas dentro do bloco é o que faz isso funcionar: <strong>lê</strong>, <strong>testa</strong> e só depois <strong>usa</strong>. Quando a Ana digitou <code>fim</code>, o <code>break</code> saiu do laço antes do <code>print</code>, e por isso não apareceu <code>Anotado: fim</code>.</p>
+
+<h3>Um número limitado de tentativas</h3>
+<p>Também dá para usar <code>break</code> num <code>for</code> com <a href="range.html">range()</a>. O programa da padaria dá à Ana <strong>3 chances</strong> de acertar a senha:</p>
+
+<pre class="file" data-file="senha.py">for tentativa in range(1, 4):
+    senha = input(f"Senha (tentativa {tentativa} de 3): ")
+    if senha == "pao123":
+        print("Bem-vinda, Ana!")
+        break
+    print("Senha errada.")
+print("Fim do programa.")
+</pre>
+
+<p>Acertando na segunda tentativa, o <code>break</code> encerra o laço, e a terceira pergunta nem aparece:</p>
+
+<pre class="term">$ python3 senha.py
+Senha (tentativa 1 de 3): pao12
+Senha errada.
+Senha (tentativa 2 de 3): pao123
+Bem-vinda, Ana!
+Fim do programa.</pre>
+
+<p>Errando as três, o <code>for</code> termina sozinho, porque o <code>range</code> acabou:</p>
+
+<pre class="term">$ python3 senha.py
+Senha (tentativa 1 de 3): abc
+Senha errada.
+Senha (tentativa 2 de 3): 123
+Senha errada.
+Senha (tentativa 3 de 3): pao
+Senha errada.
+Fim do programa.</pre>
+
+<p>Repare que nos dois casos o programa termina com o mesmo <code>Fim do programa.</code>. Seria bom avisar "acesso bloqueado" quando as três tentativas falham, mas como saber, depois do laço, se ele terminou pelo <code>break</code> ou porque as tentativas acabaram? O Python tem uma ferramenta exatamente para isso, e ela é a próxima aula: <a href="lacos-else.html">else nos Laços</a>.</p>
+
+<hr>
+
+<h2>3. <code>continue</code>: pular uma volta</h2>
+<p>O <code>continue</code> não sai do laço: ele abandona <strong>a volta atual</strong> e passa para a próxima. Tudo o que estiver abaixo dele no bloco é pulado <strong>só desta vez</strong>. Um exemplo pequeno, tirando os <code>a</code> de <code>banana</code>:</p>
+
+<pre class="file" data-file="sem_a.py">for letra in "banana":
+    if letra == "a":
+        continue
+    print(letra, end="")
+print()
+</pre>
+
+<pre class="term">$ python3 sem_a.py
+bnn</pre>
+
+<p>Nas voltas em que a letra é <code>a</code>, o <code>continue</code> pula o <code>print</code>, e o laço vai para a próxima letra. Nas outras, o <code>print</code> roda normalmente. Sobraram <code>b</code>, <code>n</code>, <code>n</code>.</p>
+
+<h3>Ignorando valores que não servem</h3>
+<p>Uma lista de valores do caixa veio com alguns números negativos (estornos que a Ana quer deixar de fora da conta). O <code>continue</code> pula esses:</p>
+
+<pre class="file" data-file="positivos.py">valores = [12, -5, 30, -2, 8]
+total = 0
+for valor in valores:
+    if valor &lt; 0:
+        print(f"Pulando {valor}")
+        continue
+    total += valor
+    print(f"Somei {valor}, total = {total}")
+print(f"Total: {total}")
+</pre>
+
+<pre class="term">$ python3 positivos.py
+Somei 12, total = 12
+Pulando -5
+Somei 30, total = 42
+Pulando -2
+Somei 8, total = 50
+Total: 50</pre>
+
+<dl class="anatomy">
+  <dt>if valor &lt; 0:</dt><dd>O teste do item "ruim".</dd>
+  <dt>continue</dt><dd>Para os negativos: pula o resto do bloco (o <code>total += valor</code> e o <code>print</code> de baixo) e vai para o próximo valor.</dd>
+  <dt>total += valor</dt><dd>Só chega aqui quem passou pelo teste: os valores de 0 para cima.</dd>
+</dl>
+
+<p>Esse jeito de escrever se chama <strong>cláusula de guarda</strong>: os casos que não interessam são despachados logo no começo do bloco, e o resto do código cuida só do caso normal, sem precisar ficar mais indentado.</p>
+
+<div class="trypy" data-goal="outre:^1\n2\n4\n5\n7\n8\n10\n$;;src:\bcontinue\b">
+<p class="try-task"><strong>Missão:</strong> mostre os números de 1 a 10, um por linha, <strong>pulando os múltiplos de 3</strong> (3, 6 e 9). Use <code>continue</code>. Dica: <code>numero % 3 == 0</code> é <code>True</code> quando o resto da divisão por 3 é zero (veja <a href="operadores-aritmeticos.html">Operadores Aritméticos</a>).</p>
+<pre class="script" data-file="main.py">for numero in range(1, 11):
+    print(numero)
+</pre>
+<pre class="solucao" data-file="main.py">for numero in range(1, 11):
+    if numero % 3 == 0:
+        continue
+    print(numero)
+</pre>
+</div>
+
+<hr>
+
+<h2>4. <code>continue</code> no <code>while</code>: cuidado com o passo</h2>
+<p>No <code>for</code>, o <code>continue</code> é tranquilo: quem avança para o próximo item é o próprio <code>for</code>. No <code>while</code>, quem avança é <strong>você</strong>, com o passo (o <code>numero += 1</code>). Por isso o passo tem de vir <strong>antes</strong> do <code>continue</code>:</p>
+
+<pre class="file" data-file="continue_while.py">numero = 0
+while numero &lt; 10:
+    numero += 1
+    if numero % 3 == 0:
+        continue
+    print(numero, end=" ")
+print()
+</pre>
+
+<pre class="term">$ python3 continue_while.py
+1 2 4 5 7 8 10 </pre>
+
+<p>O <code>numero += 1</code> é a primeira linha do bloco, então ele roda em toda volta, inclusive nas que o <code>continue</code> interrompe. A seção <a href="#errado">Quando dá errado</a> mostra o que acontece quando o passo fica depois do <code>continue</code>.</p>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+<p><code>break</code> e <code>continue</code> nunca são <strong>obrigatórios</strong>: sempre dá para escrever sem eles. A questão é qual versão fica mais fácil de ler.</p>
+
+<h3><code>continue</code> × <code>if</code> ao contrário</h3>
+<p>A soma dos valores positivos, sem <code>continue</code>: em vez de "se for negativo, pule", escreva "se não for negativo, some":</p>
+
+<pre class="file" data-file="positivos_if.py">valores = [12, -5, 30, -2, 8]
+total = 0
+for valor in valores:
+    if valor &gt;= 0:
+        total += valor
+print(f"Total: {total}")
+</pre>
+
+<pre class="term">$ python3 positivos_if.py
+Total: 50</pre>
+
+<p>Com uma linha só para fazer, o <code>if</code> invertido é mais simples. O <code>continue</code> compensa quando o caso normal tem <strong>muitas</strong> linhas: sem ele, todas elas ficariam um nível mais para dentro.</p>
+
+<h3><code>while True</code> + <code>break</code> × condição no <code>while</code></h3>
+<p>A lista de compras, sem <code>break</code>, com a condição no próprio <code>while</code>:</p>
+
+<pre class="file" data-file="while_cond.py">produto = input("Produto (ou fim): ")
+while produto != "fim":
+    print(f"Anotado: {produto}")
+    produto = input("Produto (ou fim): ")
+print("Lista fechada.")
+</pre>
+
+<pre class="term">$ python3 while_cond.py
+Produto (ou fim): pão
+Anotado: pão
+Produto (ou fim): leite
+Anotado: leite
+Produto (ou fim): fim
+Lista fechada.</pre>
+
+<p>Mesmo resultado, mas o <code>input</code> aparece <strong>duas vezes</strong> (antes do laço e no fim do bloco). Com <code>while True</code>, ele aparece uma vez só.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Situação</th><th>Qual usar</th></tr>
+<tr><td>Procurar algo e parar quando achar</td><td><code>for</code> com <code>if … : break</code></td></tr>
+<tr><td>Ler até o usuário digitar uma palavra de saída</td><td><code>while True:</code> com <code>break</code> (lê uma vez só) ou <code>while resposta != "fim":</code> (lê duas vezes)</td></tr>
+<tr><td>Pular itens, com pouca coisa para fazer nos outros</td><td><code>if</code> invertido, sem <code>continue</code></td></tr>
+<tr><td>Pular itens, com muitas linhas para os outros</td><td><code>if … : continue</code> no começo do bloco (cláusula de guarda)</td></tr>
+<tr><td>Saber, depois do laço, se ele saiu por <code>break</code></td><td><code>else</code> no laço (aula <a href="lacos-else.html">else nos Laços</a>)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong><code>break</code> fora de um laço</strong>
+<p>Quem acabou de aprender o <code>break</code> às vezes tenta usá-lo para "sair do <code>if</code>":</p>
+<pre class="file" data-file="break_fora.py">nota = 7
+if nota &gt;= 6:
+    print("Aprovada")
+    break
+</pre>
+<pre class="term">$ python3 break_fora.py
+  File "/home/ana/break_fora.py", line 4
+    break
+    ^^^^^
+SyntaxError: 'break' outside loop</pre>
+<p>"Erro de sintaxe: <code>break</code> fora de um laço". O <code>break</code> sai de um <code>for</code> ou de um <code>while</code>; um <code>if</code> sozinho não é laço, e não há de onde sair. Como é erro de sintaxe, nem o <code>Aprovada</code> aparece: o programa não chega a rodar. <strong>Como consertar:</strong> tire o <code>break</code>. Um <code>if</code> termina sozinho, no fim do seu bloco.</p>
+</div>
+
+<div class="cenario">
+<strong><code>continue</code> fora de um laço</strong>
+<pre class="file" data-file="continue_fora.py">nota = 7
+if nota &gt;= 6:
+    continue
+print("Fim")
+</pre>
+<pre class="term">$ python3 continue_fora.py
+  File "/home/ana/continue_fora.py", line 3
+    continue
+    ^^^^^^^^
+SyntaxError: 'continue' not properly in loop</pre>
+<p>"<code>continue</code> não está propriamente dentro de um laço". Mesmo caso: não existe "próxima volta" fora de um laço. <strong>Como consertar:</strong> use o <code>continue</code> só dentro de um <code>for</code> ou <code>while</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O <code>break</code> ficou fora do <code>if</code></strong>
+<p>Uma diferença de indentação, e a busca para no primeiro nome:</p>
+<pre class="file" data-file="break_cedo.py">convidados = ["Ana", "Bruno", "Carla", "Davi", "Elisa"]
+procurado = "Carla"
+for nome in convidados:
+    print(f"Conferindo {nome}...")
+    if nome == procurado:
+        print(f"Achei a {procurado}!")
+    break
+print("Fim da busca.")
+</pre>
+<pre class="term">$ python3 break_cedo.py
+Conferindo Ana...
+Fim da busca.</pre>
+<p>Nenhuma mensagem de erro. O <code>break</code> está com 4 espaços, alinhado com o <code>if</code>: ele faz parte do <code>for</code>, mas não do <code>if</code>. Então roda <strong>em toda volta</strong>, já na primeira, achando ou não. <strong>Como consertar:</strong> indente o <code>break</code> com 8 espaços, junto do <code>print</code> do <code>if</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>continue</code> antes do passo, no <code>while</code>: o programa trava</strong>
+<pre class="file" data-file="continue_trava.py">numero = 1
+while numero &lt;= 10:
+    if numero % 3 == 0:
+        continue
+    print(numero)
+    numero += 1
+print("Fim!")
+</pre>
+<pre class="term">$ python3 continue_trava.py
+1
+2
+^CTraceback (most recent call last):           « nada acontecia; a Ana apertou Ctrl+C
+  File "/home/ana/continue_trava.py", line 4, in &lt;module&gt;
+    continue
+KeyboardInterrupt
+
+$ echo $?
+130</pre>
+<p>O programa mostrou 1 e 2 e ficou parado, sem mostrar mais nada e sem terminar. Quando o <code>numero</code> chegou a 3, o <code>continue</code> pulou o <code>numero += 1</code>. Na volta seguinte, o número ainda era 3, o <code>continue</code> pulou de novo, e assim para sempre: um laço infinito <strong>silencioso</strong>, porque o <code>print</code> também é pulado. Só o <kbd>Ctrl</kbd>+<kbd>C</kbd> o interrompeu (o <code>KeyboardInterrupt</code> está explicado na aula <a href="while.html">while</a>). A linha mostrada no traceback é onde o programa estava naquele instante; num laço tão curto, podia ser a 3 ou a 4. <strong>Como consertar:</strong> faça o passo <strong>antes</strong> do <code>continue</code>, como na seção 4, ou use um <code>for</code> com <code>range</code>, que avança sozinho.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>break</code></td><td>Sai do laço na hora; segue na primeira linha depois dele</td></tr>
+<tr><td><code>continue</code></td><td>Pula o resto desta volta e vai para a próxima</td></tr>
+<tr><td><code>if achou: break</code></td><td>Busca que para no primeiro que serve</td></tr>
+<tr><td><code>while True:</code> … <code>if resposta == "fim": break</code></td><td>Repetir até o usuário mandar parar</td></tr>
+<tr><td><code>for tentativa in range(3):</code> … <code>break</code></td><td>No máximo 3 tentativas; sai antes se acertar</td></tr>
+<tr><td><code>if ruim: continue</code> no começo do bloco</td><td>Cláusula de guarda: ignora os itens que não servem</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>SyntaxError: 'break' outside loop</code></td><td><code>break</code> fora de <code>for</code>/<code>while</code> (por exemplo, só num <code>if</code>)</td></tr>
+<tr><td><code>SyntaxError: 'continue' not properly in loop</code></td><td><code>continue</code> fora de <code>for</code>/<code>while</code></td></tr>
+<tr><td>O laço para logo na primeira volta</td><td>O <code>break</code> está fora do <code>if</code> (indentação)</td></tr>
+<tr><td>O programa para de mostrar coisas e não termina</td><td><code>continue</code> antes do passo num <code>while</code></td></tr>
+<tr><td>A busca acha, mas continua olhando o resto</td><td>Faltou o <code>break</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Qual palavra?</h3>
+<p>Complete com a palavra que <strong>sai do laço</strong> assim que o número 7 aparecer:</p>
+<div class="ex-code">for n in [3, 7, 9]:<br>&nbsp;&nbsp;&nbsp;&nbsp;if n == 7:<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input data-answer="break" aria-label="palavra-chave"></div>
+</div>
+
+<div class="exercise">
+<h3>2. O que sobra?</h3>
+<p>O que este programa mostra (tudo junto, sem espaços)?</p>
+<pre class="file" data-file="exercicio.py">for letra in "python":
+    if letra in "aeiouy":
+        continue
+    print(letra, end="")
+print()
+</pre>
+<div class="ex-code">Mostra <input data-answer="pthn" aria-label="saída">.</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. Qual é a diferença entre <code>break</code> e <code>continue</code>?</p>
+<label><input type="radio" name="q3"> Nenhuma; são dois nomes para a mesma coisa</label>
+<label><input type="radio" name="q3"> <code>break</code> encerra o laço inteiro; <code>continue</code> encerra só a volta atual e vai para a próxima</label>
+<label><input type="radio" name="q3"> <code>break</code> só funciona no <code>while</code>; <code>continue</code> só no <code>for</code></label>
+<label><input type="radio" name="q3"> <code>continue</code> encerra o programa</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Quantas vezes aparece <code>Oi</code>? <code>for i in range(10):</code> / <code>&nbsp;&nbsp;&nbsp;&nbsp;if i == 3:</code> / <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break</code> / <code>&nbsp;&nbsp;&nbsp;&nbsp;print("Oi")</code></p>
+<label><input type="radio" name="q4"> 10</label>
+<label><input type="radio" name="q4"> 4</label>
+<label><input type="radio" name="q4"> 3</label>
+<label><input type="radio" name="q4"> 9</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Um programa com <code>if</code> e <code>break</code>, sem nenhum laço, dá <code>SyntaxError: 'break' outside loop</code>. Qual é o conserto?</p>
+<label><input type="radio" name="q5"> Tirar o <code>break</code>: o <code>if</code> termina sozinho no fim do bloco</label>
+<label><input type="radio" name="q5"> Trocar o <code>break</code> por <code>continue</code></label>
+<label><input type="radio" name="q5"> Pôr parênteses: <code>break()</code></label>
+<label><input type="radio" name="q5"> Indentar mais o <code>break</code></label>
+</div>
+
+<h3>Missão final: o caixa que ignora os estornos</h3>
+
+<div class="trypy" data-stdin="10\n-5\n20\nfim" data-goal="out:Total: 30;;src:\bcontinue\b">
+<p class="try-task"><strong>Missão:</strong> o caixa lê valores até a Ana digitar <code>fim</code> (isso o <code>break</code> já resolve). Mas os valores negativos estão entrando na soma. A caixa vai "digitar" <code>10</code>, <code>-5</code>, <code>20</code> e <code>fim</code>. Use <code>continue</code> no lugar do comentário para pular os negativos: o total deve dar <strong>30</strong>.</p>
+<pre class="script" data-file="main.py">total = 0
+while True:
+    texto = input("Valor (ou fim): ")
+    if texto == "fim":
+        break
+    valor = int(texto)
+    # pule os valores negativos aqui
+    total += valor
+print(f"Total: {total}")
+</pre>
+<pre class="solucao" data-file="main.py">total = 0
+while True:
+    texto = input("Valor (ou fim): ")
+    if texto == "fim":
+        break
+    valor = int(texto)
+    if valor &lt; 0:
+        continue
+    total += valor
+print(f"Total: {total}")
+</pre>
+</div>
+
+<p>No lab, com as mesmas entradas digitadas no terminal:</p>
+
+<pre class="term">$ python3 total_fim.py
+Valor (ou fim): 10
+Valor (ou fim): -5
+Valor (ou fim): 20
+Valor (ou fim): fim
+Total: 30</pre>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>break</code> sai do laço na hora; o programa segue na primeira linha depois dele. Use para parar uma busca quando achar.</li>
+  <li><code>continue</code> abandona só a volta atual e passa para a próxima. Use para pular itens que não servem.</li>
+  <li>Os dois só funcionam dentro de <code>for</code> ou <code>while</code>; fora deles, dá <code>SyntaxError</code>. Quase sempre aparecem dentro de um <code>if</code>, e a indentação decide quando rodam.</li>
+  <li><code>while True:</code> com <code>break</code> repete até você mandar parar, lendo a entrada uma vez só.</li>
+  <li>No <code>while</code>, faça o passo <strong>antes</strong> do <code>continue</code>, senão o laço trava.</li>
+  <li>Para saber, depois do laço, se ele saiu por <code>break</code>, existe o <a href="lacos-else.html">else nos Laços</a>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
