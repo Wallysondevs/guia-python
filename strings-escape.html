@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Caracteres de Escape — \n, \t, \\ e strings cruas | Guia Python</title>
+<meta name="description" content="Caracteres de escape em Python para quem está começando: a barra invertida, a quebra de linha \n, a tabulação \t, a própria barra \\, aspas com \' e \&quot;, letras pelo código Unicode, strings cruas r&quot;…&quot; para caminhos do Windows e expressões regulares, o SyntaxWarning real de &quot;\d&quot; no Python 3.12+ e o erro unicodeescape de &quot;C:\Users&quot;.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python: Caracteres de <span class="hl">Escape</span> (<code>\n</code>, <code>\t</code>)</h1>
+
+<p class="intro">Como você escreve, num texto de uma linha só, uma <strong>quebra de linha</strong>? Ou um <strong>Tab</strong>? Ou um apóstrofo e aspas duplas ao mesmo tempo? Você já viu uma pista na aula <a href="strings.html">Strings</a>: o modo interativo mostrou <code>'linha 1\nlinha 2'</code>. Aquele <code>\n</code> é um <strong>caractere de escape</strong>: uma barra invertida (<code>\</code>) seguida de uma letra, que juntas querem dizer um caractere especial. Esta aula mostra os mais usados, as <strong>strings cruas</strong> (<code>r"…"</code>), que desligam esse efeito, e um aviso que o Python 3.12 começou a dar e que pega muita gente.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que a barra invertida <code>\</code> faz dentro de um texto.</li>
+  <li>A quebrar linhas com <code>\n</code> e a pôr tabulações com <code>\t</code>.</li>
+  <li>A escrever a própria barra (<code>\\</code>) e aspas dentro de aspas (<code>\'</code> e <code>\"</code>).</li>
+  <li>A escrever uma letra pelo seu código Unicode: <code>\u00e7</code> é o <code>ç</code>.</li>
+  <li>As strings cruas, <code>r"C:\novo"</code>, e quando usá-las.</li>
+  <li>Os problemas reais: o caminho do Windows que se desmancha, o <code>SyntaxError</code> de <code>"C:\Users"</code> e o <code>SyntaxWarning</code> de <code>"\d"</code>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a barra que avisa "o próximo é especial"</h2>
+<p>Nos bilhetes, às vezes a gente escreve "(pular linha)" para avisar quem vai passar a limpo. A palavra entre parênteses não é para ser copiada: ela é uma <strong>instrução</strong>. No Python, quem faz esse papel é a barra invertida. Quando ele encontra uma <code>\</code> dentro de um texto, entende: "o caractere seguinte não é para ser lido ao pé da letra". A barra e a letra seguinte formam uma <strong>sequência de escape</strong> (o caractere "escapa" do seu sentido normal), e as duas juntas viram <strong>um caractere só</strong>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Você escreve</th><th>Vira</th><th>Nome</th></tr>
+<tr><td><code>\n</code></td><td>Uma quebra de linha</td><td><em>newline</em>, "linha nova"</td></tr>
+<tr><td><code>\t</code></td><td>Uma tabulação (a tecla Tab)</td><td><em>tab</em></td></tr>
+<tr><td><code>\\</code></td><td>Uma barra invertida <code>\</code></td><td>barra invertida (<em>backslash</em>)</td></tr>
+<tr><td><code>\'</code></td><td>Um apóstrofo <code>'</code></td><td>aspa simples</td></tr>
+<tr><td><code>\"</code></td><td>Aspas duplas <code>"</code></td><td>aspa dupla</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. <code>\n</code>: quebra de linha</h2>
+
+<pre class="file" data-file="quebra.py">print("Mãe,\nfui à padaria.\nVolto às 8.")
+print("---")
+print("Linha 1\n\nLinha 3")
+print(len("\n"))
+</pre>
+
+<pre class="term">$ python3 quebra.py
+Mãe,
+fui à padaria.
+Volto às 8.
+---
+Linha 1
+
+Linha 3
+1
+</pre>
+
+<dl class="anatomy">
+  <dt>"Mãe,\nfui à padaria.\nVolto às 8."</dt><dd>Um texto de uma linha só no código, mas com duas quebras dentro. Na tela, viraram três linhas.</dd>
+  <dt>\n\n</dt><dd>Duas quebras seguidas: uma linha em branco no meio.</dd>
+  <dt>len("\n")</dt><dd>Deu <strong>1</strong>: a barra e o <code>n</code> são dois símbolos no código, mas um caractere só no texto.</dd>
+</dl>
+
+<p>O resultado é o mesmo das aspas triplas da aula <a href="strings.html">Strings</a>. Na verdade, o texto de aspas triplas <strong>guarda</strong> as quebras como <code>\n</code>, e é isso que o modo interativo mostra quando você pede o valor sem <code>print</code>:</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; texto = "Ana\nBia"
+&gt;&gt;&gt; texto
+'Ana\nBia'
+&gt;&gt;&gt; print(texto)
+Ana
+Bia
+&gt;&gt;&gt; exit()
+</pre>
+
+<p>Sem <code>print</code>, o modo interativo mostra o texto "como ele seria escrito no código", com aspas e com o <code>\n</code> à vista. Com <code>print</code>, mostra o texto "como ele é", com a quebra de verdade. (Você também já usou um <code>\n</code> sem saber: o <code>print</code> põe um no fim de tudo o que mostra. É o <code>end="\n"</code> da aula <a href="print-sep-end.html">As Opções sep e end</a>.)</p>
+
+<div class="trypy" data-goal="outre:pão\nleite\ncafé;;src:\\n">
+<p class="try-task"><strong>Missão:</strong> o programa mostra a lista de compras numa linha só. Ponha <code>\n</code> no lugar dos espaços para que cada item fique numa linha, ainda com <strong>um único</strong> <code>print</code>.</p>
+<pre class="script" data-file="main.py">print("pão leite café")
+</pre>
+<pre class="solucao" data-file="main.py">print("pão\nleite\ncafé")
+</pre>
+</div>
+
+<hr>
+
+<h2>2. <code>\t</code>: tabulação</h2>
+<p>O <code>\t</code> é a tecla Tab: ele empurra o que vem depois até a próxima "parada" da linha. No terminal, as paradas ficam a cada 8 colunas.</p>
+
+<pre class="file" data-file="tab.py">print("Produto\tPreço")
+print("Pão\t0,80")
+print("Café\t4,50")
+print("Bolo de fubá\t25,00")
+</pre>
+
+<pre class="term">$ python3 tab.py
+Produto Preço
+Pão     0,80
+Café    4,50
+Bolo de fubá    25,00
+</pre>
+
+<p>As três primeiras linhas ficaram alinhadas: "Produto", "Pão" e "Café" têm menos de 8 letras, e o Tab levou todos para a coluna 8. Mas "Bolo de fubá" tem 12, passou da primeira parada, e o Tab o levou até a <strong>próxima</strong>, a coluna 16. A coluna dos preços entortou.</p>
+
+<div class="tip">
+<strong>Para tabelas, prefira as f-strings</strong>
+<p>O <code>\t</code> é ótimo para separar campos num arquivo (muitas planilhas abrem textos separados por Tab), mas, para <strong>alinhar na tela</strong>, a largura das f-strings é mais confiável: <code>f"{'Bolo de fubá':&lt;15}{25:&gt;8.2f}"</code> (aula <a href="f-strings.html">f-strings</a>). Lá, você escolhe a largura de cada coluna, e ela não muda com o tamanho da palavra.</p>
+</div>
+
+<div class="trypy" data-goal="outre:Nome\tNota\nAna\t9\.5;;src:\\t">
+<p class="try-task"><strong>Missão:</strong> separe o nome e a nota com um <code>\t</code>, no lugar dos espaços, nas duas linhas.</p>
+<pre class="script" data-file="main.py">print("Nome Nota")
+print("Ana 9.5")
+</pre>
+<pre class="solucao" data-file="main.py">print("Nome\tNota")
+print("Ana\t9.5")
+</pre>
+</div>
+
+<hr>
+
+<h2>3. <code>\'</code> e <code>\"</code>: aspas dentro de aspas</h2>
+<p>Na aula <a href="strings.html">Strings</a>, a saída para um apóstrofo era usar aspas duplas por fora. E quando o texto tem <strong>os dois</strong>? A barra resolve: <code>\'</code> e <code>\"</code> são aspas que <strong>não fecham</strong> o texto.</p>
+
+<pre class="file" data-file="aspas-escape.py">print('Copo d\'água')
+print("Ela disse \"bom dia\"")
+print("Copo d'água e \"bom dia\"")
+</pre>
+
+<pre class="term">$ python3 aspas-escape.py
+Copo d'água
+Ela disse "bom dia"
+Copo d'água e "bom dia"
+</pre>
+
+<p>A terceira linha tem os dois tipos: o apóstrofo entra direto (o texto abriu com aspas duplas), e as aspas duplas de dentro vão com barra.</p>
+
+<hr>
+
+<h2>4. <code>\\</code>: a própria barra</h2>
+<p>Se a barra é especial, como escrever uma barra de verdade? Com <strong>duas</strong>: a primeira avisa, a segunda é a barra.</p>
+
+<pre class="file" data-file="barra.py">print("Use a barra invertida: \\")
+print("C:\\Users\\ana")
+print(len("\\"))
+</pre>
+
+<pre class="term">$ python3 barra.py
+Use a barra invertida: \
+C:\Users\ana
+1
+</pre>
+
+<p>De novo, <code>len("\\")</code> é 1: duas barras no código, uma no texto.</p>
+
+<hr>
+
+<h2>5. Letras pelo código: <code>\u</code> e <code>\N{…}</code></h2>
+<p>Todo caractere tem um número no padrão <strong>Unicode</strong>. Com <code>\u</code> seguido de 4 algarismos hexadecimais (de 0 a 9 e de a a f), você escreve um caractere pelo número; com <code>\N{…}</code>, pelo nome oficial, em inglês:</p>
+
+<pre class="file" data-file="unicode.py">print("Cora\u00e7\u00e3o")
+print("\N{LATIN SMALL LETTER C WITH CEDILLA}")
+print("Caf\u00e9 \u2615")
+</pre>
+
+<pre class="term">$ python3 unicode.py
+Coração
+ç
+Café ☕
+</pre>
+
+<p><code>\u00e7</code> é o <code>ç</code>, <code>\u00e3</code> é o <code>ã</code>, <code>\u00e9</code> é o <code>é</code> e <code>\u2615</code> é uma xícara de café. No dia a dia, você digita as letras com acento direto, e funciona; o <code>\u</code> é útil para símbolos que não estão no teclado. O que importa aqui é saber que <code>\u</code> (e <code>\U</code>, com 8 algarismos) existe, porque ele causa um dos erros da seção <a href="#errado">Quando dá errado</a>.</p>
+
+<hr>
+
+<h2>6. Strings cruas: <code>r"…"</code></h2>
+<p>Às vezes você quer as barras <strong>ao pé da letra</strong>, sem efeito nenhum. Os dois casos clássicos são os caminhos de pastas do Windows (<code>C:\Users\ana</code>) e as <a href="regex.html">expressões regulares</a>, que usam barras o tempo todo. Para isso existem as <strong>strings cruas</strong> (em inglês, <em>raw strings</em>): um <code>r</code> antes das aspas.</p>
+
+<pre class="file" data-file="cru.py">print(r"C:\novo\teste")
+print(r"C:\Users\ana")
+print(r"Um \n de verdade")
+print(len(r"\n"))
+</pre>
+
+<pre class="term">$ python3 cru.py
+C:\novo\teste
+C:\Users\ana
+Um \n de verdade
+2
+</pre>
+
+<dl class="anatomy">
+  <dt>r</dt><dd>De <em>raw</em>, "cru". Colado antes das aspas, como o <code>f</code> das f-strings.</dd>
+  <dt>"C:\novo\teste"</dt><dd>Com o <code>r</code>, o <code>\n</code> e o <code>\t</code> não são quebra de linha nem Tab: são uma barra seguida de uma letra.</dd>
+  <dt>len(r"\n")</dt><dd>Deu <strong>2</strong>: numa string crua, a barra e o <code>n</code> são dois caracteres de verdade.</dd>
+</dl>
+
+<p>A string crua é só um jeito diferente de <strong>escrever</strong> o texto no código. O resultado é um <code>str</code> comum: <code>r"C:\Users"</code> e <code>"C:\\Users"</code> são exatamente o mesmo texto.</p>
+
+<hr>
+
+<h2>Formas diferentes de escrever o mesmo texto</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Você quer…</th><th>Opções</th><th>Qual usar</th></tr>
+<tr><td>um texto de várias linhas</td><td><code>"linha 1\nlinha 2"</code> · <code>"""linha 1<br>linha 2"""</code> · dois <code>print</code></td><td><code>\n</code> para textos curtos; aspas triplas para textos longos, que ficam mais fáceis de ler</td></tr>
+<tr><td>apóstrofo no texto</td><td><code>"Copo d'água"</code> · <code>'Copo d\'água'</code></td><td>Aspas duplas por fora: sem barra nenhuma</td></tr>
+<tr><td>apóstrofo e aspas duplas</td><td><code>"d'água e \"oi\""</code> · <code>"""d'água e "oi\""""</code></td><td>A barra (<code>\"</code>)</td></tr>
+<tr><td>um caminho do Windows</td><td><code>r"C:\Users\ana"</code> · <code>"C:\\Users\\ana"</code> · <code>"C:/Users/ana"</code></td><td>A string crua; ou barras normais (<code>/</code>), que o Python aceita no Windows também. A aula <a href="pathlib.html">pathlib</a> mostra o jeito mais moderno</td></tr>
+<tr><td>um padrão de expressão regular</td><td><code>r"\d+"</code> · <code>"\\d+"</code></td><td>Sempre a string crua</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>O caminho do Windows que se desmancha</strong>
+<p>Uma amiga da Ana, que usa Windows, mandou o caminho de uma pasta: <code>C:\novo\teste</code>. A Ana colou no programa:</p>
+<pre class="file" data-file="caminho.py">print("C:\novo\teste")
+</pre>
+<pre class="term">$ python3 caminho.py
+C:
+ovo     este
+</pre>
+<p>Nenhuma mensagem de erro, e o caminho saiu destruído. O <code>\n</code> de <code>\novo</code> virou uma quebra de linha (sumiu o <code>n</code>), e o <code>\t</code> de <code>\teste</code> virou um Tab (sumiu o <code>t</code>). O Python fez exatamente o que está escrito. <strong>Como consertar:</strong> string crua, <code>r"C:\novo\teste"</code>, ou barras dobradas, <code>"C:\\novo\\teste"</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>"C:\Users"</code>: o erro <code>unicodeescape</code></strong>
+<pre class="file" data-file="caminho-users.py">print("C:\Users\ana")
+</pre>
+<pre class="term">$ python3 caminho-users.py
+  File "/home/ana/caminho-users.py", line 1
+    print("C:\Users\ana")
+          ^^^^^^^^^^^^^^
+SyntaxError: (unicode error) 'unicodeescape' codec can't decode bytes in position 2-3: truncated \UXXXXXXXX escape
+</pre>
+<p>Agora o programa nem rodou. A mensagem assusta, mas dá para ler por partes:</p>
+<dl class="anatomy">
+  <dt>SyntaxError:</dt><dd>"Erro de sintaxe": o Python achou o problema só de ler o código.</dd>
+  <dt>(unicode error) 'unicodeescape' codec</dt><dd>Quem reclamou foi a parte do Python que entende as sequências <code>\u</code> e <code>\U</code> (seção 5).</dd>
+  <dt>can't decode bytes in position 2-3</dt><dd>"Não consegui entender os caracteres das posições 2 e 3" do texto: o <code>\U</code> de <code>\Users</code> (contando do zero: <code>C</code> é 0, <code>:</code> é 1, a barra é 2, o <code>U</code> é 3).</dd>
+  <dt>truncated \UXXXXXXXX escape</dt><dd>"Sequência <code>\U</code> incompleta": depois de <code>\U</code>, o Python esperava <strong>8</strong> algarismos hexadecimais (o <code>XXXXXXXX</code>) com o número de um caractere, e encontrou <code>sers</code>.</dd>
+</dl>
+<p>É o erro mais famoso de quem usa Windows, porque todo caminho de usuário começa com <code>C:\Users</code>. <strong>Como consertar:</strong> <code>r"C:\Users\ana"</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>"\d"</code>: o <code>SyntaxWarning</code> do Python 3.12 em diante</strong>
+<p>E se a letra depois da barra não for nenhuma das especiais? A Ana copiou da internet um padrão de expressão regular (aula <a href="regex.html">Expressões Regulares</a>) que procura algarismos:</p>
+<pre class="file" data-file="aviso-d.py">padrao = "\d+"
+print(padrao)
+</pre>
+<pre class="term">$ python3 aviso-d.py
+/home/ana/aviso-d.py:1: SyntaxWarning: "\d" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\d"? A raw string is also an option.
+  padrao = "\d+"
+\d+
+</pre>
+<p>O programa funcionou (a última linha mostra <code>\d+</code>, com a barra), mas veio um aviso. Por partes:</p>
+<dl class="anatomy">
+  <dt>/home/ana/aviso-d.py:1:</dt><dd>Arquivo e linha (a 1).</dd>
+  <dt>SyntaxWarning:</dt><dd>"Aviso de sintaxe": não é um erro, o programa continua. Mas é um aviso sério.</dd>
+  <dt>"\d" is an invalid escape sequence.</dt><dd>"<code>\d</code> é uma sequência de escape inválida": <code>\d</code> não quer dizer nada para o Python.</dd>
+  <dt>Such sequences will not work in the future.</dt><dd>"Sequências assim não vão funcionar no futuro." Hoje, o Python deixa a barra no texto, de favor. Numa versão futura, isso vai virar <strong>erro</strong>.</dd>
+  <dt>Did you mean "\\d"? A raw string is also an option.</dt><dd>"Você quis dizer <code>\\d</code>? Uma string crua também é uma opção." As duas saídas certas.</dd>
+</dl>
+<p><strong>Como consertar:</strong> string crua, que é o costume para expressões regulares:</p>
+<pre class="file" data-file="aviso-d-cru.py">padrao = r"\d+"
+print(padrao)
+print("\\d+")
+</pre>
+<pre class="term">$ python3 aviso-d-cru.py
+\d+
+\d+
+</pre>
+<p>Sem aviso, e o texto é o mesmo nas duas formas.</p>
+</div>
+
+<div class="note">
+<strong>Em versões mais antigas</strong>
+<p>Até o Python 3.11, o mesmo <code>"\d"</code> dava um <code>DeprecationWarning</code>, um aviso que fica <strong>escondido</strong> quando você roda o programa normalmente. Por isso tanto código antigo, e tanto exemplo na internet, tem <code>"\d"</code> sem <code>r</code>. Desde o 3.12, o aviso virou <code>SyntaxWarning</code> e aparece para todo mundo, como você viu no Python 3.14 da Ana; a documentação oficial avisa que, no futuro, vai virar <code>SyntaxError</code>. (O comportamento do 3.11 está descrito conforme a documentação; não deu para rodá-lo no laboratório.)</p>
+</div>
+
+<div class="cenario">
+<strong>String crua terminando em barra</strong>
+<pre class="file" data-file="cru-fim.py">pasta = r"C:\pasta\"
+print(pasta)
+</pre>
+<pre class="term">$ python3 cru-fim.py
+  File "/home/ana/cru-fim.py", line 1
+    pasta = r"C:\pasta\"
+            ^
+SyntaxError: unterminated string literal (detected at line 1); perhaps you escaped the end quote?
+</pre>
+<p>Uma pegadinha das strings cruas: elas não podem terminar com <strong>uma</strong> barra. Mesmo crua, a barra ainda impede que a aspa seguinte feche o texto (a barra fica no texto, mas a aspa também). Por isso o texto nunca fecha: <code>unterminated string literal</code>, e o Python pergunta, com razão: <code>perhaps you escaped the end quote?</code>, "será que você 'escapou' a aspa do fim?". <strong>Como consertar:</strong> tire a barra do fim (<code>r"C:\pasta"</code>), ou use barras dobradas num texto normal: <code>"C:\\pasta\\"</code>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Vira</th><th>Exemplo → resultado</th></tr>
+<tr><td><code>\n</code></td><td>Quebra de linha</td><td><code>len("a\nb")</code> → <code>3</code></td></tr>
+<tr><td><code>\t</code></td><td>Tabulação</td><td><code>"a\tb".split("\t")</code> → <code>['a', 'b']</code></td></tr>
+<tr><td><code>\\</code></td><td>Uma barra invertida</td><td><code>print("x\\y")</code> → <code>x\y</code></td></tr>
+<tr><td><code>\'</code></td><td>Apóstrofo</td><td><code>'d\'água'</code> → <code>d'água</code></td></tr>
+<tr><td><code>\"</code></td><td>Aspas duplas</td><td><code>"\"oi\""</code> → <code>"oi"</code></td></tr>
+<tr><td><code>\u00e7</code></td><td>O caractere de código Unicode 00e7</td><td><code>ç</code></td></tr>
+<tr><td><code>\N{nome}</code></td><td>O caractere com esse nome Unicode</td><td><code>"\N{LATIN SMALL LETTER C WITH CEDILLA}"</code> → <code>ç</code></td></tr>
+<tr><td><code>r"…"</code></td><td>String crua: barras ao pé da letra</td><td><code>len(r"a\nb")</code> → <code>4</code></td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td>Um caminho saiu quebrado em duas linhas, ou com espaços no meio</td><td><code>\n</code> ou <code>\t</code> sem querer: use <code>r"…"</code></td></tr>
+<tr><td><code>SyntaxError: (unicode error) 'unicodeescape' codec can't decode bytes … truncated \UXXXXXXXX escape</code></td><td><code>\U</code> num caminho (<code>C:\Users</code>): use <code>r"…"</code></td></tr>
+<tr><td><code>SyntaxWarning: "\d" is an invalid escape sequence</code></td><td>Barra seguida de uma letra sem sentido: <code>r"\d"</code> ou <code>"\\d"</code></td></tr>
+<tr><td><code>SyntaxError: unterminated string literal … perhaps you escaped the end quote?</code></td><td>Texto terminando em <code>\"</code> (até numa string crua)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Pular linha</h3>
+<p>Complete para que "Ana" e "Bia" saiam em linhas separadas:</p>
+<div class="ex-code">print("Ana<input data-answer="\n" aria-label="escape">Bia")</div>
+</div>
+
+<div class="exercise">
+<h3>2. Contando</h3>
+<p>Quanto vale <code>len("a\tb")</code>?</p>
+<div class="ex-code"><input data-answer="3" aria-label="resultado"></div>
+</div>
+
+<div class="exercise">
+<h3>3. A letra do cru</h3>
+<p>Complete para que as barras fiquem ao pé da letra:</p>
+<div class="ex-code">print(<input data-answer="r|R" aria-label="prefixo">"C:\Users\ana")</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. O que <code>print("C:\novo")</code> mostra?</p>
+<label><input type="radio" name="q4"> <code>C:\novo</code></label>
+<label><input type="radio" name="q4"> <code>C:</code> numa linha e <code>ovo</code> na seguinte</label>
+<label><input type="radio" name="q4"> Dá <code>SyntaxError</code></label>
+<label><input type="radio" name="q4"> <code>C:novo</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. Quanto vale <code>len(r"a\nb")</code>?</p>
+<label><input type="radio" name="q5"> <code>3</code></label>
+<label><input type="radio" name="q5"> <code>2</code></label>
+<label><input type="radio" name="q5"> Dá erro</label>
+<label><input type="radio" name="q5"> <code>4</code>: na string crua, a barra e o <code>n</code> são dois caracteres</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. No Python 3.14, <code>padrao = "\d+"</code> faz o quê?</p>
+<label><input type="radio" name="q6"> Funciona, mas dá um <code>SyntaxWarning</code>: o certo é <code>r"\d+"</code></label>
+<label><input type="radio" name="q6"> Dá <code>SyntaxError</code> e o programa não roda</label>
+<label><input type="radio" name="q6"> Funciona, sem aviso nenhum</label>
+<label><input type="radio" name="q6"> Vira um algarismo</label>
+</div>
+
+<h3>Missão final: o caminho das notas</h3>
+
+<div class="trypy" data-goal="out:C:\Users\ana\notas;;semerro">
+<p class="try-task"><strong>Missão:</strong> a Ana quer mostrar o caminho de uma pasta do computador da escola, que usa Windows, mas o programa dá <code>SyntaxError</code>. Conserte, para que apareça exatamente <code>C:\Users\ana\notas</code>.</p>
+<pre class="script" data-file="main.py">pasta = "C:\Users\ana\notas"
+print(pasta)
+</pre>
+<pre class="solucao" data-file="main.py">pasta = r"C:\Users\ana\notas"
+print(pasta)
+</pre>
+</div>
+
+<p>Funcionou com <code>r"…"</code>? Tente também com as barras dobradas (<code>"C:\\Users\\ana\\notas"</code>): o resultado é o mesmo.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Dentro de um texto, a barra invertida <code>\</code> avisa que o próximo caractere é especial. Juntos, eles viram <strong>um</strong> caractere.</li>
+  <li><code>\n</code> quebra a linha, <code>\t</code> é um Tab, <code>\\</code> é uma barra, <code>\'</code> e <code>\"</code> são aspas que não fecham o texto, <code>\u00e7</code> é um caractere pelo código Unicode.</li>
+  <li>Sem <code>print</code>, o modo interativo mostra os escapes (<code>'Ana\nBia'</code>); com <code>print</code>, mostra o efeito.</li>
+  <li>Strings cruas, <code>r"…"</code>, deixam as barras ao pé da letra: use em caminhos do Windows e em expressões regulares. Elas não podem terminar com uma barra só.</li>
+  <li><code>"C:\Users"</code> dá <code>SyntaxError … unicodeescape</code>, e <code>"\d"</code> dá <code>SyntaxWarning</code> desde o Python 3.12 (e um dia vai dar erro). A saída é sempre a mesma: <code>r"…"</code> ou <code>\\</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
