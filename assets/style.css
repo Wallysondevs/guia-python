@@ -924,3 +924,23 @@ figcaption { margin-top: 8px; font-size: .92rem; color: var(--muted); line-heigh
   .tc-tab { font-size: 12.5px; padding: 3px 7px; }
   .tc .ts-run { flex-direction: column; align-items: stretch; }
 }
+
+/* pysim */
+/* ---------------- Guia Python: editor .trypy (assets/pysim.js) ---------------- */
+.trypy {
+  margin: 22px 0;
+  padding: 4px 18px 14px;
+  border: 2px dashed var(--accent);
+  border-radius: 10px;
+  min-width: 0;
+}
+.trypy .sim { max-width: 100%; }
+.tp .ts-run .ts-args-l { flex: 1 1 200px; }
+.tp .ts-run .tc-entrada-l { flex: 1 1 220px; }
+.tp .ts-run > .ts-sp { flex: 1 1 0; min-width: 0; }
+.tp .ts-saida .sim-screen { max-height: 420px; }
+.tp .sim-out .sim-info { white-space: pre-wrap; }
+@media (max-width: 600px) {
+  .trypy { padding: 4px 10px 12px; }
+  .tp .ts-run > .ts-sp { display: none; }
+}

@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Teste interno do editor | Guia Python</title>
+<meta name="description" content="Página interna de teste do editor do Guia Python (pysim.js). Não faz parte do curso.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<h1>Teste interno do <span class="hl">editor</span></h1>
+<p class="intro">Página de teste do <code>assets/pysim.js</code>, fora do menu. O <code>tools/testar-navegador.js</code> abre esta página num Chromium e clica em cada botão. Cada caixa abaixo exercita uma parte do editor.</p>
+
+<h2 id="t1">1. print e Ctrl+Enter</h2>
+<div class="trypy" id="cx-ola">
+<pre class="script" data-file="main.py">nome = "Ana"
+print(f"Olá, {nome}!")
+print("2 &lt; 3 &amp;&amp; fim")
+</pre>
+</div>
+
+<h2 id="t2">2. Traceback (NameError)</h2>
+<div class="trypy" id="cx-erro">
+<pre class="script" data-file="main.py">nomes = ["Ana", "Bia"]
+print("antes do erro")
+print(nome)
+</pre>
+</div>
+
+<h2 id="t3">3. input() digitado no terminal</h2>
+<div class="trypy" id="cx-input" data-goal="out:Olá, Bia! Você tem 31 anos.">
+<p class="try-task"><strong>Missão:</strong> rode e digite <code>Bia</code> e <code>30</code>.</p>
+<pre class="script" data-file="main.py">nome = input("Qual é o seu nome? ")
+idade = int(input("Quantos anos você tem? "))
+print(f"Olá, {nome}! Você tem {idade} anos.")
+</pre>
+<pre class="solucao" data-file="main.py">nome = input("Qual é o seu nome? ")
+idade = int(input("Quantos anos você tem? ")) + 1
+print(f"Olá, {nome}! Você tem {idade} anos.")
+</pre>
+</div>
+
+<h2 id="t4">4. data-stdin</h2>
+<div class="trypy" id="cx-stdin" data-stdin="Ana\n7\n8" data-goal="out:Média de Ana: 7.5;;semerro">
+<p class="try-task"><strong>Missão:</strong> calcule a média das duas notas.</p>
+<pre class="script" data-file="main.py">nome = input("Aluna: ")
+n1 = float(input("Nota 1: "))
+n2 = float(input("Nota 2: "))
+print(f"Média de {nome}: {n1 + n2}")
+</pre>
+<pre class="solucao" data-file="main.py">nome = input("Aluna: ")
+n1 = float(input("Nota 1: "))
+n2 = float(input("Nota 2: "))
+print(f"Média de {nome}: {(n1 + n2) / 2}")
+</pre>
+</div>
+
+<h2 id="t5">5. Abas: módulo próprio e arquivo de dados</h2>
+<div class="trypy" id="cx-abas" data-goal="arquivo:total.txt~Total: 33.6;;src:\bimport\b">
+<p class="try-task"><strong>Missão:</strong> grave o total em <code>total.txt</code>.</p>
+<pre class="script" data-file="main.py">import contas
+
+with open("precos.txt", encoding="utf-8") as f:
+    precos = [float(linha) for linha in f]
+total = contas.somar(precos)
+print(f"Total: {total}")
+</pre>
+<pre class="script" data-file="contas.py">def somar(numeros):
+    total = 0
+    for n in numeros:
+        total += n
+    return round(total, 2)
+</pre>
+<pre class="script" data-file="precos.txt">4.5
+12.9
+16.2
+</pre>
+<pre class="solucao" data-file="main.py">import contas
+
+with open("precos.txt", encoding="utf-8") as f:
+    precos = [float(linha) for linha in f]
+total = contas.somar(precos)
+print(f"Total: {total}")
+with open("total.txt", "w", encoding="utf-8") as f:
+    f.write(f"Total: {total}\n")
+</pre>
+</div>
+
+<h2 id="t6">6. data-args e sys.exit</h2>
+<div class="trypy" id="cx-args" data-args="Ana 'Bia Souza'" data-goal="exit:3;;out:Bia Souza">
+<p class="try-task"><strong>Missão:</strong> termine com o código 3.</p>
+<pre class="script" data-file="main.py">import sys
+print(sys.argv)
+for nome in sys.argv[1:]:
+    print("Oi,", nome)
+sys.exit(0)
+</pre>
+<pre class="solucao" data-file="main.py">import sys
+print(sys.argv)
+for nome in sys.argv[1:]:
+    print("Oi,", nome)
+sys.exit(3)
+</pre>
+</div>
+
+<h2 id="t7">7. Laço infinito (Parar e a trava de 10 s)</h2>
+<div class="trypy" id="cx-laco">
+<pre class="script" data-file="main.py">contador = 0
+print("começando…")
+while True:
+    contador += 1
+</pre>
+</div>
+
+<h2 id="t8">8. time.sleep, asyncio e o que o navegador não tem</h2>
+<div class="trypy" id="cx-sistema">
+<pre class="script" data-file="main.py">import asyncio, os, sys, time
+
+for i in range(3, 0, -1):
+    print(i)
+    time.sleep(0.2)
+
+async def dobro(n):
+    await asyncio.sleep(0.1)
+    return n * 2
+
+print(asyncio.run(dobro(21)))
+print(sys.platform, os.getcwd(), __file__)
+print("os.system:", os.system("ls"))
+try:
+    import subprocess
+    subprocess.run(["ls"])
+except OSError as e:
+    print("subprocess:", e)
+try:
+    import threading
+    threading.Thread(target=print).start()
+except RuntimeError as e:
+    print("threading:", e)
+</pre>
+</div>
+
+<h2 id="t9">9. erro: e SyntaxError</h2>
+<div class="trypy" id="cx-sintaxe" data-goal="erro:ZeroDivisionError">
+<p class="try-task"><strong>Missão:</strong> provoque uma divisão por zero.</p>
+<pre class="script" data-file="main.py">print("Olá"
+</pre>
+<pre class="solucao" data-file="main.py">print(10 / 0)
+</pre>
+</div>
+
+<h2 id="t10">10. input() num laço com except (modo por repetição)</h2>
+<div class="trypy" id="cx-laco-input">
+<pre class="script" data-file="main.py">import random
+sorteado = random.randint(1, 1000)
+print("Pensei num número (sorteado:", sorteado, ")")
+while True:
+    try:
+        n = int(input("Número: "))
+    except ValueError:
+        print("Isso não é um número.")
+        continue
+    except EOFError:
+        print("tchau")
+        break
+    print("dobro:", n * 2)
+</pre>
+</div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
