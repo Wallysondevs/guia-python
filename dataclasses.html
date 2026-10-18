@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Dataclasses — classes de dados com @dataclass | Guia Python</title>
+<meta name="description" content="Dataclasses para quem está começando: @dataclass escreve o __init__, o __repr__ e o __eq__ por você; campos com tipo e valor padrão, field(default_factory=list) e o ValueError real do valor padrão mutável, frozen=True e o FrozenInstanceError, order=True para ordenar, __post_init__ para validar e os erros reais do Python 3.14.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Dataclasses</span></h1>
+
+<p class="intro">Muitas classes servem só para <strong>guardar dados</strong>: um produto tem nome, preço e estoque; um aluno tem nome e nota. Para cada uma delas você escreve o mesmo <code>__init__</code> com <code>self.nome = nome</code>, o mesmo <code>__repr__</code>, o mesmo <code>__eq__</code> (aula <a href="metodos-especiais.html">Métodos Especiais</a>). É trabalho repetido, e é fácil esquecer um campo em algum lugar. A <strong>dataclass</strong> ("classe de dados") resolve isso: você lista os campos, e o Python escreve esses métodos sozinho.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A criar uma classe de dados com <code>@dataclass</code>, a partir do módulo <code>dataclasses</code>.</li>
+  <li>O que o Python escreve por você: <code>__init__</code>, <code>__repr__</code> e <code>__eq__</code>.</li>
+  <li>Campos com valor padrão, e a regra da ordem dos campos.</li>
+  <li>Por que <code>itens: list = []</code> dá <code>ValueError</code>, e como o <code>field(default_factory=list)</code> resolve.</li>
+  <li><code>frozen=True</code>: objetos que não podem mudar (e o <code>FrozenInstanceError</code>).</li>
+  <li><code>order=True</code>: objetos que sabem se ordenar, e por que a ordem dos campos importa.</li>
+  <li><code>__post_init__</code>, para conferir os dados quando o objeto nasce.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a ficha de cadastro</h2>
+<p>Quando a lojinha da Ana cadastra um produto, ela preenche uma ficha impressa com três campos: nome, preço, estoque. Ninguém redesenha a ficha a cada produto; a gráfica imprimiu o modelo uma vez e pronto. A dataclass é essa ficha: você diz <strong>quais campos</strong> existem, e o Python "imprime" o resto (o jeito de preencher, o jeito de mostrar, o jeito de comparar duas fichas).</p>
+
+<hr>
+
+<h2>1. O jeito trabalhoso (o que você já sabe fazer)</h2>
+
+<pre class="file" data-file="sem_dataclass.py">class Produto:
+    def __init__(self, nome, preco, estoque=0):
+        self.nome = nome
+        self.preco = preco
+        self.estoque = estoque
+
+    def __repr__(self):
+        return f"Produto(nome={self.nome!r}, preco={self.preco!r}, estoque={self.estoque!r})"
+
+    def __eq__(self, outro):
+        if not isinstance(outro, Produto):
+            return NotImplemented
+        return (self.nome, self.preco, self.estoque) == (outro.nome, outro.preco, outro.estoque)
+
+
+cafe = Produto("Café", 18.9, 12)
+print(cafe)
+print(cafe == Produto("Café", 18.9, 12))
+</pre>
+
+<pre class="term">$ python3 sem_dataclass.py
+Produto(nome='Café', preco=18.9, estoque=12)
+True
+</pre>
+
+<p>Funciona, mas repare: cada campo aparece <strong>cinco vezes</strong> (no parâmetro, no <code>self.… = …</code>, no <code>__repr__</code> e duas no <code>__eq__</code>). Se amanhã a Ana acrescentar o campo <code>validade</code>, ela tem de lembrar de mexer em quatro lugares.</p>
+
+<hr>
+
+<h2>2. A mesma classe com <code>@dataclass</code></h2>
+
+<pre class="file" data-file="com_dataclass.py">from dataclasses import dataclass
+
+
+@dataclass
+class Produto:
+    nome: str
+    preco: float
+    estoque: int = 0
+
+
+cafe = Produto("Café", 18.9, 12)
+leite = Produto("Leite", 5.49)
+print(cafe)
+print(leite)
+print(cafe.nome, cafe.preco)
+print(cafe == Produto("Café", 18.9, 12))
+print(Produto(nome="Pão", preco=0.75, estoque=40))
+cafe.estoque -= 1
+print(cafe)
+</pre>
+
+<dl class="anatomy">
+  <dt>from dataclasses import dataclass</dt><dd>Traz o decorador <code>dataclass</code> do módulo <code>dataclasses</code>, que já vem com o Python (aula <a href="modulos.html">Módulos e import</a>).</dd>
+  <dt>@dataclass</dt><dd>O decorador, logo acima do <code>class</code>. Ele lê os campos e escreve os métodos da classe (decoradores têm aula própria: <a href="decoradores.html">Decoradores</a>).</dd>
+  <dt>nome: str</dt><dd>Um <strong>campo</strong>: o nome, dois-pontos e o tipo (a mesma escrita da aula <a href="type-hints.html">Dicas de Tipo</a>). É o tipo que transforma a linha num campo.</dd>
+  <dt>preco: float</dt><dd>Outro campo, obrigatório (não tem valor padrão).</dd>
+  <dt>estoque: int = 0</dt><dd>Campo com <strong>valor padrão</strong>: se ninguém disser o estoque, ele vale 0.</dd>
+</dl>
+
+<pre class="term">$ python3 com_dataclass.py
+Produto(nome='Café', preco=18.9, estoque=12)
+Produto(nome='Leite', preco=5.49, estoque=0)
+Café 18.9
+True
+Produto(nome='Pão', preco=0.75, estoque=40)
+Produto(nome='Café', preco=18.9, estoque=11)
+</pre>
+
+<p>Cinco linhas de classe, e veio tudo: o objeto se criou com os três valores (ou com dois, usando o padrão do estoque), se mostrou de um jeito legível, foi comparado campo a campo com o <code>==</code> e aceitou argumentos nomeados. E continua sendo uma classe normal: dá para ler e mudar os atributos (<code>cafe.estoque -= 1</code>) e escrever os seus próprios métodos.</p>
+
+<h3>O que o <code>@dataclass</code> escreveu</h3>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Método</th><th>O que faz</th><th>Equivale a</th></tr>
+<tr><td><code>__init__</code></td><td>Recebe os campos, na ordem em que foram escritos</td><td><code>def __init__(self, nome, preco, estoque=0): self.nome = nome …</code></td></tr>
+<tr><td><code>__repr__</code></td><td>Mostra a classe e cada campo com o nome</td><td><code>Produto(nome='Café', preco=18.9, estoque=12)</code></td></tr>
+<tr><td><code>__eq__</code></td><td>Dois objetos são iguais se todos os campos forem iguais</td><td><code>(self.nome, self.preco, …) == (outro.nome, outro.preco, …)</code></td></tr>
+</table>
+</div>
+
+<div class="warning">
+<strong>O tipo é só uma etiqueta</strong>
+<p>O <code>str</code> e o <code>float</code> dos campos <strong>não são conferidos</strong> quando o objeto nasce. Eles documentam o que se espera, e ferramentas como o editor de código usam essa informação, mas o Python aceita qualquer coisa:</p>
+<pre class="file" data-file="tipos.py">from dataclasses import dataclass
+
+
+@dataclass
+class Produto:
+    nome: str
+    preco: float
+
+
+estranho = Produto(42, "barato")
+print(estranho)
+</pre>
+<pre class="term">$ python3 tipos.py
+Produto(nome=42, preco='barato')
+</pre>
+<p>Para conferir os valores de verdade, use o <code>__post_init__</code> (seção 6).</p>
+</div>
+
+<div class="trypy" data-goal="out:Aluno(nome='Bia', nota=8.5);;src:@dataclass">
+<p class="try-task"><strong>Missão:</strong> rode e veja o <code>&lt;__main__.Aluno object at …&gt;</code>. Depois, transforme a classe numa dataclass com os campos <code>nome: str</code> e <code>nota: float</code> (o <code>__init__</code> escrito à mão pode sumir).</p>
+<pre class="script" data-file="main.py">class Aluno:
+    def __init__(self, nome, nota):
+        self.nome = nome
+        self.nota = nota
+
+
+bia = Aluno("Bia", 8.5)
+print(bia)
+</pre>
+<pre class="solucao" data-file="main.py">from dataclasses import dataclass
+
+
+@dataclass
+class Aluno:
+    nome: str
+    nota: float
+
+
+bia = Aluno("Bia", 8.5)
+print(bia)
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Valores padrão: os campos com padrão vêm por último</h2>
+<p>Como numa função (aula <a href="argumentos-padrao.html">Valores Padrão</a>), os campos <strong>com</strong> valor padrão têm de vir <strong>depois</strong> dos campos sem. Se a Ana puser o estoque no meio:</p>
+
+<pre class="file" data-file="ordem_padrao.py">from dataclasses import dataclass
+
+
+@dataclass
+class Produto:
+    nome: str
+    estoque: int = 0
+    preco: float
+</pre>
+
+<pre class="term">$ python3 ordem_padrao.py
+Traceback (most recent call last):
+  File "/home/ana/ordem_padrao.py", line 4, in &lt;module&gt;
+    @dataclass
+     ^^^^^^^^^
+  File "/usr/lib/python3.14/dataclasses.py", line 1442, in dataclass
+    return wrap(cls)
+  File "/usr/lib/python3.14/dataclasses.py", line 1432, in wrap
+    return _process_class(cls, init, repr, eq, order, unsafe_hash,
+                          frozen, match_args, kw_only, slots,
+                          weakref_slot)
+  File "/usr/lib/python3.14/dataclasses.py", line 1136, in _process_class
+    _init_fn(all_init_fields,
+    ~~~~~~~~^^^^^^^^^^^^^^^^^
+             std_init_fields,
+             ^^^^^^^^^^^^^^^^
+    ...&lt;9 lines&gt;...
+             slots,
+             ^^^^^^
+             )
+             ^
+  File "/usr/lib/python3.14/dataclasses.py", line 687, in _init_fn
+    raise TypeError(f'non-default argument {f.name!r} '
+                    f'follows default argument {seen_default.name!r}')
+TypeError: non-default argument 'preco' follows default argument 'estoque'
+</pre>
+
+<p>Um traceback comprido assusta, mas o jeito de ler é sempre o mesmo:</p>
+<ul>
+  <li><strong>A primeira parte</strong> é o <strong>seu</strong> arquivo: <code>File "/home/ana/ordem_padrao.py", line 4</code>, o <code>@dataclass</code>. Foi ali que o problema começou.</li>
+  <li><strong>O meio</strong> (<code>/usr/lib/python3.14/dataclasses.py</code>) é o código do próprio Python, por onde o erro passou. Você não precisa entender essas linhas; elas não são o defeito.</li>
+  <li><strong>A última linha</strong> é a explicação: <code>TypeError: non-default argument 'preco' follows default argument 'estoque'</code>, "o argumento sem padrão <code>preco</code> vem depois do argumento com padrão <code>estoque</code>".</li>
+</ul>
+<p>O erro aparece no <code>@dataclass</code>, antes mesmo de criar qualquer produto: ao escrever o <code>__init__</code>, o Python teria de fazer <code>def __init__(self, nome, estoque=0, preco)</code>, o que não é permitido. <strong>Como consertar:</strong> passe os campos com padrão para o fim (<code>nome</code>, <code>preco</code>, <code>estoque = 0</code>).</p>
+
+<hr>
+
+<h2>4. A armadilha da lista: <code>field(default_factory=list)</code></h2>
+<p>A Ana quer um carrinho que já nasça com uma lista vazia de itens. O natural seria escrever <code>= []</code>:</p>
+
+<pre class="file" data-file="lista_padrao.py">from dataclasses import dataclass
+
+
+@dataclass
+class Carrinho:
+    dona: str
+    itens: list = []
+</pre>
+
+<pre class="term">$ python3 lista_padrao.py
+Traceback (most recent call last):
+  File "/home/ana/lista_padrao.py", line 4, in &lt;module&gt;
+    @dataclass
+     ^^^^^^^^^
+  File "/usr/lib/python3.14/dataclasses.py", line 1442, in dataclass
+    return wrap(cls)
+  File "/usr/lib/python3.14/dataclasses.py", line 1432, in wrap
+    return _process_class(cls, init, repr, eq, order, unsafe_hash,
+                          frozen, match_args, kw_only, slots,
+                          weakref_slot)
+  File "/usr/lib/python3.14/dataclasses.py", line 1066, in _process_class
+    cls_fields.append(_get_field(cls, name, type, kw_only))
+                      ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/dataclasses.py", line 917, in _get_field
+    raise ValueError(f'mutable default {type(f.default)} for field '
+                     f'{f.name} is not allowed: use default_factory')
+ValueError: mutable default &lt;class 'list'&gt; for field itens is not allowed: use default_factory
+</pre>
+
+<p>De novo: o começo aponta o seu <code>@dataclass</code>, o meio é o código do Python, e a última linha explica: "valor padrão <strong>mutável</strong> (do tipo <code>list</code>) para o campo <code>itens</code> não é permitido: use <code>default_factory</code>". O próprio erro diz o conserto.</p>
+
+<h3>Por que o Python proíbe?</h3>
+<p>Uma lista pode mudar (é <strong>mutável</strong>; a aula <a href="mutabilidade.html">Mutável × Imutável</a> explica a fundo). Um valor padrão é criado <strong>uma vez só</strong>, quando a classe é escrita. Se fosse permitido, todos os carrinhos sem lista própria iam <strong>dividir a mesma lista</strong>. É exatamente o que acontece numa classe comum, que não tem essa proteção:</p>
+
+<pre class="file" data-file="mesma_lista.py">class Carrinho:
+    def __init__(self, dona, itens=[]):
+        self.dona = dona
+        self.itens = itens
+
+
+ana = Carrinho("Ana")
+bia = Carrinho("Bia")
+ana.itens.append("café")
+print(bia.itens)
+</pre>
+
+<pre class="term">$ python3 mesma_lista.py
+['café']
+</pre>
+
+<p>A Ana pôs café no carrinho <strong>dela</strong>, e o café apareceu no da Bia, sem erro nenhum. A dataclass prefere dar o <code>ValueError</code> logo de cara a deixar esse defeito passar calado.</p>
+
+<h3>O conserto: uma "fábrica" de valores</h3>
+
+<pre class="file" data-file="factory.py">from dataclasses import dataclass, field
+
+
+@dataclass
+class Carrinho:
+    dona: str
+    itens: list = field(default_factory=list)
+
+
+ana = Carrinho("Ana")
+bia = Carrinho("Bia")
+ana.itens.append("café")
+print(ana)
+print(bia)
+print(ana.itens is bia.itens)
+</pre>
+
+<dl class="anatomy">
+  <dt>from dataclasses import dataclass, field</dt><dd>Agora também a função <code>field</code> ("campo"), que configura um campo com mais detalhes.</dd>
+  <dt>field(default_factory=list)</dt><dd><em>Default factory</em> quer dizer "fábrica do valor padrão". Você passa <code>list</code> <strong>sem os parênteses</strong>: não é uma lista, é a "receita" que cria uma lista. A cada carrinho novo, o Python chama <code>list()</code> e entrega uma lista vazia <strong>nova</strong>.</dd>
+</dl>
+
+<pre class="term">$ python3 factory.py
+Carrinho(dona='Ana', itens=['café'])
+Carrinho(dona='Bia', itens=[])
+False
+</pre>
+
+<p>O café ficou só no carrinho da Ana, e <code>ana.itens is bia.itens</code> deu <code>False</code>: são duas listas diferentes. Vale o mesmo para dicionários (<code>field(default_factory=dict)</code>) e conjuntos (<code>field(default_factory=set)</code>).</p>
+
+<div class="trypy" data-goal="out:Carrinho(dona='Ana', itens=['café']);;out:Carrinho(dona='Bia', itens=[]);;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa dá <code>ValueError</code>. Conserte o campo <code>itens</code> com <code>field(default_factory=list)</code>, sem esquecer de importar o <code>field</code>.</p>
+<pre class="script" data-file="main.py">from dataclasses import dataclass
+
+
+@dataclass
+class Carrinho:
+    dona: str
+    itens: list = []
+
+
+ana = Carrinho("Ana")
+bia = Carrinho("Bia")
+ana.itens.append("café")
+print(ana)
+print(bia)
+</pre>
+<pre class="solucao" data-file="main.py">from dataclasses import dataclass, field
+
+
+@dataclass
+class Carrinho:
+    dona: str
+    itens: list = field(default_factory=list)
+
+
+ana = Carrinho("Ana")
+bia = Carrinho("Bia")
+ana.itens.append("café")
+print(ana)
+print(bia)
+</pre>
+</div>
+
+<hr>
+
+<h2>5. <code>frozen=True</code>: a ficha plastificada</h2>
+<p>Algumas fichas não devem mudar depois de prontas. Com <code>@dataclass(frozen=True)</code> ("congelada"), o objeto fica <strong>imutável</strong>: qualquer tentativa de mudar um campo dá erro.</p>
+
+<pre class="file" data-file="frozen.py">from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class Produto:
+    nome: str
+    preco: float
+
+
+cafe = Produto("Café", 18.9)
+print(cafe)
+cafe.preco = 21.0
+</pre>
+
+<pre class="term">$ python3 frozen.py
+Produto(nome='Café', preco=18.9)
+Traceback (most recent call last):
+  File "/home/ana/frozen.py", line 12, in &lt;module&gt;
+    cafe.preco = 21.0
+    ^^^^^^^^^^
+  File "&lt;string&gt;", line 16, in __setattr__
+dataclasses.FrozenInstanceError: cannot assign to field 'preco'
+</pre>
+
+<dl class="anatomy">
+  <dt>@dataclass(frozen=True)</dt><dd>Com parênteses, o decorador aceita opções. <code>frozen=True</code> liga o congelamento.</dd>
+  <dt>File "/home/ana/frozen.py", line 12</dt><dd>O erro foi na linha da mudança, <code>cafe.preco = 21.0</code>.</dd>
+  <dt>File "&lt;string&gt;", line 16, in __setattr__</dt><dd><code>&lt;string&gt;</code> quer dizer "um código que não está em arquivo nenhum": é o <code>__setattr__</code> (o método especial chamado em toda atribuição <code>objeto.campo = valor</code>) que o <code>@dataclass</code> escreveu para bloquear a mudança.</dd>
+  <dt>dataclasses.FrozenInstanceError: cannot assign to field 'preco'</dt><dd>"Erro de objeto congelado: não é possível atribuir ao campo <code>preco</code>." O nome vem com <code>dataclasses.</code> na frente porque é uma exceção desse módulo.</dd>
+</dl>
+
+<h3>Mudou o preço? Faça uma ficha nova</h3>
+<p>Com um objeto congelado, você não altera: cria outro, com a função <code>replace</code> ("substituir"). E, de brinde, o objeto congelado pode entrar num conjunto ou virar chave de dicionário (o que a dataclass comum não pode, pelo mesmo motivo do <code>__hash__</code> da aula <a href="metodos-especiais.html">Métodos Especiais</a>):</p>
+
+<pre class="file" data-file="frozen_replace.py">from dataclasses import dataclass, replace
+
+
+@dataclass(frozen=True)
+class Produto:
+    nome: str
+    preco: float
+
+
+cafe = Produto("Café", 18.9)
+cafe_novo = replace(cafe, preco=21.0)
+print(cafe)
+print(cafe_novo)
+vistos = {cafe, Produto("Café", 18.9), cafe_novo}
+print(len(vistos))
+</pre>
+
+<pre class="term">$ python3 frozen_replace.py
+Produto(nome='Café', preco=18.9)
+Produto(nome='Café', preco=21.0)
+2
+</pre>
+
+<p>O café original continua a 18,90; o novo custa 21,00. No conjunto, os dois cafés de 18,90 viraram um só (são iguais), e o de 21,00 é outro: 2 itens.</p>
+
+<hr>
+
+<h2>6. <code>order=True</code>: fichas que sabem se ordenar</h2>
+<p>A dataclass comum escreve o <code>__eq__</code>, mas não o <code>__lt__</code>. Então o <code>sorted</code> dá o mesmo erro da aula anterior:</p>
+
+<pre class="file" data-file="sem_order.py">from dataclasses import dataclass
+
+
+@dataclass
+class Produto:
+    nome: str
+    preco: float
+
+
+cesta = [Produto("Café", 18.9), Produto("Leite", 5.49)]
+print(sorted(cesta))
+</pre>
+
+<pre class="term">$ python3 sem_order.py
+Traceback (most recent call last):
+  File "/home/ana/sem_order.py", line 11, in &lt;module&gt;
+    print(sorted(cesta))
+          ~~~~~~^^^^^^^
+TypeError: '&lt;' not supported between instances of 'Produto' and 'Produto'
+</pre>
+
+<p>Com <code>order=True</code>, o Python escreve as quatro comparações (<code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>):</p>
+
+<pre class="file" data-file="order.py">from dataclasses import dataclass
+
+
+@dataclass(order=True)
+class Produto:
+    nome: str
+    preco: float
+
+
+cesta = [Produto("Leite", 5.49), Produto("Café", 18.9), Produto("Arroz", 27.5)]
+for produto in sorted(cesta):
+    print(produto)
+print(Produto("Café", 18.9) &lt; Produto("Leite", 5.49))
+print(Produto("Café", 18.9) &lt;= Produto("Café", 21.0))
+</pre>
+
+<pre class="term">$ python3 order.py
+Produto(nome='Arroz', preco=27.5)
+Produto(nome='Café', preco=18.9)
+Produto(nome='Leite', preco=5.49)
+True
+True
+</pre>
+
+<p>Ordenou, mas <strong>pelo nome</strong>: Arroz, Café, Leite. A regra do <code>order=True</code> é comparar <strong>campo por campo, na ordem em que foram escritos</strong>, como se compara um dicionário de palavras: primeiro o <code>nome</code>; só se os nomes forem iguais, o <code>preco</code> desempata (foi o que aconteceu no último <code>&lt;=</code>: dois cafés, e 18,9 é menor que 21,0).</p>
+
+<p>Para ordenar pelo preço, o preço tem de ser o <strong>primeiro</strong> campo:</p>
+
+<pre class="file" data-file="order_preco.py">from dataclasses import dataclass
+
+
+@dataclass(order=True)
+class Produto:
+    preco: float
+    nome: str
+
+
+cesta = [Produto(18.9, "Café"), Produto(5.49, "Leite"), Produto(27.5, "Arroz")]
+for produto in sorted(cesta):
+    print(produto)
+</pre>
+
+<pre class="term">$ python3 order_preco.py
+Produto(preco=5.49, nome='Leite')
+Produto(preco=18.9, nome='Café')
+Produto(preco=27.5, nome='Arroz')
+</pre>
+
+<p>Do mais barato para o mais caro. Repare que, trocando a ordem dos campos, também mudou a ordem dos argumentos: agora é <code>Produto(18.9, "Café")</code>. Para não se confundir, use argumentos nomeados: <code>Produto(nome="Café", preco=18.9)</code> funciona em qualquer ordem.</p>
+
+<h3>Um campo que não entra na comparação</h3>
+<p>O estoque muda o tempo todo e não diz nada sobre qual produto é. Com <code>field(compare=False)</code>, ele fica de fora do <code>==</code> e das comparações de ordem:</p>
+
+<pre class="file" data-file="compare_false.py">from dataclasses import dataclass, field
+
+
+@dataclass(order=True)
+class Produto:
+    nome: str
+    preco: float
+    estoque: int = field(default=0, compare=False)
+
+
+print(Produto("Café", 18.9, 12) == Produto("Café", 18.9, 3))
+</pre>
+
+<pre class="term">$ python3 compare_false.py
+True
+</pre>
+
+<hr>
+
+<h2>7. <code>__post_init__</code>: conferir os dados quando o objeto nasce</h2>
+<p>Como o <code>@dataclass</code> escreve o <code>__init__</code>, onde você põe a conferência do preço? Num método especial chamado <code>__post_init__</code> ("depois do init"): o <code>__init__</code> automático o chama logo depois de guardar os campos.</p>
+
+<pre class="file" data-file="post_init.py">from dataclasses import dataclass
+
+
+@dataclass
+class Produto:
+    nome: str
+    preco: float
+
+    def __post_init__(self):
+        if self.preco &lt;= 0:
+            raise ValueError(f"preço inválido: {self.preco}")
+
+    def descricao(self):
+        return f"{self.nome}: R$ {self.preco:.2f}"
+
+
+print(Produto("Café", 18.9).descricao())
+Produto("Café", -5)
+</pre>
+
+<pre class="term">$ python3 post_init.py
+Café: R$ 18.90
+Traceback (most recent call last):
+  File "/home/ana/post_init.py", line 18, in &lt;module&gt;
+    Produto("Café", -5)
+    ~~~~~~~^^^^^^^^^^^^
+  File "&lt;string&gt;", line 5, in __init__
+  File "/home/ana/post_init.py", line 11, in __post_init__
+    raise ValueError(f"preço inválido: {self.preco}")
+ValueError: preço inválido: -5
+</pre>
+
+<p>O rastro mostra o caminho: a linha 18 criou o produto, o <code>__init__</code> escrito pelo <code>@dataclass</code> (de novo o <code>&lt;string&gt;</code>) chamou o seu <code>__post_init__</code>, e lá, na linha 11, o <code>raise</code> (aula <a href="raise.html">raise</a>) recusou o preço. Repare também que a dataclass aceitou um método comum, o <code>descricao</code>: ela é uma classe como as outras.</p>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+<p>A dataclass também se converte num dicionário com <code>asdict</code>, útil para gravar em JSON (aula <a href="json.html">JSON</a>), e lista os próprios campos com <code>fields</code>:</p>
+
+<pre class="file" data-file="asdict.py">from dataclasses import dataclass, asdict, fields
+
+
+@dataclass
+class Produto:
+    nome: str
+    preco: float
+    estoque: int = 0
+
+
+cafe = Produto("Café", 18.9, 12)
+print(asdict(cafe))
+print([campo.name for campo in fields(Produto)])
+</pre>
+
+<pre class="term">$ python3 asdict.py
+{'nome': 'Café', 'preco': 18.9, 'estoque': 12}
+['nome', 'preco', 'estoque']
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Você quer guardar…</th><th>Use</th></tr>
+<tr><td>Dados com nome (produto, aluno, contato), com ou sem métodos</td><td><code>@dataclass</code></td></tr>
+<tr><td>Os mesmos dados, mas que não podem mudar (ou que vão para um conjunto)</td><td><code>@dataclass(frozen=True)</code></td></tr>
+<tr><td>Dados que precisam ser ordenados</td><td><code>@dataclass(order=True)</code>, com o campo de ordenar primeiro (ou <code>sorted(…, key=…)</code>)</td></tr>
+<tr><td>Uma classe com muito comportamento e um <code>__init__</code> especial (uma conta bancária que registra cada operação)</td><td>Classe comum, com <code>__init__</code> escrito à mão</td></tr>
+<tr><td>Dados soltos, rápidos, sem classe</td><td>Um dicionário (<code>{"nome": "Café", "preco": 18.9}</code>)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Faltou um campo obrigatório</strong>
+<pre class="file" data-file="faltou.py">from dataclasses import dataclass
+
+
+@dataclass
+class Produto:
+    nome: str
+    preco: float
+
+
+cafe = Produto("Café")
+</pre>
+<pre class="term">$ python3 faltou.py
+Traceback (most recent call last):
+  File "/home/ana/faltou.py", line 10, in &lt;module&gt;
+    cafe = Produto("Café")
+           ~~~~~~~^^^^^^^^
+TypeError: Produto.__init__() missing 1 required positional argument: 'preco'
+</pre>
+<p>"Falta 1 argumento obrigatório: <code>preco</code>." É a mesma mensagem de um <code>__init__</code> escrito à mão, porque o <code>@dataclass</code> escreveu um <code>__init__</code> de verdade. <strong>Como consertar:</strong> passe o preço, ou dê um valor padrão ao campo.</p>
+</div>
+
+<div class="cenario">
+<strong>Campo sem tipo: não é campo</strong>
+<pre class="file" data-file="sem_tipo.py">from dataclasses import dataclass
+
+
+@dataclass
+class Produto:
+    nome: str
+    preco = 0.0
+
+
+print(Produto("Café"))
+cafe = Produto("Café", 18.9)
+</pre>
+<pre class="term">$ python3 sem_tipo.py
+Produto(nome='Café')
+Traceback (most recent call last):
+  File "/home/ana/sem_tipo.py", line 11, in &lt;module&gt;
+    cafe = Produto("Café", 18.9)
+           ~~~~~~~^^^^^^^^^^^^^^
+TypeError: Produto.__init__() takes 2 positional arguments but 3 were given
+</pre>
+<p>O <code>print</code> mostrou só o <code>nome</code>: o <code>preco</code> sumiu da ficha. Sem o <code>: float</code>, <code>preco = 0.0</code> é só um atributo da classe comum, e o <code>@dataclass</code> não o enxerga como campo. Então o <code>__init__</code> recebe só o <code>self</code> e o <code>nome</code> (2 argumentos), e o <code>18.9</code> sobrou ("recebe 2, foram passados 3"). <strong>Como consertar:</strong> todo campo leva o tipo: <code>preco: float = 0.0</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu o <code>import</code></strong>
+<pre class="file" data-file="sem_import.py">@dataclass
+class Produto:
+    nome: str
+    preco: float
+</pre>
+<pre class="term">$ python3 sem_import.py
+Traceback (most recent call last):
+  File "/home/ana/sem_import.py", line 1, in &lt;module&gt;
+    @dataclass
+     ^^^^^^^^^
+NameError: name 'dataclass' is not defined
+</pre>
+<p>O <code>dataclass</code> não vem pronto como o <code>print</code>; mora no módulo <code>dataclasses</code>. <strong>Como consertar:</strong> <code>from dataclasses import dataclass</code> no começo do arquivo. (Os outros erros desta aula, <code>ValueError: mutable default</code>, <code>FrozenInstanceError</code> e <code>non-default argument … follows default argument</code>, estão nas seções 3, 4 e 5.)</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>from dataclasses import dataclass, field</code></td><td>Traz o decorador e a função de configurar campos</td></tr>
+<tr><td><code>@dataclass</code></td><td>Escreve <code>__init__</code>, <code>__repr__</code> e <code>__eq__</code></td></tr>
+<tr><td><code>nome: str</code></td><td>Campo obrigatório</td></tr>
+<tr><td><code>estoque: int = 0</code></td><td>Campo com valor padrão (sempre depois dos obrigatórios)</td></tr>
+<tr><td><code>itens: list = field(default_factory=list)</code></td><td>Uma lista nova para cada objeto (também <code>dict</code>, <code>set</code>)</td></tr>
+<tr><td><code>field(compare=False)</code></td><td>O campo não entra no <code>==</code> nem na ordem</td></tr>
+<tr><td><code>@dataclass(frozen=True)</code></td><td>Objeto imutável; pode ir para conjuntos</td></tr>
+<tr><td><code>@dataclass(order=True)</code></td><td>Escreve <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>, comparando campo por campo, na ordem escrita</td></tr>
+<tr><td><code>def __post_init__(self):</code></td><td>Roda logo depois do <code>__init__</code> automático (para conferir dados)</td></tr>
+<tr><td><code>replace(obj, campo=valor)</code></td><td>Cópia do objeto com um campo trocado</td></tr>
+<tr><td><code>asdict(obj)</code></td><td>Converte num dicionário</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>ValueError: mutable default &lt;class 'list'&gt; for field … is not allowed: use default_factory</code></td><td><code>= []</code> (ou <code>{}</code>, <code>set()</code>) como padrão: use <code>field(default_factory=list)</code></td></tr>
+<tr><td><code>TypeError: non-default argument 'x' follows default argument 'y'</code></td><td>Campo obrigatório depois de um campo com padrão</td></tr>
+<tr><td><code>dataclasses.FrozenInstanceError: cannot assign to field 'x'</code></td><td>Mudou um campo de uma dataclass <code>frozen=True</code>: use <code>replace</code></td></tr>
+<tr><td><code>'&lt;' not supported between instances of …</code></td><td>Faltou <code>order=True</code></td></tr>
+<tr><td>Ordenou pelo campo errado</td><td>O <code>order=True</code> compara na ordem dos campos: ponha o campo de ordenar primeiro</td></tr>
+<tr><td>Um campo some do <code>print</code> / <code>takes 2 positional arguments but 3 were given</code></td><td>Faltou o tipo no campo (<code>preco = 0.0</code> em vez de <code>preco: float = 0.0</code>)</td></tr>
+<tr><td><code>NameError: name 'dataclass' is not defined</code></td><td>Faltou o <code>from dataclasses import dataclass</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A ficha do contato</h3>
+<p>Complete a dataclass com o campo <code>telefone</code>, do tipo texto:</p>
+<div class="ex-code">@dataclass<br>class Contato:<br>&nbsp;&nbsp;&nbsp;&nbsp;nome: str<br>&nbsp;&nbsp;&nbsp;&nbsp;telefone<input data-answer=": str|:str" aria-label="tipo do campo"></div>
+</div>
+
+<div class="exercise">
+<h3>2. Uma lista para cada um</h3>
+<p>Complete para que cada turma ganhe uma lista de alunos própria:</p>
+<div class="ex-code">alunos: list = field(<input data-answer="default_factory=list" aria-label="argumento do field">)</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. Quais métodos o <code>@dataclass</code> (sem opções) escreve sozinho?</p>
+<label><input type="radio" name="q3"> Só o <code>__init__</code></label>
+<label><input type="radio" name="q3"> <code>__init__</code>, <code>__repr__</code> e <code>__eq__</code></label>
+<label><input type="radio" name="q3"> <code>__init__</code>, <code>__repr__</code>, <code>__eq__</code> e <code>__lt__</code></label>
+<label><input type="radio" name="q3"> Nenhum: ele só confere os tipos</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">4. Por que <code>itens: list = []</code> dá <code>ValueError</code> numa dataclass?</p>
+<label><input type="radio" name="q4"> Porque dataclasses não aceitam listas</label>
+<label><input type="radio" name="q4"> Porque falta o tipo do campo</label>
+<label><input type="radio" name="q4"> Porque listas precisam de <code>frozen=True</code></label>
+<label><input type="radio" name="q4"> Porque todos os objetos iam dividir a mesma lista; o Python exige <code>default_factory</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Com <code>@dataclass(order=True)</code> e os campos <code>nome</code> e <code>preco</code>, nessa ordem, o <code>sorted</code> ordena por…</p>
+<label><input type="radio" name="q5"> nome; o preço só desempata nomes iguais</label>
+<label><input type="radio" name="q5"> preço, sempre</label>
+<label><input type="radio" name="q5"> ordem em que os objetos foram criados</label>
+<label><input type="radio" name="q5"> dá erro, porque falta o <code>__lt__</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">6. <code>cafe</code> é de uma dataclass <code>frozen=True</code>. Como ter o café com preço 21.0?</p>
+<label><input type="radio" name="q6"> <code>cafe.preco = 21.0</code></label>
+<label><input type="radio" name="q6"> <code>del cafe.preco</code> e depois <code>cafe.preco = 21.0</code></label>
+<label><input type="radio" name="q6"> <code>cafe = replace(cafe, preco=21.0)</code>, criando um objeto novo</label>
+<label><input type="radio" name="q6"> Não tem como</label>
+</div>
+
+<h3>Missão final: o ranking da turma</h3>
+
+<div class="trypy" data-goal="outre:^Duda 9.25\nBia 8.5\nCaio 6.0\n$;;src:order\s*=\s*True">
+<p class="try-task"><strong>Missão:</strong> a professora quer a turma da maior nota para a menor, mas o <code>sorted</code> dá <code>TypeError</code>. Use <code>order=True</code> e faça a dataclass ordenar <strong>pela nota</strong> (dica: qual campo o <code>order=True</code> olha primeiro?). Os alunos são criados com argumentos nomeados, então você pode mexer na ordem dos campos à vontade.</p>
+<pre class="script" data-file="main.py">from dataclasses import dataclass
+
+
+@dataclass
+class Aluno:
+    nome: str
+    nota: float
+
+
+turma = [
+    Aluno(nome="Bia", nota=8.5),
+    Aluno(nome="Caio", nota=6.0),
+    Aluno(nome="Duda", nota=9.25),
+]
+for aluno in sorted(turma, reverse=True):
+    print(aluno.nome, aluno.nota)
+</pre>
+<pre class="solucao" data-file="main.py">from dataclasses import dataclass
+
+
+@dataclass(order=True)
+class Aluno:
+    nota: float
+    nome: str
+
+
+turma = [
+    Aluno(nome="Bia", nota=8.5),
+    Aluno(nome="Caio", nota=6.0),
+    Aluno(nome="Duda", nota=9.25),
+]
+for aluno in sorted(turma, reverse=True):
+    print(aluno.nome, aluno.nota)
+</pre>
+</div>
+
+<p>Se você só acrescentar o <code>order=True</code>, sem mexer nos campos, o programa roda, mas a ordem sai pelo nome ao contrário (Duda, Caio, Bia). No lab, a solução mostrou:</p>
+<pre class="term">$ python3 main.py
+Duda 9.25
+Bia 8.5
+Caio 6.0
+</pre>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>@dataclass</code> (do módulo <code>dataclasses</code>) escreve <code>__init__</code>, <code>__repr__</code> e <code>__eq__</code> a partir dos campos <code>nome: tipo</code>.</li>
+  <li>O tipo é obrigatório para virar campo, mas <strong>não é conferido</strong>; para conferir, use <code>__post_init__</code>.</li>
+  <li>Campos com valor padrão vêm por último.</li>
+  <li>Lista, dicionário ou conjunto como padrão: <code>field(default_factory=list)</code>. O <code>= []</code> dá <code>ValueError: mutable default … use default_factory</code>, para evitar que todos dividam a mesma lista.</li>
+  <li><code>frozen=True</code> congela o objeto (<code>FrozenInstanceError</code> ao mudar); para "mudar", crie outro com <code>replace</code>.</li>
+  <li><code>order=True</code> permite ordenar, comparando campo por campo <strong>na ordem em que foram escritos</strong>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
