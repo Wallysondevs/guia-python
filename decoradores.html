@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Decoradores — o @ que embrulha uma função | Guia Python</title>
+<meta name="description" content="Decoradores em Python para quem está começando: funções como objetos, funções dentro de funções, o decorador escrito na mão e com @, *args e **kwargs no embrulho, functools.wraps, um @cronometro com time.perf_counter, decoradores com argumentos, empilhados, @cache e os erros reais do Python 3.14.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Decoradores</span></h1>
+
+<p class="intro">Você já viu linhas começando com <code>@</code> em cima de um <code>def</code>: o <code>@property</code> da aula <a href="property.html">@property</a>, o <code>@classmethod</code>, o <code>@dataclass</code>. Esse <code>@</code> é um <strong>decorador</strong>: uma função que recebe outra função e devolve uma versão "embrulhada" dela, com algo a mais antes ou depois. Nesta aula você vai entender como isso funciona por dentro e escrever os seus: um que anuncia, um que registra as chamadas e um que cronometra.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>Que funções são <strong>objetos</strong>: dá para guardar numa variável, passar e devolver.</li>
+  <li>A criar uma função dentro de outra e devolvê-la.</li>
+  <li>A escrever um decorador na mão e com a sintaxe <code>@</code>, e por que as duas são a mesma coisa.</li>
+  <li>A aceitar quaisquer argumentos com <code>*args</code> e <code>**kwargs</code> e a devolver o resultado.</li>
+  <li>Por que usar <code>functools.wraps</code>.</li>
+  <li>Um <code>@cronometro</code> com <code>time.perf_counter()</code>, decoradores com argumentos, empilhados, e o <code>@cache</code> pronto.</li>
+  <li>Os erros reais: <code>'NoneType' object is not callable</code>, <code>takes 0 positional arguments</code>, <code>missing 1 required positional argument</code> e o resultado que vira <code>None</code>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: o papel de presente</h2>
+<p>A Ana comprou um livro para dar de aniversário. Ela não muda o livro: <strong>embrulha</strong>. O presente continua sendo o livro, mas agora tem um papel por fora, um laço e um cartão. Quem recebe abre o embrulho, lê o cartão e encontra o livro.</p>
+<p>O decorador faz isso com uma função. A função original (o livro) continua lá dentro, sem uma linha mudada. O decorador cria uma função nova (o embrulho) que faz alguma coisa antes, chama a original e faz alguma coisa depois. E o nome antigo passa a apontar para o embrulho.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>No presente</th><th>No Python</th></tr>
+<tr><td>O livro</td><td>A função original (<code>promocao</code>)</td></tr>
+<tr><td>Quem embrulha</td><td>O decorador (<code>anunciar</code>)</td></tr>
+<tr><td>O pacote pronto</td><td>A função nova que o decorador devolve (<code>embrulho</code>)</td></tr>
+<tr><td>O cartão e o laço</td><td>O que o embrulho faz antes e depois de chamar a original</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. Funções são objetos</h2>
+<p>Para entender decoradores, falta uma peça: em Python, uma função é um <strong>objeto</strong>, como um número ou uma lista. O nome dela é só uma etiqueta (aula <a href="variaveis.html">Variáveis</a>) presa ao objeto. Sem os parênteses, você fala <strong>da</strong> função; com os parênteses, você <strong>chama</strong> a função.</p>
+
+<pre class="file" data-file="objetos.py">def saudar(nome):
+    return f"Olá, {nome}!"
+
+
+# 1. Uma função é um objeto: dá para guardar numa variável
+cumprimentar = saudar
+print(cumprimentar("Ana"))
+print(saudar)
+print(type(saudar))
+print(saudar.__name__)
+
+
+# 2. Dá para passar uma função para outra
+def aplicar_em_todos(funcao, nomes):
+    for nome in nomes:
+        print(funcao(nome))
+
+
+aplicar_em_todos(saudar, ["Bia", "Caio"])
+</pre>
+
+<pre class="term">$ python3 objetos.py
+Olá, Ana!
+&lt;function saudar at 0x7f65d372f530&gt;      « o endereço muda a cada execução
+&lt;class 'function'&gt;
+saudar
+Olá, Bia!
+Olá, Caio!</pre>
+
+<dl class="anatomy">
+  <dt>cumprimentar = saudar</dt><dd>Sem parênteses: não chama nada. Só cola uma segunda etiqueta no mesmo objeto função. <code>cumprimentar("Ana")</code> roda o mesmo código.</dd>
+  <dt>print(saudar)</dt><dd>Mostra o objeto: <code>&lt;function saudar at 0x…&gt;</code>, "a função <code>saudar</code>, no endereço tal da memória".</dd>
+  <dt>saudar.__name__</dt><dd>Toda função guarda o próprio nome no atributo <code>__name__</code>. Ele vai ser importante na seção 5.</dd>
+  <dt>aplicar_em_todos(saudar, …)</dt><dd>A função vai como argumento, sem parênteses. Lá dentro, <code>funcao(nome)</code> chama. Você já fez isso com o <code>key=</code> do <code>sorted</code> e com o <code>map</code> (aula <a href="map-filter.html">map() e filter()</a>).</dd>
+</dl>
+
+<h3>Uma função que fabrica funções</h3>
+<p>Também dá para <strong>criar</strong> uma função dentro de outra e devolvê-la com <code>return</code>. A função de dentro continua lembrando as variáveis da de fora, mesmo depois que a de fora terminou:</p>
+
+<pre class="file" data-file="fabrica.py">def criar_saudacao(saudacao):
+    def saudar(nome):
+        return f"{saudacao}, {nome}!"
+    return saudar
+
+
+bom_dia = criar_saudacao("Bom dia")
+boa_noite = criar_saudacao("Boa noite")
+
+print(bom_dia("Ana"))
+print(boa_noite("Ana"))
+print(bom_dia)
+</pre>
+
+<pre class="term">$ python3 fabrica.py
+Bom dia, Ana!
+Boa noite, Ana!
+&lt;function criar_saudacao.&lt;locals&gt;.saudar at 0x7fecee73f110&gt;</pre>
+
+<p>Cada chamada a <code>criar_saudacao</code> fabricou uma função <code>saudar</code> nova, cada uma com a sua <code>saudacao</code> guardada. O nome completo, <code>criar_saudacao.&lt;locals&gt;.saudar</code>, quer dizer "a <code>saudar</code> que é local de <code>criar_saudacao</code>". Essa função que lembra variáveis de fora tem um nome técnico: <strong>closure</strong> ("fechamento").</p>
+
+<p>Com essas duas peças (receber uma função e devolver uma função nova), dá para montar um decorador.</p>
+
+<hr>
+
+<h2>2. O primeiro decorador, escrito na mão</h2>
+<p>A padaria tem um alto-falante. Antes de cada aviso, toca a chamada "Atenção, clientes!"; depois, "Obrigado pela atenção". Em vez de repetir isso em cada aviso, a Ana escreve um decorador:</p>
+
+<pre class="file" data-file="na_mao.py">def anunciar(funcao):
+    def embrulho():
+        print("[Atenção, clientes!]")
+        funcao()
+        print("[Obrigado pela atenção.]")
+    return embrulho
+
+
+def promocao():
+    print("Pão francês pela metade do preço!")
+
+
+promocao = anunciar(promocao)
+promocao()
+</pre>
+
+<pre class="term">$ python3 na_mao.py
+[Atenção, clientes!]
+Pão francês pela metade do preço!
+[Obrigado pela atenção.]</pre>
+
+<dl class="anatomy">
+  <dt>def anunciar(funcao):</dt><dd>O decorador. Recebe a função a ser embrulhada.</dd>
+  <dt>def embrulho():</dt><dd>A função nova, criada lá dentro. Ela ainda não roda: só fica pronta.</dd>
+  <dt>print(…) / funcao() / print(…)</dt><dd>O que o embrulho vai fazer quando for chamado: o "antes", a função original, o "depois". O <code>funcao</code> é a variável de fora que o embrulho lembra.</dd>
+  <dt>return embrulho</dt><dd>Devolve a função nova, <strong>sem parênteses</strong>: entrega o pacote, não abre.</dd>
+  <dt>promocao = anunciar(promocao)</dt><dd>A linha que decora: passa a <code>promocao</code> original para o <code>anunciar</code> e cola a etiqueta <code>promocao</code> no embrulho que voltou.</dd>
+  <dt>promocao()</dt><dd>Agora chama o embrulho, que chama a original lá dentro.</dd>
+</dl>
+
+<hr>
+
+<h2>3. A sintaxe <code>@</code></h2>
+<p>A linha <code>promocao = anunciar(promocao)</code> tem um problema: fica <strong>longe</strong> do <code>def</code>, e quem lê a função não sabe que ela vai ser embrulhada. O <code>@</code> faz a mesma coisa, colado em cima do <code>def</code>:</p>
+
+<pre class="file" data-file="arroba.py">def anunciar(funcao):
+    def embrulho():
+        print("[Atenção, clientes!]")
+        funcao()
+        print("[Obrigado pela atenção.]")
+    return embrulho
+
+
+@anunciar
+def promocao():
+    print("Pão francês pela metade do preço!")
+
+
+@anunciar
+def fechamento():
+    print("A padaria fecha em 10 minutos.")
+
+
+promocao()
+print()
+fechamento()
+</pre>
+
+<pre class="term">$ python3 arroba.py
+[Atenção, clientes!]
+Pão francês pela metade do preço!
+[Obrigado pela atenção.]
+
+[Atenção, clientes!]
+A padaria fecha em 10 minutos.
+[Obrigado pela atenção.]</pre>
+
+<p><code>@anunciar</code> em cima de <code>def promocao</code> quer dizer, exatamente: "crie a função <code>promocao</code> e, logo em seguida, faça <code>promocao = anunciar(promocao)</code>". O decorador roda <strong>uma vez</strong>, quando o Python passa pelo <code>def</code>; o embrulho roda a cada chamada. Dois avisos, um decorador só: o "antes" e o "depois" estão escritos num lugar.</p>
+
+<div class="trypy" data-goal="out:BOM DIA, ANA!;;src:^@gritar;;semerro">
+<p class="try-task"><strong>Missão:</strong> o decorador <code>gritar</code> deve deixar em maiúsculas o texto que a função devolve. Faça duas mudanças: no embrulho, devolva <code>resultado.upper()</code> no lugar de <code>resultado</code>; e ponha <code>@gritar</code> na linha de cima do <code>def saudar</code>.</p>
+<pre class="script" data-file="main.py">def gritar(funcao):
+    def embrulho(*args, **kwargs):
+        resultado = funcao(*args, **kwargs)
+        return resultado
+    return embrulho
+
+
+def saudar(nome):
+    return f"Bom dia, {nome}!"
+
+
+print(saudar("Ana"))
+</pre>
+<pre class="solucao" data-file="main.py">def gritar(funcao):
+    def embrulho(*args, **kwargs):
+        resultado = funcao(*args, **kwargs)
+        return resultado.upper()
+    return embrulho
+
+
+@gritar
+def saudar(nome):
+    return f"Bom dia, {nome}!"
+
+
+print(saudar("Ana"))
+</pre>
+</div>
+
+<p>O <code>*args, **kwargs</code> do embrulho é a próxima seção: é o que permite a <code>saudar</code> receber o <code>nome</code>.</p>
+
+<hr>
+
+<h2>4. Funções com argumentos e com resultado</h2>
+<p>O <code>embrulho()</code> do <code>anunciar</code> não recebe nada e não devolve nada. Para decorar <strong>qualquer</strong> função, o embrulho precisa de duas coisas:</p>
+<ul>
+  <li><strong>aceitar quaisquer argumentos</strong> e repassá-los: <code>*args</code> (os posicionais, numa tupla) e <code>**kwargs</code> (os nomeados, num dicionário), da aula <a href="args-kwargs.html">*args e **kwargs</a>;</li>
+  <li><strong>devolver o resultado</strong> da função original com <code>return</code>.</li>
+</ul>
+
+<pre class="file" data-file="argumentos.py">def registrar(funcao):
+    def embrulho(*args, **kwargs):
+        print(f"Chamando {funcao.__name__} com {args} {kwargs}")
+        resultado = funcao(*args, **kwargs)
+        print(f"{funcao.__name__} devolveu {resultado}")
+        return resultado
+    return embrulho
+
+
+@registrar
+def somar(a, b):
+    return a + b
+
+
+@registrar
+def preco_final(preco, desconto=0):
+    return preco - desconto
+
+
+total = somar(2, 3)
+print("total =", total)
+preco_final(10.0, desconto=1.5)
+</pre>
+
+<pre class="term">$ python3 argumentos.py
+Chamando somar com (2, 3) {}
+somar devolveu 5
+total = 5
+Chamando preco_final com (10.0,) {'desconto': 1.5}
+preco_final devolveu 8.5</pre>
+
+<dl class="anatomy">
+  <dt>def embrulho(*args, **kwargs):</dt><dd>Aceita qualquer combinação de argumentos. Em <code>somar(2, 3)</code>, <code>args</code> é <code>(2, 3)</code> e <code>kwargs</code> é <code>{}</code>; em <code>preco_final(10.0, desconto=1.5)</code>, <code>args</code> é <code>(10.0,)</code> e <code>kwargs</code> é <code>{'desconto': 1.5}</code>.</dd>
+  <dt>funcao(*args, **kwargs)</dt><dd>Aqui o <code>*</code> e o <code>**</code> fazem o contrário: <strong>desempacotam</strong> a tupla e o dicionário de volta em argumentos. A original recebe exatamente o que foi passado ao embrulho.</dd>
+  <dt>return resultado</dt><dd>Repassa o que a original devolveu. Sem esta linha, <code>total</code> seria <code>None</code> (veja em <a href="#errado">Quando dá errado</a>).</dd>
+</dl>
+
+<p>Este é o <strong>molde</strong> de quase todo decorador: <code>def embrulho(*args, **kwargs):</code>, o "antes", <code>resultado = funcao(*args, **kwargs)</code>, o "depois", <code>return resultado</code>.</p>
+
+<hr>
+
+<h2>5. <code>functools.wraps</code>: o embrulho com a etiqueta certa</h2>
+<p>Há um efeito colateral. Depois de decorada, a etiqueta <code>somar</code> aponta para o <strong>embrulho</strong>, e o embrulho tem o nome e a documentação dele, não os da original:</p>
+
+<pre class="file" data-file="nome_perdido.py">def registrar(funcao):
+    def embrulho(*args, **kwargs):
+        print(f"Chamando {funcao.__name__}")
+        return funcao(*args, **kwargs)
+    return embrulho
+
+
+@registrar
+def somar(a, b):
+    """Soma dois números."""
+    return a + b
+
+
+print(somar.__name__)
+print(somar.__doc__)
+print(somar)
+</pre>
+
+<pre class="term">$ python3 nome_perdido.py
+embrulho
+None
+&lt;function registrar.&lt;locals&gt;.embrulho at 0x7f03bf9a31c0&gt;</pre>
+
+<p>O nome virou <code>embrulho</code> e a docstring (aula <a href="docstrings.html">Docstrings</a>) sumiu: <code>None</code>. Parece detalhe, mas quem usa o <code>help(somar)</code>, os testes, as mensagens de erro e o <code>logging</code> passam a ver "embrulho" em todo lugar. O módulo <code>functools</code> tem a solução: o decorador <code>@wraps</code> ("embrulha"), que você põe <strong>no embrulho</strong> e que copia para ele o nome, a docstring e outros dados da original.</p>
+
+<pre class="file" data-file="wraps_ok.py">from functools import wraps
+
+
+def registrar(funcao):
+    @wraps(funcao)
+    def embrulho(*args, **kwargs):
+        print(f"Chamando {funcao.__name__}")
+        return funcao(*args, **kwargs)
+    return embrulho
+
+
+@registrar
+def somar(a, b):
+    """Soma dois números."""
+    return a + b
+
+
+print(somar.__name__)
+print(somar.__doc__)
+print(somar(2, 3))
+</pre>
+
+<pre class="term">$ python3 wraps_ok.py
+somar
+Soma dois números.
+Chamando somar
+5</pre>
+
+<p>Repare que <code>@wraps(funcao)</code> tem parênteses: é um decorador que recebe um argumento (a original), como o <code>@repetir(3)</code> da seção 7. Daqui para a frente, todo decorador do guia usa <code>@wraps</code>. É o costume, e custa uma linha.</p>
+
+<hr>
+
+<h2>6. Um <code>@cronometro</code></h2>
+<p>Um uso clássico: medir quanto tempo uma função leva. O <code>time.perf_counter()</code> ("contador de desempenho") devolve um relógio em segundos, bem preciso; a diferença entre duas leituras é o tempo que passou.</p>
+
+<pre class="file" data-file="cronometro.py">import time
+from functools import wraps
+
+
+def cronometro(funcao):
+    @wraps(funcao)
+    def embrulho(*args, **kwargs):
+        inicio = time.perf_counter()
+        resultado = funcao(*args, **kwargs)
+        fim = time.perf_counter()
+        print(f"{funcao.__name__} levou {fim - inicio:.4f} s")
+        return resultado
+    return embrulho
+
+
+@cronometro
+def somar_ate(n):
+    total = 0
+    for i in range(n):
+        total += i
+    return total
+
+
+@cronometro
+def somar_ate_rapido(n):
+    return sum(range(n))
+
+
+print(somar_ate(1_000_000))
+print(somar_ate_rapido(1_000_000))
+</pre>
+
+<pre class="term">$ python3 cronometro.py
+somar_ate levou 0.0359 s
+499999500000
+somar_ate_rapido levou 0.0098 s
+499999500000
+$ python3 cronometro.py
+somar_ate levou 0.0367 s              « o tempo muda a cada execução
+499999500000
+somar_ate_rapido levou 0.0102 s
+499999500000</pre>
+
+<p>Os dois jeitos de somar dão o mesmo resultado, mas o <code>sum(range(n))</code> foi umas três vezes mais rápido: o laço do <code>sum</code> roda dentro do próprio Python, escrito em C, sem passar pelas linhas do seu programa a cada número. Os tempos <strong>mudam</strong> de uma execução para outra e de um computador para outro; o que vale é a comparação. O <code>{… :.4f}</code> mostra 4 casas decimais (aula <a href="f-strings.html">f-strings</a>).</p>
+
+<div class="trypy">
+<p class="try-task"><strong>Experimente:</strong> rode e compare os tempos do editor com os do terminal da Ana (no navegador, as duas versões costumam ficar mais parecidas). Depois troque o <code>1_000_000</code> por <code>5_000_000</code> e veja o tempo crescer.</p>
+<pre class="script" data-file="main.py">import time
+from functools import wraps
+
+
+def cronometro(funcao):
+    @wraps(funcao)
+    def embrulho(*args, **kwargs):
+        inicio = time.perf_counter()
+        resultado = funcao(*args, **kwargs)
+        fim = time.perf_counter()
+        print(f"{funcao.__name__} levou {fim - inicio:.4f} s")
+        return resultado
+    return embrulho
+
+
+@cronometro
+def somar_ate(n):
+    total = 0
+    for i in range(n):
+        total += i
+    return total
+
+
+@cronometro
+def somar_ate_rapido(n):
+    return sum(range(n))
+
+
+print(somar_ate(1_000_000))
+print(somar_ate_rapido(1_000_000))
+</pre>
+</div>
+
+<hr>
+
+<h2>7. Decoradores com argumentos</h2>
+<p>E se o decorador precisar de uma configuração, como "repita 3 vezes"? Aí ele ganha mais um andar: uma função que recebe a configuração e <strong>fabrica</strong> o decorador (como o <code>criar_saudacao</code> da seção 1 fabricava funções).</p>
+
+<pre class="file" data-file="repetir.py">from functools import wraps
+
+
+def repetir(vezes):
+    def decorador(funcao):
+        @wraps(funcao)
+        def embrulho(*args, **kwargs):
+            for _ in range(vezes):
+                resultado = funcao(*args, **kwargs)
+            return resultado
+        return embrulho
+    return decorador
+
+
+@repetir(3)
+def buzinar():
+    print("Bi-bi!")
+
+
+buzinar()
+</pre>
+
+<pre class="term">$ python3 repetir.py
+Bi-bi!
+Bi-bi!
+Bi-bi!</pre>
+
+<ol class="passo">
+  <li><code>repetir(3)</code> roda primeiro e devolve <code>decorador</code>, que lembra <code>vezes = 3</code>.</li>
+  <li>O <code>@</code> aplica esse <code>decorador</code> à <code>buzinar</code>: <code>buzinar = decorador(buzinar)</code>.</li>
+  <li><code>buzinar()</code> chama o embrulho, que chama a original 3 vezes. O <code>_</code> é o nome de costume para uma variável de laço que não vai ser usada.</li>
+</ol>
+
+<h3>Empilhando decoradores</h3>
+<p>Dá para pôr mais de um <code>@</code> na mesma função. Eles se aplicam de <strong>baixo para cima</strong> (o mais perto do <code>def</code> embrulha primeiro), como camadas de papel:</p>
+
+<pre class="file" data-file="empilhar.py">def negrito(funcao):
+    def embrulho():
+        return "&lt;b&gt;" + funcao() + "&lt;/b&gt;"
+    return embrulho
+
+
+def italico(funcao):
+    def embrulho():
+        return "&lt;i&gt;" + funcao() + "&lt;/i&gt;"
+    return embrulho
+
+
+@negrito
+@italico
+def aviso():
+    return "Promoção"
+
+
+print(aviso())
+</pre>
+
+<pre class="term">$ python3 empilhar.py
+&lt;b&gt;&lt;i&gt;Promoção&lt;/i&gt;&lt;/b&gt;</pre>
+
+<p>É o mesmo que <code>aviso = negrito(italico(aviso))</code>: o <code>italico</code> embrulha primeiro (fica por dentro), o <code>negrito</code> embrulha o resultado (fica por fora). Trocando a ordem dos <code>@</code>, sai <code>&lt;i&gt;&lt;b&gt;Promoção&lt;/b&gt;&lt;/i&gt;</code>.</p>
+
+<hr>
+
+<h2>Formas diferentes: decoradores prontos</h2>
+<p>Muitas vezes o decorador que você precisa já existe. Um dos mais úteis é o <code>@cache</code>, também do <code>functools</code>: ele guarda o resultado de cada chamada e, se a função for chamada de novo com os mesmos argumentos, devolve o resultado guardado sem calcular de novo. Na sequência de Fibonacci da aula <a href="recursao.html">Recursão</a>, isso transforma uma conta que levaria anos numa conta instantânea:</p>
+
+<pre class="file" data-file="cache.py">from functools import cache
+
+
+@cache
+def fibonacci(n):
+    if n &lt; 2:
+        return n
+    return fibonacci(n - 1) + fibonacci(n - 2)
+
+
+print(fibonacci(80))
+print(fibonacci.cache_info())
+</pre>
+
+<pre class="term">$ python3 cache.py
+23416728348467685
+CacheInfo(hits=78, misses=81, maxsize=None, currsize=81)</pre>
+
+<p>O <code>cache_info()</code> conta: 81 cálculos de verdade (<code>misses</code>, "erros", um para cada <code>n</code> de 0 a 80) e 78 respostas tiradas do cache (<code>hits</code>, "acertos"). Sem o <code>@cache</code>, a mesma função faria dezenas de quatrilhões de chamadas repetidas.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>funcao = decorador(funcao)</code></td><td>Para entender o que o <code>@</code> faz, ou para decorar uma função que não é sua (de um módulo) sem mexer no <code>def</code></td></tr>
+<tr><td><code>@decorador</code></td><td>Sempre que você escreve o <code>def</code>: fica visível logo em cima da função</td></tr>
+<tr><td><code>@decorador(argumento)</code></td><td>Quando o decorador precisa de configuração (<code>@repetir(3)</code>)</td></tr>
+<tr><td>Decoradores prontos</td><td><code>@cache</code> e <code>@wraps</code> (<code>functools</code>), <code>@property</code>, <code>@classmethod</code>, <code>@staticmethod</code> (aula <a href="classmethod-staticmethod.html">@classmethod e @staticmethod</a>), <code>@dataclass</code> (aula <a href="dataclasses.html">Dataclasses</a>)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Esqueceu o <code>return embrulho</code></strong>
+<pre class="file" data-file="erro_sem_return.py">def anunciar(funcao):
+    def embrulho():
+        print("[Atenção, clientes!]")
+        funcao()
+
+
+@anunciar
+def promocao():
+    print("Pão francês pela metade do preço!")
+
+
+promocao()
+</pre>
+<pre class="term">$ python3 erro_sem_return.py
+Traceback (most recent call last):
+  File "/home/ana/erro_sem_return.py", line 12, in &lt;module&gt;
+    promocao()
+    ~~~~~~~~^^
+TypeError: 'NoneType' object is not callable</pre>
+<p>"Um objeto <code>NoneType</code> não pode ser chamado". Sem <code>return</code>, o <code>anunciar</code> devolveu <code>None</code>, e o <code>@</code> fez <code>promocao = None</code>. Na linha 12, <code>promocao()</code> tentou chamar o <code>None</code> como se fosse uma função. <strong>Como consertar:</strong> no fim do decorador, <code>return embrulho</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>return embrulho()</code>, com parênteses</strong>
+<pre class="file" data-file="erro_chamou.py">def anunciar(funcao):
+    def embrulho():
+        print("[Atenção, clientes!]")
+        funcao()
+    return embrulho()
+
+
+@anunciar
+def promocao():
+    print("Pão francês pela metade do preço!")
+
+
+print("O programa começou.")
+promocao()
+</pre>
+<pre class="term">$ python3 erro_chamou.py
+[Atenção, clientes!]
+Pão francês pela metade do preço!
+O programa começou.
+Traceback (most recent call last):
+  File "/home/ana/erro_chamou.py", line 14, in &lt;module&gt;
+    promocao()
+    ~~~~~~~~^^
+TypeError: 'NoneType' object is not callable</pre>
+<p>Dois sintomas juntos. O aviso apareceu <strong>antes</strong> de "O programa começou": com os parênteses, o decorador abriu o pacote na hora do <code>@</code>, rodando o embrulho; e devolveu o que o embrulho devolveu, <code>None</code>. Depois, a chamada de verdade, na linha 14, deu o mesmo erro do caso anterior. <strong>Como consertar:</strong> <code>return embrulho</code>, sem parênteses: devolva a função, não o resultado dela.</p>
+</div>
+
+<div class="cenario">
+<strong>O embrulho não aceita os argumentos</strong>
+<pre class="file" data-file="erro_args.py">def anunciar(funcao):
+    def embrulho():
+        print("[Atenção, clientes!]")
+        funcao()
+    return embrulho
+
+
+@anunciar
+def promocao(produto):
+    print(f"{produto} pela metade do preço!")
+
+
+promocao("Pão francês")
+</pre>
+<pre class="term">$ python3 erro_args.py
+Traceback (most recent call last):
+  File "/home/ana/erro_args.py", line 13, in &lt;module&gt;
+    promocao("Pão francês")
+    ~~~~~~~~^^^^^^^^^^^^^^^
+TypeError: anunciar.&lt;locals&gt;.embrulho() takes 0 positional arguments but 1 was given</pre>
+<p>"<code>embrulho()</code>, local de <code>anunciar</code>, aceita 0 argumentos posicionais, mas recebeu 1". Repare no nome: quem foi chamado foi o <strong>embrulho</strong>, e ele foi escrito sem parâmetros. <strong>Como consertar:</strong> use o molde <code>def embrulho(*args, **kwargs):</code> e <code>funcao(*args, **kwargs)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O resultado sumiu (sem erro nenhum)</strong>
+<pre class="file" data-file="erro_none.py">def registrar(funcao):
+    def embrulho(*args, **kwargs):
+        print(f"Chamando {funcao.__name__}")
+        funcao(*args, **kwargs)
+    return embrulho
+
+
+@registrar
+def somar(a, b):
+    return a + b
+
+
+total = somar(2, 3)
+print("total =", total)
+</pre>
+<pre class="term">$ python3 erro_none.py
+Chamando somar
+total = None</pre>
+<p>A soma foi feita, mas o 5 se perdeu no caminho: o embrulho chamou a original e jogou fora o que ela devolveu. Como o embrulho não tem <code>return</code>, devolveu <code>None</code> (aula <a href="return.html">return</a>). <strong>Como consertar:</strong> <code>return funcao(*args, **kwargs)</code>, ou guarde em <code>resultado</code> e devolva no fim.</p>
+</div>
+
+<div class="cenario">
+<strong>Parênteses no <code>@</code> de um decorador sem argumentos</strong>
+<pre class="term">$ python3 erro_parenteses.py
+Traceback (most recent call last):
+  File "/home/ana/erro_parenteses.py", line 8, in &lt;module&gt;
+    @anunciar()
+     ~~~~~~~~^^
+TypeError: anunciar() missing 1 required positional argument: 'funcao'</pre>
+<p>Um <code>anunciar</code> como o da seção 2, usado com <code>@anunciar()</code> na linha 8. "Falta 1 argumento posicional obrigatório: <code>funcao</code>". Com parênteses, o Python chama <code>anunciar()</code> primeiro, sem nada, como faria com <code>@repetir(3)</code>. Repare que o erro aponta a linha do <code>@</code>: ele acontece quando o Python passa pelo <code>def</code>, antes de qualquer chamada. <strong>Como consertar:</strong> <code>@anunciar</code>, sem parênteses. Os parênteses só vão quando o decorador foi feito para receber argumentos.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>f</code> × <code>f()</code></td><td>A função (o objeto) × chamar a função</td></tr>
+<tr><td><code>@deco</code> em cima de <code>def f</code></td><td>O mesmo que <code>f = deco(f)</code> logo depois do <code>def</code></td></tr>
+<tr><td><code>@deco(arg)</code></td><td>O mesmo que <code>f = deco(arg)(f)</code></td></tr>
+<tr><td><code>@a</code> <code>@b</code> <code>def f</code></td><td><code>f = a(b(f))</code>: o de baixo embrulha primeiro</td></tr>
+<tr><td><code>def embrulho(*args, **kwargs):</code></td><td>Aceita quaisquer argumentos</td></tr>
+<tr><td><code>return funcao(*args, **kwargs)</code></td><td>Repassa os argumentos e devolve o resultado</td></tr>
+<tr><td><code>@wraps(funcao)</code></td><td>(de <code>functools</code>) copia nome e docstring da original para o embrulho</td></tr>
+<tr><td><code>@cache</code></td><td>(de <code>functools</code>) guarda resultados já calculados</td></tr>
+<tr><td><code>time.perf_counter()</code></td><td>Relógio preciso, em segundos, para medir intervalos</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>TypeError: 'NoneType' object is not callable</code></td><td>O decorador não tem <code>return embrulho</code> (ou tem <code>return embrulho()</code>)</td></tr>
+<tr><td>O "antes" aparece na hora do <code>@</code></td><td><code>return embrulho()</code> com parênteses</td></tr>
+<tr><td><code>embrulho() takes 0 positional arguments but N were given</code></td><td>O embrulho não tem <code>*args, **kwargs</code></td></tr>
+<tr><td>A função decorada devolve <code>None</code></td><td>O embrulho não devolve o resultado da original</td></tr>
+<tr><td><code>missing 1 required positional argument: 'funcao'</code></td><td><code>@deco()</code> com parênteses num decorador sem argumentos</td></tr>
+<tr><td><code>__name__</code> é <code>embrulho</code>, docstring <code>None</code></td><td>Faltou o <code>@wraps(funcao)</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O que o <code>@</code> faz</h3>
+<p>Escreva a linha equivalente a <code>@anunciar</code> em cima de <code>def aviso():</code>.</p>
+<div class="ex-code"><input data-answer="aviso = anunciar(aviso)|aviso=anunciar(aviso)" aria-label="linha equivalente"></div>
+</div>
+
+<div class="exercise">
+<h3>2. O molde</h3>
+<p>Complete o embrulho para aceitar quaisquer argumentos e devolver o resultado:</p>
+<div class="ex-code">def embrulho(<input data-answer="*args, **kwargs|*args,**kwargs" aria-label="parâmetros">):<br>&nbsp;&nbsp;&nbsp;&nbsp;<input data-answer="return" aria-label="palavra-chave"> funcao(*args, **kwargs)</div>
+</div>
+
+<div class="exercise">
+<h3>3. A etiqueta certa</h3>
+<p>Qual decorador do <code>functools</code> faz o embrulho manter o <code>__name__</code> da original? Escreva só o nome.</p>
+<div class="ex-code"><input data-answer="wraps|@wraps|functools.wraps" aria-label="nome do decorador"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Quando o corpo do decorador (a função <code>anunciar</code>) roda?</p>
+<label><input type="radio" name="q4"> A cada chamada da função decorada</label>
+<label><input type="radio" name="q4"> Uma vez, quando o Python passa pelo <code>def</code> decorado</label>
+<label><input type="radio" name="q4"> Só quando você chama <code>anunciar()</code> na mão</label>
+<label><input type="radio" name="q4"> Nunca: o <code>@</code> só serve de comentário</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. Com <code>@negrito</code> na primeira linha e <code>@italico</code> na segunda, em cima de <code>def aviso()</code>, qual é o equivalente?</p>
+<label><input type="radio" name="q5"> <code>aviso = italico(negrito(aviso))</code></label>
+<label><input type="radio" name="q5"> <code>aviso = negrito(aviso) + italico(aviso)</code></label>
+<label><input type="radio" name="q5"> <code>aviso = negrito(italico)</code></label>
+<label><input type="radio" name="q5"> <code>aviso = negrito(italico(aviso))</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Por que um <code>@cronometro</code> não serve para um teste com resultado exato, como "deve mostrar 0.0359 s"?</p>
+<label><input type="radio" name="q6"> Porque o tempo muda a cada execução e de computador para computador</label>
+<label><input type="radio" name="q6"> Porque o <code>perf_counter</code> sempre devolve zero</label>
+<label><input type="radio" name="q6"> Porque decoradores não podem usar <code>print</code></label>
+<label><input type="radio" name="q6"> Porque o <code>@wraps</code> apaga o tempo</label>
+</div>
+
+<h3>Missão final: quantas vendas?</h3>
+
+<div class="trypy" data-goal="out:vender: chamada número 3;;out:Nome: vender;;src:@wraps\s*\(\s*funcao\s*\);;semerro">
+<p class="try-task"><strong>Missão:</strong> o decorador <code>contar_chamadas</code> deve contar quantas vezes a função foi chamada. Ele guarda o número num atributo do próprio embrulho, <code>embrulho.chamadas</code> (funções são objetos, e objetos podem ganhar atributos). Faça três coisas: (1) dentro do embrulho, some 1 em <code>embrulho.chamadas</code>; (2) mostre <code>f"{funcao.__name__}: chamada número {embrulho.chamadas}"</code>; (3) ponha <code>@wraps(funcao)</code> em cima do <code>def embrulho</code>, para a última linha mostrar <code>Nome: vender</code>.</p>
+<pre class="script" data-file="main.py">from functools import wraps
+
+
+def contar_chamadas(funcao):
+    def embrulho(*args, **kwargs):
+        # 1. some 1 em embrulho.chamadas
+        # 2. mostre "nome: chamada número N"
+        return funcao(*args, **kwargs)
+    embrulho.chamadas = 0
+    return embrulho
+
+
+@contar_chamadas
+def vender(produto):
+    return f"Vendido: {produto}"
+
+
+print(vender("pão"))
+print(vender("leite"))
+print(vender("café"))
+print("Nome:", vender.__name__)
+</pre>
+<pre class="solucao" data-file="main.py">from functools import wraps
+
+
+def contar_chamadas(funcao):
+    @wraps(funcao)
+    def embrulho(*args, **kwargs):
+        embrulho.chamadas += 1
+        print(f"{funcao.__name__}: chamada número {embrulho.chamadas}")
+        return funcao(*args, **kwargs)
+    embrulho.chamadas = 0
+    return embrulho
+
+
+@contar_chamadas
+def vender(produto):
+    return f"Vendido: {produto}"
+
+
+print(vender("pão"))
+print(vender("leite"))
+print(vender("café"))
+print("Nome:", vender.__name__)
+</pre>
+</div>
+
+<p>A solução mostra, para cada venda, <code>vender: chamada número 1</code>, <code>2</code>, <code>3</code> antes do <code>Vendido: …</code>, e termina com <code>Nome: vender</code>. Sem o <code>@wraps</code>, a última linha seria <code>Nome: embrulho</code>.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Funções são objetos: <code>f</code> é a função, <code>f()</code> é a chamada. Dá para guardar, passar e devolver funções, e criar uma função dentro de outra.</li>
+  <li>Um decorador recebe uma função e devolve outra, o <strong>embrulho</strong>, que faz algo antes e depois de chamar a original.</li>
+  <li><code>@deco</code> em cima do <code>def</code> é o mesmo que <code>f = deco(f)</code>. O decorador roda uma vez; o embrulho, a cada chamada.</li>
+  <li>O molde: <code>@wraps(funcao)</code>, <code>def embrulho(*args, **kwargs):</code>, o antes, <code>resultado = funcao(*args, **kwargs)</code>, o depois, <code>return resultado</code>; e, no fim, <code>return embrulho</code> sem parênteses.</li>
+  <li>Decorador com configuração tem três andares (<code>@repetir(3)</code>); empilhados, o de baixo embrulha primeiro.</li>
+  <li>Prontos para usar: <code>@cache</code>, <code>@wraps</code>, <code>@property</code>, <code>@classmethod</code>, <code>@staticmethod</code>, <code>@dataclass</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
