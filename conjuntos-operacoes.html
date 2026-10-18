@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python União, Interseção e Diferença — contas com conjuntos | Guia Python</title>
+<meta name="description" content="Operações de conjuntos em Python para quem está começando: união (|), interseção (&amp;), diferença (-) e diferença simétrica (^), os métodos union, intersection e difference, subconjuntos com &lt;= e issubset, isdisjoint, |= e update, e os erros reais ao misturar conjunto com lista ou usar + e and, com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">União, Interseção e Diferença</span></h1>
+
+<p class="intro">Na aula <a href="conjuntos.html">Conjuntos</a>, você viu que o <code>set</code> guarda valores sem repetir. A outra grande força dele são as <strong>contas entre conjuntos</strong>, as mesmas dos diagramas de bolinhas da escola: juntar dois grupos, ver quem está nos dois, quem está só em um. A Ana dá aula de violão e de inglês no centro comunitário, e essas contas respondem na hora perguntas como "quem faz as duas aulas?" e "quem faz só violão?".</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A <strong>união</strong> (<code>|</code>): todos de um grupo ou do outro.</li>
+  <li>A <strong>interseção</strong> (<code>&amp;</code>): só quem está nos dois.</li>
+  <li>A <strong>diferença</strong> (<code>-</code>): quem está num e não está no outro, e por que a ordem importa.</li>
+  <li>A <strong>diferença simétrica</strong> (<code>^</code>): quem está em um só.</li>
+  <li>Os métodos com nome (<code>union</code>, <code>intersection</code>…) e quando preferi-los.</li>
+  <li>A perguntar se um grupo está dentro do outro (<code>&lt;=</code>, <code>issubset</code>) e a atualizar no lugar (<code>|=</code>, <code>update</code>).</li>
+  <li>Os erros reais ao misturar conjunto com lista e ao usar <code>+</code> ou <code>and</code>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: as duas bolinhas</h2>
+<p>Desenhe duas bolinhas que se cruzam. Na da esquerda, os alunos de violão: Ana, Bia, Caio e Davi. Na da direita, os de inglês: Bia, Davi e Eva. A Bia e o Davi fazem as duas aulas, então ficam no pedaço do meio, onde as bolinhas se cruzam.</p>
+
+<figure>
+<svg viewBox="0 0 360 200" role="img" aria-label="Dois círculos que se cruzam: violão à esquerda com Ana e Caio, inglês à direita com Eva, e Bia e Davi no meio" style="max-width:420px;width:100%;height:auto;display:block;margin:0 auto">
+  <circle cx="135" cy="105" r="80" style="fill:var(--accent);fill-opacity:.15;stroke:var(--accent);stroke-width:2"/>
+  <circle cx="225" cy="105" r="80" style="fill:var(--tip-border);fill-opacity:.15;stroke:var(--tip-border);stroke-width:2"/>
+  <text x="95" y="18" text-anchor="middle" style="fill:var(--text);font-size:15px;font-weight:bold">violao</text>
+  <text x="265" y="18" text-anchor="middle" style="fill:var(--text);font-size:15px;font-weight:bold">ingles</text>
+  <text x="95" y="100" text-anchor="middle" style="fill:var(--text);font-size:14px">Ana</text>
+  <text x="95" y="122" text-anchor="middle" style="fill:var(--text);font-size:14px">Caio</text>
+  <text x="180" y="100" text-anchor="middle" style="fill:var(--text);font-size:14px">Bia</text>
+  <text x="180" y="122" text-anchor="middle" style="fill:var(--text);font-size:14px">Davi</text>
+  <text x="265" y="111" text-anchor="middle" style="fill:var(--text);font-size:14px">Eva</text>
+</svg>
+<figcaption>As duas turmas da Ana. O meio é quem faz as duas aulas.</figcaption>
+</figure>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Pergunta</th><th>Pedaço do desenho</th><th>Nome</th><th>Em Python</th></tr>
+<tr><td>Quem faz alguma das aulas?</td><td>As duas bolinhas inteiras</td><td>União</td><td><code>violao | ingles</code></td></tr>
+<tr><td>Quem faz as duas?</td><td>Só o meio</td><td>Interseção</td><td><code>violao &amp; ingles</code></td></tr>
+<tr><td>Quem faz só violão?</td><td>A esquerda, sem o meio</td><td>Diferença</td><td><code>violao - ingles</code></td></tr>
+<tr><td>Quem faz só uma das duas?</td><td>As pontas, sem o meio</td><td>Diferença simétrica</td><td><code>violao ^ ingles</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. As quatro contas de uma vez</h2>
+
+<pre class="file" data-file="o_turmas.py">violao = {"Ana", "Bia", "Caio", "Davi"}
+ingles = {"Bia", "Davi", "Eva"}
+print("União:", sorted(violao | ingles))
+print("Interseção:", sorted(violao &amp; ingles))
+print("Só violão:", sorted(violao - ingles))
+print("Só inglês:", sorted(ingles - violao))
+print("Só uma das duas:", sorted(violao ^ ingles))
+</pre>
+
+<pre class="term">$ python3 o_turmas.py
+União: ['Ana', 'Bia', 'Caio', 'Davi', 'Eva']
+Interseção: ['Bia', 'Davi']
+Só violão: ['Ana', 'Caio']
+Só inglês: ['Eva']
+Só uma das duas: ['Ana', 'Caio', 'Eva']
+</pre>
+
+<dl class="anatomy">
+  <dt>violao | ingles</dt><dd><strong>União</strong>. A barra vertical <code>|</code> lembra "ou": quem está em <code>violao</code> <strong>ou</strong> em <code>ingles</code>. A Bia e o Davi aparecem uma vez só, porque o resultado também é um conjunto.</dd>
+  <dt>violao &amp; ingles</dt><dd><strong>Interseção</strong>. O <code>&amp;</code> ("e comercial") lembra "e": quem está em <code>violao</code> <strong>e</strong> em <code>ingles</code>.</dd>
+  <dt>violao - ingles</dt><dd><strong>Diferença</strong>. Como numa subtração: comece com a turma de violão e tire quem também está na de inglês.</dd>
+  <dt>ingles - violao</dt><dd>A diferença ao contrário dá outro resultado: quem faz só inglês. Na diferença, <strong>a ordem importa</strong>.</dd>
+  <dt>violao ^ ingles</dt><dd><strong>Diferença simétrica</strong>. O acento circunflexo <code>^</code> quer dizer "em um dos dois, mas não nos dois". É a união menos a interseção.</dd>
+  <dt>sorted( … )</dt><dd>Cada conta devolve um <strong>conjunto novo</strong>, e conjunto de textos não tem ordem fixa. O <code>sorted()</code> põe o resultado em ordem alfabética para o <code>print</code> sair sempre igual.</dd>
+</dl>
+
+<p>Nenhuma das contas muda <code>violao</code> ou <code>ingles</code>: todas criam um conjunto novo, do mesmo jeito que <code>2 + 3</code> não muda o 2 nem o 3.</p>
+
+<h3>Com números, sem <code>sorted</code></h3>
+<p>Com números inteiros pequenos, o <code>print</code> do conjunto sai sempre igual (lembre da aula anterior: a "arrumação" dos números não muda de uma execução para outra), então dá para ver o conjunto direto:</p>
+
+<pre class="file" data-file="o_numeros.py">a = {1, 2, 3, 4}
+b = {3, 4, 5}
+print(a | b)
+print(a &amp; b)
+print(a - b)
+print(b - a)
+print(a ^ b)
+</pre>
+
+<pre class="term">$ python3 o_numeros.py
+{1, 2, 3, 4, 5}
+{3, 4}
+{1, 2}
+{5}
+{1, 2, 5}
+</pre>
+
+<div class="trypy" data-goal="out:['leite', 'pão'];;src:&amp;|intersection">
+<p class="try-task"><strong>Missão:</strong> a Ana e a Bia fizeram cada uma a sua lista de compras. Mostre, em ordem alfabética, o que está <strong>nas duas</strong> listas (para não comprar em dobro). Troque o <code>?</code> pela conta certa entre <code>ana</code> e <code>bia</code>.</p>
+<pre class="script" data-file="main.py">ana = {"pão", "leite", "café", "ovos"}
+bia = {"leite", "arroz", "pão"}
+print(sorted(ana))  # troque ana pela conta: ana ? bia
+</pre>
+<pre class="solucao" data-file="main.py">ana = {"pão", "leite", "café", "ovos"}
+bia = {"leite", "arroz", "pão"}
+print(sorted(ana &amp; bia))
+</pre>
+</div>
+
+<hr>
+
+<h2>2. Os mesmos cálculos com nome: os métodos</h2>
+<p>Cada símbolo tem um método equivalente, com o nome em inglês da conta. O resultado é o mesmo:</p>
+
+<pre class="file" data-file="o_metodos.py">violao = {"Ana", "Bia", "Caio", "Davi"}
+ingles = {"Bia", "Davi", "Eva"}
+print(sorted(violao.union(ingles)))
+print(sorted(violao.intersection(ingles)))
+print(sorted(violao.difference(ingles)))
+print(sorted(violao.symmetric_difference(ingles)))
+print(sorted(violao.intersection(["Eva", "Ana", "Ana"])))
+</pre>
+
+<pre class="term">$ python3 o_metodos.py
+['Ana', 'Bia', 'Caio', 'Davi', 'Eva']
+['Bia', 'Davi']
+['Ana', 'Caio']
+['Ana', 'Caio', 'Eva']
+['Ana']
+</pre>
+
+<p>Repare na última linha: o método aceitou uma <strong>lista</strong> (com repetido e tudo). Essa é a grande diferença entre os dois jeitos: os <strong>símbolos</strong> só funcionam entre dois conjuntos; os <strong>métodos</strong> aceitam qualquer coisa que tenha itens (lista, tupla, texto) e convertem sozinhos.</p>
+
+<h3>Mais de dois conjuntos</h3>
+<p>As contas podem ser encadeadas. Os clientes que vieram na segunda, na quarta e na sexta, por número:</p>
+
+<pre class="file" data-file="o_tres.py">seg = {1, 2, 3}
+qua = {2, 3, 4}
+sex = {3, 4, 5}
+print(seg &amp; qua &amp; sex)
+print(seg | qua | sex)
+print(seg.union(qua, sex))
+</pre>
+
+<pre class="term">$ python3 o_tres.py
+{3}
+{1, 2, 3, 4, 5}
+{1, 2, 3, 4, 5}
+</pre>
+
+<p>Só o cliente 3 veio nos três dias. E os métodos aceitam vários conjuntos de uma vez, separados por vírgula: <code>seg.union(qua, sex)</code>.</p>
+
+<hr>
+
+<h2>3. Um conjunto dentro do outro</h2>
+<p>Além de calcular, dá para <strong>perguntar</strong> sobre dois conjuntos. "Todos desta dupla fazem violão?" é perguntar se a dupla é um <strong>subconjunto</strong> da turma: se cabe inteira dentro dela.</p>
+
+<pre class="file" data-file="o_sub.py">violao = {"Ana", "Bia", "Caio", "Davi"}
+dupla = {"Bia", "Davi"}
+print(dupla &lt;= violao)
+print(dupla.issubset(violao))
+print(violao &gt;= dupla)
+print(violao.issuperset(dupla))
+print(dupla &lt; violao)
+print(violao &lt; violao)
+print(violao &lt;= violao)
+print(violao.isdisjoint({"Eva", "Fábio"}))
+print(violao.isdisjoint({"Ana"}))
+</pre>
+
+<pre class="term">$ python3 o_sub.py
+True
+True
+True
+True
+True
+False
+True
+True
+False
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Pergunta</th><th>Aqui</th></tr>
+<tr><td><code>dupla &lt;= violao</code> ou <code>dupla.issubset(violao)</code></td><td>Todos de <code>dupla</code> estão em <code>violao</code>? (subconjunto)</td><td><code>True</code></td></tr>
+<tr><td><code>violao &gt;= dupla</code> ou <code>violao.issuperset(dupla)</code></td><td>A mesma pergunta, vista do outro lado: <code>violao</code> contém <code>dupla</code>? (superconjunto)</td><td><code>True</code></td></tr>
+<tr><td><code>dupla &lt; violao</code></td><td>Subconjunto <strong>e</strong> menor (falta alguém)? (subconjunto próprio)</td><td><code>True</code></td></tr>
+<tr><td><code>violao &lt; violao</code></td><td>Um conjunto não é "menor" que ele mesmo</td><td><code>False</code></td></tr>
+<tr><td><code>violao &lt;= violao</code></td><td>Mas cabe dentro dele mesmo</td><td><code>True</code></td></tr>
+<tr><td><code>violao.isdisjoint(outro)</code></td><td>Os dois <strong>não têm ninguém em comum</strong>? ("disjuntos")</td><td><code>True</code> com Eva e Fábio; <code>False</code> com Ana</td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong><code>&lt;</code> não é "tem menos itens"</strong>
+<p>Com conjuntos, <code>&lt;</code> e <code>&lt;=</code> não comparam tamanhos, comparam <strong>conteúdo</strong>. <code>{1, 2} &lt; {5, 6, 7}</code> é <code>False</code>, mesmo o primeiro sendo menor, porque o 1 e o 2 não estão no outro. Para comparar tamanhos, compare os <code>len</code>.</p>
+</div>
+
+<hr>
+
+<h2>4. Atualizando o conjunto no lugar</h2>
+<p>As contas acima criam um conjunto novo. Quando você quer <strong>mudar</strong> o próprio conjunto, use a versão com <code>=</code>, como o <code>+=</code> dos números (aula <a href="operadores-atribuicao.html">Operadores de Atribuição</a>), ou o método <code>update</code>:</p>
+
+<pre class="file" data-file="o_update.py">estoque = {"arroz", "feijão"}
+estoque |= {"café", "arroz"}
+print(sorted(estoque))
+estoque -= {"feijão"}
+print(sorted(estoque))
+estoque.update(["leite", "pão"])
+print(sorted(estoque))
+</pre>
+
+<pre class="term">$ python3 o_update.py
+['arroz', 'café', 'feijão']
+['arroz', 'café']
+['arroz', 'café', 'leite', 'pão']
+</pre>
+
+<dl class="anatomy">
+  <dt>estoque |= {"café", "arroz"}</dt><dd>O mesmo que <code>estoque = estoque | {"café", "arroz"}</code>: junta os itens novos. O arroz já estava e não se repete.</dd>
+  <dt>estoque -= {"feijão"}</dt><dd>Tira do estoque tudo o que está no outro conjunto.</dd>
+  <dt>estoque.update(["leite", "pão"])</dt><dd>"Atualizar": a versão método do <code>|=</code>. Como todo método, aceita uma lista.</dd>
+</dl>
+
+<p>Existem também <code>&amp;=</code> (fica só com o que está nos dois) e <code>^=</code>, e os métodos <code>intersection_update</code>, <code>difference_update</code> e <code>symmetric_difference_update</code>, com nomes compridos mas a mesma ideia.</p>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma conta</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Conta</th><th>Símbolo</th><th>Método</th><th>Atualizando no lugar</th></tr>
+<tr><td>União</td><td><code>a | b</code></td><td><code>a.union(b)</code></td><td><code>a |= b</code> / <code>a.update(b)</code></td></tr>
+<tr><td>Interseção</td><td><code>a &amp; b</code></td><td><code>a.intersection(b)</code></td><td><code>a &amp;= b</code> / <code>a.intersection_update(b)</code></td></tr>
+<tr><td>Diferença</td><td><code>a - b</code></td><td><code>a.difference(b)</code></td><td><code>a -= b</code> / <code>a.difference_update(b)</code></td></tr>
+<tr><td>Diferença simétrica</td><td><code>a ^ b</code></td><td><code>a.symmetric_difference(b)</code></td><td><code>a ^= b</code> / <code>a.symmetric_difference_update(b)</code></td></tr>
+</table>
+</div>
+
+<p><strong>Qual usar?</strong> Os símbolos são curtos e se leem como uma conta; use quando os dois lados já são conjuntos. Os métodos são mais fáceis de entender para quem não decorou os símbolos, e aceitam listas e tuplas sem precisar converter: use quando o outro lado não é um conjunto.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Símbolo entre conjunto e lista</strong>
+<pre class="file" data-file="o_lista_erro.py">violao = {"Ana", "Bia"}
+novos = ["Caio", "Davi"]
+todos = violao | novos
+</pre>
+<pre class="term">$ python3 o_lista_erro.py
+Traceback (most recent call last):
+  File "/home/ana/o_lista_erro.py", line 3, in &lt;module&gt;
+    todos = violao | novos
+            ~~~~~~~^~~~~~~
+TypeError: unsupported operand type(s) for |: 'set' and 'list'
+</pre>
+<dl class="anatomy">
+  <dt>line 3</dt><dd>O erro está na linha 3.</dd>
+  <dt>~~~~~~~^~~~~~~</dt><dd>O <code>^</code> aponta para o operador <code>|</code>, e os tils marcam os dois lados da conta.</dd>
+  <dt>TypeError: unsupported operand type(s) for |: 'set' and 'list'</dt><dd>"Tipos de operando não suportados para <code>|</code>: <code>set</code> e <code>list</code>". O <code>|</code> não sabe juntar um conjunto com uma lista.</dd>
+</dl>
+<p><strong>Como consertar:</strong> converta a lista (<code>violao | set(novos)</code>) ou use o método, que aceita listas: <code>violao.union(novos)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Somar conjuntos com <code>+</code></strong>
+<pre class="file" data-file="o_mais_erro.py">a = {1, 2}
+b = {3}
+print(a + b)
+</pre>
+<pre class="term">$ python3 o_mais_erro.py
+Traceback (most recent call last):
+  File "/home/ana/o_mais_erro.py", line 3, in &lt;module&gt;
+    print(a + b)
+          ~~^~~
+TypeError: unsupported operand type(s) for +: 'set' and 'set'
+</pre>
+<p>Listas e tuplas se juntam com <code>+</code>, mas conjuntos não: "tipos não suportados para <code>+</code>: <code>set</code> e <code>set</code>". <strong>Como consertar:</strong> a "soma" de conjuntos é a união: <code>a | b</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>and</code> no lugar de <code>&amp;</code>: sem erro, resultado errado</strong>
+<pre class="file" data-file="o_and.py">violao = {1, 2, 3}
+ingles = {3, 4}
+print(violao and ingles)
+print(violao &amp; ingles)
+</pre>
+<pre class="term">$ python3 o_and.py
+{3, 4}
+{3}
+</pre>
+<p>A palavra <code>and</code> ("e") parece a interseção, mas não é. Ela é o "e" lógico da aula <a href="operadores-logicos.html">and, or e not</a>: como <code>violao</code> não está vazio, <code>violao and ingles</code> devolve simplesmente o segundo conjunto, <code>{3, 4}</code>, sem calcular nada. Nenhum erro aparece, e o resultado está errado. O mesmo vale para <code>or</code> no lugar de <code>|</code>. <strong>Como consertar:</strong> para contas de conjunto, use os símbolos <code>&amp;</code> e <code>|</code> (ou os métodos).</p>
+</div>
+
+<div class="cenario">
+<strong>Ninguém em comum não é erro</strong>
+<pre class="file" data-file="o_vazio.py">violao = {"Ana", "Bia"}
+xadrez = {"Caio"}
+comum = violao &amp; xadrez
+print(comum)
+print(len(comum))
+if not comum:
+    print("Ninguém faz as duas.")
+</pre>
+<pre class="term">$ python3 o_vazio.py
+set()
+0
+Ninguém faz as duas.
+</pre>
+<p>Quando a conta não sobra ninguém, o resultado é o conjunto vazio, <code>set()</code>. Ele conta como "falso" num <code>if</code>, então <code>if not comum:</code> é o jeito de perguntar "ficou vazio?".</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Resultado</th></tr>
+<tr><td><code>a | b</code></td><td>União: o que está em <code>a</code> ou em <code>b</code></td></tr>
+<tr><td><code>a &amp; b</code></td><td>Interseção: o que está nos dois</td></tr>
+<tr><td><code>a - b</code></td><td>Diferença: o que está em <code>a</code> e não em <code>b</code></td></tr>
+<tr><td><code>a ^ b</code></td><td>Diferença simétrica: o que está em um só</td></tr>
+<tr><td><code>a &lt;= b</code> / <code>a.issubset(b)</code></td><td><code>True</code> se tudo de <code>a</code> está em <code>b</code></td></tr>
+<tr><td><code>a &gt;= b</code> / <code>a.issuperset(b)</code></td><td><code>True</code> se <code>a</code> contém tudo de <code>b</code></td></tr>
+<tr><td><code>a.isdisjoint(b)</code></td><td><code>True</code> se não há nada em comum</td></tr>
+<tr><td><code>a |= b</code>, <code>a &amp;= b</code>, <code>a -= b</code>, <code>a ^= b</code></td><td>Fazem a conta e guardam o resultado em <code>a</code></td></tr>
+<tr><td><code>a.update(lista)</code></td><td>Acrescenta os itens de qualquer sequência</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>TypeError: unsupported operand type(s) for |: 'set' and 'list'</code></td><td>Símbolo entre conjunto e lista: use o método ou <code>set()</code></td></tr>
+<tr><td><code>TypeError: unsupported operand type(s) for +: 'set' and 'set'</code></td><td>Conjunto não soma: use <code>|</code></td></tr>
+<tr><td>Resultado estranho, sem erro</td><td><code>and</code>/<code>or</code> no lugar de <code>&amp;</code>/<code>|</code>, ou a ordem trocada na diferença</td></tr>
+<tr><td><code>set()</code></td><td>A conta não sobrou ninguém (não é erro)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A interseção</h3>
+<p>Quanto vale <code>{1, 2, 3} &amp; {2, 3, 4}</code>? Escreva como o Python mostra.</p>
+<div class="ex-code"><input data-answer="{2, 3}" aria-label="resposta"></div>
+</div>
+
+<div class="exercise">
+<h3>2. A diferença</h3>
+<p>Quanto vale <code>{1, 2, 3} - {2, 3, 4}</code>?</p>
+<div class="ex-code"><input data-answer="{1}" aria-label="resposta"></div>
+</div>
+
+<div class="exercise">
+<h3>3. O símbolo da união</h3>
+<p>Complete o símbolo que junta as duas turmas:</p>
+<div class="ex-code">todos = violao <input data-answer="|" aria-label="símbolo"> ingles</div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Com <code>violao = {"Ana", "Bia"}</code> e <code>ingles = {"Bia", "Eva"}</code>, qual conta dá <code>{'Eva'}</code>?</p>
+<label><input type="radio" name="q4"> <code>violao - ingles</code></label>
+<label><input type="radio" name="q4"> <code>violao &amp; ingles</code></label>
+<label><input type="radio" name="q4"> <code>ingles - violao</code></label>
+<label><input type="radio" name="q4"> <code>violao ^ ingles</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. <code>{1, 2} | [3, 4]</code> dá erro. Qual destas linhas funciona?</p>
+<label><input type="radio" name="q5"> <code>{1, 2} + [3, 4]</code></label>
+<label><input type="radio" name="q5"> <code>{1, 2}.union([3, 4])</code></label>
+<label><input type="radio" name="q5"> <code>{1, 2} or [3, 4]</code>, que faz a união</label>
+<label><input type="radio" name="q5"> Nenhuma: conjunto e lista nunca se misturam</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. O que <code>{"Bia"} &lt;= {"Ana", "Bia"}</code> responde?</p>
+<label><input type="radio" name="q6"> <code>True</code>: a Bia está no outro conjunto, então é um subconjunto</label>
+<label><input type="radio" name="q6"> <code>False</code>: o "B" vem depois do "A"</label>
+<label><input type="radio" name="q6"> <code>True</code>, porque o primeiro tem menos itens</label>
+<label><input type="radio" name="q6"> Dá erro</label>
+</div>
+
+<h3>Missão final: a lista de presença da festa</h3>
+
+<div class="trypy" data-goal="out:Faltaram: ['Ana', 'Caio'];;out:Sem confirmar: ['Eva'];;out:Total de pessoas: 5">
+<p class="try-task"><strong>Missão:</strong> a Ana tem o conjunto de quem <strong>confirmou</strong> presença na festa e o de quem <strong>apareceu</strong>. Troque cada <code>"?"</code> por uma conta de conjuntos: quem confirmou e faltou (em ordem alfabética), quem veio sem confirmar (em ordem alfabética) e quantas pessoas diferentes estão nas duas listas juntas.</p>
+<pre class="script" data-file="main.py">confirmados = {"Ana", "Bia", "Caio", "Davi"}
+presentes = {"Bia", "Davi", "Eva"}
+print("Faltaram:", "?")
+print("Sem confirmar:", "?")
+print("Total de pessoas:", "?")
+</pre>
+<pre class="solucao" data-file="main.py">confirmados = {"Ana", "Bia", "Caio", "Davi"}
+presentes = {"Bia", "Davi", "Eva"}
+print("Faltaram:", sorted(confirmados - presentes))
+print("Sem confirmar:", sorted(presentes - confirmados))
+print("Total de pessoas:", len(confirmados | presentes))
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>|</code> é a <strong>união</strong> (um ou outro), <code>&amp;</code> a <strong>interseção</strong> (os dois), <code>-</code> a <strong>diferença</strong> (este e não aquele) e <code>^</code> a <strong>diferença simétrica</strong> (só um dos dois).</li>
+  <li>Toda conta devolve um conjunto novo; os originais não mudam. Na diferença, a ordem importa.</li>
+  <li>Os métodos <code>union</code>, <code>intersection</code>, <code>difference</code> e <code>symmetric_difference</code> fazem o mesmo e aceitam listas; os símbolos exigem dois conjuntos.</li>
+  <li><code>&lt;=</code>/<code>issubset</code>, <code>&gt;=</code>/<code>issuperset</code> e <code>isdisjoint</code> respondem perguntas com <code>True</code> ou <code>False</code>.</li>
+  <li><code>|=</code>, <code>-=</code>, <code>&amp;=</code>, <code>^=</code> e <code>update</code> mudam o próprio conjunto.</li>
+  <li>Conjunto não soma com <code>+</code>, e <code>and</code>/<code>or</code> não são <code>&amp;</code>/<code>|</code>. Para mostrar um conjunto de textos sempre igual, use <code>sorted()</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
