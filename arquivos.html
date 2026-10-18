@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python open e with — abrindo arquivos de texto | Guia Python</title>
+<meta name="description" content="Abrir arquivos no Python para quem nunca programou: open(), close() e por que usar with, o encoding=&quot;utf-8&quot; (e o que acontece com os acentos no Windows sem ele), os modos r, w, a e x, o FileNotFoundError real e como tratá-lo, e os caminhos relativos: por que o mesmo programa acha ou não acha o arquivo dependendo da pasta onde você roda.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">open e with</span></h1>
+
+<p class="intro">Tudo o que seus programas guardaram até agora sumia quando eles terminavam: as notas da turma, a lista de compras, o saldo. Para guardar uma informação de um dia para o outro, o programa precisa escrevê-la num <strong>arquivo</strong>, e para usá-la depois, abrir e ler esse arquivo. Nesta aula você aprende o primeiro passo, que vale para ler e para escrever: <strong>abrir</strong> um arquivo com <code>open()</code> (em inglês, "abrir") e fechá-lo do jeito certo, com <code>with</code>.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A abrir um arquivo de texto com <code>open()</code>, ler o conteúdo e fechar com <code>close()</code>.</li>
+  <li>Por que o <code>with</code> é o jeito recomendado: ele fecha o arquivo sozinho.</li>
+  <li>Para que serve o <code>encoding="utf-8"</code> e o que acontece com os acentos sem ele (principalmente no Windows).</li>
+  <li>Os modos de abrir: <code>"r"</code> (ler), <code>"w"</code> (escrever do zero), <code>"a"</code> (acrescentar) e <code>"x"</code> (criar novo).</li>
+  <li>O <code>FileNotFoundError</code> e como tratá-lo.</li>
+  <li>Os caminhos relativos: por que o arquivo é procurado na pasta <strong>onde você roda</strong> o programa, e não onde o programa está.</li>
+</ul>
+</div>
+
+<p>Todos os programas desta aula rodaram no <strong>Python 3.14</strong> da máquina da Ana (usuária <code>ana</code>, computador <code>notebook</code>, Ubuntu), salvos na pasta pessoal dela, <code>/home/ana</code>. Os detalhes de ler (<a href="arquivos-ler.html">Lendo Arquivos</a>) e de escrever (<a href="arquivos-escrever.html">Escrevendo Arquivos</a>) têm aulas próprias; aqui o assunto é abrir.</p>
+
+<hr>
+
+<h2>A ideia: o caderno na gaveta</h2>
+<p>A professora da Ana guarda as notas da turma num caderno, dentro de uma gaveta. Para usar o caderno, ela:</p>
+<ol class="passo">
+  <li><strong>Abre</strong> a gaveta e pega o caderno, já decidindo para quê: só para <strong>consultar</strong>, para <strong>começar uma página nova</strong> ou para <strong>acrescentar</strong> no fim.</li>
+  <li><strong>Lê</strong> ou <strong>escreve</strong>.</li>
+  <li><strong>Guarda</strong> o caderno de volta e fecha a gaveta.</li>
+</ol>
+<p>Com arquivos é igual. O <code>open()</code> é o passo 1: você diz <strong>qual</strong> arquivo e <strong>para quê</strong> (o "modo"). Depois lê ou escreve. Por fim, <strong>fecha</strong> o arquivo, para o sistema saber que você terminou e para tudo o que você escreveu ser gravado de verdade. Se a professora esquece o caderno aberto em cima da mesa, alguém pode não achá-lo na gaveta; um arquivo que fica aberto também pode causar problemas.</p>
+
+<p>Os arquivos desta aula são <strong>arquivos de texto</strong> (<code>.txt</code>): só letras, números e quebras de linha, do tipo que você abre no Bloco de Notas, no gedit ou no <code>nano</code>. Este é o arquivo <code>notas.txt</code> da Ana, mostrado no terminal com o comando <code>cat</code>:</p>
+
+<pre class="term">$ cat notas.txt
+Ana: 9.0
+Bruno: 6.5
+Carla: 8.5</pre>
+
+<hr>
+
+<h2>1. Abrir, ler e fechar</h2>
+
+<pre class="file" data-file="abrir.py">arquivo = open("notas.txt", encoding="utf-8")
+conteudo = arquivo.read()
+arquivo.close()
+print(conteudo)
+</pre>
+
+<dl class="anatomy">
+  <dt>open("notas.txt", …)</dt><dd>Abre o arquivo <code>notas.txt</code>. O nome vai entre aspas, é um texto. Sem pasta na frente, o Python procura o arquivo na <strong>pasta atual</strong> (seção 6).</dd>
+  <dt>encoding="utf-8"</dt><dd>A "codificação": a regra para transformar os bytes do arquivo em letras. <code>utf-8</code> é a regra usada por quase todos os arquivos hoje. A seção 3 explica por que vale escrever sempre.</dd>
+  <dt>arquivo = …</dt><dd>O <code>open()</code> devolve um <strong>objeto arquivo</strong>, a "alça" para mexer no arquivo aberto. A variável pode ter qualquer nome; <code>arquivo</code> e <code>f</code> (de <em>file</em>) são os mais comuns.</dd>
+  <dt>arquivo.read()</dt><dd>"Ler": devolve todo o conteúdo do arquivo como um único texto. Outras formas de ler estão em <a href="arquivos-ler.html">Lendo Arquivos</a>.</dd>
+  <dt>arquivo.close()</dt><dd>"Fechar": avisa que você terminou. Depois disso, o objeto arquivo não serve mais para ler.</dd>
+</dl>
+
+<pre class="term">$ python3 abrir.py
+Ana: 9.0
+Bruno: 6.5
+Carla: 8.5
+</pre>
+
+<p>O conteúdo apareceu. No terminal de verdade, ele ainda vem seguido de uma <strong>linha em branco</strong> (repare nela nas sessões abaixo, entre um programa e o próximo <code>$</code>). Ela vem do próprio arquivo: a última linha (<code>Carla: 8.5</code>) termina com uma quebra de linha, e o <code>print</code> acrescenta mais uma. A aula <a href="arquivos-ler.html">Lendo Arquivos</a> mostra como tirar essa sobra.</p>
+
+<hr>
+
+<h2>2. <code>with</code>: o arquivo se fecha sozinho</h2>
+<p>O <code>close()</code> tem um problema: é fácil esquecer. E, se der um erro entre o <code>open()</code> e o <code>close()</code>, o programa para antes de chegar ao <code>close()</code>. O Python tem um jeito de abrir que <strong>garante</strong> o fechamento, o <code>with</code> (em inglês, "com"):</p>
+
+<pre class="file" data-file="com_with.py">with open("notas.txt", encoding="utf-8") as arquivo:
+    conteudo = arquivo.read()
+    print(f"Dentro do with, fechado? {arquivo.closed}")
+print(f"Depois do with, fechado? {arquivo.closed}")
+print(conteudo)
+</pre>
+
+<dl class="anatomy">
+  <dt>with open(…) as arquivo:</dt><dd>"Com o arquivo aberto, chamado <code>arquivo</code>, faça o bloco abaixo." O <code>as</code> ("como") dá o nome à variável, como no <code>except … as e</code> da aula <a href="try-except.html">try e except</a>. Termina com dois-pontos.</dd>
+  <dt>o bloco indentado</dt><dd>Enquanto o Python estiver nestas linhas (4 espaços para dentro), o arquivo está aberto.</dd>
+  <dt>arquivo.closed</dt><dd>Um atributo que diz se o arquivo está fechado: <code>True</code> ou <code>False</code>.</dd>
+  <dt>a linha que voltou para a margem</dt><dd>Saiu do bloco: o <code>with</code> fechou o arquivo <strong>sozinho</strong>. Não existe <code>close()</code> no programa.</dd>
+</dl>
+
+<pre class="term">$ python3 com_with.py
+Dentro do with, fechado? False
+Depois do with, fechado? True
+Ana: 9.0
+Bruno: 6.5
+Carla: 8.5
+</pre>
+
+<p>Dentro do bloco, aberto; fora, fechado. E o <code>conteudo</code> continua disponível depois do bloco: o que foi lido já está guardado na variável. O <code>with</code> fecha o arquivo também quando acontece um erro dentro do bloco, do mesmo jeito que o <code>finally</code> da aula <a href="else-finally.html">else e finally</a> roda sempre. Por isso ele é o jeito recomendado de abrir arquivos, e é o único que o guia usa daqui em diante. (Como o <code>with</code> funciona por dentro está na aula <a href="gerenciadores-contexto.html">Gerenciadores de Contexto</a>.)</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Fecha o arquivo?</th><th>Quando usar</th></tr>
+<tr><td><code>arquivo = open(…)</code> … <code>arquivo.close()</code></td><td>Só se você lembrar, e só se não der erro antes</td><td>Raramente; você vai ver em códigos antigos</td></tr>
+<tr><td><code>with open(…) as arquivo:</code></td><td><strong>Sempre</strong>, ao sair do bloco, com erro ou sem</td><td><strong>Sempre</strong></td></tr>
+</table>
+</div>
+
+<div class="trypy" data-goal="out:maçã;;src:with\s+open\(;;src:encoding\s*=\s*&quot;utf-8&quot;">
+<p class="try-task"><strong>Missão:</strong> a aba <code>compras.txt</code> é a lista de compras da Ana, que fica na mesma pasta do programa. O <code>main.py</code> abre a lista do jeito antigo e sem <code>encoding</code>. Reescreva com <code>with open("compras.txt", encoding="utf-8") as arquivo:</code>, ponha a leitura e o <code>print</code> dentro do bloco e apague o <code>close()</code>.</p>
+<pre class="script" data-file="main.py">arquivo = open("compras.txt")
+print(arquivo.read())
+arquivo.close()
+</pre>
+<pre class="script" data-file="compras.txt">Lista de compras:
+pão de queijo
+maçã
+feijão
+café
+</pre>
+<pre class="solucao" data-file="main.py">with open("compras.txt", encoding="utf-8") as arquivo:
+    print(arquivo.read())
+</pre>
+</div>
+
+<hr>
+
+<h2>3. <code>encoding="utf-8"</code>: os acentos</h2>
+<p>Um arquivo, no disco, não guarda letras: guarda <strong>números</strong> (bytes). Para o <code>ç</code> virar bytes e voltar a ser <code>ç</code>, quem grava e quem lê têm de usar a <strong>mesma regra</strong>. Essa regra é a codificação (<em>encoding</em>). A mais usada no mundo, e a de quase todo arquivo novo, é a <strong>UTF-8</strong>. Com ela, a lista de compras sai certinha:</p>
+
+<pre class="file" data-file="acentos.py">with open("compras.txt", encoding="utf-8") as arquivo:
+    print(arquivo.read())
+</pre>
+
+<pre class="term">$ python3 acentos.py
+Lista de compras:
+pão de queijo
+maçã
+feijão
+café
+</pre>
+
+<p>Agora o mesmo arquivo lido com outra regra, a <code>cp1252</code>, que é a codificação tradicional do Windows em português:</p>
+
+<pre class="file" data-file="errado_cp.py">with open("compras.txt", encoding="cp1252") as arquivo:
+    print(arquivo.read())
+</pre>
+
+<pre class="term">$ python3 errado_cp.py
+Lista de compras:
+pÃ£o de queijo
+maÃ§Ã£
+feijÃ£o
+cafÃ©
+</pre>
+
+<p>Nenhum erro, e todos os acentos viraram lixo: <code>pão</code> virou <code>pÃ£o</code>. Na UTF-8, cada letra acentuada ocupa <strong>dois</strong> bytes; a <code>cp1252</code> leu cada byte como uma letra separada. Se você já viu um "Ã£" num e-mail ou num site, foi exatamente isso.</p>
+
+<p>O contrário também acontece: um arquivo antigo, gravado em <code>cp1252</code> (o <code>antigo.txt</code>, com a palavra <code>maçã</code>), lido como UTF-8:</p>
+
+<pre class="file" data-file="le_antigo.py">with open("antigo.txt", encoding="utf-8") as arquivo:
+    print(arquivo.read())
+</pre>
+
+<pre class="term">$ python3 le_antigo.py
+Traceback (most recent call last):
+  File "/home/ana/le_antigo.py", line 2, in &lt;module&gt;
+    print(arquivo.read())
+          ~~~~~~~~~~~~^^
+  File "&lt;frozen codecs&gt;", line 325, in decode
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe7 in position 2: invalid continuation byte</pre>
+
+<p>"O codec <code>utf-8</code> não consegue decodificar o byte <code>0xe7</code> na posição 2." O byte <code>0xe7</code> é o <code>ç</code> na regra <code>cp1252</code>; na posição 2 (contando do zero: <code>m</code>, <code>a</code>, <code>ç</code>), a UTF-8 encontrou um byte que não faz sentido para ela. A linha <code>File "&lt;frozen codecs&gt;"</code> é de dentro do próprio Python (o código que traduz bytes em letras); o seu arquivo é a linha de cima. <strong>Como consertar:</strong> abrir com a codificação com que o arquivo foi gravado, <code>encoding="cp1252"</code>.</p>
+
+<h3>E se eu não escrever o <code>encoding</code>?</h3>
+<p>Aí o Python usa a codificação <strong>padrão do sistema</strong>. No Ubuntu da Ana, ela é UTF-8, então funciona:</p>
+
+<pre class="file" data-file="sem_encoding.py">with open("compras.txt") as arquivo:
+    print(arquivo.read())
+</pre>
+
+<pre class="term">$ python3 sem_encoding.py
+Lista de compras:
+pão de queijo
+maçã
+feijão
+café
+</pre>
+
+<p>O problema é que o programa vai rodar em outros computadores. Num Windows em português, até o Python 3.14, o padrão costuma ser a <code>cp1252</code>: o mesmo programa, com o mesmo arquivo, mostraria <code>pÃ£o</code>. Funciona na sua máquina e quebra na do colega. Com <code>encoding="utf-8"</code> escrito, o resultado é o mesmo em qualquer sistema.</p>
+
+<p>O Python até avisa, se você pedir. A opção <code>-X warn_default_encoding</code> mostra um aviso a cada <code>open()</code> sem <code>encoding</code>:</p>
+
+<pre class="term">$ python3 -X warn_default_encoding sem_encoding.py
+/home/ana/sem_encoding.py:1: EncodingWarning: 'encoding' argument not specified
+  with open("compras.txt") as arquivo:
+Lista de compras:
+pão de queijo
+maçã
+feijão
+café
+</pre>
+
+<p>"Aviso de codificação: o argumento <code>encoding</code> não foi informado", com o arquivo e a linha.</p>
+
+<div class="note">
+<strong>Python 3.15: UTF-8 por padrão em todo lugar</strong>
+<p>A partir do Python 3.15 (lançado em outubro de 2026), um <code>open()</code> sem <code>encoding</code> usa UTF-8 em qualquer sistema, inclusive no Windows (é a PEP 686). Mesmo assim, a própria documentação recomenda continuar escrevendo o <code>encoding</code>: assim o programa funciona igual no 3.15 e nos Pythons mais antigos, que ainda vão existir por muitos anos.</p>
+</div>
+
+<hr>
+
+<h2>4. Os modos: ler, escrever, acrescentar, criar</h2>
+<p>O segundo argumento do <code>open()</code> é o <strong>modo</strong>: o "para quê" da gaveta. Quando você não escreve nenhum, ele é <code>"r"</code>, de <em>read</em> (ler).</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Modo</th><th>Em inglês</th><th>Para quê</th><th>Se o arquivo não existe</th><th>Se o arquivo já existe</th></tr>
+<tr><td><code>"r"</code> (o padrão)</td><td><em>read</em></td><td>Só ler</td><td><code>FileNotFoundError</code></td><td>Lê do começo</td></tr>
+<tr><td><code>"w"</code></td><td><em>write</em></td><td>Escrever do zero</td><td>Cria</td><td><strong>Apaga tudo</strong> e começa vazio</td></tr>
+<tr><td><code>"a"</code></td><td><em>append</em></td><td>Acrescentar no fim</td><td>Cria</td><td>Mantém o conteúdo e escreve depois dele</td></tr>
+<tr><td><code>"x"</code></td><td><em>exclusive</em></td><td>Criar um arquivo novo</td><td>Cria</td><td><code>FileExistsError</code>: não apaga nada</td></tr>
+</table>
+</div>
+
+<p>Um programa que usa os três jeitos de escrever no recado do dia (o <code>write()</code>, "escrever", tem aula própria: <a href="arquivos-escrever.html">Escrevendo Arquivos</a>):</p>
+
+<pre class="file" data-file="modos.py">with open("recado.txt", "w", encoding="utf-8") as arquivo:
+    arquivo.write("Comprar pão\n")
+with open("recado.txt", "a", encoding="utf-8") as arquivo:
+    arquivo.write("Pagar a luz\n")
+with open("recado.txt", encoding="utf-8") as arquivo:
+    print(arquivo.read())
+</pre>
+
+<pre class="term">$ python3 modos.py
+Comprar pão
+Pagar a luz
+</pre>
+
+<p>O <code>"w"</code> criou o arquivo com a primeira linha; o <code>"a"</code> acrescentou a segunda <strong>depois</strong> dela; o terceiro <code>open()</code>, sem modo, leu. Agora, cuidado com o <code>"w"</code> num arquivo que já existe:</p>
+
+<pre class="file" data-file="modo_w.py">with open("recado.txt", "w", encoding="utf-8") as arquivo:
+    arquivo.write("Só isto agora\n")
+with open("recado.txt", encoding="utf-8") as arquivo:
+    print(arquivo.read())
+</pre>
+
+<pre class="term">$ python3 modo_w.py
+Só isto agora
+</pre>
+
+<p>As duas linhas de antes <strong>sumiram</strong>, sem pergunta e sem aviso. O <code>"w"</code> esvazia o arquivo no momento em que o abre. Quando você quer criar um arquivo, mas <strong>nunca</strong> apagar um que já exista, use <code>"x"</code>:</p>
+
+<pre class="file" data-file="modo_x.py">with open("recado.txt", "x", encoding="utf-8") as arquivo:
+    arquivo.write("Não quero apagar nada\n")
+</pre>
+
+<pre class="term">$ python3 modo_x.py                              « a primeira vez: o recado.txt não existia
+$ cat recado.txt
+Não quero apagar nada
+$ python3 modo_x.py                              « a segunda vez: ele já existe
+Traceback (most recent call last):
+  File "/home/ana/modo_x.py", line 1, in &lt;module&gt;
+    with open("recado.txt", "x", encoding="utf-8") as arquivo:
+         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileExistsError: [Errno 17] File exists: 'recado.txt'</pre>
+
+<p>Na primeira vez, o programa criou o arquivo sem dizer nada. Na segunda, recusou: "O arquivo existe." É um erro que você pode tratar com <code>except FileExistsError</code>, por exemplo para perguntar se a pessoa quer mesmo substituir.</p>
+
+<div class="trypy" data-goal="arquivo:diario.txt~Hoje fez sol;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa quer criar o diário da Ana, mas abre o arquivo no modo de <strong>ler</strong>, e o <code>diario.txt</code> ainda não existe. Rode para ver o erro e troque o modo para o de <strong>escrever do zero</strong>.</p>
+<pre class="script" data-file="main.py">with open("diario.txt", "r", encoding="utf-8") as arquivo:
+    arquivo.write("Hoje fez sol.\n")
+print("Diário salvo.")
+</pre>
+<pre class="solucao" data-file="main.py">with open("diario.txt", "w", encoding="utf-8") as arquivo:
+    arquivo.write("Hoje fez sol.\n")
+print("Diário salvo.")
+</pre>
+</div>
+
+<hr>
+
+<h2>5. <code>FileNotFoundError</code>: o arquivo não está lá</h2>
+<p>O erro que mais aparece com arquivos. A Ana tentou abrir as notas do ano passado, que ela não tem:</p>
+
+<pre class="file" data-file="nao_existe.py">with open("notas_2025.txt", encoding="utf-8") as arquivo:
+    print(arquivo.read())
+</pre>
+
+<pre class="term">$ python3 nao_existe.py
+Traceback (most recent call last):
+  File "/home/ana/nao_existe.py", line 1, in &lt;module&gt;
+    with open("notas_2025.txt", encoding="utf-8") as arquivo:
+         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'notas_2025.txt'</pre>
+
+<p>"Arquivo ou diretório inexistente: <code>'notas_2025.txt'</code>." O <code>[Errno 2]</code> é o número que o sistema operacional dá a esse problema. (No editor do guia, que roda o Python dentro do navegador, o mesmo erro sai como <code>[Errno 44]</code>: lá o "sistema" é outro e numera os problemas de outro jeito. O tipo e a mensagem são os mesmos.) A mensagem mostra o nome <strong>exatamente</strong> como o programa pediu: confira letra por letra, maiúsculas, a extensão (<code>.txt</code>) e a pasta. No Linux, <code>Notas.txt</code> e <code>notas.txt</code> são arquivos diferentes.</p>
+
+<p>Quando o nome vem do usuário, o certo é tratar o erro, com o <code>try</code>/<code>except</code> da aula <a href="try-except.html">try e except</a>:</p>
+
+<pre class="file" data-file="trata.py">nome = input("Qual arquivo? ")
+try:
+    with open(nome, encoding="utf-8") as arquivo:
+        print(arquivo.read())
+except FileNotFoundError:
+    print(f"Não achei o arquivo {nome}. Confira o nome e a pasta.")
+</pre>
+
+<pre class="term">$ python3 trata.py
+Qual arquivo? notas.txt
+Não achei o arquivo notas.txt. Confira o nome e a pasta.
+$ python3 trata.py
+Qual arquivo? escola/notas.txt
+Ana: 9.0
+Bruno: 6.5
+Carla: 8.5
+</pre>
+
+<p>Na primeira vez, não havia <code>notas.txt</code> na pasta da Ana (ela tinha mudado as notas para a pasta <code>escola</code>). Na segunda, ela disse a pasta junto com o nome, <code>escola/notas.txt</code>, e funcionou. Isso leva ao último assunto da aula.</p>
+
+<hr>
+
+<h2>6. Caminhos: onde o Python procura o arquivo</h2>
+<p>Quando você escreve só <code>"notas.txt"</code>, sem pasta, o Python procura o arquivo na <strong>pasta atual</strong> (em inglês, <em>current working directory</em>): a pasta em que o terminal estava quando você rodou o programa. <strong>Não</strong> é, necessariamente, a pasta onde o programa está guardado. Um nome assim, que depende da pasta atual, é um <strong>caminho relativo</strong>.</p>
+
+<p>A Ana tem duas listas de notas: a deste ano, <code>/home/ana/escola/notas.txt</code>, ao lado do programa, e a do ano passado, esquecida na pasta pessoal, <code>/home/ana/notas.txt</code>:</p>
+
+<pre class="term">$ cat notas.txt
+Notas do ano passado:
+Ana: 7.0
+$ cat escola/notas.txt
+Ana: 9.0
+Bruno: 6.5
+Carla: 8.5</pre>
+
+<p>O programa <code>escola/onde.py</code> mostra a pasta atual (com <code>os.getcwd()</code>, "pegue a pasta de trabalho atual"; o módulo <code>os</code> tem aula própria, <a href="os-sys.html">Os Módulos os e sys</a>) e abre <code>notas.txt</code>:</p>
+
+<pre class="file" data-file="escola/onde.py">import os
+
+print(f"Estou rodando na pasta: {os.getcwd()}")
+with open("notas.txt", encoding="utf-8") as arquivo:
+    print(arquivo.read())
+</pre>
+
+<p>O <strong>mesmo programa</strong>, rodado de duas pastas diferentes:</p>
+
+<pre class="term">$ cd escola
+$ python3 onde.py
+Estou rodando na pasta: /home/ana/escola
+Ana: 9.0
+Bruno: 6.5
+Carla: 8.5
+
+$ cd ..
+$ python3 escola/onde.py
+Estou rodando na pasta: /home/ana
+Notas do ano passado:
+Ana: 7.0
+</pre>
+
+<p>Na primeira vez, o terminal estava em <code>/home/ana/escola</code>, e o Python achou as notas deste ano. Na segunda, a Ana voltou para <code>/home/ana</code> (o <code>cd ..</code> sobe uma pasta) e rodou o programa de lá: o Python procurou <code>notas.txt</code> em <code>/home/ana</code> e leu, <strong>sem erro nenhum</strong>, as notas do ano passado. É o pior tipo de problema: o programa "funciona", com os dados errados. E se o arquivo velho não existisse:</p>
+
+<pre class="term">$ mv notas.txt notas-2025.txt                    « a Ana renomeou o arquivo velho
+$ python3 escola/onde.py
+Estou rodando na pasta: /home/ana
+Traceback (most recent call last):
+  File "/home/ana/escola/onde.py", line 4, in &lt;module&gt;
+    with open("notas.txt", encoding="utf-8") as arquivo:
+         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'notas.txt'</pre>
+
+<p>O arquivo existe, ao lado do programa, e mesmo assim deu <code>FileNotFoundError</code>: o Python procurou na pasta atual (<code>/home/ana</code>), e não na do programa. Quando um arquivo "que está lá" não é encontrado, desconfie primeiro da pasta atual.</p>
+
+<h3>Os tipos de caminho</h3>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Caminho</th><th>Tipo</th><th>Onde o Python procura</th></tr>
+<tr><td><code>"notas.txt"</code></td><td>Relativo</td><td>Na pasta atual</td></tr>
+<tr><td><code>"escola/notas.txt"</code></td><td>Relativo</td><td>Na pasta <code>escola</code>, dentro da pasta atual</td></tr>
+<tr><td><code>"../notas.txt"</code></td><td>Relativo</td><td>Na pasta <strong>de cima</strong> da atual (<code>..</code> = "a pasta mãe")</td></tr>
+<tr><td><code>"/home/ana/escola/notas.txt"</code></td><td>Absoluto</td><td>Exatamente ali, de onde quer que você rode. Começa com <code>/</code> no Linux e no macOS</td></tr>
+<tr><td><code>r"C:\Users\ana\notas.txt"</code></td><td>Absoluto (Windows)</td><td>Exatamente ali, no Windows. Começa com a letra do disco</td></tr>
+</table>
+</div>
+
+<div class="warning">
+<strong>A barra invertida do Windows</strong>
+<p>No Windows, as pastas se separam com <code>\</code>, mas dentro de um texto do Python a <code>\</code> começa os caracteres especiais (<code>\n</code> é a quebra de linha, <code>\t</code> a tabulação; veja <a href="strings-escape.html">Caracteres de Escape</a>). Num caminho como <code>"C:\Users\ana\novo.txt"</code>, o <code>\n</code> de <code>\novo</code> vira uma quebra de linha. Escreva o <code>r</code> antes das aspas (<code>r"C:\Users\ana\novo.txt"</code>, um texto "cru", em que a <code>\</code> é só uma barra) ou use a barra normal, <code>"C:/Users/ana/novo.txt"</code>, que o Python também aceita no Windows.</p>
+</div>
+
+<h3>Achar o arquivo ao lado do programa</h3>
+<p>Para o programa achar o arquivo da pasta <strong>dele</strong>, de onde quer que seja rodado, monte o caminho a partir do próprio programa. O <code>__file__</code> é o caminho do arquivo <code>.py</code> que está rodando, e o <code>Path</code> do módulo <code>pathlib</code> sabe pegar a pasta dele (<code>.parent</code>, "a pasta mãe") e juntar o nome com <code>/</code>:</p>
+
+<pre class="file" data-file="escola/onde_fixo.py">from pathlib import Path
+
+pasta_do_programa = Path(__file__).parent
+caminho = pasta_do_programa / "notas.txt"
+with open(caminho, encoding="utf-8") as arquivo:
+    print(arquivo.read())
+</pre>
+
+<pre class="term">$ python3 escola/onde_fixo.py
+Ana: 9.0
+Bruno: 6.5
+Carla: 8.5
+</pre>
+
+<p>Rodado de <code>/home/ana</code>, achou as notas certas, de <code>escola</code>. O <code>pathlib</code> tem aula própria: <a href="pathlib.html">Pastas e Caminhos (pathlib)</a>.</p>
+
+<div class="note">
+<strong>No editor do guia</strong>
+<p>Nas caixas "Experimente", o programa é o <code>/home/ana/main.py</code> e roda na pasta <code>/home/ana</code>, e as abas (como a <code>compras.txt</code> da missão da seção 2) ficam nessa mesma pasta. Por isso, lá, o nome sozinho (<code>"compras.txt"</code>) sempre funciona. Os arquivos que o programa cria somem no próximo Rodar.</p>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Usar o arquivo depois do <code>with</code></strong>
+<pre class="file" data-file="fechado.py">with open("notas.txt", encoding="utf-8") as arquivo:
+    print("Abri o arquivo.")
+print(arquivo.read())
+</pre>
+<pre class="term">$ python3 fechado.py
+Abri o arquivo.
+Traceback (most recent call last):
+  File "/home/ana/fechado.py", line 3, in &lt;module&gt;
+    print(arquivo.read())
+          ~~~~~~~~~~~~^^
+ValueError: I/O operation on closed file.</pre>
+<p>"Operação de entrada/saída (<em>I/O</em>) num arquivo fechado." O <code>read()</code> da linha 3 está <strong>fora</strong> do bloco do <code>with</code> (na margem esquerda), e o arquivo já tinha sido fechado. <strong>Como consertar:</strong> indente a leitura para dentro do bloco, ou guarde o conteúdo numa variável lá dentro e use a variável fora, como no <code>com_with.py</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Escrever num arquivo aberto para ler</strong>
+<pre class="file" data-file="modo_r_escreve.py">with open("notas.txt", encoding="utf-8") as arquivo:
+    arquivo.write("Davi: 7.0\n")
+</pre>
+<pre class="term">$ python3 modo_r_escreve.py
+Traceback (most recent call last):
+  File "/home/ana/modo_r_escreve.py", line 2, in &lt;module&gt;
+    arquivo.write("Davi: 7.0\n")
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+io.UnsupportedOperation: not writable</pre>
+<p>"Operação não suportada: não dá para escrever." Sem modo, o <code>open()</code> abre para <strong>ler</strong> (<code>"r"</code>). O <code>io.</code> antes do nome diz que esse tipo de erro mora no módulo <code>io</code>, o de entrada e saída. <strong>Como consertar:</strong> para acrescentar o Davi no fim, <code>open("notas.txt", "a", encoding="utf-8")</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Um modo que não existe</strong>
+<pre class="file" data-file="modo_errado.py">with open("notas.txt", "l", encoding="utf-8") as arquivo:
+    print(arquivo.read())
+</pre>
+<pre class="term">$ python3 modo_errado.py
+Traceback (most recent call last):
+  File "/home/ana/modo_errado.py", line 1, in &lt;module&gt;
+    with open("notas.txt", "l", encoding="utf-8") as arquivo:
+         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: invalid mode: 'l'</pre>
+<p>"Modo inválido: <code>'l'</code>." Quem pensa em "ler" escreve <code>"l"</code>, mas os modos são as letras das palavras em inglês: <code>"r"</code>, <code>"w"</code>, <code>"a"</code>, <code>"x"</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Abrir uma pasta</strong>
+<pre class="file" data-file="pasta.py">with open("Documentos", encoding="utf-8") as arquivo:
+    print(arquivo.read())
+</pre>
+<pre class="term">$ python3 pasta.py
+Traceback (most recent call last):
+  File "/home/ana/pasta.py", line 1, in &lt;module&gt;
+    with open("Documentos", encoding="utf-8") as arquivo:
+         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+IsADirectoryError: [Errno 21] Is a directory: 'Documentos'</pre>
+<p>"É um diretório." <code>Documentos</code> é uma pasta, e o <code>open()</code> abre só arquivos. <strong>Como consertar:</strong> diga o arquivo dentro da pasta, <code>"Documentos/notas.txt"</code>. Para listar o que tem numa pasta, veja <a href="pathlib.html">pathlib</a>.</p>
+</div>
+
+<div class="cenario">
+<strong>Acentos estragados ou <code>UnicodeDecodeError</code></strong>
+<p>Você viu na seção 3: <code>pÃ£o</code> no lugar de <code>pão</code> quer dizer que um arquivo UTF-8 foi lido com outra codificação; <code>UnicodeDecodeError: 'utf-8' codec can't decode byte…</code> quer dizer que um arquivo de outra codificação foi lido como UTF-8. <strong>Como evitar:</strong> grave e leia sempre com <code>encoding="utf-8"</code>; para arquivos antigos do Windows, tente <code>encoding="cp1252"</code>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>with open("a.txt", encoding="utf-8") as arquivo:</code></td><td>Abre para ler e fecha sozinho no fim do bloco</td></tr>
+<tr><td><code>open("a.txt", "w", encoding="utf-8")</code></td><td>Abre para escrever do zero (apaga o que havia)</td></tr>
+<tr><td><code>open("a.txt", "a", encoding="utf-8")</code></td><td>Abre para acrescentar no fim</td></tr>
+<tr><td><code>open("a.txt", "x", encoding="utf-8")</code></td><td>Cria um arquivo novo; erro se já existir</td></tr>
+<tr><td><code>arquivo.read()</code></td><td>Lê tudo, como um texto</td></tr>
+<tr><td><code>arquivo.close()</code></td><td>Fecha (desnecessário com <code>with</code>)</td></tr>
+<tr><td><code>arquivo.closed</code></td><td><code>True</code> se o arquivo está fechado</td></tr>
+<tr><td><code>os.getcwd()</code></td><td>A pasta atual, onde os caminhos relativos são procurados</td></tr>
+<tr><td><code>Path(__file__).parent / "a.txt"</code></td><td>O arquivo ao lado do programa</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Erro</th><th>Causa provável</th></tr>
+<tr><td><code>FileNotFoundError: [Errno 2] No such file or directory</code></td><td>Nome errado, ou o arquivo está em outra pasta (confira a pasta atual)</td></tr>
+<tr><td><code>FileExistsError: [Errno 17] File exists</code></td><td>Modo <code>"x"</code> com um arquivo que já existe</td></tr>
+<tr><td><code>IsADirectoryError: [Errno 21] Is a directory</code></td><td>Abriu uma pasta em vez de um arquivo</td></tr>
+<tr><td><code>io.UnsupportedOperation: not writable</code></td><td><code>write()</code> num arquivo aberto para ler</td></tr>
+<tr><td><code>ValueError: I/O operation on closed file.</code></td><td>Usou o arquivo depois do <code>with</code> ou do <code>close()</code></td></tr>
+<tr><td><code>ValueError: invalid mode</code></td><td>Modo que não existe (<code>"l"</code>, <code>"e"</code>…)</td></tr>
+<tr><td><code>UnicodeDecodeError</code> / <code>pÃ£o</code></td><td>Codificação errada: use <code>encoding="utf-8"</code> (ou a do arquivo)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Complete o <code>open</code></h3>
+<p>Complete para abrir <code>agenda.txt</code> para ler, com a codificação recomendada:</p>
+<div class="ex-code"><input data-answer="with" aria-label="palavra 1"> open("agenda.txt", encoding="<input data-answer="utf-8|UTF-8" aria-label="codificação">") <input data-answer="as" aria-label="palavra 2"> arquivo:
+    print(arquivo.read())</div>
+</div>
+
+<div class="exercise">
+<h3>2. Qual modo?</h3>
+<p>Qual modo acrescenta uma linha no fim de um arquivo, sem apagar o que já está nele? (escreva só a letra)</p>
+<div class="ex-code"><input data-answer="a|&quot;a&quot;" aria-label="modo"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">3. O que acontece ao abrir com <code>"w"</code> um arquivo que já tem conteúdo?</p>
+<label><input type="radio" name="q3"> Dá <code>FileExistsError</code></label>
+<label><input type="radio" name="q3"> O que você escrever vai para o fim</label>
+<label><input type="radio" name="q3"> O conteúdo antigo é apagado, sem aviso</label>
+<label><input type="radio" name="q3"> O Python pergunta se pode apagar</label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Por que preferir <code>with open(…) as arquivo:</code> a <code>open()</code> + <code>close()</code>?</p>
+<label><input type="radio" name="q4"> Porque lê mais rápido</label>
+<label><input type="radio" name="q4"> Porque fecha o arquivo sozinho ao sair do bloco, mesmo se der erro</label>
+<label><input type="radio" name="q4"> Porque o <code>close()</code> não existe no Python 3.14</label>
+<label><input type="radio" name="q4"> Porque dispensa o <code>encoding</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. <code>notas.txt</code> está em <code>/home/ana/escola</code>, junto com o programa. A Ana roda <code>python3 escola/ler.py</code> estando em <code>/home/ana</code>, e o programa abre <code>"notas.txt"</code>. Onde o Python procura?</p>
+<label><input type="radio" name="q5"> Em <code>/home/ana/escola</code>, a pasta do programa</label>
+<label><input type="radio" name="q5"> No computador inteiro</label>
+<label><input type="radio" name="q5"> Em <code>/home</code></label>
+<label><input type="radio" name="q5"> Em <code>/home/ana</code>, a pasta atual</label>
+</div>
+
+<h3>Missão final: o arquivo que não existe</h3>
+
+<div class="trypy" data-stdin="boletim.txt" data-goal="out:Não achei o arquivo boletim.txt;;semerro;;src:except\s+FileNotFoundError">
+<p class="try-task"><strong>Missão:</strong> o programa pergunta o nome de um arquivo e mostra o conteúdo. A caixa vai "digitar" <code>boletim.txt</code>, que não existe (a única aba é <code>notas.txt</code>). Trate o erro: com um <code>try</code> em volta do <code>with</code> e um <code>except FileNotFoundError:</code>, mostre <code>Não achei o arquivo boletim.txt.</code> (use o <code>nome</code> numa f-string). Para pensar: se a pessoa digitasse <code>notas.txt</code>, o que apareceria?</p>
+<pre class="script" data-file="main.py">nome = input("Qual arquivo? ")
+with open(nome, encoding="utf-8") as arquivo:
+    print(arquivo.read())
+</pre>
+<pre class="script" data-file="notas.txt">Ana: 9.0
+Bruno: 6.5
+Carla: 8.5
+</pre>
+<pre class="solucao" data-file="main.py">nome = input("Qual arquivo? ")
+try:
+    with open(nome, encoding="utf-8") as arquivo:
+        print(arquivo.read())
+except FileNotFoundError:
+    print(f"Não achei o arquivo {nome}.")
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>open(nome, modo, encoding="utf-8")</code> abre um arquivo e devolve o objeto arquivo; <code>read()</code> lê tudo; <code>close()</code> fecha.</li>
+  <li>Use sempre <code>with open(…) as arquivo:</code>: o arquivo fecha sozinho ao sair do bloco, até se der erro. Depois do bloco, o arquivo não serve mais (<code>I/O operation on closed file</code>).</li>
+  <li>Escreva sempre <code>encoding="utf-8"</code>: sem ele, o Python usa o padrão do sistema, que no Windows (até o 3.14) costuma ser <code>cp1252</code>, e os acentos viram <code>Ã£</code>.</li>
+  <li>Modos: <code>"r"</code> ler (o padrão), <code>"w"</code> escrever do zero (<strong>apaga</strong>), <code>"a"</code> acrescentar no fim, <code>"x"</code> criar sem apagar (<code>FileExistsError</code> se já existe).</li>
+  <li><code>FileNotFoundError</code>: confira o nome e a pasta; quando o nome vem do usuário, trate com <code>try</code>/<code>except FileNotFoundError</code>.</li>
+  <li>Um caminho relativo (<code>"notas.txt"</code>) é procurado na <strong>pasta atual</strong>, de onde você rodou o programa, e não na pasta do programa. Para achar o arquivo ao lado do programa: <code>Path(__file__).parent / "notas.txt"</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>

@@ -340,7 +340,7 @@ Traceback (most recent call last):
   File "/home/ana/e_file.py", line 1, in &lt;module&gt;
     arquivo = open("notas.txt")
 FileNotFoundError: [Errno 2] No such file or directory: 'notas.txt'</pre>
-<p>"Arquivo ou diretório inexistente: <code>'notas.txt'</code>." O <code>[Errno 2]</code> é o número que o sistema operacional usa para esse problema (todo programa do Linux recebe o mesmo número quando um arquivo não existe). Ou o arquivo não existe, ou ele está numa pasta diferente da que o programa está olhando. Abrir arquivos tem aula própria: <a href="arquivos.html">Abrindo Arquivos</a>.</p>
+<p>"Arquivo ou diretório inexistente: <code>'notas.txt'</code>." O <code>[Errno 2]</code> é o número que o sistema operacional usa para esse problema (todo programa do Linux recebe o mesmo número quando um arquivo não existe; no editor do guia, que roda dentro do navegador, sai <code>[Errno 44]</code>). Ou o arquivo não existe, ou ele está numa pasta diferente da que o programa está olhando. Abrir arquivos tem aula própria: <a href="arquivos.html">Abrindo Arquivos</a>.</p>
 
 <h3><code>IndentationError</code>: os espaços do começo da linha</h3>
 <pre class="file" data-file="e_indent.py">idade = 20
