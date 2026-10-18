@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Dicionários — guardando valores por nome | Guia Python</title>
+<meta name="description" content="Dicionários (dict) em Python para quem está começando: chave e valor, criar com chaves e dois-pontos, ler com colchetes, o KeyError real, get() com valor padrão, in para perguntar se a chave existe, a ordem de inserção garantida, que tipos podem ser chave, e os erros reais de maiúsculas, índice e lista como chave, com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Dicionários</span></h1>
+
+<p class="intro">Numa lista, você acha um item pela <strong>posição</strong>: o primeiro, o segundo, o quinto. Mas no balcão da padaria ninguém pergunta "quanto custa o produto número 2?"; pergunta "quanto custa o <strong>leite</strong>?". Para achar um valor por um <strong>nome</strong> o Python tem o <strong>dicionário</strong> (em inglês, <em>dictionary</em>, e no código, <code>dict</code>): cada valor fica guardado junto de uma <strong>chave</strong>, e é pela chave que você o encontra.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que são <strong>chave</strong> e <strong>valor</strong>, e como criar um dicionário com <code>{chave: valor}</code>.</li>
+  <li>A ler um valor pela chave: <code>precos["leite"]</code>.</li>
+  <li>O <code>KeyError</code>, o erro de pedir uma chave que não existe, e como evitá-lo com <code>get()</code> e <code>in</code>.</li>
+  <li>Que o dicionário <strong>guarda a ordem</strong> em que as chaves entraram.</li>
+  <li>O que pode ser chave (texto, número, tupla) e o que não pode (lista).</li>
+  <li>Os erros reais de maiúscula, de índice, de ponto e de chave sem aspas.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: o dicionário de verdade</h2>
+<p>Num dicionário de papel, você procura a <strong>palavra</strong> e encontra o <strong>significado</strong>. Ninguém lê o dicionário inteiro até achar "padaria": vai direto à letra P. A palavra é a chave; o significado é o valor.</p>
+
+<p>A tabela de preços pendurada na padaria funciona igual: à esquerda o nome do produto, à direita o preço.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Chave (o nome)</th><th>Valor (o que está guardado)</th></tr>
+<tr><td><code>"pão"</code></td><td><code>0.50</code></td></tr>
+<tr><td><code>"leite"</code></td><td><code>4.75</code></td></tr>
+<tr><td><code>"café"</code></td><td><code>18.90</code></td></tr>
+</table>
+</div>
+
+<p>Cada linha é um <strong>par chave-valor</strong>. Em Python, essa tabela inteira cabe numa variável.</p>
+
+<hr>
+
+<h2>1. Criando um dicionário</h2>
+
+<pre class="file" data-file="di_criar.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+print(precos)
+print(type(precos))
+print(len(precos))
+</pre>
+
+<dl class="anatomy">
+  <dt>{ … }</dt><dd>As chaves envolvem o dicionário inteiro, como no conjunto. O que faz a diferença é o dois-pontos lá dentro.</dd>
+  <dt>"pão": 0.50</dt><dd>Um par: a <strong>chave</strong> <code>"pão"</code>, o <strong>dois-pontos</strong> <code>:</code>, e o <strong>valor</strong> <code>0.50</code>. Leia como "pão vale 0.50".</dd>
+  <dt>,</dt><dd>A vírgula separa um par do outro.</dd>
+  <dt>type(precos)</dt><dd>O tipo se chama <code>dict</code>.</dd>
+  <dt>len(precos)</dt><dd>Quantos <strong>pares</strong> há no dicionário: 3.</dd>
+</dl>
+
+<pre class="term">$ python3 di_criar.py
+{'pão': 0.5, 'leite': 4.75, 'café': 18.9}
+&lt;class 'dict'&gt;
+3
+</pre>
+
+<p>O Python mostrou <code>0.5</code> e <code>18.9</code>, sem o zero do fim: para ele, <code>0.50</code> e <code>0.5</code> são o mesmo número. Para mostrar com duas casas, use a f-string com <code>:.2f</code>, como na próxima seção.</p>
+
+<div class="tip">
+<strong>Dicionário grande: um par por linha</strong>
+<p>Quando há muitos pares, o costume é escrever um por linha, com 4 espaços na frente. A vírgula depois do último é permitida e facilita acrescentar outro depois:</p>
+<pre class="file" data-file="precos.py">precos = {
+    "pão": 0.50,
+    "leite": 4.75,
+    "café": 18.90,
+}
+</pre>
+</div>
+
+<hr>
+
+<h2>2. Lendo um valor pela chave</h2>
+<p>Para pegar um valor, escreva o nome do dicionário e a chave entre <strong>colchetes</strong>, como o índice de uma lista, só que com a chave no lugar do número:</p>
+
+<pre class="file" data-file="di_acessar.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+print(precos["leite"])
+print(f"O café custa R$ {precos['café']:.2f}")
+total = precos["pão"] * 10 + precos["leite"]
+print(f"Total: R$ {total:.2f}")
+</pre>
+
+<pre class="term">$ python3 di_acessar.py
+4.75
+O café custa R$ 18.90
+Total: R$ 9.75
+</pre>
+
+<dl class="anatomy">
+  <dt>precos["leite"]</dt><dd>"O valor guardado na chave <code>"leite"</code>": 4.75.</dd>
+  <dt>{precos['café']:.2f}</dt><dd>Dentro de uma f-string com aspas duplas, a chave vai com aspas <strong>simples</strong>, para não fechar o texto antes da hora (veja <a href="f-strings.html">f-strings</a>).</dd>
+  <dt>precos["pão"] * 10 + precos["leite"]</dt><dd>O valor lido é um número comum: dá para fazer contas. Dez pães e um leite: R$ 9.75.</dd>
+</dl>
+
+<div class="trypy" data-goal="out:Café: R$ 18.90;;src:precos\[">
+<p class="try-task"><strong>Missão:</strong> troque o <code>0</code> pela leitura do preço do café no dicionário, para o programa mostrar <code>Café: R$ 18.90</code>.</p>
+<pre class="script" data-file="main.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+print(f"Café: R$ {0:.2f}")
+</pre>
+<pre class="solucao" data-file="main.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+print(f"Café: R$ {precos['café']:.2f}")
+</pre>
+</div>
+
+<hr>
+
+<h2>3. A chave que não existe: <code>KeyError</code></h2>
+<p>A padaria não vende bolo. O que acontece se o programa pedir o preço do bolo?</p>
+
+<pre class="file" data-file="di_keyerror.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+print(precos["bolo"])
+</pre>
+
+<pre class="term">$ python3 di_keyerror.py
+Traceback (most recent call last):
+  File "/home/ana/di_keyerror.py", line 2, in &lt;module&gt;
+    print(precos["bolo"])
+          ~~~~~~^^^^^^^^
+KeyError: 'bolo'
+</pre>
+
+<dl class="anatomy">
+  <dt>Traceback (most recent call last):</dt><dd>Deu erro; abaixo vem onde.</dd>
+  <dt>File "/home/ana/di_keyerror.py", line 2</dt><dd>Na linha 2 do programa.</dd>
+  <dt>~~~~~~^^^^^^^^</dt><dd>Os <code>^</code> apontam para <code>["bolo"]</code>: a chave pedida.</dd>
+  <dt>KeyError: 'bolo'</dt><dd>"Erro de chave": a chave <code>'bolo'</code> não existe no dicionário. A mensagem é só o nome da chave que faltou, e é a pista para você saber qual foi.</dd>
+</dl>
+
+<p>Com colchetes, o dicionário é rigoroso: chave que não existe é erro, e o programa para. Há duas formas de perguntar com cuidado.</p>
+
+<h3>Forma 1: <code>get()</code>, que não dá erro</h3>
+
+<pre class="file" data-file="di_get.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+print(precos.get("leite"))
+print(precos.get("bolo"))
+print(precos.get("bolo", 0))
+print(precos.get("bolo", "não temos"))
+</pre>
+
+<pre class="term">$ python3 di_get.py
+4.75
+None
+0
+não temos
+</pre>
+
+<dl class="anatomy">
+  <dt>precos.get("leite")</dt><dd>"Pegar": com a chave existindo, é igual a <code>precos["leite"]</code>.</dd>
+  <dt>precos.get("bolo")</dt><dd>Com a chave faltando, em vez de erro, devolve <code>None</code> ("nada", aula <a href="none.html">O Valor None</a>).</dd>
+  <dt>precos.get("bolo", 0)</dt><dd>O segundo valor é o <strong>padrão</strong>: o que devolver se a chave não existir. Aqui, 0.</dd>
+  <dt>precos.get("bolo", "não temos")</dt><dd>O padrão pode ser qualquer coisa, até um texto.</dd>
+</dl>
+
+<h3>Forma 2: perguntar antes com <code>in</code></h3>
+
+<pre class="file" data-file="di_in.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+print("pão" in precos)
+print("bolo" in precos)
+print("bolo" not in precos)
+print(4.75 in precos)
+</pre>
+
+<pre class="term">$ python3 di_in.py
+True
+False
+True
+False
+</pre>
+
+<p>Repare na última linha: <code>4.75 in precos</code> deu <code>False</code>, embora 4.75 seja o preço do leite. O <code>in</code> num dicionário procura só nas <strong>chaves</strong>, nunca nos valores. Para procurar nos valores existe <code>precos.values()</code>, da aula <a href="dicionarios-percorrer.html">Percorrendo um Dicionário</a>.</p>
+
+<div class="trypy" data-goal="out:Bolos: 0;;semerro;;src:\.get\(">
+<p class="try-task"><strong>Missão:</strong> o programa mostra quantos pães e quantos bolos há no estoque, mas para com <code>KeyError: 'bolo'</code>, porque bolo não está no dicionário. Use <code>get()</code> com o padrão <code>0</code> para mostrar <code>Bolos: 0</code>.</p>
+<pre class="script" data-file="main.py">estoque = {"pão": 40, "leite": 12}
+print("Pães:", estoque["pão"])
+print("Bolos:", estoque["bolo"])
+</pre>
+<pre class="solucao" data-file="main.py">estoque = {"pão": 40, "leite": 12}
+print("Pães:", estoque.get("pão", 0))
+print("Bolos:", estoque.get("bolo", 0))
+</pre>
+</div>
+
+<hr>
+
+<h2>4. A ordem é a de chegada</h2>
+<p>Ao contrário do <a href="conjuntos.html">conjunto</a>, o dicionário <strong>lembra a ordem</strong> em que as chaves entraram. A Ana montou a agenda acrescentando um contato de cada vez (o jeito de acrescentar, <code>agenda["Bia"] = …</code>, é o assunto da próxima aula):</p>
+
+<pre class="file" data-file="di_ordem.py">agenda = {}
+agenda["Bia"] = "99999-0002"
+agenda["Ana"] = "99999-0001"
+agenda["Caio"] = "99999-0003"
+print(agenda)
+</pre>
+
+<pre class="term">$ python3 di_ordem.py
+{'Bia': '99999-0002', 'Ana': '99999-0001', 'Caio': '99999-0003'}
+</pre>
+
+<p>A Bia entrou primeiro e aparece primeiro, em toda execução. Não é ordem alfabética: é a ordem de <strong>inserção</strong>. O Python garante isso desde a versão 3.7. Mesmo assim, o dicionário não tem posição: não existe <code>agenda[0]</code> (veja <a href="#errado">Quando dá errado</a>); a ordem só aparece quando você mostra ou percorre o dicionário.</p>
+
+<hr>
+
+<h2>5. O que pode ser chave, o que pode ser valor</h2>
+
+<pre class="file" data-file="di_chaves.py">alunos = {101: "Ana", 102: "Bia"}
+print(alunos[101])
+distancias = {("Teresina", "Picos"): 306}
+print(distancias[("Teresina", "Picos")])
+repetida = {"pão": 0.50, "pão": 0.60}
+print(repetida)
+ficha = {"nome": "Ana", "idade": 34, "notas": [9, 7, 10], "vip": True}
+print(ficha["notas"])
+</pre>
+
+<pre class="term">$ python3 di_chaves.py
+Ana
+306
+{'pão': 0.6}
+[9, 7, 10]
+</pre>
+
+<dl class="anatomy">
+  <dt>{101: "Ana", 102: "Bia"}</dt><dd>Números podem ser chave: aqui, o número de matrícula. <code>alunos[101]</code> não é "a posição 101", é "a chave 101".</dd>
+  <dt>{("Teresina", "Picos"): 306}</dt><dd>Uma <a href="tuplas.html">tupla</a> pode ser chave: a distância em km entre duas cidades.</dd>
+  <dt>{"pão": 0.50, "pão": 0.60}</dt><dd>Cada chave existe <strong>uma vez só</strong>. Escrita duas vezes, vale a última: sobrou <code>0.6</code>. Não é erro, por isso é fácil não perceber.</dd>
+  <dt>ficha</dt><dd>Os <strong>valores</strong> podem ser de qualquer tipo, misturados: texto, número, lista, <code>True</code>. Um dicionário assim descreve uma coisa (a ficha da Ana) campo por campo.</dd>
+</dl>
+
+<p>A regra para as chaves é a mesma dos itens de um conjunto: só valores que <strong>não mudam</strong> (texto, número, tupla, <code>True</code>/<code>False</code>). Lista não pode ser chave. Os valores, esses, podem ser qualquer coisa, até outro dicionário (aula <a href="dicionarios-aninhados.html">Dicionários Aninhados</a>).</p>
+
+<hr>
+
+<h2>6. Outras formas de criar: <code>dict()</code></h2>
+
+<pre class="file" data-file="di_dict.py">a = dict(pao=0.50, leite=4.75)
+print(a)
+b = dict([("pão", 0.50), ("leite", 4.75)])
+print(b)
+vazio = {}
+tambem = dict()
+print(vazio, tambem, len(vazio))
+</pre>
+
+<pre class="term">$ python3 di_dict.py
+{'pao': 0.5, 'leite': 4.75}
+{'pão': 0.5, 'leite': 4.75}
+{} {} 0
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>{"pão": 0.50, "leite": 4.75}</code></td><td>Quase sempre. É a forma mais comum e a mais clara</td></tr>
+<tr><td><code>dict(pao=0.50, leite=4.75)</code></td><td>Quando as chaves são textos simples, que poderiam ser nomes de variável (sem espaço, sem começar com número). Repare que aqui a chave virou <code>'pao'</code>, sem til, porque a Ana escreveu assim</td></tr>
+<tr><td><code>dict([("pão", 0.50), ("leite", 4.75)])</code></td><td>Quando os pares já estão numa lista de tuplas</td></tr>
+<tr><td><code>{}</code> ou <code>dict()</code></td><td>Dicionário vazio, para encher depois</td></tr>
+</table>
+</div>
+
+<h3>Lista ou dicionário?</h3>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Situação</th><th>Use</th></tr>
+<tr><td>Uma fila de coisas do mesmo tipo, em que a posição importa (as tarefas do dia, em ordem)</td><td>Lista</td></tr>
+<tr><td>Você procura pelo <strong>nome</strong> (o preço de cada produto, o telefone de cada pessoa)</td><td>Dicionário</td></tr>
+<tr><td>Os campos de uma ficha (nome, idade, cidade)</td><td>Dicionário</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Chave com maiúscula diferente</strong>
+<pre class="file" data-file="di_maiuscula.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+print(precos["Leite"])
+</pre>
+<pre class="term">$ python3 di_maiuscula.py
+Traceback (most recent call last):
+  File "/home/ana/di_maiuscula.py", line 2, in &lt;module&gt;
+    print(precos["Leite"])
+          ~~~~~~^^^^^^^^^
+KeyError: 'Leite'
+</pre>
+<p>Para o dicionário, <code>"Leite"</code> e <code>"leite"</code> são chaves diferentes, como <code>"cafe"</code> e <code>"café"</code>. A chave tem de ser igual letra por letra. <strong>Como consertar:</strong> escreva a chave exatamente como foi guardada. Se a chave vem do teclado, padronize antes: <code>precos[item.lower()]</code> (aula <a href="strings-metodos.html">Métodos de Texto</a>).</p>
+</div>
+
+<div class="cenario">
+<strong>Pedir pela posição</strong>
+<pre class="file" data-file="di_indice.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+print(precos[0])
+</pre>
+<pre class="term">$ python3 di_indice.py
+Traceback (most recent call last):
+  File "/home/ana/di_indice.py", line 2, in &lt;module&gt;
+    print(precos[0])
+          ~~~~~~^^^
+KeyError: 0
+</pre>
+<p>Não é <code>IndexError</code>, como seria numa lista: é <code>KeyError: 0</code>. O dicionário procurou uma <strong>chave</strong> chamada <code>0</code> e não achou. No dicionário, o que vai entre colchetes é sempre uma chave, nunca uma posição. <strong>Como consertar:</strong> peça pela chave (<code>precos["pão"]</code>). Para "o primeiro par", percorra o dicionário (próximas aulas).</p>
+</div>
+
+<div class="cenario">
+<strong>Chave sem aspas</strong>
+<pre class="file" data-file="di_semaspas.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+print(precos[leite])
+</pre>
+<pre class="term">$ python3 di_semaspas.py
+Traceback (most recent call last):
+  File "/home/ana/di_semaspas.py", line 2, in &lt;module&gt;
+    print(precos[leite])
+                 ^^^^^
+NameError: name 'leite' is not defined
+</pre>
+<p>Sem aspas, <code>leite</code> é o nome de uma <strong>variável</strong>, e não existe nenhuma variável com esse nome: "nome <code>'leite'</code> não está definido". <strong>Como consertar:</strong> chave de texto vai entre aspas: <code>precos["leite"]</code>. (Sem aspas só faz sentido quando existe mesmo uma variável guardando a chave, como <code>item = "leite"</code> e depois <code>precos[item]</code>.)</p>
+</div>
+
+<div class="cenario">
+<strong>Ponto no lugar dos colchetes</strong>
+<pre class="file" data-file="di_ponto.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+print(precos.leite)
+</pre>
+<pre class="term">$ python3 di_ponto.py
+Traceback (most recent call last):
+  File "/home/ana/di_ponto.py", line 2, in &lt;module&gt;
+    print(precos.leite)
+          ^^^^^^^^^^^^
+AttributeError: 'dict' object has no attribute 'leite'
+</pre>
+<p>Quem vem do JavaScript costuma escrever <code>precos.leite</code>. Em Python, o ponto serve para os <strong>métodos</strong> (<code>precos.get</code>), e o dicionário não tem nada chamado <code>leite</code>. <strong>Como consertar:</strong> <code>precos["leite"]</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Lista como chave</strong>
+<pre class="file" data-file="di_lista_chave.py">estoque = {["arroz", "5kg"]: 12}
+</pre>
+<pre class="term">$ python3 di_lista_chave.py
+Traceback (most recent call last):
+  File "/home/ana/di_lista_chave.py", line 1, in &lt;module&gt;
+    estoque = {["arroz", "5kg"]: 12}
+              ^^^^^^^^^^^^^^^^^^^^^^
+TypeError: cannot use 'list' as a dict key (unhashable type: 'list')
+</pre>
+<p>"Não é possível usar <code>list</code> como chave de dicionário". A lista pode mudar, e uma chave que muda deixaria o dicionário perdido. <strong>Como consertar:</strong> use uma tupla: <code>{("arroz", "5kg"): 12}</code>. (No Python 3.13 a mensagem é só <code>TypeError: unhashable type: 'list'</code>; a primeira parte é novidade da <span class="versao">3.14</span>.)</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>d = {"a": 1, "b": 2}</code></td><td>Cria um dicionário</td></tr>
+<tr><td><code>d = {}</code> / <code>dict()</code></td><td>Dicionário vazio</td></tr>
+<tr><td><code>d["a"]</code></td><td>O valor da chave <code>"a"</code>; <code>KeyError</code> se não existir</td></tr>
+<tr><td><code>d.get("a")</code></td><td>O valor, ou <code>None</code> se a chave não existir</td></tr>
+<tr><td><code>d.get("a", 0)</code></td><td>O valor, ou <code>0</code> se a chave não existir</td></tr>
+<tr><td><code>"a" in d</code></td><td><code>True</code> se a <strong>chave</strong> existe</td></tr>
+<tr><td><code>len(d)</code></td><td>Quantos pares chave-valor</td></tr>
+<tr><td><code>dict(pao=1)</code>, <code>dict([("pão", 1)])</code></td><td>Outras formas de criar</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>KeyError: 'bolo'</code></td><td>A chave não existe (ou está escrita diferente: maiúscula, acento)</td></tr>
+<tr><td><code>KeyError: 0</code></td><td>Pediu por posição: dicionário não tem índice</td></tr>
+<tr><td><code>NameError: name 'leite' is not defined</code></td><td>Chave de texto sem aspas</td></tr>
+<tr><td><code>AttributeError: 'dict' object has no attribute 'leite'</code></td><td><code>d.leite</code> no lugar de <code>d["leite"]</code></td></tr>
+<tr><td><code>TypeError: cannot use 'list' as a dict key …</code></td><td>Lista como chave: use tupla</td></tr>
+<tr><td>Um par sumiu, sem erro</td><td>Chave repetida na criação: vale a última</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Lendo o preço</h3>
+<p>Complete para mostrar o preço do pão:</p>
+<div class="ex-code">print(precos<input data-answer="[&quot;pão&quot;]|['pão']" aria-label="leitura">)</div>
+</div>
+
+<div class="exercise">
+<h3>2. Sem erro</h3>
+<p>Complete o método que devolve <code>0</code> se a chave <code>"bolo"</code> não existir:</p>
+<div class="ex-code">qtd = estoque.<input data-answer="get" aria-label="método">("bolo", 0)</div>
+</div>
+
+<div class="exercise">
+<h3>3. Quantos pares?</h3>
+<p>Quanto vale <code>len({"a": 1, "b": 2, "a": 3})</code>?</p>
+<div class="ex-code"><input data-answer="2" aria-label="resposta"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Com <code>precos = {"pão": 0.50, "leite": 4.75}</code>, o que <code>0.50 in precos</code> responde?</p>
+<label><input type="radio" name="q4"> <code>True</code>, porque o pão custa 0.50</label>
+<label><input type="radio" name="q4"> <code>False</code>, porque o <code>in</code> procura só nas chaves</label>
+<label><input type="radio" name="q4"> Dá <code>KeyError</code></label>
+<label><input type="radio" name="q4"> <code>None</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. O que <code>{"x": 1}["y"]</code> causa?</p>
+<label><input type="radio" name="q5"> Devolve <code>None</code></label>
+<label><input type="radio" name="q5"> Devolve <code>0</code></label>
+<label><input type="radio" name="q5"> <code>KeyError: 'y'</code></label>
+<label><input type="radio" name="q5"> <code>IndexError</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Qual destes <strong>não</strong> pode ser chave de um dicionário?</p>
+<label><input type="radio" name="q6"> <code>["Ana", "Bia"]</code></label>
+<label><input type="radio" name="q6"> <code>("Ana", "Bia")</code></label>
+<label><input type="radio" name="q6"> <code>101</code></label>
+<label><input type="radio" name="q6"> <code>"Ana"</code></label>
+</div>
+
+<h3>Missão final: o balcão da padaria</h3>
+
+<div class="trypy" data-stdin="leite" data-goal="out:leite custa R$ 4.75;;src:\bin\b">
+<p class="try-task"><strong>Missão:</strong> o cliente digita o nome de um produto (a caixa já vai responder <code>leite</code> por ele). Se o produto estiver no dicionário, mostre <code>leite custa R$ 4.75</code>; se não estiver, mostre <code>Não temos …</code>. Use <code>in</code> para perguntar antes, sem deixar o programa parar com <code>KeyError</code>.</p>
+<pre class="script" data-file="main.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+item = input("Qual produto? ")
+print("?")
+</pre>
+<pre class="solucao" data-file="main.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+item = input("Qual produto? ")
+if item in precos:
+    print(f"{item} custa R$ {precos[item]:.2f}")
+else:
+    print(f"Não temos {item}.")
+</pre>
+</div>
+
+<p>A Ana salvou a solução como <code>balcao.py</code> e rodou no terminal duas vezes; na primeira digitou <code>leite</code>, na segunda <code>bolo</code>:</p>
+
+<pre class="term">$ python3 balcao.py
+Qual produto? leite
+leite custa R$ 4.75
+$ python3 balcao.py
+Qual produto? bolo
+Não temos bolo.
+</pre>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>O dicionário (<code>dict</code>) guarda pares <strong>chave: valor</strong>: <code>{"pão": 0.50, "leite": 4.75}</code>.</li>
+  <li>Lê-se pela chave, com colchetes: <code>precos["leite"]</code>. Chave que não existe dá <code>KeyError</code>.</li>
+  <li><code>get(chave, padrão)</code> devolve o padrão (ou <code>None</code>) em vez de dar erro; <code>chave in d</code> pergunta se a chave existe (só olha as chaves).</li>
+  <li>O dicionário guarda a <strong>ordem de inserção</strong>, mas não tem índice: <code>d[0]</code> procura a chave <code>0</code>.</li>
+  <li>Cada chave aparece uma vez; repetida, vale a última. Chaves: texto, número, tupla (lista não). Valores: qualquer coisa.</li>
+  <li>A chave tem de ser exata: <code>"Leite"</code> não é <code>"leite"</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
