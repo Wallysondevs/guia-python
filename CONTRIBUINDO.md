@@ -137,7 +137,7 @@ No `.exercise`, `data-answer="a|b"` aceita respostas alternativas (a comparaçã
 | `subprocess.run([...])`, `os.popen` | **✘** `OSError: [Errno 138] emscripten does not support processes.` |
 | `os.system("ls")` | **✘** não roda nada e devolve `-1` (no lab roda o comando e devolve `0`) |
 | `os.fork()` | **✘** `OSError: [Errno 52] Function not implemented` |
-| Rede: `urllib.request.urlopen`, `socket`, `http.client` | **✘** sem rede (`URLError: <urlopen error [Errno 23] Host is unreachable>`) |
+| Rede: `urllib.request.urlopen`, `socket`, `http.client` | **✘** sem rede. No navegador: `https://…` → `RuntimeError: TLS not supported in this environment`; `http://…` → `URLError: <urlopen error timed out>` (depois de esperar). No `tools/sim.js` (Node) a mensagem é outra (`[Errno 23] Host is unreachable`): não ponha a mensagem de rede numa meta |
 | `pip`, `venv`, `ensurepip` | **✘** `ModuleNotFoundError: No module named 'pip'` (e `'venv'`): ensine no terminal (lab) |
 | `tkinter`, `turtle`, `curses`, `readline`, `dbm`, `pwd`, `grp`, `resource`, `idlelib` | **✘** `ModuleNotFoundError: No module named 'tkinter'` (etc.) |
 | `locale.setlocale(locale.LC_ALL, "")` + `locale.currency(...)`, `f"{x:n}"` | **✘** aceita o `setlocale`, mas formata como o locale "C": `ValueError: Currency formatting is not possible using the 'C' locale.` (no lab: `R$ 1.234,50`) |

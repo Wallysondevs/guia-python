@@ -145,6 +145,15 @@ try:
     threading.Thread(target=print).start()
 except RuntimeError as e:
     print("threading:", e)
+try:
+    import urllib.request
+    urllib.request.urlopen("https://example.com", timeout=3)
+except Exception as e:
+    print("rede:", type(e).__name__, e)
+try:
+    urllib.request.urlopen("http://example.com", timeout=3)
+except Exception as e:
+    print("rede http:", type(e).__name__, e)
 </pre>
 </div>
 
