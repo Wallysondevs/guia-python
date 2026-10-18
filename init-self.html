@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python __init__ e self — o objeto que já nasce pronto | Guia Python</title>
+<meta name="description" content="O __init__ e o self em Python para quem está começando: como fazer todo objeto já nascer com os seus dados, o que é o self (o próprio objeto), por que cafe.mostrar() vira Produto.mostrar(cafe), valores padrão e argumentos nomeados, e os erros reais: o self esquecido (takes 0 positional arguments but 1 was given), argumentos faltando ou sobrando, o __int__ digitado errado e o self. esquecido.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">__init__ e self</span></h1>
+
+<p class="intro">Na aula <a href="classes.html">Classes e Objetos</a>, a Ana criava um produto vazio e depois pendurava os dados um por um: <code>cafe = Produto()</code>, <code>cafe.nome = "Café"</code>, <code>cafe.preco = 18.90</code>. Três linhas por produto, e se ela esquecesse uma, o programa quebrava lá na frente com <code>AttributeError</code>. Nesta aula você vai escrever o <code>__init__</code>, o trecho da classe que roda <strong>sozinho</strong> toda vez que um objeto nasce e já deixa tudo preenchido. Com ele, criar um produto vira uma linha: <code>Produto("Café", 18.90)</code>. E vai conhecer o <code>self</code>, a palavrinha que aparece em todo método e que quer dizer "o próprio objeto".</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A escrever o <code>__init__</code>, para que todo objeto já nasça com os seus dados.</li>
+  <li>O que é o <code>self</code>, e por que <code>self.nome = nome</code> tem dois "nome".</li>
+  <li>Quando o <code>__init__</code> roda, e quem passa o <code>self</code> para ele.</li>
+  <li>A escrever o primeiro método, <code>mostrar(self)</code>, e o que <code>cafe.mostrar()</code> faz por baixo.</li>
+  <li>Valores padrão (<code>estoque=0</code>) e argumentos nomeados no <code>__init__</code>.</li>
+  <li>Os erros reais: o <code>self</code> esquecido, argumentos faltando ou sobrando, o <code>__int__</code> digitado errado e o <code>self.</code> esquecido.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a ficha com os campos obrigatórios</h2>
+<p>Na lojinha da Ana, o cadastro de um produto novo é uma ficha com campos <strong>obrigatórios</strong>: ninguém cadastra um produto sem nome e sem preço. A pessoa do caixa preenche os campos <strong>na hora</strong> em que a ficha é criada, e a ficha já vai para o arquivo completa.</p>
+
+<p>O <code>__init__</code> é essa hora do preenchimento. O nome vem de <em>initialize</em>, "inicializar": é o que acontece logo no começo da vida do objeto. E o <code>self</code> (em inglês, "si mesmo", "o próprio") é a <strong>ficha que está sendo preenchida agora</strong>. Quando o <code>__init__</code> diz <code>self.nome = nome</code>, ele está dizendo: "no campo <code>nome</code> <strong>desta ficha aqui</strong>, escreva o nome que me deram".</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Na lojinha</th><th>Em Python</th></tr>
+<tr><td>A ficha em branco, com os campos obrigatórios</td><td>A classe com o <code>__init__(self, nome, preco)</code></td></tr>
+<tr><td>"Cadastre o Café, que custa 18,90"</td><td><code>Produto("Café", 18.90)</code></td></tr>
+<tr><td>A ficha que está sendo preenchida agora</td><td><code>self</code></td></tr>
+<tr><td>Escrever no campo "nome" desta ficha</td><td><code>self.nome = nome</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. O primeiro <code>__init__</code></h2>
+
+<pre class="file" data-file="init1.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+
+cafe = Produto("Café", 18.90)
+pao = Produto("Pão de forma", 9.50)
+
+print(cafe.nome, cafe.preco)
+print(pao.nome, pao.preco)
+</pre>
+
+<dl class="anatomy">
+  <dt>def __init__</dt><dd>Uma função escrita <strong>dentro</strong> da classe (recuada 4 espaços). Uma função que mora numa classe se chama <strong>método</strong>. O nome tem <strong>dois sublinhados</strong> antes e <strong>dois</strong> depois: <code>__init__</code>. Os programadores leem "dunder init" (de <em>double underscore</em>, "sublinhado duplo"). Nomes assim são especiais: o Python os chama sozinho em certos momentos.</dd>
+  <dt>(self, nome, preco)</dt><dd>Os parâmetros. O primeiro é sempre o <code>self</code>, o objeto que está nascendo. Depois vêm os dados que quem cria o produto precisa informar.</dd>
+  <dt>self.nome = nome</dt><dd>Lido da direita para a esquerda: pegue o <code>nome</code> que chegou como parâmetro e guarde no atributo <code>nome</code> do objeto (<code>self.nome</code>). Os dois "nome" são coisas diferentes: o da direita é o parâmetro, que some quando o <code>__init__</code> termina; o da esquerda é o atributo, que fica guardado no objeto.</dd>
+  <dt>self.preco = preco</dt><dd>O mesmo, para o preço.</dd>
+  <dt>Produto("Café", 18.90)</dt><dd>Cria um produto passando os dados entre os parênteses, na ordem dos parâmetros depois do <code>self</code>: <code>"Café"</code> vai para <code>nome</code>, <code>18.90</code> vai para <code>preco</code>. Repare que <strong>ninguém passa o <code>self</code></strong>: o Python passa sozinho.</dd>
+</dl>
+
+<pre class="term">$ python3 init1.py
+Café 18.9
+Pão de forma 9.5
+</pre>
+
+<p>O resultado é o mesmo da aula anterior, mas cada produto agora é criado numa linha só, e <strong>não tem como</strong> nascer um produto sem nome ou sem preço: o Python não deixa (você vai ver o erro em <a href="#errado">Quando dá errado</a>).</p>
+
+<hr>
+
+<h2>2. Quando o <code>__init__</code> roda?</h2>
+<p>Você nunca escreve <code>cafe.__init__(…)</code>. Quem chama o <code>__init__</code> é o próprio Python, no momento em que o objeto é criado. Um <code>print</code> dentro dele mostra a hora exata:</p>
+
+<pre class="file" data-file="quando.py">class Produto:
+    def __init__(self, nome, preco):
+        print(f"__init__ rodou para: {nome}")
+        self.nome = nome
+        self.preco = preco
+
+
+print("Antes de criar")
+cafe = Produto("Café", 18.90)
+print("Entre um e outro")
+pao = Produto("Pão de forma", 9.50)
+print("Depois de criar")
+</pre>
+
+<pre class="term">$ python3 quando.py
+Antes de criar
+__init__ rodou para: Café
+Entre um e outro
+__init__ rodou para: Pão de forma
+Depois de criar
+</pre>
+
+<p>O <code>__init__</code> roda uma vez para cada objeto criado, bem na linha do <code>Produto(…)</code>. Quando você escreve <code>Produto("Café", 18.90)</code>, o Python faz três coisas, nesta ordem:</p>
+
+<ol class="passo">
+  <li>Cria um objeto <code>Produto</code> novo, ainda vazio (uma ficha em branco).</li>
+  <li>Chama o <code>__init__</code> passando <strong>o objeto novo como <code>self</code></strong>, mais os seus dados: é como se fosse <code>__init__(objeto_novo, "Café", 18.90)</code>. O <code>__init__</code> preenche a ficha.</li>
+  <li>Entrega o objeto pronto, que vai para a variável <code>cafe</code>.</li>
+</ol>
+
+<hr>
+
+<h2>3. O <code>self</code> é o próprio objeto</h2>
+<p>Se o <code>self</code> é o objeto que está nascendo, então ele e o <code>cafe</code> têm de ser a mesma coisa. Dá para conferir pelo endereço da memória (aquele <code>0x…</code> da aula passada):</p>
+
+<pre class="file" data-file="self_mesmo.py">class Produto:
+    def __init__(self, nome, preco):
+        print("self é:", self)
+        self.nome = nome
+        self.preco = preco
+
+
+cafe = Produto("Café", 18.90)
+print("cafe é:", cafe)
+</pre>
+
+<pre class="term">$ python3 self_mesmo.py
+self é: &lt;__main__.Produto object at 0x7f933bd90590&gt;
+cafe é: &lt;__main__.Produto object at 0x7f933bd90590&gt;
+</pre>
+
+<p><strong>O mesmo endereço.</strong> Dentro do <code>__init__</code>, o objeto se chama <code>self</code>; fora dele, depois de pronto, ele se chama <code>cafe</code>. São dois nomes para um objeto só. (No seu computador o número será outro, mas os dois vão ser iguais entre si.)</p>
+
+<p>Por que o Python precisa disso? Porque a classe é uma só, e os objetos são muitos. O mesmo <code>__init__</code> preenche o café, o pão e o leite. O <code>self</code> é a forma de o código da classe dizer "<strong>este</strong> objeto, aquele que está sendo cuidado agora", sem saber de antemão qual é.</p>
+
+<div class="trypy" data-goal="out:Bia 3º A;;semerro">
+<p class="try-task"><strong>Missão:</strong> a classe <code>Aluno</code> recebe o nome e a turma, mas o <code>__init__</code> não guarda nada (o <code>pass</code> só ocupa o lugar), e o programa dá <code>AttributeError</code>. Troque o <code>pass</code> pelas linhas que guardam o <code>nome</code> e a <code>turma</code> no objeto.</p>
+<pre class="script" data-file="main.py">class Aluno:
+    def __init__(self, nome, turma):
+        pass
+
+
+bia = Aluno("Bia", "3º A")
+print(bia.nome, bia.turma)
+</pre>
+<pre class="solucao" data-file="main.py">class Aluno:
+    def __init__(self, nome, turma):
+        self.nome = nome
+        self.turma = turma
+
+
+bia = Aluno("Bia", "3º A")
+print(bia.nome, bia.turma)
+</pre>
+</div>
+
+<hr>
+
+<h2>4. O primeiro método: o objeto sabe fazer coisas</h2>
+<p>O <code>__init__</code> é um método que o Python chama sozinho. Você também pode escrever os seus métodos, para o objeto <strong>fazer</strong> coisas. Todo método recebe o <code>self</code> como primeiro parâmetro, e é por ele que o método enxerga os dados do objeto:</p>
+
+<pre class="file" data-file="metodo.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def mostrar(self):
+        print(f"{self.nome}: R$ {self.preco:.2f}")
+
+
+cafe = Produto("Café", 18.90)
+pao = Produto("Pão de forma", 9.50)
+
+cafe.mostrar()
+pao.mostrar()
+Produto.mostrar(cafe)
+</pre>
+
+<dl class="anatomy">
+  <dt>def mostrar(self):</dt><dd>Um método novo, no mesmo recuo do <code>__init__</code> (dentro da classe), separado dele por uma linha em branco. Ele só precisa do <code>self</code>: tudo de que precisa já está guardado no objeto.</dd>
+  <dt>self.nome, self.preco</dt><dd>Dentro do método, os dados do objeto são lidos pelo <code>self</code>. O <code>:.2f</code> mostra o preço com duas casas (aula <a href="f-strings.html">f-strings</a>).</dd>
+  <dt>cafe.mostrar()</dt><dd>Chama o método <strong>no objeto</strong> <code>cafe</code>. Os parênteses estão vazios, e mesmo assim o método recebe o <code>self</code>: o Python põe o <code>cafe</code> lá.</dd>
+  <dt>Produto.mostrar(cafe)</dt><dd>O que o Python faz por baixo: chama o <code>mostrar</code> da classe passando o <code>cafe</code> como <code>self</code>. Ninguém escreve assim no dia a dia, mas é o que explica o <code>self</code>.</dd>
+</dl>
+
+<pre class="term">$ python3 metodo.py
+Café: R$ 18.90
+Pão de forma: R$ 9.50
+Café: R$ 18.90                     « Produto.mostrar(cafe): o mesmo que cafe.mostrar()
+</pre>
+
+<p>Esta é a regra que você precisa guardar:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Você escreve</th><th>O Python faz</th><th>Dentro do método, <code>self</code> é…</th></tr>
+<tr><td><code>cafe.mostrar()</code></td><td><code>Produto.mostrar(cafe)</code></td><td>o <code>cafe</code></td></tr>
+<tr><td><code>pao.mostrar()</code></td><td><code>Produto.mostrar(pao)</code></td><td>o <code>pao</code></td></tr>
+<tr><td><code>Produto("Café", 18.90)</code></td><td><code>__init__(novo, "Café", 18.90)</code></td><td>o objeto que está nascendo</td></tr>
+</table>
+</div>
+
+<p>O que vem <strong>antes do ponto</strong> vira o <code>self</code>. É por isso que o mesmo método <code>mostrar</code> mostra o café numa chamada e o pão na outra. Métodos têm uma aula inteira, a próxima: <a href="atributos-metodos.html">Atributos e Métodos</a>.</p>
+
+<hr>
+
+<h2>5. Valores padrão e argumentos nomeados</h2>
+<p>O <code>__init__</code> é uma função, então tudo o que você aprendeu na aula <a href="argumentos-padrao.html">Valores Padrão e Argumentos Nomeados</a> vale aqui. Um produto recém-cadastrado pode ainda não ter estoque: o estoque vale <code>0</code> se ninguém disser nada.</p>
+
+<pre class="file" data-file="padrao.py">class Produto:
+    def __init__(self, nome, preco, estoque=0):
+        self.nome = nome
+        self.preco = preco
+        self.estoque = estoque
+
+
+cafe = Produto("Café", 18.90, 12)
+leite = Produto("Leite", 6.50)
+pao = Produto(nome="Pão de forma", preco=9.50, estoque=30)
+
+print(cafe.nome, cafe.estoque)
+print(leite.nome, leite.estoque)
+print(pao.nome, pao.estoque)
+</pre>
+
+<pre class="term">$ python3 padrao.py
+Café 12
+Leite 0                            « não disse o estoque: ficou o padrão
+Pão de forma 30                    « argumentos nomeados: dá para ler sem decorar a ordem
+</pre>
+
+<h3>Nem todo atributo vem de um parâmetro</h3>
+<p>O <code>__init__</code> pode criar atributos calculados, ou com um valor inicial fixo. A ficha de um aluno já nasce com a média calculada e com zero faltas:</p>
+
+<pre class="file" data-file="calculado.py">class Aluno:
+    def __init__(self, nome, nota1, nota2):
+        self.nome = nome
+        self.nota1 = nota1
+        self.nota2 = nota2
+        self.media = (nota1 + nota2) / 2
+        self.faltas = 0
+
+
+bia = Aluno("Bia", 8.0, 9.5)
+print(bia.nome, bia.media, bia.faltas)
+print(vars(bia))
+</pre>
+
+<pre class="term">$ python3 calculado.py
+Bia 8.75 0
+{'nome': 'Bia', 'nota1': 8.0, 'nota2': 9.5, 'media': 8.75, 'faltas': 0}
+</pre>
+
+<p>O <code>vars(bia)</code> mostra os cinco atributos que o <code>__init__</code> criou. Uma boa prática: crie <strong>todos</strong> os atributos do objeto dentro do <code>__init__</code>, mesmo os que começam vazios ou zerados. Assim, quem lê a classe descobre num lugar só quais dados todo objeto tem.</p>
+
+<hr>
+
+<h2>Formas diferentes de escrever</h2>
+
+<h3>Os parâmetros não precisam ter o nome dos atributos</h3>
+<pre class="file" data-file="nomes_dif.py">class Produto:
+    def __init__(self, n, p):
+        self.nome = n
+        self.preco = p
+
+
+cafe = Produto("Café", 18.90)
+print(cafe.nome, cafe.preco)
+print(cafe.n)
+</pre>
+
+<pre class="term">$ python3 nomes_dif.py
+Café 18.9
+Traceback (most recent call last):
+  File "/home/ana/nomes_dif.py", line 9, in &lt;module&gt;
+    print(cafe.n)
+          ^^^^^^
+AttributeError: 'Produto' object has no attribute 'n'
+</pre>
+
+<p>Funciona: o atributo se chama o que estiver depois de <code>self.</code>. O parâmetro <code>n</code> só existe enquanto o <code>__init__</code> roda; por isso <code>cafe.n</code> não existe. Mas usar o mesmo nome (<code>self.nome = nome</code>) é o costume, e é mais claro: quem lê sabe na hora qual parâmetro vira qual atributo.</p>
+
+<h3>O <code>self</code> é só um nome</h3>
+<pre class="file" data-file="outro_nome.py">class Produto:
+    def __init__(eu, nome, preco):
+        eu.nome = nome
+        eu.preco = preco
+
+
+cafe = Produto("Café", 18.90)
+print(cafe.nome)
+</pre>
+
+<pre class="term">$ python3 outro_nome.py
+Café
+</pre>
+
+<p>Também funciona. Para o Python, o que importa é a <strong>posição</strong>: o primeiro parâmetro de um método recebe o objeto, chame-se ele como for. Mas <strong>todo mundo</strong> usa <code>self</code>: os editores de código, os colegas e os tutoriais esperam esse nome. Trocar só confunde.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>def __init__(self, nome, preco):</code> + <code>self.nome = nome</code></td><td>Sempre. É o costume, e o mais fácil de ler</td></tr>
+<tr><td><code>def __init__(self, nome, preco, estoque=0):</code></td><td>Quando um dado tem um valor óbvio para começar</td></tr>
+<tr><td><code>Produto(nome="Café", preco=18.90)</code></td><td>Quando há muitos parâmetros e a ordem não é óbvia</td></tr>
+<tr><td><code>def __init__(self, n, p):</code></td><td>Funciona, mas evite: nomes curtos escondem o que cada um é</td></tr>
+<tr><td><code>def __init__(eu, nome, preco):</code></td><td>Funciona, mas não faça: o nome é sempre <code>self</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Esquecer o <code>self</code> no método: <code>takes 0 positional arguments but 1 was given</code></strong>
+<p>É o erro mais comum de quem está começando com classes:</p>
+<pre class="file" data-file="sem_self.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def mostrar():
+        print("Um produto da lojinha")
+
+
+cafe = Produto("Café", 18.90)
+cafe.mostrar()
+</pre>
+<pre class="term">$ python3 sem_self.py
+Traceback (most recent call last):
+  File "/home/ana/sem_self.py", line 11, in &lt;module&gt;
+    cafe.mostrar()
+    ~~~~~~~~~~~~^^
+TypeError: Produto.mostrar() takes 0 positional arguments but 1 was given
+</pre>
+<p>Linha por linha:</p>
+<ul>
+  <li><code>File "/home/ana/sem_self.py", line 11</code>: o erro estourou na linha 11, a da chamada <code>cafe.mostrar()</code>, e não na linha 6, onde está o engano. O Python só descobre o problema quando tenta usar o método.</li>
+  <li><code>~~~~~~~~~~~~^^</code>: os tils marcam o que foi chamado (<code>cafe.mostrar</code>) e os <code>^^</code> marcam os parênteses da chamada, onde o problema aconteceu.</li>
+  <li><code>TypeError</code>: "erro de tipo", usado quando uma função é chamada do jeito errado.</li>
+  <li><code>Produto.mostrar() takes 0 positional arguments but 1 was given</code>: "o <code>Produto.mostrar()</code> recebe 0 argumentos, mas foi dado 1".</li>
+</ul>
+<p>"Mas eu não passei nada!", pensa a Ana. Passou, sim, sem ver: <code>cafe.mostrar()</code> vira <code>Produto.mostrar(cafe)</code>. O Python entregou o <code>cafe</code>, e o <code>def mostrar():</code> não tinha onde recebê-lo. <strong>Como consertar:</strong> <code>def mostrar(self):</code>. Todo método comum começa com <code>self</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Passar o objeto de novo: <code>takes 1 positional argument but 2 were given</code></strong>
+<p>O erro contrário: quem entendeu que o método recebe o objeto e resolve passá-lo à mão.</p>
+<pre class="file" data-file="self_arg.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def mostrar(self):
+        print(f"{self.nome}: R$ {self.preco:.2f}")
+
+
+cafe = Produto("Café", 18.90)
+cafe.mostrar(cafe)
+</pre>
+<pre class="term">$ python3 self_arg.py
+Traceback (most recent call last):
+  File "/home/ana/self_arg.py", line 11, in &lt;module&gt;
+    cafe.mostrar(cafe)
+    ~~~~~~~~~~~~^^^^^^
+TypeError: Produto.mostrar() takes 1 positional argument but 2 were given
+</pre>
+<p>"Recebe 1 argumento (o <code>self</code>), mas foram dados 2": o <code>cafe</code> que o Python passou sozinho, e o <code>cafe</code> que você escreveu. <strong>Como consertar:</strong> <code>cafe.mostrar()</code>. O objeto antes do ponto já é o <code>self</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Faltou um dado: <code>missing 1 required positional argument</code></strong>
+<pre class="file" data-file="falta_arg.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+
+cafe = Produto("Café")
+</pre>
+<pre class="term">$ python3 falta_arg.py
+Traceback (most recent call last):
+  File "/home/ana/falta_arg.py", line 7, in &lt;module&gt;
+    cafe = Produto("Café")
+           ~~~~~~~^^^^^^^^
+TypeError: Produto.__init__() missing 1 required positional argument: 'preco'
+</pre>
+<p>"Falta 1 argumento posicional obrigatório: <code>preco</code>". É o <code>__init__</code> fazendo o seu trabalho: um produto sem preço não nasce. A mensagem até diz qual campo faltou. Sem nenhum dado, faltam os dois:</p>
+<pre class="term">$ python3 vazio.py
+Traceback (most recent call last):
+  File "/home/ana/vazio.py", line 7, in &lt;module&gt;
+    cafe = Produto()
+TypeError: Produto.__init__() missing 2 required positional arguments: 'nome' and 'preco'
+</pre>
+<p>(Desta vez sem os <code>~~~^^^</code>: quando a linha inteira é o problema, o Python não sublinha nada.) <strong>Como consertar:</strong> passe todos os dados obrigatórios, <code>Produto("Café", 18.90)</code>, ou dê um valor padrão ao parâmetro que pode faltar.</p>
+</div>
+
+<div class="cenario">
+<strong>Sobrou um dado: <code>takes 3 positional arguments but 4 were given</code></strong>
+<pre class="file" data-file="sobra_arg.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+
+cafe = Produto("Café", 18.90, 12)
+</pre>
+<pre class="term">$ python3 sobra_arg.py
+Traceback (most recent call last):
+  File "/home/ana/sobra_arg.py", line 7, in &lt;module&gt;
+    cafe = Produto("Café", 18.90, 12)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^
+TypeError: Produto.__init__() takes 3 positional arguments but 4 were given
+</pre>
+<p>A Ana passou 3 dados e a mensagem fala em <strong>4</strong>. A conta do Python <strong>inclui o <code>self</code></strong>: o <code>__init__</code> recebe 3 (<code>self</code>, <code>nome</code>, <code>preco</code>) e ganhou 4 (o objeto novo, <code>"Café"</code>, <code>18.90</code> e <code>12</code>). Sempre que um número dessas mensagens parecer um a mais, lembre do <code>self</code>. <strong>Como consertar:</strong> tire o dado que sobrou, ou acrescente o parâmetro <code>estoque</code> no <code>__init__</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Nome errado: <code>__int__</code> ou <code>_init_</code> no lugar de <code>__init__</code></strong>
+<pre class="file" data-file="init_errado.py">class Produto:
+    def __int__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+
+cafe = Produto("Café", 18.90)
+</pre>
+<pre class="term">$ python3 init_errado.py
+Traceback (most recent call last):
+  File "/home/ana/init_errado.py", line 7, in &lt;module&gt;
+    cafe = Produto("Café", 18.90)
+           ~~~~~~~^^^^^^^^^^^^^^^
+TypeError: Produto() takes no arguments
+</pre>
+<p>"<code>Produto()</code> não recebe argumentos". Faltou um <strong>i</strong>: <code>__int__</code> (que existe, mas serve para outra coisa, converter o objeto em número inteiro). Como a classe não tem nenhum <code>__init__</code>, o Python acha que ela não aceita dados. Com um sublinhado só de cada lado, <code>_init_</code>, sai exatamente a mesma mensagem. <strong>Como consertar:</strong> confira o nome letra por letra: dois sublinhados, <code>init</code>, dois sublinhados.</p>
+</div>
+
+<div class="cenario">
+<strong>Esquecer o <code>self.</code> na hora de guardar</strong>
+<pre class="file" data-file="sem_self_ponto.py">class Produto:
+    def __init__(self, nome, preco):
+        nome = nome
+        preco = preco
+
+
+cafe = Produto("Café", 18.90)
+print(cafe.nome)
+</pre>
+<pre class="term">$ python3 sem_self_ponto.py
+Traceback (most recent call last):
+  File "/home/ana/sem_self_ponto.py", line 8, in &lt;module&gt;
+    print(cafe.nome)
+          ^^^^^^^^^
+AttributeError: 'Produto' object has no attribute 'nome'
+</pre>
+<p>O objeto nasceu sem problema, mas vazio. <code>nome = nome</code> só copiou o parâmetro para ele mesmo, uma variável comum que some quando o <code>__init__</code> termina (aula <a href="escopo.html">Escopo</a>). Nada foi guardado no objeto. <strong>Como consertar:</strong> <code>self.nome = nome</code>. Sem o <code>self.</code>, o dado não vai para a ficha.</p>
+</div>
+
+<div class="cenario">
+<strong><code>return</code> dentro do <code>__init__</code></strong>
+<pre class="file" data-file="retorna.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+        return self
+
+
+cafe = Produto("Café", 18.90)
+</pre>
+<pre class="term">$ python3 retorna.py
+Traceback (most recent call last):
+  File "/home/ana/retorna.py", line 8, in &lt;module&gt;
+    cafe = Produto("Café", 18.90)
+           ~~~~~~~^^^^^^^^^^^^^^^
+TypeError: __init__() should return None, not 'Produto'
+</pre>
+<p>"O <code>__init__()</code> deveria devolver <code>None</code>, e não um <code>Produto</code>". O <code>__init__</code> só <strong>preenche</strong> o objeto; quem entrega o objeto pronto é o Python (o passo 3 lá de cima). <strong>Como consertar:</strong> apague o <code>return</code>. O <code>__init__</code> nunca devolve nada.</p>
+</div>
+
+<div class="trypy" data-goal="out:Café: R$ 18.90;;semerro">
+<p class="try-task"><strong>Missão:</strong> o método <code>mostrar</code> foi escrito sem o <code>self</code> e ainda tenta usar o nome e o preço. Rode, leia o <code>TypeError</code> e conserte o método para o programa mostrar <code>Café: R$ 18.90</code>.</p>
+<pre class="script" data-file="main.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def mostrar():
+        print(f"{nome}: R$ {preco:.2f}")
+
+
+cafe = Produto("Café", 18.90)
+cafe.mostrar()
+</pre>
+<pre class="solucao" data-file="main.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def mostrar(self):
+        print(f"{self.nome}: R$ {self.preco:.2f}")
+
+
+cafe = Produto("Café", 18.90)
+cafe.mostrar()
+</pre>
+</div>
+
+<p>Repare que eram <strong>dois</strong> consertos: acrescentar o <code>self</code> nos parênteses e trocar <code>nome</code> por <code>self.nome</code> (e <code>preco</code> por <code>self.preco</code>). Se você consertar só o primeiro, o próximo Rodar mostra outro erro, e o Python até dá a dica:</p>
+
+<pre class="term">$ python3 main.py
+Traceback (most recent call last):
+  File "/home/ana/main.py", line 11, in &lt;module&gt;
+    cafe.mostrar()
+    ~~~~~~~~~~~~^^
+  File "/home/ana/main.py", line 7, in mostrar
+    print(f"{nome}: R$ {preco:.2f}")
+             ^^^^
+NameError: name 'nome' is not defined. Did you mean: 'self.nome'?
+</pre>
+
+<p>Agora o rastro tem <strong>dois</strong> trechos <code>File</code>: o erro começou na linha 11 (a chamada) e estourou na linha 7, <code>in mostrar</code>, dentro do método. "O nome <code>nome</code> não está definido. Você quis dizer <code>self.nome</code>?" Dentro do método, <code>nome</code> sozinho não existe: o nome mora no objeto.</p>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>def __init__(self, nome, preco):</code></td><td>Roda sozinho quando um objeto nasce; recebe o objeto (<code>self</code>) e os dados</td></tr>
+<tr><td><code>self.nome = nome</code></td><td>Guarda o parâmetro <code>nome</code> no atributo <code>nome</code> do objeto</td></tr>
+<tr><td><code>Produto("Café", 18.90)</code></td><td>Cria o objeto e chama <code>__init__(novo, "Café", 18.90)</code></td></tr>
+<tr><td><code>def __init__(self, nome, preco, estoque=0):</code></td><td>Parâmetro com valor padrão</td></tr>
+<tr><td><code>Produto(nome="Café", preco=18.90)</code></td><td>Argumentos nomeados</td></tr>
+<tr><td><code>def mostrar(self):</code></td><td>Um método; o <code>self</code> é o objeto antes do ponto</td></tr>
+<tr><td><code>cafe.mostrar()</code></td><td>O mesmo que <code>Produto.mostrar(cafe)</code></td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>takes 0 positional arguments but 1 was given</code></td><td>O método não tem <code>self</code></td></tr>
+<tr><td><code>takes 1 positional argument but 2 were given</code></td><td>Passou o objeto à mão: <code>cafe.mostrar(cafe)</code></td></tr>
+<tr><td><code>missing 1 required positional argument: 'preco'</code></td><td>Faltou um dado no <code>Produto(…)</code></td></tr>
+<tr><td><code>takes 3 positional arguments but 4 were given</code></td><td>Sobrou um dado (a conta inclui o <code>self</code>)</td></tr>
+<tr><td><code>Produto() takes no arguments</code></td><td>O <code>__init__</code> está com o nome errado (<code>__int__</code>, <code>_init_</code>) ou não existe</td></tr>
+<tr><td><code>AttributeError</code> logo depois de criar o objeto</td><td>Faltou o <code>self.</code> no <code>__init__</code></td></tr>
+<tr><td><code>__init__() should return None</code></td><td>Há um <code>return</code> com valor no <code>__init__</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O nome do método</h3>
+<p>Complete o nome do método que roda quando o objeto nasce:</p>
+<div class="ex-code">def <input data-answer="__init__" aria-label="nome do método">(self, nome, preco):</div>
+</div>
+
+<div class="exercise">
+<h3>2. Guardando no objeto</h3>
+<p>Complete para guardar o parâmetro <code>turma</code> no objeto:</p>
+<div class="ex-code"><input data-answer="self.turma" aria-label="destino"> = turma</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. Quando a Ana escreve <code>pao.mostrar()</code>, o que o <code>self</code> vale dentro do <code>mostrar</code>?</p>
+<label><input type="radio" name="q3"> Nada: os parênteses estão vazios</label>
+<label><input type="radio" name="q3"> O objeto <code>pao</code></label>
+<label><input type="radio" name="q3"> A classe <code>Produto</code></label>
+<label><input type="radio" name="q3"> O último objeto criado</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Qual erro aparece quando um método é escrito como <code>def mostrar():</code> e chamado com <code>cafe.mostrar()</code>?</p>
+<label><input type="radio" name="q4"> <code>NameError: name 'self' is not defined</code></label>
+<label><input type="radio" name="q4"> <code>SyntaxError</code></label>
+<label><input type="radio" name="q4"> <code>TypeError: Produto.mostrar() takes 0 positional arguments but 1 was given</code></label>
+<label><input type="radio" name="q4"> Nenhum: o método roda normalmente</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Com <code>def __init__(self, nome, preco, estoque=0)</code>, quais destas criações funcionam?</p>
+<label><input type="radio" name="q5"> <code>Produto("Leite", 6.50)</code> e <code>Produto("Leite", 6.50, 20)</code></label>
+<label><input type="radio" name="q5"> Só <code>Produto("Leite", 6.50, 20)</code></label>
+<label><input type="radio" name="q5"> Só <code>Produto("Leite")</code></label>
+<label><input type="radio" name="q5"> <code>Produto(self, "Leite", 6.50)</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. A mensagem diz <code>takes 3 positional arguments but 4 were given</code>, mas a Ana passou só 3 dados. Por quê?</p>
+<label><input type="radio" name="q6"> O Python contou errado</label>
+<label><input type="radio" name="q6"> Um dos dados foi passado duas vezes</label>
+<label><input type="radio" name="q6"> O <code>print</code> conta como argumento</label>
+<label><input type="radio" name="q6"> A conta inclui o <code>self</code>, que o Python passa sozinho</label>
+</div>
+
+<h3>Missão final: a conta bancária que já nasce pronta</h3>
+
+<div class="trypy" data-goal="out:Ana: R$ 100.00;;out:Bia: R$ 0.00;;src:def __init__\(self;;semerro">
+<p class="try-task"><strong>Missão:</strong> escreva o <code>__init__</code> da <code>ContaBancaria</code>. Ele recebe o <code>titular</code> e o <code>saldo</code>, e o saldo vale <code>0</code> quando ninguém informar. Depois escreva o método <code>mostrar</code>, que imprime <code>Ana: R$ 100.00</code> (o titular, dois-pontos e o saldo com duas casas). O código de baixo já está pronto: a conta da Ana abre com 100 reais, e a da Bia, sem nada.</p>
+<pre class="script" data-file="main.py">class ContaBancaria:
+    pass  # troque por: o __init__ (titular e saldo=0) e o método mostrar
+
+
+conta_ana = ContaBancaria("Ana", 100)
+conta_bia = ContaBancaria("Bia")
+
+conta_ana.mostrar()
+conta_bia.mostrar()
+</pre>
+<pre class="solucao" data-file="main.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self.saldo = saldo
+
+    def mostrar(self):
+        print(f"{self.titular}: R$ {self.saldo:.2f}")
+
+
+conta_ana = ContaBancaria("Ana", 100)
+conta_bia = ContaBancaria("Bia")
+
+conta_ana.mostrar()
+conta_bia.mostrar()
+</pre>
+</div>
+
+<p>Se aparecer <code>ContaBancaria() takes no arguments</code>, o <code>__init__</code> ainda não existe (ou está com o nome errado). Se aparecer <code>missing 1 required positional argument: 'saldo'</code>, faltou o <code>=0</code>.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>O <code>__init__</code> (dois sublinhados de cada lado) roda <strong>sozinho</strong> toda vez que um objeto nasce, e serve para preencher os dados dele.</li>
+  <li><code>Produto("Café", 18.90)</code> cria um objeto vazio, chama <code>__init__(novo, "Café", 18.90)</code> e entrega o objeto pronto.</li>
+  <li><code>self</code> é o próprio objeto: dentro do <code>__init__</code>, o que está nascendo; num método, o que veio antes do ponto. <code>cafe.mostrar()</code> é o mesmo que <code>Produto.mostrar(cafe)</code>.</li>
+  <li><code>self.nome = nome</code> guarda o parâmetro no objeto. Sem o <code>self.</code>, nada é guardado.</li>
+  <li>Todo método comum tem <code>self</code> como primeiro parâmetro. Sem ele: <code>takes 0 positional arguments but 1 was given</code>.</li>
+  <li>Nas mensagens de argumentos, a conta inclui o <code>self</code>. <code>Produto() takes no arguments</code> quer dizer que o <code>__init__</code> não existe ou está com o nome errado.</li>
+  <li>Valores padrão e argumentos nomeados funcionam no <code>__init__</code> como em qualquer função. Crie todos os atributos dentro dele.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
