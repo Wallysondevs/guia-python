@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Comparações — ==, !=, &lt;, &gt;, &lt;= e &gt;= | Guia Python</title>
+<meta name="description" content="Os operadores de comparação do Python para quem nunca programou: ==, !=, &lt;, &gt;, &lt;= e &gt;=, a diferença entre = e ==, o encadeamento 1 &lt; x &lt; 10, como o Python compara textos (maiúsculas, acentos e por que &quot;10&quot; &lt; &quot;9&quot;), comparar número com texto e os erros reais do Python 3.14.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Comparações (==, !=, &lt;, &gt;)</span></h1>
+
+<p class="intro">"A nota é maior ou igual a 7?" "A senha digitada é igual à senha certa?" "O forno está entre 180 e 220 graus?" Um programa vive fazendo perguntas assim, e as respostas decidem o que ele vai fazer em seguida. Para perguntar, o Python tem seis <strong>operadores de comparação</strong>, e cada um responde com um booleano: <code>True</code> ou <code>False</code> (aula <a href="booleanos.html">Booleanos</a>). Nesta aula você vai conhecer os seis, nunca mais confundir <code>=</code> com <code>==</code>, aprender o atalho <code>1 &lt; x &lt; 10</code> e descobrir as surpresas de comparar textos.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>Os seis operadores: <code>==</code>, <code>!=</code>, <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code> e <code>&gt;=</code>.</li>
+  <li>A diferença entre <code>=</code> (guarda) e <code>==</code> (pergunta).</li>
+  <li>A guardar a resposta numa variável: <code>aprovado = nota &gt;= 7</code>.</li>
+  <li>A encadear comparações: <code>180 &lt;= temperatura &lt;= 220</code>.</li>
+  <li>Como o Python compara textos: letra por letra, com maiúsculas e acentos contando.</li>
+  <li>Por que <code>"10" &lt; "9"</code> é <code>True</code>.</li>
+  <li>O que acontece ao comparar número com texto, o erro do <code>input()</code>.</li>
+</ul>
+</div>
+
+<p>Os programas desta aula rodaram no <strong>Python 3.14</strong> da máquina da Ana (usuária <code>ana</code>, computador <code>notebook</code>), e podem ser repetidos no editor do guia.</p>
+
+<hr>
+
+<h2>A ideia: a balança de dois pratos</h2>
+<p>Numa balança antiga, de dois pratos, você coloca uma coisa de cada lado e olha: os pratos ficaram nivelados? Qual lado desceu? A balança não diz "quanto"; ela só responde a pergunta.</p>
+
+<p>Os operadores de comparação são essa balança. Você põe um valor de cada lado do operador, e o Python responde com <code>True</code> (sim) ou <code>False</code> (não):</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Operador</th><th>Pergunta</th><th>Exemplo</th><th>Resposta</th></tr>
+<tr><td><code>==</code></td><td>É igual?</td><td><code>12 == 12</code></td><td><code>True</code></td></tr>
+<tr><td><code>!=</code></td><td>É diferente?</td><td><code>12 != 12</code></td><td><code>False</code></td></tr>
+<tr><td><code>&lt;</code></td><td>É menor?</td><td><code>12 &lt; 20</code></td><td><code>True</code></td></tr>
+<tr><td><code>&gt;</code></td><td>É maior?</td><td><code>12 &gt; 20</code></td><td><code>False</code></td></tr>
+<tr><td><code>&lt;=</code></td><td>É menor ou igual?</td><td><code>12 &lt;= 12</code></td><td><code>True</code></td></tr>
+<tr><td><code>&gt;=</code></td><td>É maior ou igual?</td><td><code>12 &gt;= 15</code></td><td><code>False</code></td></tr>
+</table>
+</div>
+
+<p>No caderno, você escreveria ≠, ≤ e ≥. Como esses sinais não existem no teclado, o Python usa dois caracteres: <code>!=</code> (o <code>!</code> quer dizer "não"), <code>&lt;=</code> e <code>&gt;=</code>. O sinal de "igual" vem <strong>sempre por último</strong>: <code>&lt;=</code>, nunca <code>=&lt;</code>.</p>
+
+<hr>
+
+<h2>1. As seis comparações</h2>
+<pre class="file" data-file="comparacoes.py">estoque = 12
+print(estoque == 12)
+print(estoque != 12)
+print(estoque &lt; 20)
+print(estoque &gt; 20)
+print(estoque &lt;= 12)
+print(estoque &gt;= 15)
+</pre>
+
+<pre class="term">$ python3 comparacoes.py
+True
+False
+True
+False
+True
+False
+</pre>
+
+<dl class="anatomy">
+  <dt>estoque == 12</dt><dd>"O estoque é igual a 12?" Sim.</dd>
+  <dt>estoque != 12</dt><dd>"O estoque é diferente de 12?" Não, é igual.</dd>
+  <dt>estoque &lt; 20</dt><dd>"É menor que 20?" Sim.</dd>
+  <dt>estoque &gt; 20</dt><dd>"É maior que 20?" Não.</dd>
+  <dt>estoque &lt;= 12</dt><dd>"É menor <strong>ou igual</strong> a 12?" É igual, então sim. Com <code>&lt;</code> (só "menor") a resposta seria não.</dd>
+  <dt>estoque &gt;= 15</dt><dd>"É maior ou igual a 15?" Não.</dd>
+</dl>
+
+<p>A resposta é um valor como outro qualquer: dá para mostrar, como acima, ou <strong>guardar</strong> numa variável. A Ana usa a média 7 para aprovar:</p>
+
+<pre class="file" data-file="aprovacao.py">nota = 8.5
+aprovado = nota &gt;= 7
+print("Aprovado:", aprovado)
+</pre>
+
+<pre class="term">$ python3 aprovacao.py
+Aprovado: True
+</pre>
+
+<p>O Python resolve primeiro a comparação da direita (<code>8.5 &gt;= 7</code> é <code>True</code>) e depois guarda o <code>True</code> em <code>aprovado</code>. Mais adiante, essas respostas vão decidir o caminho do programa no <a href="if.html">if</a>.</p>
+
+<div class="trypy" data-goal="out:Aprovado: True;;src:&gt;=">
+<p class="try-task"><strong>Missão:</strong> na escola da Ana, quem tira <strong>7 ou mais</strong> passa. A Bia tirou 7, mas o programa diz que ela não passou. Conserte a comparação.</p>
+<pre class="script" data-file="main.py">nota = 7
+aprovado = nota &gt; 7
+print("Aprovado:", aprovado)
+</pre>
+<pre class="solucao" data-file="main.py">nota = 7
+aprovado = nota &gt;= 7
+print("Aprovado:", aprovado)
+</pre>
+</div>
+
+<hr>
+
+<h2>2. <code>=</code> guarda, <code>==</code> pergunta</h2>
+<p>É a confusão número um de quem está começando:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sinal</th><th>Nome</th><th>O que faz</th><th>Exemplo</th></tr>
+<tr><td><code>=</code></td><td>Atribuição</td><td><strong>Guarda</strong> um valor numa variável. É uma ordem</td><td><code>idade = 18</code>: "a idade agora é 18"</td></tr>
+<tr><td><code>==</code></td><td>Igualdade</td><td><strong>Pergunta</strong> se dois valores são iguais. Responde <code>True</code> ou <code>False</code></td><td><code>idade == 18</code>: "a idade é 18?"</td></tr>
+</table>
+</div>
+
+<p>Se você usar um igual só onde o Python espera uma pergunta, ele avisa, e o Python 3.14 até sugere o conserto:</p>
+
+<pre class="file" data-file="if_um_igual.py">idade = 18
+if idade = 18:
+    print("Maior de idade!")
+</pre>
+
+<pre class="term">$ python3 if_um_igual.py
+  File "/home/ana/if_um_igual.py", line 2
+    if idade = 18:
+       ^^^^^^^^^^
+SyntaxError: invalid syntax. Maybe you meant '==' or ':=' instead of '='?
+</pre>
+
+<dl class="anatomy">
+  <dt>line 2</dt><dd>O problema está na linha 2, a do <code>if</code> ("se").</dd>
+  <dt>^^^^^^^^^^</dt><dd>Os chapeuzinhos marcam <code>idade = 18</code> inteiro.</dd>
+  <dt>SyntaxError: invalid syntax</dt><dd>"Sintaxe inválida": o código nem começou a rodar.</dd>
+  <dt>Maybe you meant '==' or ':=' instead of '='?</dt><dd>"Talvez você quisesse <code>==</code> ou <code>:=</code> no lugar de <code>=</code>?". Depois do <code>if</code> vem uma pergunta, e a pergunta "é igual?" é o <code>==</code>. (O <code>:=</code> é um tipo especial de atribuição, para casos avançados; aqui, a resposta certa é o <code>==</code>.)</dd>
+</dl>
+
+<div class="tip">
+<strong>Como ler em voz alta</strong>
+<p>Leia o <code>=</code> como "<strong>recebe</strong>" e o <code>==</code> como "<strong>é igual a</strong>". <code>idade = 18</code>: "idade recebe 18". <code>idade == 18</code>: "idade é igual a 18?". Fica difícil confundir.</p>
+</div>
+
+<hr>
+
+<h2>3. Comparando números</h2>
+<p>Para o <code>==</code>, o que importa é o <strong>valor</strong>, não o tipo: um <code>int</code> e um <code>float</code> com o mesmo valor são iguais. E, como você viu na aula <a href="booleanos.html">Booleanos</a>, <code>True</code> vale 1:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; 10 == 10.0
+True
+&gt;&gt;&gt; 1 == 1.0 == True
+True
+&gt;&gt;&gt; 0.1 + 0.2 == 0.3
+False
+</pre>
+
+<p>A última você já conhece da aula <a href="numeros.html">Números</a>: o <code>float</code> guarda uma aproximação, e <code>0.1 + 0.2</code> sai <code>0.30000000000000004</code>. <strong>Não compare <code>float</code> com <code>==</code></strong> depois de fazer contas; arredonde antes (<code>round(0.1 + 0.2, 2) == 0.3</code>) ou use <code>math.isclose()</code> (aula <a href="math.html">O Módulo math</a>).</p>
+
+<hr>
+
+<h2>4. Encadeando: <code>1 &lt; x &lt; 10</code></h2>
+<p>O forno da padaria assa bem o pão entre 180 e 220 graus. Na Matemática, você escreveria 180 ≤ t ≤ 220. No Python, pode escrever igualzinho:</p>
+
+<pre class="file" data-file="faixa.py">temperatura = 200
+print(180 &lt;= temperatura &lt;= 220)
+temperatura = 250
+print(180 &lt;= temperatura &lt;= 220)
+</pre>
+
+<pre class="term">$ python3 faixa.py
+True
+False
+</pre>
+
+<p>Quando você encadeia comparações, o Python faz <strong>cada uma</strong> e só responde <code>True</code> se <strong>todas</strong> forem verdadeiras. <code>180 &lt;= temperatura &lt;= 220</code> quer dizer "180 ≤ temperatura <strong>e</strong> temperatura ≤ 220". Com 250, a segunda parte é falsa, e a resposta é <code>False</code>.</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; x = 5
+&gt;&gt;&gt; 1 &lt; x &lt; 10
+True
+&gt;&gt;&gt; 1 &lt; x &lt; 3
+False
+&gt;&gt;&gt; 3 == 3 == 3
+True
+&gt;&gt;&gt; 1 &lt; x &gt; 2
+True
+</pre>
+
+<p>O último funciona, mas confunde: é "1 &lt; x <strong>e</strong> x &gt; 2". Encadear fica claro quando os sinais apontam para o mesmo lado, como uma faixa: <code>mínimo &lt;= x &lt;= máximo</code>. Para outros casos, escreva as duas perguntas com <code>and</code> (aula <a href="operadores-logicos.html">and, or e not</a>).</p>
+
+<div class="note">
+<strong>Isso é coisa do Python</strong>
+<p>Em C e JavaScript, <code>1 &lt; x &lt; 3</code> não quer dizer "x entre 1 e 3" (e, em Java, nem é aceito): a linguagem compara <code>1 &lt; x</code>, obtém verdadeiro ou falso, e depois compara <strong>esse resultado</strong> com 3. O encadeamento como na Matemática é uma gentileza do Python.</p>
+</div>
+
+<hr>
+
+<h2>5. Comparando textos</h2>
+<p>Os mesmos operadores funcionam com textos. Para o <code>==</code>, dois textos só são iguais se forem iguais <strong>caractere por caractere</strong>:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; "Ana" == "ana"
+False
+&gt;&gt;&gt; "pão" == "pao"
+False
+&gt;&gt;&gt; "Ana" == "Ana "
+False
+</pre>
+
+<p>Maiúscula é diferente de minúscula, letra com acento é diferente de letra sem acento, e um espaço sobrando no fim também conta. Isso importa muito numa senha:</p>
+
+<pre class="file" data-file="senha.py">senha_certa = "pao123"
+digitada = input("Senha: ")
+print("Acesso liberado:", digitada == senha_certa)
+</pre>
+
+<pre class="term">$ python3 senha.py
+Senha: Pao123
+Acesso liberado: False
+$ python3 senha.py
+Senha: pao123
+Acesso liberado: True
+</pre>
+
+<p>Quando você quer comparar <strong>sem ligar para maiúsculas</strong> (num nome de cidade, numa resposta "sim"/"SIM"), passe os dois lados para minúsculas antes, com <code>.lower()</code>: <code>"ana".lower() == "Ana".lower()</code> dá <code>True</code>. O <code>.lower()</code> está na aula <a href="strings-metodos.html">Métodos de Texto</a>.</p>
+
+<h3>Maior e menor com textos: a "ordem do dicionário"… quase</h3>
+<p>Com <code>&lt;</code> e <code>&gt;</code>, o Python compara os textos <strong>letra por letra</strong>, da esquerda para a direita, como num dicionário. A primeira letra diferente decide:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; "abacaxi" &lt; "banana"
+True
+&gt;&gt;&gt; "banana" &lt; "bananada"
+True
+&gt;&gt;&gt; "Zebra" &lt; "abacaxi"
+True
+&gt;&gt;&gt; "10" &lt; "9"
+True
+&gt;&gt;&gt; 10 &lt; 9
+False
+&gt;&gt;&gt; "maçã" &lt; "mamão"
+False
+</pre>
+
+<dl class="anatomy">
+  <dt>"abacaxi" &lt; "banana"</dt><dd>"a" vem antes de "b": <code>True</code>. Como no dicionário.</dd>
+  <dt>"banana" &lt; "bananada"</dt><dd>As seis primeiras letras são iguais, e "banana" acabou antes: o texto mais curto vem primeiro. <code>True</code>.</dd>
+  <dt>"Zebra" &lt; "abacaxi"</dt><dd>Surpresa: <code>True</code>. Para o Python, <strong>todas as maiúsculas vêm antes de todas as minúsculas</strong>.</dd>
+  <dt>"10" &lt; "9"</dt><dd>Outra surpresa: <code>True</code>. São textos, então o Python compara o primeiro caractere, "1" com "9", e "1" vem antes. Com <strong>números</strong>, <code>10 &lt; 9</code> é <code>False</code>, como deveria.</dd>
+  <dt>"maçã" &lt; "mamão"</dt><dd><code>False</code>! No dicionário, "maçã" vem antes de "mamão" (ç conta como c). Para o Python, o "ç" vem <strong>depois</strong> de todas as letras sem acento.</dd>
+</dl>
+
+<p>Por quê? Porque, por baixo do pano, cada caractere é um <strong>número</strong> (o seu código na tabela Unicode), e o Python compara esses números. A função <code>ord()</code> mostra o código de um caractere:</p>
+
+<pre class="term">&gt;&gt;&gt; ord("A"), ord("Z"), ord("a"), ord("ç"), ord("m")
+(65, 90, 97, 231, 109)
+</pre>
+
+<p>"Z" é 90 e "a" é 97: por isso "Zebra" vem antes de "abacaxi". "ç" é 231 e "m" é 109: por isso "maçã" vem depois de "mamão". Moral: <code>&lt;</code> com textos serve bem para palavras sem acento e todas em minúsculas; para ordenar nomes em português "de verdade", existem ferramentas próprias, que aparecem na aula <a href="listas-ordenar.html">Ordenando Listas</a>.</p>
+
+<hr>
+
+<h2>6. Número com texto</h2>
+<p>Um número e um texto <strong>nunca</strong> são iguais, mesmo que pareçam:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; 5 == "5"
+False
+</pre>
+
+<p>O <code>==</code> só responde <code>False</code>, sem erro. Mas "maior" e "menor" entre número e texto não fazem sentido, e aí o Python para:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; 5 &lt; "5"
+Traceback (most recent call last):
+  File "&lt;python-input-0&gt;", line 1, in &lt;module&gt;
+    5 &lt; "5"
+TypeError: '&lt;' not supported between instances of 'int' and 'str'
+</pre>
+
+<p>"<code>&lt;</code> não é suportado entre <code>int</code> e <code>str</code>". Na prática, esse erro quase sempre vem do <code>input()</code>, que devolve texto. Você vai vê-lo em <a href="#errado">Quando dá errado</a>.</p>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma pergunta</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Pergunta</th><th>Forma</th><th>Quando usar</th></tr>
+<tr><td>Passou de ano?</td><td><code>nota &gt;= 7</code></td><td>A forma direta: use sempre que puder</td></tr>
+<tr><td></td><td><code>not nota &lt; 7</code></td><td>Funciona, mas é mais difícil de ler. Evite</td></tr>
+<tr><td>Está na faixa?</td><td><code>180 &lt;= t &lt;= 220</code></td><td>O jeito Python, igual à Matemática</td></tr>
+<tr><td></td><td><code>t &gt;= 180 and t &lt;= 220</code></td><td>O jeito das outras linguagens; funciona igual (aula <a href="operadores-logicos.html">and, or e not</a>)</td></tr>
+<tr><td>É diferente?</td><td><code>resposta != "s"</code></td><td>O normal</td></tr>
+<tr><td></td><td><code>not resposta == "s"</code></td><td>Funciona, mas o <code>!=</code> é mais claro</td></tr>
+<tr><td>Mesmo texto, sem ligar para maiúsculas?</td><td><code>a.lower() == b.lower()</code></td><td>Respostas digitadas, nomes de cidades</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Comparar o que o <code>input()</code> leu com um número: <code>TypeError</code></strong>
+<pre class="file" data-file="idade_texto.py">idade = input("Sua idade: ")
+print("Pode votar:", idade &gt;= 16)
+</pre>
+<pre class="term">$ python3 idade_texto.py
+Sua idade: 17
+Traceback (most recent call last):
+  File "/home/ana/idade_texto.py", line 2, in &lt;module&gt;
+    print("Pode votar:", idade &gt;= 16)
+                         ^^^^^^^^^^^
+TypeError: '&gt;=' not supported between instances of 'str' and 'int'
+</pre>
+<dl class="anatomy">
+  <dt>line 2</dt><dd>O erro é na linha 2.</dd>
+  <dt>^^^^^^^^^^^</dt><dd>Os chapeuzinhos marcam a comparação <code>idade &gt;= 16</code>.</dd>
+  <dt>TypeError</dt><dd>"Erro de tipo".</dd>
+  <dt>'&gt;=' not supported between instances of 'str' and 'int'</dt><dd>"<code>&gt;=</code> não é suportado entre um <code>str</code> e um <code>int</code>". Do lado esquerdo está o texto <code>"17"</code> (o <code>input()</code> sempre devolve texto); do lado direito, o número 16.</dd>
+</dl>
+<p><strong>Como consertar:</strong> converta antes de comparar: <code>idade = int(input("Sua idade: "))</code> (aula <a href="conversao.html">Conversão de Tipos</a>).</p>
+</div>
+
+<div class="cenario">
+<strong>Um igual só, onde era pergunta: <code>SyntaxError</code></strong>
+<p><code>SyntaxError: invalid syntax. Maybe you meant '==' or ':=' instead of '='?</code>, como na seção 2. <strong>Como consertar:</strong> para perguntar, <code>==</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Comparar com o tipo errado, sem erro nenhum</strong>
+<p><code>5 == "5"</code> e <code>idade == "18"</code> (com <code>idade</code> sendo número) respondem <code>False</code> calados. E <code>"10" &lt; "9"</code> responde <code>True</code>, também calado. Se uma comparação dá uma resposta que não faz sentido, confira o <strong>tipo</strong> dos dois lados com <code>type()</code>: um deles provavelmente é texto. <strong>Como consertar:</strong> compare número com número e texto com texto.</p>
+</div>
+
+<div class="cenario">
+<strong>Sinais na ordem errada: <code>=&lt;</code> e <code>=&gt;</code></strong>
+<pre class="file" data-file="ordem_errada.py">nota = 5
+print(nota =&lt; 7)
+</pre>
+<pre class="term">$ python3 ordem_errada.py
+  File "/home/ana/ordem_errada.py", line 2
+    print(nota =&lt; 7)
+                ^
+SyntaxError: invalid syntax
+</pre>
+<p>O chapeuzinho aponta o <code>&lt;</code> que sobrou depois do <code>=</code>. O mesmo vale para <code>=&gt;</code>. O sinal de igual vem sempre <strong>por último</strong>: <code>&lt;=</code>, <code>&gt;=</code>, <code>!=</code>. (A mesma ordem da fala: "menor ou igual".)</p>
+</div>
+
+<div class="trypy" data-stdin="17" data-goal="out:Pode votar: True;;semerro">
+<p class="try-task"><strong>Missão:</strong> o editor vai digitar <code>17</code>, e o programa para com <code>TypeError</code>. Converta a idade para número antes de comparar.</p>
+<pre class="script" data-file="main.py">idade = input("Sua idade: ")
+print("Pode votar:", idade &gt;= 16)
+</pre>
+<pre class="solucao" data-file="main.py">idade = int(input("Sua idade: "))
+print("Pode votar:", idade &gt;= 16)
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Pergunta</th><th>Observação</th></tr>
+<tr><td><code>a == b</code></td><td><code>a</code> é igual a <code>b</code>?</td><td>Dois iguais. <code>10 == 10.0</code> é <code>True</code></td></tr>
+<tr><td><code>a != b</code></td><td><code>a</code> é diferente de <code>b</code>?</td><td></td></tr>
+<tr><td><code>a &lt; b</code>, <code>a &gt; b</code></td><td>Menor? Maior?</td><td>Com textos: letra por letra, pelo código de cada caractere</td></tr>
+<tr><td><code>a &lt;= b</code>, <code>a &gt;= b</code></td><td>Menor ou igual? Maior ou igual?</td><td>O <code>=</code> vem por último</td></tr>
+<tr><td><code>x &lt; y &lt; z</code></td><td><code>x &lt; y</code> e <code>y &lt; z</code>?</td><td>Encadeamento, como na Matemática</td></tr>
+<tr><td><code>"Ana" == "ana"</code></td><td></td><td><code>False</code>: maiúsculas contam</td></tr>
+<tr><td><code>"10" &lt; "9"</code></td><td></td><td><code>True</code>: são textos</td></tr>
+<tr><td><code>5 == "5"</code></td><td></td><td><code>False</code>: número não é texto</td></tr>
+<tr><td><code>5 &lt; "5"</code></td><td></td><td><code>TypeError</code></td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>SyntaxError: invalid syntax. Maybe you meant '==' or ':=' instead of '='?</code></td><td>Um <code>=</code> só onde era pergunta</td></tr>
+<tr><td><code>TypeError: '&gt;=' not supported between instances of 'str' and 'int'</code></td><td>Comparou o texto do <code>input()</code> com um número: converta com <code>int()</code></td></tr>
+<tr><td>Uma igualdade que devia dar <code>True</code> dá <code>False</code></td><td>Tipos diferentes (<code>5</code> e <code>"5"</code>), maiúsculas, acentos, espaço sobrando, ou <code>float</code> depois de conta</td></tr>
+<tr><td>A ordem dos textos parece errada</td><td>Maiúsculas vêm antes das minúsculas, e letras acentuadas vêm depois de todas</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. True ou False?</h3>
+<div class="ex-code">7 &gt;= 7 → <input data-answer="True" aria-label="7 maior ou igual a 7">
+7 != 7.0 → <input data-answer="False" aria-label="7 diferente de 7.0">
+"casa" &lt; "carro" → <input data-answer="False" aria-label="casa menor que carro">
+2 &lt; 5 &lt; 4 → <input data-answer="False" aria-label="encadeado"></div>
+</div>
+
+<div class="exercise">
+<h3>2. O sinal certo</h3>
+<p>Complete para perguntar se a senha digitada é <strong>diferente</strong> da certa:</p>
+<div class="ex-code">digitada <input data-answer="!=" aria-label="operador"> senha_certa</div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">3. Qual a diferença entre <code>x = 5</code> e <code>x == 5</code>?</p>
+<label><input type="radio" name="q3"> Nenhuma, os dois guardam 5</label>
+<label><input type="radio" name="q3"> O primeiro pergunta e o segundo guarda</label>
+<label><input type="radio" name="q3"> O primeiro guarda 5 em <code>x</code>; o segundo pergunta se <code>x</code> é igual a 5</label>
+<label><input type="radio" name="q3"> O segundo dá erro</label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Por que <code>"Zebra" &lt; "abacaxi"</code> é <code>True</code>?</p>
+<label><input type="radio" name="q4"> Porque "Zebra" tem menos letras</label>
+<label><input type="radio" name="q4"> Porque, para o Python, as maiúsculas vêm antes das minúsculas</label>
+<label><input type="radio" name="q4"> Porque o Python compara de trás para a frente</label>
+<label><input type="radio" name="q4"> É um defeito</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Qual expressão pergunta se a idade está entre 18 e 65, incluindo os dois?</p>
+<label><input type="radio" name="q5"> <code>18 &lt;= idade &lt;= 65</code></label>
+<label><input type="radio" name="q5"> <code>18 =&lt; idade =&lt; 65</code></label>
+<label><input type="radio" name="q5"> <code>18 &lt; idade &lt; 65</code></label>
+<label><input type="radio" name="q5"> <code>idade = 18 até 65</code></label>
+</div>
+
+<h3>Missão final: o forno no ponto</h3>
+
+<div class="trypy" data-goal="out:No ponto: True;;src:&lt;=[^\n]*&lt;=">
+<p class="try-task"><strong>Missão:</strong> o pão assa bem com o forno entre <strong>180 e 220 graus</strong>, incluindo os dois. Troque o <code>False</code> por uma comparação <strong>encadeada</strong> que responda se a <code>temperatura</code> está nessa faixa.</p>
+<pre class="script" data-file="main.py">temperatura = 220
+no_ponto = False
+print("No ponto:", no_ponto)
+</pre>
+<pre class="solucao" data-file="main.py">temperatura = 220
+no_ponto = 180 &lt;= temperatura &lt;= 220
+print("No ponto:", no_ponto)
+</pre>
+</div>
+
+<p>Experimente trocar a temperatura por 179, 180 e 221 e ver a resposta mudar.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Os seis operadores de comparação são <code>==</code>, <code>!=</code>, <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code> e <code>&gt;=</code>, e todos respondem <code>True</code> ou <code>False</code>.</li>
+  <li><code>=</code> guarda ("recebe"); <code>==</code> pergunta ("é igual a?"). Um <code>=</code> só no <code>if</code> dá <code>SyntaxError</code>, com a dica <code>Maybe you meant '=='</code>.</li>
+  <li>A resposta pode ser guardada: <code>aprovado = nota &gt;= 7</code>.</li>
+  <li>Comparações encadeiam como na Matemática: <code>180 &lt;= t &lt;= 220</code> quer dizer "as duas coisas são verdade".</li>
+  <li><code>10 == 10.0</code> é <code>True</code>; <code>float</code> depois de conta não se compara com <code>==</code>.</li>
+  <li>Textos se comparam caractere por caractere: maiúsculas, acentos e espaços contam. Na ordem, maiúsculas vêm antes das minúsculas e <code>"10" &lt; "9"</code>.</li>
+  <li>Número e texto: <code>==</code> responde <code>False</code>; <code>&lt;</code> e <code>&gt;</code> dão <code>TypeError</code>. Converta o <code>input()</code> antes de comparar.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
