@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python import — usando módulos | Guia Python</title>
+<meta name="description" content="Módulos e import em Python para quem está começando: o que é um módulo, import math, from math import sqrt, import statistics as est, por que evitar import *, onde o Python procura os módulos, o __name__ e o if __name__ == &quot;__main__&quot;:, e os erros reais: ModuleNotFoundError, NameError, AttributeError e o arquivo random.py que esconde o módulo de verdade.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">import</span></h1>
+
+<p class="intro">Nas últimas aulas, todo programa começou com uma linha diferente: <code>import csv</code>, <code>import json</code>, <code>from pathlib import Path</code>. Agora é hora de entender o que essa linha faz. O Python vem com centenas de ferramentas prontas (para matemática, sorteios, datas, arquivos, internet), mas elas não ficam todas carregadas o tempo todo: cada grupo mora no seu <strong>módulo</strong>, e você chama só os que vai usar, com <code>import</code> ("importar").</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é um módulo e o que é a biblioteca padrão.</li>
+  <li>As três formas de importar: <code>import math</code>, <code>from math import sqrt</code> e <code>import statistics as est</code>.</li>
+  <li>Por que evitar o <code>from … import *</code>, com um exemplo que quebra de verdade.</li>
+  <li>Onde o Python procura os módulos, e por que um arquivo chamado <code>random.py</code> causa problemas.</li>
+  <li>O que é o <code>__name__</code> e para que serve o <code>if __name__ == "__main__":</code>.</li>
+  <li>Os erros reais: <code>ModuleNotFoundError</code>, <code>NameError</code>, <code>AttributeError</code> e <code>'module' object is not callable</code>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: caixas de ferramentas na prateleira</h2>
+<p>Na oficina do bairro, as ferramentas ficam em caixas na prateleira: uma caixa de chaves de fenda, uma de medição, uma de pintura. Ninguém carrega todas para cada serviço. Para pintar uma parede, o pintor pega <strong>a caixa de pintura</strong> e usa o que tem dentro dela.</p>
+
+<p>Um <strong>módulo</strong> é uma dessas caixas: um arquivo com funções e valores prontos sobre um assunto. O <code>math</code> tem as ferramentas de matemática; o <code>random</code>, as de sorteio; o <code>json</code>, as de JSON. A prateleira inteira, que vem junto com o Python, se chama <strong>biblioteca padrão</strong> (<em>standard library</em>). E o <code>import</code> é o gesto de pegar a caixa.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Módulo</th><th>Ferramentas para…</th><th>Aula</th></tr>
+<tr><td><code>math</code></td><td>Raiz quadrada, arredondar para cima, pi…</td><td><a href="math.html">O Módulo math</a></td></tr>
+<tr><td><code>random</code></td><td>Sortear números e itens</td><td><a href="random.html">O Módulo random</a></td></tr>
+<tr><td><code>datetime</code></td><td>Datas e horas</td><td><a href="datetime.html">Datas e Horas</a></td></tr>
+<tr><td><code>pathlib</code></td><td>Pastas e caminhos</td><td><a href="pathlib.html">Pastas e Caminhos</a></td></tr>
+<tr><td><code>csv</code>, <code>json</code></td><td>Planilhas em texto, dados estruturados</td><td><a href="csv.html">CSV</a>, <a href="json.html">JSON</a></td></tr>
+<tr><td><code>statistics</code></td><td>Média, mediana, moda</td><td>nesta aula</td></tr>
+<tr><td><code>os</code>, <code>sys</code></td><td>Conversar com o sistema</td><td><a href="os-sys.html">Os Módulos os e sys</a></td></tr>
+</table>
+</div>
+
+<p>A lista completa está na <a href="ref-modulos.html">referência dos módulos</a>. Além da biblioteca padrão, existem milhares de módulos feitos pela comunidade, que você instala com o <a href="pip.html">pip</a>. E você também pode criar os seus, como mostra a próxima aula, <a href="modulos-proprios.html">Criando seu Módulo</a>.</p>
+
+<hr>
+
+<h2>1. <code>import modulo</code>: traz a caixa inteira</h2>
+
+<pre class="file" data-file="raiz.py">import math
+
+print(math.sqrt(16))
+print(math.pi)
+print(math.ceil(2.1))
+</pre>
+
+<pre class="term">$ python3 raiz.py
+4.0
+3.141592653589793
+3
+</pre>
+
+<dl class="anatomy">
+  <dt>import math</dt><dd>"Traga o módulo <code>math</code>." A partir daqui, o nome <code>math</code> existe no programa e representa a caixa inteira.</dd>
+  <dt>math.sqrt(16)</dt><dd>O <strong>ponto</strong> quer dizer "de dentro de": a função <code>sqrt</code> (de <em>square root</em>, "raiz quadrada") <strong>de dentro do</strong> <code>math</code>.</dd>
+  <dt>math.pi</dt><dd>Nem tudo é função: <code>pi</code> é um valor guardado no módulo (por isso, sem parênteses).</dd>
+  <dt>math.ceil(2.1)</dt><dd>Arredonda para cima (<em>ceiling</em>, "teto"): 3.</dd>
+</dl>
+
+<p>Escrever <code>math.</code> na frente de tudo parece trabalho a mais, mas tem uma vantagem: quem lê o código sabe <strong>de onde</strong> cada coisa veio. O <code>sqrt</code> é o do <code>math</code>, sem dúvida nenhuma.</p>
+
+<div class="tip">
+<strong>Onde e como escrever os <code>import</code></strong>
+<p>O costume (e a recomendação do guia de estilo do Python, a <a href="estilo-pep8.html">PEP 8</a>) é colocar todos os <code>import</code> <strong>no começo do arquivo</strong>, um módulo por linha. Assim, quem abre o programa vê de cara do que ele depende.</p>
+</div>
+
+<h3>Um módulo é um objeto como outro qualquer</h3>
+<p>O nome <code>math</code> é uma variável que guarda um valor do tipo <code>module</code>, e o <code>dir()</code> lista o que tem dentro dele:</p>
+
+<pre class="file" data-file="dir.py">import math
+
+nomes = [nome for nome in dir(math) if not nome.startswith("_")]
+print(len(nomes), "nomes no math")
+print(nomes[:12])
+</pre>
+
+<pre class="term">$ python3 dir.py
+62 nomes no math
+['acos', 'acosh', 'asin', 'asinh', 'atan', 'atan2', 'atanh', 'cbrt', 'ceil', 'comb', 'copysign', 'cos']
+</pre>
+
+<p>São 62 nomes públicos (o programa tirou os que começam com <code>_</code>, que são de uso interno). O <a href="list-comprehension.html">list comprehension</a> e a fatia <code>[:12]</code> são só para a lista caber na tela. No <a href="repl.html">modo interativo</a>, <code>help(math.sqrt)</code> mostra a explicação de cada um.</p>
+
+<hr>
+
+<h2>2. <code>from modulo import nome</code>: só a ferramenta</h2>
+<p>Quando você vai usar muito uma ou duas ferramentas, dá para trazê-las para fora da caixa e chamá-las pelo nome direto:</p>
+
+<pre class="file" data-file="raiz2.py">from math import sqrt, pi
+
+print(sqrt(16))
+print(pi)
+</pre>
+
+<pre class="term">$ python3 raiz2.py
+4.0
+3.141592653589793
+</pre>
+
+<dl class="anatomy">
+  <dt>from math</dt><dd>"Do módulo <code>math</code>…"</dd>
+  <dt>import sqrt, pi</dt><dd>"…traga o <code>sqrt</code> e o <code>pi</code>." Vários nomes, separados por vírgula.</dd>
+  <dt>sqrt(16)</dt><dd>Sem o <code>math.</code> na frente. Em compensação, o nome <code>math</code> sozinho <strong>não existe</strong> neste programa: só os dois nomes que você pediu.</dd>
+</dl>
+
+<p>Você já usou essa forma: <code>from pathlib import Path</code>. Ninguém escreve <code>pathlib.Path("loja")</code> o tempo todo; o <code>Path</code> é usado demais para isso.</p>
+
+<div class="trypy" data-goal="out:9.0;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa quer a raiz quadrada de 81, mas dá <code>NameError</code>. Rode, leia o erro e acrescente a linha que falta, no começo. (Qualquer uma das duas formas que você viu serve; se escolher a primeira, ajuste a chamada.)</p>
+<pre class="script" data-file="main.py">print(sqrt(81))
+</pre>
+<pre class="solucao" data-file="main.py">from math import sqrt
+
+print(sqrt(81))
+</pre>
+</div>
+
+<hr>
+
+<h2>3. <code>import modulo as apelido</code></h2>
+<p>Alguns módulos têm nome comprido. O <code>as</code> ("como") dá um apelido mais curto:</p>
+
+<pre class="file" data-file="apelido.py">import statistics as est
+
+notas = [8.5, 6.0, 9.5, 7.0]
+print("Média:", est.mean(notas))
+print("Mediana:", est.median(notas))
+</pre>
+
+<pre class="term">$ python3 apelido.py
+Média: 7.75
+Mediana: 7.75
+</pre>
+
+<dl class="anatomy">
+  <dt>import statistics as est</dt><dd>"Traga o <code>statistics</code> (estatística), e chame-o de <code>est</code>." No resto do programa, o nome é <code>est</code>; o nome <code>statistics</code> não fica disponível.</dd>
+  <dt>est.mean(notas)</dt><dd>A média (<em>mean</em>) da lista.</dd>
+  <dt>est.median(notas)</dt><dd>A mediana: o valor do meio, com a lista em ordem (com 4 notas, a média das duas do meio, 7.0 e 8.5).</dd>
+</dl>
+
+<p>O <code>as</code> também funciona no <code>from</code>: <code>from statistics import mean as media</code>. Alguns apelidos são tão usados que viraram regra na comunidade, e você vai encontrá-los em todo lugar: <code>import numpy as np</code>, <code>import pandas as pd</code> (dois módulos famosos, instalados com o <code>pip</code>). Fora esses casos conhecidos, não invente apelidos para módulos de nome curto: <code>import math as m</code> só deixa o código mais difícil de ler.</p>
+
+<hr>
+
+<h2>4. <code>from modulo import *</code>: por que evitar</h2>
+<p>Existe uma quarta forma: o <code>*</code> ("tudo") despeja <strong>todos</strong> os nomes do módulo no seu programa. Parece prático, mas é como virar todas as caixas da prateleira no chão da oficina: você não sabe mais o que veio de onde, e uma ferramenta pode cair <strong>em cima</strong> de outra com o mesmo nome. Olhe o que acontece com o módulo <code>os</code>:</p>
+
+<pre class="file" data-file="estrela.py">from os import *
+
+with open("recado.txt", "w") as arquivo:
+    arquivo.write("Comprar pão\n")
+</pre>
+
+<pre class="term">$ python3 estrela.py
+Traceback (most recent call last):
+  File "/home/ana/estrela.py", line 3, in &lt;module&gt;
+    with open("recado.txt", "w") as arquivo:
+         ~~~~^^^^^^^^^^^^^^^^^^^
+TypeError: 'str' object cannot be interpreted as an integer
+</pre>
+
+<p>Um <code>open</code> que sempre funcionou, de repente, reclama que um texto "não pode ser interpretado como inteiro". O motivo: o módulo <code>os</code> tem a sua <strong>própria</strong> função chamada <code>open</code>, de baixo nível, que espera números no segundo argumento. O <code>import *</code> trouxe esse <code>open</code> e ele <strong>tapou</strong> o <code>open</code> de sempre, sem aviso. Nada na linha 3 dá a pista, porque o problema está na linha 1.</p>
+
+<div class="warning">
+<strong>Regra prática</strong>
+<p>Não use <code>import *</code> nos seus programas. Prefira <code>import modulo</code> (você sempre sabe de onde vem cada nome) ou <code>from modulo import nome1, nome2</code> (você escolhe exatamente o que entra). Os dois deixam claro, só de olhar o começo do arquivo, quais nomes cada módulo trouxe.</p>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de importar: qual usar</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Como se usa depois</th><th>Quando usar</th></tr>
+<tr><td><code>import math</code></td><td><code>math.sqrt(16)</code></td><td>O padrão. Sempre claro de onde vem cada coisa</td></tr>
+<tr><td><code>from math import sqrt, pi</code></td><td><code>sqrt(16)</code></td><td>Uma ou poucas ferramentas usadas muitas vezes (<code>from pathlib import Path</code>)</td></tr>
+<tr><td><code>import statistics as est</code></td><td><code>est.mean(notas)</code></td><td>Nome comprido, ou um apelido que todo mundo conhece (<code>np</code>, <code>pd</code>)</td></tr>
+<tr><td><code>from statistics import mean as media</code></td><td><code>media(notas)</code></td><td>Para evitar choque com um nome que você já usa</td></tr>
+<tr><td><code>from math import *</code></td><td><code>sqrt(16)</code></td><td>Evite: esconde a origem dos nomes e pode tapar outros (como o <code>open</code>)</td></tr>
+</table>
+</div>
+
+<div class="trypy" data-goal="out:Média: 7.75;;out:Maior: 9.5;;src:^import statistics as \w+">
+<p class="try-task"><strong>Missão:</strong> troque a primeira linha por um <code>import statistics as</code> com o apelido que você quiser e ajuste o resto do programa para usar o apelido. O resultado deve continuar mostrando <code>Média: 7.75</code> e <code>Maior: 9.5</code>.</p>
+<pre class="script" data-file="main.py">import statistics
+
+notas = [8.5, 6.0, 9.5, 7.0]
+print("Média:", statistics.mean(notas))
+print("Maior:", max(notas))
+</pre>
+<pre class="solucao" data-file="main.py">import statistics as est
+
+notas = [8.5, 6.0, 9.5, 7.0]
+print("Média:", est.mean(notas))
+print("Maior:", max(notas))
+</pre>
+</div>
+
+<hr>
+
+<h2>5. Onde o Python procura os módulos</h2>
+<p>Quando você escreve <code>import json</code>, o Python sai procurando um módulo com esse nome numa lista de pastas, <strong>em ordem</strong>, e usa o primeiro que achar. A lista fica no <code>sys.path</code>:</p>
+
+<pre class="file" data-file="onde_mora.py">import math
+import json
+import sys
+
+print(math)
+print(json)
+for pasta in sys.path:
+    print(pasta)
+</pre>
+
+<pre class="term">$ python3 onde_mora.py
+&lt;module 'math' (built-in)&gt;
+&lt;module 'json' from '/usr/lib/python3.14/json/__init__.py'&gt;
+/home/ana
+/usr/lib/python314.zip
+/usr/lib/python3.14
+/usr/lib/python3.14/lib-dynload
+/usr/local/lib/python3.14/dist-packages
+/usr/lib/python3/dist-packages
+</pre>
+
+<ul>
+  <li>O <code>math</code> é <em>built-in</em> ("embutido"): está dentro do próprio programa <code>python3</code>, não num arquivo.</li>
+  <li>O <code>json</code> é um arquivo de verdade, na pasta da biblioteca padrão: <code>/usr/lib/python3.14/json/</code>.</li>
+  <li>A <strong>primeira</strong> pasta da lista é <code>/home/ana</code>, a pasta do <strong>programa</strong> que está rodando. Depois vêm a biblioteca padrão (<code>/usr/lib/python3.14</code>) e as pastas dos pacotes instalados (<code>dist-packages</code>).</li>
+</ul>
+
+<p>Essa ordem tem duas consequências. A boa: um arquivo <code>.py</code> seu, na mesma pasta, pode ser importado como módulo (é o assunto da <a href="modulos-proprios.html">próxima aula</a>). A má: um arquivo seu com o <strong>mesmo nome</strong> de um módulo da biblioteca padrão passa na frente dele. Veja em <a href="#errado">Quando dá errado</a> o que acontece com um <code>random.py</code>.</p>
+
+<p>Outro detalhe: cada módulo é carregado <strong>uma vez só</strong> por execução. Se o programa fizer <code>import json</code> duas vezes, a segunda só reaproveita o que já foi carregado (a seção 6 mostra isso acontecendo).</p>
+
+<hr>
+
+<h2>6. O <code>__name__</code> e o <code>if __name__ == "__main__":</code></h2>
+<p>Todo módulo tem um nome, guardado na variável especial <code>__name__</code> (com dois sublinhados de cada lado). E o seu próprio programa também tem um:</p>
+
+<pre class="file" data-file="nome.py">import math
+
+print(__name__)
+print(math.__name__)
+print(type(math))
+</pre>
+
+<pre class="term">$ python3 nome.py
+__main__
+math
+&lt;class 'module'&gt;
+</pre>
+
+<p>O <code>math</code> se chama <code>math</code>, como esperado. Mas o programa que você rodou com <code>python3 nome.py</code> não se chama <code>nome</code>: se chama <code>__main__</code> ("principal"). É a forma do Python dizer: <strong>este é o arquivo que a pessoa mandou rodar</strong>.</p>
+
+<p>Isso importa porque um arquivo <code>.py</code> pode ser usado de dois jeitos: <strong>rodado</strong> diretamente ou <strong>importado</strong> por outro. Dois arquivos pequenos mostram a diferença:</p>
+
+<pre class="file" data-file="quem.py">print("quem.py: o meu __name__ é", __name__)
+</pre>
+
+<pre class="file" data-file="chama_quem.py">import quem
+
+print("chama_quem.py: o meu __name__ é", __name__)
+</pre>
+
+<pre class="term">$ python3 quem.py
+quem.py: o meu __name__ é __main__
+$ python3 chama_quem.py
+quem.py: o meu __name__ é quem
+chama_quem.py: o meu __name__ é __main__
+</pre>
+
+<p>Rodado sozinho, o <code>quem.py</code> é o <code>__main__</code>. Importado pelo <code>chama_quem.py</code>, ele passa a se chamar <code>quem</code>, e o principal agora é o outro. Repare também que o <code>import quem</code> <strong>rodou</strong> o arquivo <code>quem.py</code> inteiro: importar um módulo executa o código dele, de cima a baixo. Mas só na primeira vez, como a seção 5 avisou:</p>
+
+<pre class="file" data-file="duas_vezes.py">import quem
+import quem
+
+print("Fim")
+</pre>
+
+<pre class="term">$ python3 duas_vezes.py
+quem.py: o meu __name__ é quem
+Fim
+</pre>
+
+<h3>O problema que o <code>if</code> resolve</h3>
+<p>A Ana escreveu uma função de desconto no arquivo <code>precos.py</code>, com uma linha no fim para testar:</p>
+
+<pre class="file" data-file="precos.py">def com_desconto(preco, porcento):
+    return preco * (100 - porcento) / 100
+
+print("Testando:", com_desconto(100, 10))
+</pre>
+
+<p>E um programa do caixa que usa a função:</p>
+
+<pre class="file" data-file="caixa.py">import precos
+
+print("Café com 5% de desconto:", precos.com_desconto(18.90, 5))
+</pre>
+
+<pre class="term">$ python3 precos.py
+Testando: 90.0
+$ python3 caixa.py
+Testando: 90.0
+Café com 5% de desconto: 17.955
+</pre>
+
+<p>O teste apareceu também no caixa, onde não tinha nada que estar: o <code>import precos</code> rodou o arquivo inteiro, inclusive o <code>print</code> do teste. A solução é colocar o teste dentro de um <code>if</code> que pergunta "eu sou o programa principal?":</p>
+
+<pre class="file" data-file="precos2.py">def com_desconto(preco, porcento):
+    return preco * (100 - porcento) / 100
+
+if __name__ == "__main__":
+    print("Testando:", com_desconto(100, 10))
+</pre>
+
+<pre class="file" data-file="caixa2.py">import precos2
+
+print("Café com 5% de desconto:", precos2.com_desconto(18.90, 5))
+</pre>
+
+<pre class="term">$ python3 precos2.py
+Testando: 90.0
+$ python3 caixa2.py
+Café com 5% de desconto: 17.955
+</pre>
+
+<dl class="anatomy">
+  <dt>if __name__ == "__main__":</dt><dd>"Se este arquivo é o que foi mandado rodar…" Rodado com <code>python3 precos2.py</code>, o <code>__name__</code> vale <code>"__main__"</code> e o bloco roda. Importado pelo caixa, o <code>__name__</code> vale <code>"precos2"</code>, a condição é falsa e o bloco é pulado.</dd>
+  <dt>print("Testando:", …)</dt><dd>O que só deve acontecer quando o arquivo é o principal: testes, um menu, a "parte que faz o programa andar".</dd>
+</dl>
+
+<p>Você vai ver esse <code>if</code> no fim de muitos programas Python, mesmo nos que ninguém pretende importar: é o jeito de dizer "daqui para baixo é o programa; daqui para cima são as definições". A próxima aula, <a href="modulos-proprios.html">Criando seu Módulo</a>, usa isso de verdade.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Nome do módulo errado: <code>ModuleNotFoundError</code></strong>
+<pre class="file" data-file="errado1.py">import maths
+</pre>
+<pre class="term">$ python3 errado1.py
+Traceback (most recent call last):
+  File "/home/ana/errado1.py", line 1, in &lt;module&gt;
+    import maths
+ModuleNotFoundError: No module named 'maths'
+</pre>
+<p>"Erro de módulo não encontrado: não existe módulo chamado <code>'maths'</code>." O Python procurou em todas as pastas do <code>sys.path</code> e não achou nenhum <code>maths</code>. O nome certo é <code>math</code>, no singular (e sem acento, como todos os módulos). <strong>Como consertar:</strong> confira a grafia. Os nomes dos módulos são sempre em minúsculas.</p>
+</div>
+
+<div class="cenario">
+<strong>Módulo que não vem com o Python: <code>ModuleNotFoundError</code> de novo</strong>
+<pre class="file" data-file="errado2.py">import requests
+</pre>
+<pre class="term">$ python3 errado2.py
+Traceback (most recent call last):
+  File "/home/ana/errado2.py", line 1, in &lt;module&gt;
+    import requests
+ModuleNotFoundError: No module named 'requests'
+</pre>
+<p>A mesma mensagem, mas por outro motivo: o nome está certo, só que o <code>requests</code> (um módulo famoso para acessar sites) <strong>não faz parte</strong> da biblioteca padrão. Ele é da comunidade e precisa ser instalado. <strong>Como consertar:</strong> instale com o <code>pip</code>, dentro de um ambiente virtual (aulas <a href="pip.html">pip</a> e <a href="venv.html">Ambientes Virtuais</a>).</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu o <code>import</code>: <code>NameError</code> com dica</strong>
+<pre class="file" data-file="sem_import.py">print(math.sqrt(16))
+</pre>
+<pre class="term">$ python3 sem_import.py
+Traceback (most recent call last):
+  File "/home/ana/sem_import.py", line 1, in &lt;module&gt;
+    print(math.sqrt(16))
+          ^^^^
+NameError: name 'math' is not defined. Did you forget to import 'math'?
+</pre>
+<p>"O nome <code>math</code> não está definido. Você esqueceu de importar <code>'math'</code>?" O Python reconhece os nomes dos módulos da biblioteca padrão e dá a dica. <strong>Como consertar:</strong> <code>import math</code> no começo.</p>
+</div>
+
+<div class="cenario">
+<strong>Importou o módulo, mas usou o nome sem o ponto</strong>
+<pre class="file" data-file="sem_from.py">import math
+
+print(sqrt(16))
+</pre>
+<pre class="term">$ python3 sem_from.py
+Traceback (most recent call last):
+  File "/home/ana/sem_from.py", line 3, in &lt;module&gt;
+    print(sqrt(16))
+          ^^^^
+NameError: name 'sqrt' is not defined
+</pre>
+<p>Agora sem dica nenhuma. O <code>import math</code> trouxe só o nome <code>math</code>; o <code>sqrt</code> continua guardado dentro da caixa. <strong>Como consertar:</strong> <code>math.sqrt(16)</code>, ou troque o import por <code>from math import sqrt</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Ferramenta que o módulo não tem: <code>AttributeError</code></strong>
+<pre class="file" data-file="atributo.py">import math
+
+print(math.raiz(16))
+</pre>
+<pre class="term">$ python3 atributo.py
+Traceback (most recent call last):
+  File "/home/ana/atributo.py", line 3, in &lt;module&gt;
+    print(math.raiz(16))
+          ^^^^^^^^^
+AttributeError: module 'math' has no attribute 'raiz'
+</pre>
+<p>"O módulo <code>math</code> não tem o atributo <code>raiz</code>." O módulo existe e foi importado, mas não há nada chamado <code>raiz</code> lá dentro: os nomes são em inglês. <strong>Como consertar:</strong> use o nome certo (<code>math.sqrt</code>); na dúvida, <code>dir(math)</code> ou a documentação.</p>
+</div>
+
+<div class="cenario">
+<strong>Chamar o módulo como se fosse função: <code>'module' object is not callable</code></strong>
+<pre class="file" data-file="chamar.py">import random
+
+print(random())
+</pre>
+<pre class="term">$ python3 chamar.py
+Traceback (most recent call last):
+  File "/home/ana/chamar.py", line 3, in &lt;module&gt;
+    print(random())
+          ~~~~~~^^
+TypeError: 'module' object is not callable. Did you mean: 'random.random(...)'?
+</pre>
+<p>"Um objeto <code>module</code> não pode ser chamado." Os parênteses foram colocados na <strong>caixa</strong>, e não numa ferramenta. O módulo <code>random</code> tem uma função com o mesmo nome, e o Python adivinhou: "Você quis dizer <code>random.random(...)</code>?" <strong>Como consertar:</strong> chame a função de dentro do módulo, com o ponto.</p>
+</div>
+
+<div class="cenario">
+<strong>O arquivo <code>random.py</code> que esconde o módulo de verdade</strong>
+<p>A Ana estava estudando sorteios e salvou o programa com o nome mais natural do mundo: <code>random.py</code>.</p>
+<pre class="file" data-file="random.py">import random
+
+print("Sorteando...")
+print(random.randint(1, 6))
+</pre>
+<pre class="term">$ python3 random.py
+Sorteando...
+Traceback (most recent call last):
+  File "/home/ana/random.py", line 1, in &lt;module&gt;
+    import random
+  File "/home/ana/random.py", line 4, in &lt;module&gt;
+    print(random.randint(1, 6))
+          ^^^^^^^^^^^^^^
+AttributeError: module 'random' has no attribute 'randint' (consider renaming '/home/ana/random.py' since it has the same name as the standard library module named 'random' and prevents importing that standard library module)
+</pre>
+<p>O traceback mostra o mesmo arquivo duas vezes, e essa é a pista. Lembra da ordem do <code>sys.path</code>? A primeira pasta é a do programa. Então o <code>import random</code> da linha 1 achou… o próprio <code>/home/ana/random.py</code>, e o importou (por isso o "Sorteando..." aparece). Esse arquivo não tem nenhum <code>randint</code>, daí o <code>AttributeError</code>. A mensagem do Python é longa, mas muito clara: "considere renomear <code>'/home/ana/random.py'</code>, porque ele tem o mesmo nome do módulo <code>'random'</code> da biblioteca padrão e impede que esse módulo seja importado".</p>
+<p>E o pior: enquanto o <code>random.py</code> existir na pasta, <strong>qualquer</strong> programa ali que faça <code>import random</code> quebra. Um <code>dados.py</code> inocente:</p>
+<pre class="term">$ python3 dados.py
+Sorteando...
+Traceback (most recent call last):
+  File "/home/ana/dados.py", line 1, in &lt;module&gt;
+    import random
+  File "/home/ana/random.py", line 4, in &lt;module&gt;
+    print(random.randint(1, 6))
+          ^^^^^^^^^^^^^^
+AttributeError: module 'random' has no attribute 'randint' (consider renaming '/home/ana/random.py' since it has the same name as the standard library module named 'random' and prevents importing that standard library module)
+$ rm random.py
+$ python3 dados.py
+4                                       « um número de 1 a 6; o seu pode ser outro
+</pre>
+<p><strong>Como consertar:</strong> renomeie o arquivo (<code>sorteio.py</code>, <code>meu_sorteio.py</code>). <strong>Nunca</strong> dê aos seus programas o nome de um módulo do Python: <code>random.py</code>, <code>math.py</code>, <code>json.py</code>, <code>csv.py</code>, <code>statistics.py</code>…</p>
+</div>
+
+<div class="note">
+<strong>Python mais antigo</strong>
+<p>O trecho "(consider renaming …)" é uma ajuda recente: chegou no Python 3.13 (que é o do Debian 13, e também mostra a mensagem). Num Python mais antigo, a mensagem termina em <code>has no attribute 'randint'</code>, sem dizer o motivo, e você tem de lembrar sozinho de procurar um arquivo com nome de módulo na pasta.</p>
+</div>
+
+<div class="cenario">
+<strong><code>import *</code> tapando um nome</strong>
+<p>Você viu este na seção 4: depois de <code>from os import *</code>, o <code>open("recado.txt", "w")</code> dá <code>TypeError: 'str' object cannot be interpreted as an integer</code>, porque o <code>open</code> do <code>os</code> tapou o <code>open</code> de sempre. <strong>Como consertar:</strong> <code>import os</code> (e use <code>os.</code> na frente do que precisar).</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>import math</code></td><td>Traz o módulo; use <code>math.nome</code></td></tr>
+<tr><td><code>import math, json</code></td><td>Dois de uma vez (funciona, mas o costume é um por linha)</td></tr>
+<tr><td><code>from math import sqrt, pi</code></td><td>Traz só esses nomes; use direto: <code>sqrt(…)</code></td></tr>
+<tr><td><code>import statistics as est</code></td><td>Traz o módulo com um apelido</td></tr>
+<tr><td><code>from statistics import mean as media</code></td><td>Traz um nome com apelido</td></tr>
+<tr><td><code>from math import *</code></td><td>Traz tudo (evite)</td></tr>
+<tr><td><code>dir(math)</code></td><td>Lista os nomes de dentro do módulo</td></tr>
+<tr><td><code>help(math.sqrt)</code></td><td>Mostra a explicação (no modo interativo)</td></tr>
+<tr><td><code>sys.path</code></td><td>As pastas onde o Python procura os módulos, em ordem</td></tr>
+<tr><td><code>__name__</code></td><td>O nome do módulo; <code>"__main__"</code> no arquivo que foi mandado rodar</td></tr>
+<tr><td><code>if __name__ == "__main__":</code></td><td>Roda o bloco só quando o arquivo é o principal, não quando é importado</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>ModuleNotFoundError: No module named 'x'</code></td><td>Nome errado, ou módulo que precisa ser instalado com <code>pip</code></td></tr>
+<tr><td><code>NameError: name 'math' is not defined. Did you forget to import 'math'?</code></td><td>Faltou o <code>import</code></td></tr>
+<tr><td><code>NameError: name 'sqrt' is not defined</code></td><td>Fez <code>import math</code> e esqueceu o <code>math.</code> (ou faltou <code>from math import sqrt</code>)</td></tr>
+<tr><td><code>AttributeError: module 'math' has no attribute 'x'</code></td><td>O módulo não tem esse nome: confira com <code>dir()</code></td></tr>
+<tr><td><code>… (consider renaming '…/random.py' …)</code></td><td>Um arquivo seu com nome de módulo do Python: renomeie</td></tr>
+<tr><td><code>TypeError: 'module' object is not callable</code></td><td>Parênteses no módulo, em vez de na função de dentro dele</td></tr>
+<tr><td>Um teste ou <code>print</code> do módulo aparece no outro programa</td><td>Faltou o <code>if __name__ == "__main__":</code> no módulo</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Só a ferramenta</h3>
+<p>Complete para poder escrever <code>sqrt(25)</code> sem o <code>math.</code> na frente:</p>
+<div class="ex-code"><input data-answer="from" aria-label="palavra 1"> math <input data-answer="import" aria-label="palavra 2"> sqrt</div>
+</div>
+
+<div class="exercise">
+<h3>2. O apelido</h3>
+<p>Complete para importar o <code>statistics</code> com o apelido <code>est</code>:</p>
+<div class="ex-code">import statistics <input data-answer="as" aria-label="palavra"> est</div>
+</div>
+
+<div class="exercise">
+<h3>3. O programa principal</h3>
+<p>Quando você roda <code>python3 loja.py</code>, qual é o valor de <code>__name__</code> dentro de <code>loja.py</code>?</p>
+<div class="ex-code"><input data-answer="__main__|&quot;__main__&quot;|'__main__'" aria-label="valor"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. O programa começa com <code>import math</code>. Qual linha funciona?</p>
+<label><input type="radio" name="q4"> <code>print(sqrt(9))</code></label>
+<label><input type="radio" name="q4"> <code>print(math.sqrt(9))</code></label>
+<label><input type="radio" name="q4"> <code>print(math(sqrt(9)))</code></label>
+<label><input type="radio" name="q4"> <code>print(math.raiz(9))</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. A Ana salvou um programa como <code>json.py</code>. O que acontece quando outro programa da mesma pasta faz <code>import json</code>?</p>
+<label><input type="radio" name="q5"> Nada de diferente: o Python sempre prefere a biblioteca padrão</label>
+<label><input type="radio" name="q5"> Dá <code>ModuleNotFoundError</code></label>
+<label><input type="radio" name="q5"> O Python importa o <code>json.py</code> da Ana, que passa na frente do módulo de verdade, e as funções do <code>json</code> "somem"</label>
+<label><input type="radio" name="q5"> O Python apaga o arquivo da Ana</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Por que evitar <code>from os import *</code>?</p>
+<label><input type="radio" name="q6"> Porque ele traz todos os nomes do módulo, e algum pode tapar um nome que você usa (como o <code>open</code>)</label>
+<label><input type="radio" name="q6"> Porque ele deixa o programa mais lento para sempre</label>
+<label><input type="radio" name="q6"> Porque o <code>*</code> só funciona com o módulo <code>math</code></label>
+<label><input type="radio" name="q6"> Porque é um erro de sintaxe</label>
+</div>
+
+<h3>Missão final: o teste que vaza</h3>
+
+<div class="trypy" data-goal="out:Café com desconto: 17.955;;outre:^(?![\s\S]*Testando)">
+<p class="try-task"><strong>Missão:</strong> a caixa tem duas abas. O <code>main.py</code> importa o <code>precos.py</code>, e o teste do módulo aparece junto na saída. Mexa só no <code>precos.py</code> para que o teste rode apenas quando ele for o programa principal: a saída do <code>main.py</code> deve ter só a linha do café.</p>
+<pre class="script" data-file="main.py">import precos
+
+print("Café com desconto:", precos.com_desconto(18.90, 5))
+</pre>
+<pre class="script" data-file="precos.py">def com_desconto(preco, porcento):
+    return preco * (100 - porcento) / 100
+
+print("Testando:", com_desconto(100, 10))
+</pre>
+<pre class="solucao" data-file="precos.py">def com_desconto(preco, porcento):
+    return preco * (100 - porcento) / 100
+
+if __name__ == "__main__":
+    print("Testando:", com_desconto(100, 10))
+</pre>
+</div>
+
+<p>(O <code>17.955</code> com três casas é a conta exata; para mostrar em reais, formate com <code>f"{valor:.2f}"</code>, como em <a href="f-strings.html">f-strings</a>.)</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Um <strong>módulo</strong> é uma caixa de ferramentas sobre um assunto. A <strong>biblioteca padrão</strong> é o conjunto que vem com o Python.</li>
+  <li><code>import math</code> traz a caixa (use <code>math.sqrt</code>); <code>from math import sqrt</code> traz só a ferramenta (use <code>sqrt</code>); <code>import statistics as est</code> dá um apelido.</li>
+  <li>Evite <code>import *</code>: ele esconde de onde vem cada nome e pode tapar outros.</li>
+  <li>Os <code>import</code> ficam no começo do arquivo, um por linha.</li>
+  <li>O Python procura os módulos primeiro na pasta do programa, depois na biblioteca padrão: nunca dê a um arquivo seu o nome de um módulo (<code>random.py</code>, <code>json.py</code>).</li>
+  <li>Importar um módulo <strong>roda</strong> o arquivo dele. O <code>__name__</code> vale <code>"__main__"</code> só no arquivo que foi mandado rodar, e o <code>if __name__ == "__main__":</code> guarda o que só deve acontecer nesse caso.</li>
+  <li><code>ModuleNotFoundError</code>: nome errado ou módulo que precisa de <code>pip</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
