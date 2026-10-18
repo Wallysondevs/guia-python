@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Conversão de Tipos — int(), float(), str() e bool() | Guia Python</title>
+<meta name="description" content="Conversão de tipos em Python para quem nunca programou: transformar texto em número com int() e float(), o ValueError real de float(&quot;3,5&quot;) com a vírgula brasileira, por que int(3.9) dá 3, o round() que arredonda 2.5 para 2, str() para juntar texto e número, e bool().">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Conversão de Tipos</span></h1>
+
+<p class="intro">Para o Python, <code>"12"</code> (entre aspas) e <code>12</code> (sem aspas) são coisas diferentes: o primeiro é um <strong>texto</strong> que por acaso tem dois algarismos; o segundo é um <strong>número</strong>, com o qual dá para fazer conta. E o problema aparece logo: tudo o que o <code>input()</code> lê do teclado chega como texto. Nesta aula você vai aprender a <strong>converter</strong> um valor de um tipo para outro com <code>int()</code>, <code>float()</code>, <code>str()</code> e <code>bool()</code>, e a conhecer as surpresas do caminho: a vírgula brasileira, o <code>int()</code> que corta em vez de arredondar e o <code>round()</code> que arredonda <code>2.5</code> para <code>2</code>.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>Por que <code>"12" + 1</code> dá erro, e como transformar o texto em número com <code>int()</code>.</li>
+  <li>A converter o que o <code>input()</code> lê: <code>int(input(…))</code>.</li>
+  <li>A usar <code>float()</code>, e o que fazer com o <code>"3,5"</code> escrito com vírgula.</li>
+  <li>Que <code>int(3.9)</code> dá <code>3</code>: ele corta, não arredonda.</li>
+  <li>A arredondar com <code>round()</code>, e por que <code>round(2.5)</code> dá <code>2</code>.</li>
+  <li>A transformar número em texto com <code>str()</code>.</li>
+  <li>O que <code>bool()</code> faz com números e textos.</li>
+  <li>Os erros reais: <code>ValueError</code> e <code>TypeError</code>.</li>
+</ul>
+</div>
+
+<p>Os programas desta aula rodaram no <strong>Python 3.14</strong> da máquina da Ana (usuária <code>ana</code>, computador <code>notebook</code>), e podem ser repetidos no editor do guia.</p>
+
+<hr>
+
+<h2>A ideia: o número escrito no papel</h2>
+<p>Na padaria, o padeiro deixa um bilhete para a Ana: "faltam 12 pães". Para saber quantos pães terá depois de assar mais uma fornada, a Ana não faz conta com o <strong>papel</strong>: ela <strong>lê</strong> o "12" do bilhete, entende que é o número doze e aí faz a conta de cabeça.</p>
+
+<p>O Python é igualzinho. O texto <code>"12"</code> é o bilhete: só desenhos de algarismos. Para fazer conta, alguém precisa "ler" o texto e transformar em número. Quem faz isso são as <strong>funções de conversão</strong>, que têm o mesmo nome do tipo que você quer obter:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Função</th><th>Converte para</th><th>Exemplo</th><th>Resultado</th></tr>
+<tr><td><code>int(…)</code></td><td>Número inteiro</td><td><code>int("12")</code></td><td><code>12</code></td></tr>
+<tr><td><code>float(…)</code></td><td>Número com casas decimais</td><td><code>float("3.5")</code></td><td><code>3.5</code></td></tr>
+<tr><td><code>str(…)</code></td><td>Texto (<em>string</em>)</td><td><code>str(12)</code></td><td><code>'12'</code></td></tr>
+<tr><td><code>bool(…)</code></td><td>Verdadeiro ou falso</td><td><code>bool(0)</code></td><td><code>False</code></td></tr>
+</table>
+</div>
+
+<p>Converter não muda o valor original: a função devolve um valor <strong>novo</strong>, do tipo pedido. Se você quiser guardá-lo, ponha numa variável.</p>
+
+<hr>
+
+<h2>1. Texto para inteiro: <code>int()</code></h2>
+<p>Primeiro, o problema. A Ana guardou a quantidade como texto (repare nas aspas) e tentou somar 1:</p>
+
+<pre class="file" data-file="soma_errada.py">quantidade = "12"
+print(quantidade + 1)
+</pre>
+
+<pre class="term">$ python3 soma_errada.py
+Traceback (most recent call last):
+  File "/home/ana/soma_errada.py", line 2, in &lt;module&gt;
+    print(quantidade + 1)
+          ~~~~~~~~~~~^~~
+TypeError: can only concatenate str (not "int") to str
+</pre>
+
+<dl class="anatomy">
+  <dt>Traceback (most recent call last)</dt><dd>O programa começou a rodar e parou por causa de um erro. As linhas de baixo dizem onde e por quê.</dd>
+  <dt>File "/home/ana/soma_errada.py", line 2</dt><dd>O erro está na linha 2.</dd>
+  <dt>~~~~~~~~~~~^~~</dt><dd>Os tils marcam as duas partes da conta, e o chapeuzinho, o <code>+</code>: foi a soma que falhou.</dd>
+  <dt>TypeError</dt><dd>"Erro de tipo": a operação não funciona com esses tipos.</dd>
+  <dt>can only concatenate str (not "int") to str</dt><dd>"Só dá para concatenar (juntar) <code>str</code> com <code>str</code> (não com <code>int</code>)". Com um texto do lado esquerdo, o <code>+</code> quer <strong>juntar textos</strong> (aula <a href="strings-juntar.html">Juntar e Repetir Textos</a>), e o 1 não é texto.</dd>
+</dl>
+
+<p>A solução é converter o texto em número antes da conta:</p>
+
+<pre class="file" data-file="soma_certa.py">quantidade = "12"
+numero = int(quantidade)
+print(numero + 1)
+print(type(quantidade))
+print(type(numero))
+</pre>
+
+<pre class="term">$ python3 soma_certa.py
+13
+&lt;class 'str'&gt;
+&lt;class 'int'&gt;
+</pre>
+
+<dl class="anatomy">
+  <dt>int(quantidade)</dt><dd>Lê o texto <code>"12"</code> e devolve o número <code>12</code>.</dd>
+  <dt>numero = …</dt><dd>Guarda o número novo numa variável.</dd>
+  <dt>&lt;class 'str'&gt;</dt><dd>A variável <code>quantidade</code> continua sendo texto: o <code>int()</code> não mexeu nela, criou um valor novo.</dd>
+</dl>
+
+<h3>O que o <code>int()</code> aceita</h3>
+<p>No modo interativo dá para testar vários de uma vez:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; int("12")
+12
+&gt;&gt;&gt; int(" 12 ")
+12
+&gt;&gt;&gt; int("-7")
+-7
+&gt;&gt;&gt; int("1_000")
+1000
+</pre>
+
+<p>Espaços em volta são ignorados, o sinal de menos funciona e até o sublinhado da aula <a href="numeros.html">Números</a> passa. Mas o texto tem de ser um <strong>inteiro</strong> escrito direitinho. Com ponto, com letras ou vazio, dá erro:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; int("12.5")
+Traceback (most recent call last):
+  File "&lt;python-input-0&gt;", line 1, in &lt;module&gt;
+    int("12.5")
+    ~~~^^^^^^^^
+ValueError: invalid literal for int() with base 10: '12.5'
+&gt;&gt;&gt; int("doze")
+Traceback (most recent call last):
+  File "&lt;python-input-1&gt;", line 1, in &lt;module&gt;
+    int("doze")
+    ~~~^^^^^^^^
+ValueError: invalid literal for int() with base 10: 'doze'
+&gt;&gt;&gt; int("")
+Traceback (most recent call last):
+  File "&lt;python-input-2&gt;", line 1, in &lt;module&gt;
+    int("")
+    ~~~^^^^
+ValueError: invalid literal for int() with base 10: ''
+</pre>
+
+<dl class="anatomy">
+  <dt>File "&lt;python-input-0&gt;", line 1</dt><dd>No modo interativo não há arquivo: <code>&lt;python-input-0&gt;</code> é a primeira coisa digitada na sessão, <code>-1</code> a segunda, e assim por diante.</dd>
+  <dt>ValueError</dt><dd>"Erro de valor": o tipo está certo (é um texto, e o <code>int()</code> aceita textos), mas aquele texto em particular não serve.</dd>
+  <dt>invalid literal for int() with base 10: '12.5'</dt><dd>"Escrita inválida para <code>int()</code> na base 10". "Base 10" é o nosso sistema de sempre, com os algarismos de 0 a 9. Entre aspas, no fim, o Python mostra o texto que recusou; no último caso, <code>''</code>, um texto vazio (o que acontece quando a pessoa aperta Enter sem digitar nada).</dd>
+</dl>
+
+<p>Para <code>"12.5"</code>, há dois caminhos: <code>float("12.5")</code>, se você quer o número com a casa decimal, ou <code>int(float("12.5"))</code>, que passa pelo <code>float</code> e depois corta para <code>12</code>. Nos outros casos, o texto simplesmente não é um número; a aula <a href="try-except.html">try e except</a> ensina a tratar isso sem o programa parar.</p>
+
+<div class="trypy" data-goal="out:13;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa dá <code>TypeError</code>. Converta a quantidade para inteiro antes da soma, para ele mostrar <code>13</code>.</p>
+<pre class="script" data-file="main.py">quantidade = "12"
+print(quantidade + 1)
+</pre>
+<pre class="solucao" data-file="main.py">quantidade = "12"
+print(int(quantidade) + 1)
+</pre>
+</div>
+
+<hr>
+
+<h2>2. Convertendo o que o <code>input()</code> lê</h2>
+<p>É aqui que você mais vai usar a conversão. O <code>input()</code> (aula <a href="input.html">input()</a>) <strong>sempre</strong> devolve texto, mesmo quando a pessoa digita só algarismos:</p>
+
+<pre class="file" data-file="idade.py">idade = input("Quantos anos você tem? ")
+print(type(idade))
+idade = int(idade)
+print("No ano que vem você terá", idade + 1, "anos.")
+</pre>
+
+<pre class="term">$ python3 idade.py
+Quantos anos você tem? 30
+&lt;class 'str'&gt;
+No ano que vem você terá 31 anos.
+</pre>
+
+<p>A Ana digitou 30, e o <code>type</code> mostrou <code>str</code>: um texto. Depois do <code>int(idade)</code>, a variável passou a guardar o número 30, e a conta funcionou. Repare que a linha 3 reaproveita o mesmo nome: <code>idade = int(idade)</code> lê o texto antigo, converte e guarda o número no lugar dele.</p>
+
+<p>O mais comum é fazer tudo numa linha só, uma função dentro da outra:</p>
+
+<pre class="file" data-file="idade2.py">idade = int(input("Quantos anos você tem? "))
+</pre>
+
+<p>O Python resolve de dentro para fora: primeiro o <code>input()</code> lê o texto; depois o <code>int()</code> converte; por fim, o número vai para a variável.</p>
+
+<hr>
+
+<h2>3. Texto para <code>float</code>: <code>float()</code> e a vírgula</h2>
+<p>O <code>float()</code> faz o mesmo para números com casas decimais. Ele aceita um pouco mais que o <code>int()</code>:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; float("3.5")
+3.5
+&gt;&gt;&gt; float("12")
+12.0
+&gt;&gt;&gt; float("1e3")
+1000.0
+&gt;&gt;&gt; float(" 2.75\n")
+2.75
+</pre>
+
+<p>Um texto de inteiro vira <code>12.0</code>; a notação científica funciona; espaços e quebras de linha (<code>\n</code>) em volta são ignorados. Agora, a armadilha brasileira. A Ana fez um programa para a balança da padaria:</p>
+
+<pre class="file" data-file="preco.py">texto = input("Preço do quilo: ")
+preco = float(texto)
+print("2 quilos custam", preco * 2)
+</pre>
+
+<pre class="term">$ python3 preco.py
+Preço do quilo: 3.5
+2 quilos custam 7.0
+$ python3 preco.py
+Preço do quilo: 3,5
+Traceback (most recent call last):
+  File "/home/ana/preco.py", line 2, in &lt;module&gt;
+    preco = float(texto)
+ValueError: could not convert string to float: '3,5'
+</pre>
+
+<p>Com ponto, funcionou. Com <strong>vírgula</strong>, do jeito que qualquer pessoa no Brasil digita, o programa parou: <code>could not convert string to float: '3,5'</code>, "não foi possível converter o texto em <code>float</code>". O <code>float()</code> só entende o ponto. (Repare que, desta vez, não apareceram os tils e chapeuzinhos embaixo da linha. O Python nem sempre os mostra; o que importa é o número da linha e a mensagem do fim.)</p>
+
+<p>Você não pode obrigar quem usa o programa a digitar ponto. Então o programa troca a vírgula pelo ponto antes de converter, com o <code>.replace(",", ".")</code> ("substituir"), um método de texto que você vai conhecer na aula <a href="strings-metodos.html">Métodos de Texto</a>:</p>
+
+<pre class="file" data-file="preco_virgula.py">texto = input("Preço do quilo: ")
+preco = float(texto.replace(",", "."))
+print("2 quilos custam", preco * 2)
+</pre>
+
+<pre class="term">$ python3 preco_virgula.py
+Preço do quilo: 3,5
+2 quilos custam 7.0
+</pre>
+
+<dl class="anatomy">
+  <dt>texto.replace(",", ".")</dt><dd>Devolve uma cópia do texto com cada vírgula trocada por ponto: <code>"3,5"</code> vira <code>"3.5"</code>. Se a pessoa já digitou ponto, não há vírgula para trocar e nada muda.</dd>
+  <dt>float(…)</dt><dd>Converte o texto já consertado.</dd>
+</dl>
+
+<p>Também não passa nada além do número: <code>float("R$ 3.50")</code> dá o mesmo <code>ValueError</code>, por causa do <code>R$</code>.</p>
+
+<div class="trypy" data-stdin="3,50" data-goal="out:2 quilos custam 7.0;;semerro">
+<p class="try-task"><strong>Missão:</strong> o editor vai digitar <code>3,50</code>, com vírgula, e o programa para com <code>ValueError</code>. Troque a vírgula por ponto antes do <code>float()</code>, para ele mostrar o preço de 2 quilos.</p>
+<pre class="script" data-file="main.py">texto = input("Preço do quilo: ")
+preco = float(texto)
+print("2 quilos custam", preco * 2)
+</pre>
+<pre class="solucao" data-file="main.py">texto = input("Preço do quilo: ")
+preco = float(texto.replace(",", "."))
+print("2 quilos custam", preco * 2)
+</pre>
+</div>
+
+<hr>
+
+<h2>4. <code>float</code> para inteiro: o <code>int()</code> corta</h2>
+<p>O <code>int()</code> também converte um <code>float</code>. Só que ele não arredonda: ele <strong>joga fora</strong> tudo o que vem depois do ponto.</p>
+
+<pre class="file" data-file="corte.py">print(int(3.9))
+print(int(3.1))
+print(int(-3.9))
+print(round(3.9))
+print(round(-3.9))
+</pre>
+
+<pre class="term">$ python3 corte.py
+3
+3
+-3
+4
+-4
+</pre>
+
+<p><code>3.9</code> virou <code>3</code>, e não 4. Com os negativos é igual: <code>-3.9</code> virou <code>-3</code> (o corte sempre vai em direção ao zero). Quando você quer o inteiro <strong>mais próximo</strong>, use o <code>round()</code> ("arredondar"), como nas duas últimas linhas.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Valor</th><th><code>int()</code> (corta)</th><th><code>round()</code> (arredonda)</th></tr>
+<tr><td><code>3.9</code></td><td><code>3</code></td><td><code>4</code></td></tr>
+<tr><td><code>3.1</code></td><td><code>3</code></td><td><code>3</code></td></tr>
+<tr><td><code>-3.9</code></td><td><code>-3</code></td><td><code>-4</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>5. Arredondando: <code>round()</code> e o 2.5 que vira 2</h2>
+<p>O <code>round</code> tem duas formas. Sem o segundo número, ele devolve um <strong>inteiro</strong>; com ele, devolve um <code>float</code> com aquela quantidade de casas:</p>
+
+<pre class="file" data-file="media.py">nota1 = 7
+nota2 = 8
+nota3 = 8
+media = (nota1 + nota2 + nota3) / 3
+print(media)
+print(round(media, 1))
+print(round(media))
+</pre>
+
+<pre class="term">$ python3 media.py
+7.666666666666667
+7.7
+8
+</pre>
+
+<dl class="anatomy">
+  <dt>(nota1 + nota2 + nota3) / 3</dt><dd>Soma as notas e divide por 3. Os parênteses fazem a soma acontecer antes da divisão (aula <a href="precedencia.html">Precedência</a>).</dd>
+  <dt>round(media, 1)</dt><dd>Arredonda para <strong>1 casa</strong> decimal: <code>7.7</code>.</dd>
+  <dt>round(media)</dt><dd>Sem o segundo número: arredonda para o inteiro mais próximo e devolve um <code>int</code>, <code>8</code>.</dd>
+</dl>
+
+<h3>A surpresa: <code>round(2.5)</code> dá <code>2</code></h3>
+<p>Na escola, a gente aprende que 2,5 arredonda para cima, 3. Veja o que o Python faz:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; round(2.5)
+2
+&gt;&gt;&gt; round(3.5)
+4
+&gt;&gt;&gt; round(0.5)
+0
+&gt;&gt;&gt; round(1.5)
+2
+&gt;&gt;&gt; round(4.5)
+4
+&gt;&gt;&gt; round(2.6)
+3
+</pre>
+
+<p>Não é defeito. Quando o número está <strong>exatamente no meio</strong> (terminado em ,5), o Python arredonda para o vizinho <strong>par</strong>: 2,5 vai para 2; 3,5 vai para 4; 4,5 vai para 4. Esse jeito se chama <strong>arredondamento bancário</strong> (ou "arredondamento para o par"). O motivo: se você arredondar milhares de valores sempre para cima, a soma deles vai ficando maior do que deveria; indo metade das vezes para cima e metade para baixo, os erros se compensam. É o que bancos e programas de estatística costumam fazer, e é a regra do <code>round()</code> segundo a documentação oficial do Python.</p>
+
+<p>Fora do meio exato, nada muda: <code>round(2.6)</code> dá <code>3</code>, como na escola.</p>
+
+<div class="warning">
+<strong>Com casas decimais, entra o <code>float</code></strong>
+<pre class="term">&gt;&gt;&gt; round(7.456, 2)
+7.46
+&gt;&gt;&gt; round(2.675, 2)
+2.67
+</pre>
+<p>Por que <code>2.675</code> virou <code>2.67</code>, e não <code>2.68</code>? Nem é o arredondamento bancário: é a aproximação do <code>float</code> que você viu na aula <a href="numeros.html">Números</a>. O <code>2.675</code> guardado no computador é, na verdade, um pouquinho <strong>menos</strong> que 2,675, então ele fica mais perto de 2,67. Para mostrar valores, o <code>round</code> é ótimo; para dinheiro que precisa bater centavo por centavo, use centavos em <code>int</code> ou o módulo <code>decimal</code>.</p>
+</div>
+
+<hr>
+
+<h2>6. Número para texto: <code>str()</code></h2>
+<p>O caminho inverso também existe. O <code>str()</code> transforma qualquer valor em texto:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; str(12)
+'12'
+&gt;&gt;&gt; str(25.9)
+'25.9'
+&gt;&gt;&gt; str(-3)
+'-3'
+&gt;&gt;&gt; type(str(12))
+&lt;class 'str'&gt;
+</pre>
+
+<p>As aspas na resposta (<code>'12'</code>) são o jeito do modo interativo mostrar que aquilo é um texto. Para que serve? Para <strong>juntar</strong> um número a um texto com o <code>+</code>. Sem a conversão, é o mesmo <code>TypeError</code> do começo da aula:</p>
+
+<pre class="file" data-file="total_texto.py">total = 15
+print("Total: " + total)
+</pre>
+
+<pre class="term">$ python3 total_texto.py
+Traceback (most recent call last):
+  File "/home/ana/total_texto.py", line 2, in &lt;module&gt;
+    print("Total: " + total)
+          ~~~~~~~~~~^~~~~~~
+TypeError: can only concatenate str (not "int") to str
+</pre>
+
+<pre class="file" data-file="total_str.py">total = 15
+mensagem = "Total: " + str(total)
+print(mensagem)
+print("Total:", total)
+</pre>
+
+<pre class="term">$ python3 total_str.py
+Total: 15
+Total: 15
+</pre>
+
+<p>As duas linhas mostram o mesmo. Na segunda, o <code>print</code> recebeu dois valores separados por vírgula e cuidou sozinho da conversão (e do espaço entre eles). O <code>str()</code> é necessário quando você quer o texto pronto numa variável, como a <code>mensagem</code>. Na prática, para montar textos com números, a forma mais usada é a <a href="f-strings.html">f-string</a>: <code>f"Total: {total}"</code>.</p>
+
+<hr>
+
+<h2>7. Para verdadeiro ou falso: <code>bool()</code></h2>
+<p>O <code>bool()</code> converte um valor em <code>True</code> (verdadeiro) ou <code>False</code> (falso). A regra, para números e textos, é curta: <strong>zero e vazio viram <code>False</code>; todo o resto vira <code>True</code></strong>.</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; bool(0)
+False
+&gt;&gt;&gt; bool(1)
+True
+&gt;&gt;&gt; bool(-2)
+True
+&gt;&gt;&gt; bool(0.0)
+False
+&gt;&gt;&gt; bool("")
+False
+&gt;&gt;&gt; bool("0")
+True
+&gt;&gt;&gt; bool("False")
+True
+</pre>
+
+<p>Repare nos dois últimos: <code>"0"</code> e <code>"False"</code> são textos <strong>com letras dentro</strong>, então não estão vazios, e viram <code>True</code>. O <code>bool()</code> não lê o que está escrito; só olha se o texto tem alguma coisa. O caminho inverso também funciona: <code>int(True)</code> dá <code>1</code> e <code>float(False)</code> dá <code>0.0</code>. A aula <a href="booleanos.html">Booleanos</a> explica tudo isso com calma.</p>
+
+<hr>
+
+<h2>Formas diferentes de fazer</h2>
+
+<h3>Ler um número do teclado</h3>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>quantidade = int(input("Quantos? "))</code></td><td>Números inteiros: quantidades, idades. É a forma mais comum</td></tr>
+<tr><td><code>preco = float(input("Preço: "))</code></td><td>Números com casas decimais, se a pessoa digitar com ponto</td></tr>
+<tr><td><code>preco = float(input("Preço: ").replace(",", "."))</code></td><td>Números com casas decimais digitados por brasileiros: aceita vírgula e ponto</td></tr>
+<tr><td><code>texto = input(…)</code> e, na linha de baixo, <code>numero = int(texto)</code></td><td>Quando você ainda vai usar o texto original, ou quer deixar cada passo claro</td></tr>
+</table>
+</div>
+
+<h3>Tirar as casas decimais</h3>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>3.7 vira</th><th>2.5 vira</th><th>Quando usar</th></tr>
+<tr><td><code>int(x)</code></td><td><code>3</code></td><td><code>2</code></td><td>Quando você quer só a parte inteira, cortando (ex.: anos completos)</td></tr>
+<tr><td><code>round(x)</code></td><td><code>4</code></td><td><code>2</code></td><td>Quando você quer o inteiro mais próximo (no meio exato, o par)</td></tr>
+<tr><td><code>round(x, 2)</code></td><td><code>3.7</code></td><td><code>2.5</code></td><td>Para mostrar um valor com até 2 casas</td></tr>
+<tr><td><code>math.floor(x)</code> e <code>math.ceil(x)</code></td><td><code>3</code> e <code>4</code></td><td><code>2</code> e <code>3</code></td><td>Sempre para baixo ou sempre para cima (aula <a href="math.html">O Módulo math</a>)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Somar um texto com um número: <code>TypeError</code></strong>
+<p><code>TypeError: can only concatenate str (not "int") to str</code>. Um dos lados do <code>+</code> é texto (muitas vezes, o que veio do <code>input()</code>) e o outro é número. <strong>Como consertar:</strong> se você queria fazer <strong>conta</strong>, converta o texto com <code>int()</code> ou <code>float()</code>; se queria <strong>juntar textos</strong>, converta o número com <code>str()</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Texto que não é número: <code>ValueError</code> no <code>int()</code></strong>
+<p><code>ValueError: invalid literal for int() with base 10: '12.5'</code>. O texto tem ponto, letras, espaço no meio ou está vazio. <strong>Como consertar:</strong> se tem casa decimal, use <code>float()</code>; se a pessoa pode digitar qualquer coisa, trate o erro com <a href="try-except.html">try e except</a>.</p>
+</div>
+
+<div class="cenario">
+<strong>Número com vírgula: <code>ValueError</code> no <code>float()</code></strong>
+<p><code>ValueError: could not convert string to float: '3,5'</code>. O <code>float()</code> só entende ponto. <strong>Como consertar:</strong> <code>float(texto.replace(",", "."))</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu de guardar o resultado</strong>
+<pre class="file" data-file="esqueceu.py">quantidade = "12"
+int(quantidade)
+print(quantidade + 1)
+</pre>
+<p>Este programa dá o mesmo <code>TypeError</code> do começo da aula. A linha 2 converteu, mas o número novo não foi guardado em lugar nenhum e se perdeu; <code>quantidade</code> continua sendo o texto <code>"12"</code>. <strong>Como consertar:</strong> <code>quantidade = int(quantidade)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Achar que o <code>int()</code> arredonda</strong>
+<p>A média da turma deu <code>7.9</code> e o programa mostrou <code>7</code>: o <code>int()</code> cortou. Não aparece mensagem nenhuma, porque não é erro do Python; é o comportamento do <code>int()</code>. <strong>Como consertar:</strong> use <code>round()</code>.</p>
+</div>
+
+<div class="trypy" data-goal="out:Total: 15;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa para com <code>TypeError</code>. Converta o número para texto, para ele mostrar <code>Total: 15</code>.</p>
+<pre class="script" data-file="main.py">total = 15
+print("Total: " + total)
+</pre>
+<pre class="solucao" data-file="main.py">total = 15
+print("Total: " + str(total))
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Resultado</th><th>Observação</th></tr>
+<tr><td><code>int("12")</code></td><td><code>12</code></td><td>Espaços em volta são ignorados</td></tr>
+<tr><td><code>int("12.5")</code></td><td><code>ValueError</code></td><td>Texto com ponto não vira <code>int</code> direto</td></tr>
+<tr><td><code>int(3.9)</code></td><td><code>3</code></td><td>Corta as casas decimais (em direção ao zero)</td></tr>
+<tr><td><code>float("3.5")</code></td><td><code>3.5</code></td><td>Só com ponto</td></tr>
+<tr><td><code>float("3,5")</code></td><td><code>ValueError</code></td><td>Use <code>.replace(",", ".")</code> antes</td></tr>
+<tr><td><code>float("12")</code></td><td><code>12.0</code></td><td></td></tr>
+<tr><td><code>round(3.7)</code></td><td><code>4</code></td><td>Devolve <code>int</code></td></tr>
+<tr><td><code>round(2.5)</code></td><td><code>2</code></td><td>No meio exato, vai para o par</td></tr>
+<tr><td><code>round(7.456, 2)</code></td><td><code>7.46</code></td><td>Devolve <code>float</code></td></tr>
+<tr><td><code>str(12)</code></td><td><code>'12'</code></td><td>Para juntar com outros textos</td></tr>
+<tr><td><code>bool(0)</code>, <code>bool("")</code></td><td><code>False</code></td><td>Zero e vazio são falsos</td></tr>
+<tr><td><code>bool("0")</code></td><td><code>True</code></td><td>Texto com algo dentro é verdadeiro</td></tr>
+<tr><td><code>int(input(…))</code></td><td>um <code>int</code></td><td>Lê do teclado e converte</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O que sai?</h3>
+<p>Escreva o resultado de cada conversão, como o modo interativo mostraria:</p>
+<div class="ex-code">int(" 40 ") → <input data-answer="40" aria-label="resultado 1">
+int(9.99) → <input data-answer="9" aria-label="resultado 2">
+float("8") → <input data-answer="8.0" aria-label="resultado 3">
+round(6.5) → <input data-answer="6" aria-label="resultado 4"></div>
+</div>
+
+<div class="exercise">
+<h3>2. Ler um inteiro</h3>
+<p>Complete para a variável guardar um <strong>número inteiro</strong> lido do teclado:</p>
+<div class="ex-code">paes = <input data-answer="int" aria-label="função">(input("Quantos pães? "))</div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">3. A pessoa digitou <code>2,75</code>. O que acontece em <code>float(input("Peso: "))</code>?</p>
+<label><input type="radio" name="q3"> O resultado é <code>2.75</code></label>
+<label><input type="radio" name="q3"> O resultado é <code>(2, 75)</code></label>
+<label><input type="radio" name="q3"> <code>ValueError: could not convert string to float: '2,75'</code></label>
+<label><input type="radio" name="q3"> O resultado é <code>275.0</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Por que <code>round(4.5)</code> dá <code>4</code>?</p>
+<label><input type="radio" name="q4"> Porque o <code>round</code> sempre arredonda para baixo</label>
+<label><input type="radio" name="q4"> Porque, no meio exato, o Python arredonda para o vizinho par</label>
+<label><input type="radio" name="q4"> Porque o <code>round</code> corta as casas decimais, como o <code>int</code></label>
+<label><input type="radio" name="q4"> É um defeito do Python 3.14</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. Quanto vale <code>bool("0")</code>?</p>
+<label><input type="radio" name="q5"> <code>False</code>, porque é zero</label>
+<label><input type="radio" name="q5"> <code>0</code></label>
+<label><input type="radio" name="q5"> Dá erro</label>
+<label><input type="radio" name="q5"> <code>True</code>, porque o texto não está vazio</label>
+</div>
+
+<h3>Missão final: a média arredondada</h3>
+
+<div class="trypy" data-goal="out:7.7;;src:round">
+<p class="try-task"><strong>Missão:</strong> a média da Ana mostra <code>7.666666666666667</code>, casas demais para o boletim. Use o <code>round</code> para mostrar a média com <strong>1 casa</strong> decimal.</p>
+<pre class="script" data-file="main.py">nota1 = 7
+nota2 = 8
+nota3 = 8
+media = (nota1 + nota2 + nota3) / 3
+print(media)
+</pre>
+<pre class="solucao" data-file="main.py">nota1 = 7
+nota2 = 8
+nota3 = 8
+media = (nota1 + nota2 + nota3) / 3
+print(round(media, 1))
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>"12"</code> é texto; <code>12</code> é número. Para fazer conta com um texto, converta: <code>int("12")</code> ou <code>float("3.5")</code>.</li>
+  <li>O <code>input()</code> sempre devolve texto: <code>int(input(…))</code> lê e converte de uma vez.</li>
+  <li>O <code>float()</code> só entende ponto: <code>float("3,5")</code> dá <code>ValueError</code>. Troque antes com <code>.replace(",", ".")</code>.</li>
+  <li>Texto que não é número (<code>"doze"</code>, <code>""</code>, <code>"12.5"</code> no <code>int</code>) dá <code>ValueError</code>.</li>
+  <li><code>int(3.9)</code> dá <code>3</code>: corta. Para arredondar, <code>round()</code>.</li>
+  <li><code>round(x)</code> devolve <code>int</code>; <code>round(x, 2)</code> devolve <code>float</code>. No meio exato vai para o par: <code>round(2.5)</code> é <code>2</code>.</li>
+  <li><code>str()</code> transforma em texto, para juntar com <code>+</code>. Sem ele, <code>"Total: " + 15</code> dá <code>TypeError</code>.</li>
+  <li><code>bool()</code>: zero e vazio são <code>False</code>; o resto é <code>True</code>, até <code>"0"</code> e <code>"False"</code>.</li>
+  <li>Converter cria um valor novo: guarde-o numa variável.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
