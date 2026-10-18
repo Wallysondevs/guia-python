@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Laços Aninhados — um laço dentro do outro | Guia Python</title>
+<meta name="description" content="Laços aninhados no Python para quem nunca programou: um for dentro do outro, as cadeiras do teatro, a tabuada, a grade de multiplicação, desenhos com asteriscos (retângulo, triângulo, pirâmide), o break que só sai do laço de dentro, e os erros reais: a mesma variável nos dois laços, o print() no lugar errado e o IndentationError.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Laços Aninhados</span></h1>
+
+<p class="intro">Dentro do bloco de um laço pode ir qualquer coisa: um <code>print</code>, um <code>if</code>… e também <strong>outro laço</strong>. Um laço dentro do outro se chama <strong>laço aninhado</strong> (como um ninho, um dentro do outro). É o que você usa quando o trabalho tem duas "dimensões": as fileiras e as cadeiras de um teatro, as linhas e as colunas de uma tabela, as tabuadas e os números de cada tabuada.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>Como se escreve um laço dentro do outro, e a regra de ouro: <strong>o de dentro dá a volta completa a cada volta do de fora</strong>.</li>
+  <li>A contar quantas vezes o bloco de dentro roda.</li>
+  <li>A montar a <strong>tabuada</strong> e uma grade de multiplicação.</li>
+  <li>A desenhar com <code>*</code>: retângulo, triângulo, triângulo invertido e pirâmide.</li>
+  <li>Que o <code>break</code> só sai do laço <strong>de dentro</strong>, e como sair dos dois.</li>
+  <li>Os erros reais: o mesmo nome de variável nos dois laços, o <code>print()</code> fora do lugar e o <code>IndentationError</code>.</li>
+</ul>
+</div>
+
+<p>Todos os programas desta aula rodaram no <strong>Python 3.14</strong> da máquina da Ana (usuária <code>ana</code>, computador <code>notebook</code>), com <code>python3 arquivo.py</code>. Esta aula usa o <a href="for.html">for</a>, o <a href="range.html">range()</a> e o <code>end</code> do <code>print</code> (aula <a href="print-sep-end.html">As Opções sep e end</a>).</p>
+
+<hr>
+
+<h2>A ideia: o lanterninha do teatro</h2>
+<p>O teatro do bairro tem 3 fileiras (A, B e C), cada uma com 4 cadeiras. Antes do espetáculo, o lanterninha confere todas as cadeiras. Ele faz assim:</p>
+<ol class="passo">
+  <li>Vai para a fileira <strong>A</strong> e confere as cadeiras 1, 2, 3 e 4.</li>
+  <li>Só então passa para a fileira <strong>B</strong> e confere as cadeiras 1, 2, 3 e 4 <strong>de novo</strong>.</li>
+  <li>Depois a fileira <strong>C</strong>: cadeiras 1, 2, 3 e 4.</li>
+</ol>
+<p>São <strong>dois</strong> laços. O de fora anda pelas <strong>fileiras</strong>, devagar: só 3 voltas. O de dentro anda pelas <strong>cadeiras</strong>, depressa, e <strong>recomeça do 1</strong> a cada fileira nova. No total, ele conferiu 3 × 4 = 12 cadeiras. É como os ponteiros de um relógio: o dos minutos dá a volta inteira para o das horas andar um passo.</p>
+
+<hr>
+
+<h2>1. O primeiro laço aninhado</h2>
+
+<pre class="file" data-file="cadeiras.py">for fileira in "ABC":
+    for cadeira in range(1, 5):
+        print(f"{fileira}{cadeira}", end=" ")
+    print()
+</pre>
+
+<pre class="term">$ python3 cadeiras.py
+A1 A2 A3 A4
+B1 B2 B3 B4
+C1 C2 C3 C4</pre>
+
+<dl class="anatomy">
+  <dt>for fileira in "ABC":</dt><dd>O laço <strong>de fora</strong>: percorre as letras A, B e C (3 voltas).</dd>
+  <dt>for cadeira in range(1, 5):</dt><dd>O laço <strong>de dentro</strong>, com 4 espaços: faz parte do bloco do de fora. Percorre 1, 2, 3 e 4, e começa tudo de novo a cada fileira.</dd>
+  <dt>print(f"{fileira}{cadeira}", end=" ")</dt><dd>O bloco do laço de dentro, com <strong>8 espaços</strong>. Mostra a cadeira (A1, A2…) e, por causa do <code>end=" "</code>, fica na mesma linha, com um espaço depois. Repare que ele usa as <strong>duas</strong> variáveis: a do de fora e a do de dentro.</dd>
+  <dt>print()</dt><dd>Com 4 espaços: está no laço de fora, mas <strong>depois</strong> do de dentro. Roda uma vez por fileira, quando as 4 cadeiras já foram mostradas, e só pula a linha.</dd>
+</dl>
+
+<h3>Seguindo as voltas, uma por uma</h3>
+<p>Para enxergar a ordem em que as coisas acontecem, este programa avisa quando cada volta do laço de fora começa e termina:</p>
+
+<pre class="file" data-file="voltas.py">for fora in range(1, 3):
+    print(f"Começa a volta {fora} do laço de fora")
+    for dentro in range(1, 4):
+        print(f"    fora = {fora}, dentro = {dentro}")
+    print(f"Termina a volta {fora} do laço de fora")
+print("Acabou tudo.")
+</pre>
+
+<pre class="term">$ python3 voltas.py
+Começa a volta 1 do laço de fora
+    fora = 1, dentro = 1
+    fora = 1, dentro = 2
+    fora = 1, dentro = 3
+Termina a volta 1 do laço de fora
+Começa a volta 2 do laço de fora
+    fora = 2, dentro = 1
+    fora = 2, dentro = 2
+    fora = 2, dentro = 3
+Termina a volta 2 do laço de fora
+Acabou tudo.</pre>
+
+<p>Enquanto o laço de dentro roda, a variável <code>fora</code> fica <strong>parada</strong>: vale 1 nas três primeiras linhas de dentro e 2 nas três seguintes. Já a <code>dentro</code> recomeça do 1 a cada volta de fora.</p>
+
+<div class="tip">
+<strong>Quantas vezes o bloco de dentro roda?</strong>
+<p>Multiplique: voltas do de fora × voltas do de dentro. Aqui, 2 × 3 = 6 linhas com <code>fora = …, dentro = …</code>. No teatro, 3 × 4 = 12 cadeiras. A conta cresce rápido: dois laços de 100 voltas fazem o bloco de dentro rodar <strong>10000</strong> vezes. Para o computador ainda é pouco, mas vale lembrar quando os números forem grandes.</p>
+</div>
+
+<hr>
+
+<h2>2. A tabuada</h2>
+<p>O exemplo mais famoso de laço aninhado. O laço de fora escolhe <strong>qual tabuada</strong>; o de dentro passa pelos números de 1 a 10:</p>
+
+<pre class="file" data-file="tabuada.py">for numero in range(1, 4):
+    print(f"Tabuada do {numero}")
+    for vezes in range(1, 11):
+        print(f"{numero} x {vezes} = {numero * vezes}")
+    print()
+</pre>
+
+<pre class="term">$ python3 tabuada.py
+Tabuada do 1
+1 x 1 = 1
+1 x 2 = 2
+1 x 3 = 3
+1 x 4 = 4
+1 x 5 = 5
+1 x 6 = 6
+1 x 7 = 7
+1 x 8 = 8
+1 x 9 = 9
+1 x 10 = 10
+
+Tabuada do 2
+2 x 1 = 2
+2 x 2 = 4
+2 x 3 = 6
+2 x 4 = 8
+2 x 5 = 10
+2 x 6 = 12
+2 x 7 = 14
+2 x 8 = 16
+2 x 9 = 18
+2 x 10 = 20
+
+Tabuada do 3
+3 x 1 = 3
+3 x 2 = 6
+3 x 3 = 9
+3 x 4 = 12
+3 x 5 = 15
+3 x 6 = 18
+3 x 7 = 21
+3 x 8 = 24
+3 x 9 = 27
+3 x 10 = 30
+</pre>
+
+<p>O título <code>Tabuada do …</code> está no laço de fora, <strong>antes</strong> do de dentro: aparece uma vez por tabuada, em cima. O <code>print()</code> vazio está no laço de fora, <strong>depois</strong> do de dentro: deixa uma linha em branco entre uma tabuada e outra. Dentro do <code>{…}</code> da f-string pode ir uma conta: <code>{numero * vezes}</code>.</p>
+
+<div class="trypy" data-goal="out:7 x 1 = 7;;out:9 x 10 = 90;;src:for[\s\S]*for">
+<p class="try-task"><strong>Missão:</strong> a Ana está estudando as tabuadas mais difíceis. Mude o programa para mostrar as tabuadas do <strong>7, do 8 e do 9</strong> (cada uma de 1 a 10).</p>
+<pre class="script" data-file="main.py">for numero in range(1, 4):
+    print(f"Tabuada do {numero}")
+    for vezes in range(1, 11):
+        print(f"{numero} x {vezes} = {numero * vezes}")
+    print()
+</pre>
+<pre class="solucao" data-file="main.py">for numero in range(7, 10):
+    print(f"Tabuada do {numero}")
+    for vezes in range(1, 11):
+        print(f"{numero} x {vezes} = {numero * vezes}")
+    print()
+</pre>
+</div>
+
+<h3>A grade de multiplicação</h3>
+<p>Com o <code>end=""</code>, o laço de dentro escreve uma <strong>linha</strong> inteira, e o de fora empilha as linhas. Sai uma tabela, como as do fundo do caderno:</p>
+
+<pre class="file" data-file="grade.py">for linha in range(1, 6):
+    for coluna in range(1, 6):
+        print(f"{linha * coluna:3}", end="")
+    print()
+</pre>
+
+<pre class="term">$ python3 grade.py
+  1  2  3  4  5
+  2  4  6  8 10
+  3  6  9 12 15
+  4  8 12 16 20
+  5 10 15 20 25</pre>
+
+<p>O <code>:3</code> dentro das chaves manda o número ocupar <strong>3 casas</strong>, completando com espaços à esquerda. É isso que deixa as colunas alinhadas, tanto para o <code>1</code> quanto para o <code>25</code>. (Os detalhes dessa formatação estão em <a href="f-strings.html">f-strings</a> e em <a href="ref-formatacao.html">Formatação</a>.)</p>
+
+<hr>
+
+<h2>3. Desenhando com asteriscos</h2>
+<p>Desenhar figuras com <code>*</code> é um treino clássico de laços aninhados: o laço de fora cuida das <strong>linhas</strong>; o de dentro, das <strong>estrelas de cada linha</strong>.</p>
+
+<h3>Retângulo: todas as linhas iguais</h3>
+<pre class="file" data-file="retangulo.py">for linha in range(3):
+    for coluna in range(5):
+        print("*", end="")
+    print()
+</pre>
+
+<pre class="term">$ python3 retangulo.py
+*****
+*****
+*****</pre>
+
+<p>3 linhas, 5 estrelas em cada. O laço de dentro sempre dá 5 voltas, então todas as linhas ficam iguais.</p>
+
+<h3>Triângulo: o laço de dentro depende do de fora</h3>
+<p>Agora o pulo do gato. Se o número de voltas do laço de dentro usar a variável do de fora, cada linha fica de um tamanho:</p>
+
+<pre class="file" data-file="triangulo.py">for linha in range(1, 6):
+    for estrela in range(linha):
+        print("*", end="")
+    print()
+</pre>
+
+<pre class="term">$ python3 triangulo.py
+*
+**
+***
+****
+*****</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Volta de fora</th><th><code>linha</code></th><th>O de dentro: <code>range(linha)</code></th><th>Estrelas</th></tr>
+<tr><td>1ª</td><td>1</td><td><code>range(1)</code>: 1 volta</td><td><code>*</code></td></tr>
+<tr><td>2ª</td><td>2</td><td><code>range(2)</code>: 2 voltas</td><td><code>**</code></td></tr>
+<tr><td>3ª</td><td>3</td><td><code>range(3)</code>: 3 voltas</td><td><code>***</code></td></tr>
+<tr><td>4ª</td><td>4</td><td><code>range(4)</code>: 4 voltas</td><td><code>****</code></td></tr>
+<tr><td>5ª</td><td>5</td><td><code>range(5)</code>: 5 voltas</td><td><code>*****</code></td></tr>
+</table>
+</div>
+
+<h3>Triângulo invertido</h3>
+<p>Basta o laço de fora contar <strong>para trás</strong> (passo negativo, veja <a href="range.html">range()</a>):</p>
+
+<pre class="file" data-file="invertido.py">for linha in range(5, 0, -1):
+    for estrela in range(linha):
+        print("*", end="")
+    print()
+</pre>
+
+<pre class="term">$ python3 invertido.py
+*****
+****
+***
+**
+*</pre>
+
+<div class="trypy">
+<p class="try-task"><strong>Experimente:</strong> troque o <code>"*"</code> por <code>"#"</code> ou por um número (<code>print(linha, end="")</code>), e o <code>range(5, 0, -1)</code> por <code>range(8, 0, -2)</code>. Antes de rodar, tente imaginar o desenho.</p>
+<pre class="script" data-file="main.py">for linha in range(5, 0, -1):
+    for estrela in range(linha):
+        print("*", end="")
+    print()
+</pre>
+</div>
+
+<hr>
+
+<h2>4. O <code>break</code> só sai do laço de dentro</h2>
+<p>O <code>break</code> (aula <a href="break-continue.html">break e continue</a>) sai do laço <strong>em que ele está</strong>, que é sempre o mais de dentro. O laço de fora continua como se nada tivesse acontecido. Este programa procura, para cada <code>a</code> de 1 a 6, um <code>b</code> de 1 a 6 com <code>a × b = 12</code>:</p>
+
+<pre class="file" data-file="break_dentro.py">for a in range(1, 7):
+    for b in range(1, 7):
+        if a * b == 12:
+            print(f"{a} x {b} = 12")
+            break
+</pre>
+
+<pre class="term">$ python3 break_dentro.py
+2 x 6 = 12
+3 x 4 = 12
+4 x 3 = 12
+6 x 2 = 12</pre>
+
+<p>Cada <code>break</code> encerrou só a busca do <code>b</code>; o laço do <code>a</code> seguiu para o próximo número. Por isso apareceram quatro respostas, uma para cada <code>a</code> que tem par (o 1 e o 5 não têm nenhum <code>b</code> até 6 que dê 12).</p>
+
+<h3>E para parar tudo no primeiro que achar?</h3>
+<p>Um jeito é a variável <code>achou</code>, a "bandeira" que você viu em <a href="lacos-else.html">else nos Laços</a>: o laço de dentro levanta a bandeira antes do <code>break</code>, e o de fora olha para ela logo depois:</p>
+
+<pre class="file" data-file="break_tudo.py">achou = False
+for a in range(1, 7):
+    for b in range(1, 7):
+        if a * b == 12:
+            print(f"Primeiro par: {a} x {b} = 12")
+            achou = True
+            break
+    if achou:
+        break
+print("Busca encerrada.")
+</pre>
+
+<pre class="term">$ python3 break_tudo.py
+Primeiro par: 2 x 6 = 12
+Busca encerrada.</pre>
+
+<p>São dois <code>break</code>: o de 12 espaços sai do laço do <code>b</code>; o de 8 espaços, logo abaixo do <code>if achou:</code>, sai do laço do <code>a</code>. (Mais adiante, na aula <a href="return.html">return</a>, você vai ver um jeito ainda mais limpo: pôr a busca numa função e sair dela de uma vez.)</p>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+<p>Para desenhar uma linha de estrelas, o laço de dentro tem um substituto: o texto multiplicado por um número repete o texto (aula <a href="strings-juntar.html">Juntar e Repetir Textos</a>). <code>"*" * 3</code> é <code>"***"</code>. O triângulo fica com um laço só:</p>
+
+<pre class="file" data-file="triangulo_mult.py">for linha in range(1, 6):
+    print("*" * linha)
+</pre>
+
+<pre class="term">$ python3 triangulo_mult.py
+*
+**
+***
+****
+*****</pre>
+
+<p>Mesmo desenho, e sem precisar do <code>end=""</code> nem do <code>print()</code> para pular a linha. Com esse truque, até uma pirâmide fica fácil: cada linha leva alguns <strong>espaços</strong> antes das estrelas, para centralizar.</p>
+
+<pre class="file" data-file="piramide.py">altura = 4
+for linha in range(1, altura + 1):
+    espacos = altura - linha
+    estrelas = 2 * linha - 1
+    print(" " * espacos + "*" * estrelas)
+</pre>
+
+<pre class="term">$ python3 piramide.py
+   *
+  ***
+ *****
+*******</pre>
+
+<p>Na linha 1: 3 espaços e 1 estrela. Na linha 2: 2 espaços e 3 estrelas. Cada linha tem um espaço a menos e duas estrelas a mais.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Situação</th><th>Qual usar</th></tr>
+<tr><td>Combinar cada item de um grupo com cada item de outro (fileiras × cadeiras, tabuadas × números)</td><td>Laço aninhado</td></tr>
+<tr><td>Uma linha com N cópias do mesmo caractere</td><td><code>"*" * n</code>, sem laço de dentro</td></tr>
+<tr><td>Uma linha em que cada posição é diferente (a grade de multiplicação)</td><td>Laço de dentro com <code>print(…, end="")</code> e um <code>print()</code> depois</td></tr>
+<tr><td>Parar tudo no primeiro que achar</td><td><code>break</code> no de dentro + variável <code>achou</code> + <code>break</code> no de fora</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>A mesma variável nos dois laços</strong>
+<pre class="file" data-file="mesmo_nome.py">for i in range(1, 4):
+    for i in range(1, 3):
+        print(i, end=" ")
+    print(f"&lt;- fim da fileira {i}")
+</pre>
+<pre class="term">$ python3 mesmo_nome.py
+1 2 &lt;- fim da fileira 2
+1 2 &lt;- fim da fileira 2
+1 2 &lt;- fim da fileira 2</pre>
+<p>Nenhum erro, mas a fileira é sempre "2". Os dois laços usam o nome <code>i</code>, então o de dentro <strong>sobrescreve</strong> o valor do de fora. Quando o laço de dentro termina, <code>i</code> ficou com o último valor dele (2), e é esse que o <code>print</code> mostra. (O laço de fora ainda dá as suas 3 voltas, porque o <code>for</code> não usa a variável para saber qual é o próximo item; mas o valor dele se perdeu.) <strong>Como consertar:</strong> nomes diferentes e que digam o que guardam: <code>for fileira in …</code> e <code>for cadeira in …</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu o <code>print()</code> que pula a linha</strong>
+<pre class="file" data-file="sem_print.py">for linha in range(3):
+    for coluna in range(5):
+        print("*", end="")
+</pre>
+<pre class="term">$ python3 sem_print.py
+***************ana@notebook:~$          « o prompt grudou no fim das estrelas</pre>
+<p>As 15 estrelas saíram numa linha só, e até o prompt do terminal ficou grudado nelas. Com <code>end=""</code>, nenhum <code>print</code> pula a linha; isso é trabalho do <code>print()</code> vazio no laço de fora. <strong>Como consertar:</strong> ponha <code>print()</code> com 4 espaços, depois do laço de dentro.</p>
+</div>
+
+<div class="cenario">
+<strong>O <code>print()</code> entrou no laço de dentro</strong>
+<pre class="file" data-file="print_dentro.py">for linha in range(2):
+    for coluna in range(3):
+        print("*", end="")
+        print()
+</pre>
+<pre class="term">$ python3 print_dentro.py
+*
+*
+*
+*
+*
+*</pre>
+<p>Com 8 espaços, o <code>print()</code> faz parte do laço de dentro e pula a linha depois de <strong>cada</strong> estrela: em vez de 2 linhas de 3, saíram 6 linhas de 1. <strong>Como consertar:</strong> o <code>print()</code> vai com 4 espaços, alinhado com o <code>for coluna</code>. Num laço aninhado, cada nível de indentação diz em qual laço a linha está.</p>
+</div>
+
+<div class="cenario">
+<strong>Indentação que não bate com nenhum nível</strong>
+<pre class="file" data-file="recuo.py">for linha in range(3):
+    for coluna in range(5):
+        print("*", end="")
+  print()
+</pre>
+<pre class="term">$ python3 recuo.py
+  File "/home/ana/recuo.py", line 4
+    print()
+           ^
+IndentationError: unindent does not match any outer indentation level</pre>
+<p>"Erro de indentação: o recuo não corresponde a nenhum nível de indentação de fora". O <code>print()</code> tem <strong>2</strong> espaços. Os níveis que existem são 0 (o <code>for linha</code>), 4 (o <code>for coluna</code>) e 8 (o <code>print("*")</code>); 2 não é nenhum deles, e o Python não sabe a qual laço a linha pertence. <strong>Como consertar:</strong> use sempre múltiplos de 4 espaços. Aqui, 4.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>for a in …:</code> / <code>&nbsp;&nbsp;&nbsp;&nbsp;for b in …:</code></td><td>Laço aninhado: o de dentro dá a volta completa a cada volta do de fora</td></tr>
+<tr><td>voltas de fora × voltas de dentro</td><td>Quantas vezes o bloco de dentro roda</td></tr>
+<tr><td><code>print(x, end="")</code> no de dentro + <code>print()</code> no de fora</td><td>Montar uma linha por volta do de fora</td></tr>
+<tr><td><code>for b in range(a):</code></td><td>O de dentro depende do de fora: linhas de tamanhos diferentes (triângulo)</td></tr>
+<tr><td><code>f"{n:3}"</code></td><td>O número ocupa 3 casas: colunas alinhadas</td></tr>
+<tr><td><code>"*" * n</code></td><td>N estrelas sem laço de dentro</td></tr>
+<tr><td><code>break</code> no de dentro</td><td>Sai só do de dentro; o de fora continua</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td>A variável do de fora mostra um valor errado</td><td>Os dois laços usam o mesmo nome de variável</td></tr>
+<tr><td>Tudo numa linha só</td><td>Faltou o <code>print()</code> no laço de fora</td></tr>
+<tr><td>Um item por linha, em vez de uma tabela</td><td>O <code>print()</code> está indentado dentro do laço de dentro</td></tr>
+<tr><td><code>IndentationError: unindent does not match any outer indentation level</code></td><td>Uma linha com recuo que não é nenhum dos níveis (use múltiplos de 4)</td></tr>
+<tr><td>O <code>break</code> não parou a busca toda</td><td>Ele só sai do laço de dentro: use a variável <code>achou</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Quantas vezes?</h3>
+<p>Quantas vezes aparece <code>Oi</code>?</p>
+<pre class="file" data-file="exercicio.py">for a in range(4):
+    for b in range(5):
+        print("Oi")
+</pre>
+<div class="ex-code"><input data-answer="20" aria-label="número de vezes"> vezes.</div>
+</div>
+
+<div class="exercise">
+<h3>2. Complete o triângulo</h3>
+<p>Complete para o laço de dentro dar tantas voltas quanto o número da linha:</p>
+<div class="ex-code">for linha in range(1, 6):<br>&nbsp;&nbsp;&nbsp;&nbsp;for estrela in range(<input data-answer="linha" aria-label="variável">):<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print("*", end="")<br>&nbsp;&nbsp;&nbsp;&nbsp;print()</div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">3. Num laço aninhado, o que acontece com o laço de dentro a cada nova volta do de fora?</p>
+<label><input type="radio" name="q3"> Continua de onde parou</label>
+<label><input type="radio" name="q3"> Roda só uma vez</label>
+<label><input type="radio" name="q3"> Recomeça do início e dá todas as suas voltas de novo</label>
+<label><input type="radio" name="q3"> Para de rodar</label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Um <code>break</code> está dentro do laço de dentro. O que ele faz?</p>
+<label><input type="radio" name="q4"> Sai dos dois laços e termina o programa</label>
+<label><input type="radio" name="q4"> Sai só do laço de dentro; o de fora segue para a próxima volta</label>
+<label><input type="radio" name="q4"> Sai só do laço de fora</label>
+<label><input type="radio" name="q4"> Dá <code>SyntaxError</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Este programa mostra 15 estrelas numa linha só: <code>for l in range(3):</code> / <code>&nbsp;&nbsp;&nbsp;&nbsp;for c in range(5):</code> / <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print("*", end="")</code>. O que falta para virar um retângulo 3 × 5?</p>
+<label><input type="radio" name="q5"> Um <code>print()</code> com 4 espaços, depois do laço de dentro</label>
+<label><input type="radio" name="q5"> Um <code>print()</code> com 8 espaços, depois do <code>print("*", end="")</code></label>
+<label><input type="radio" name="q5"> Trocar <code>end=""</code> por <code>end="*"</code></label>
+<label><input type="radio" name="q5"> Um <code>break</code></label>
+</div>
+
+<h3>Missão final: o triângulo de estrelas</h3>
+
+<div class="trypy" data-goal="outre:^\*\n\*\*\n\*\*\*\n\*\*\*\*\n\*\*\*\*\*\n$;;src:for[\s\S]*for">
+<p class="try-task"><strong>Missão:</strong> este programa desenha um quadrado de 5 × 5. Mude o laço <strong>de dentro</strong> para desenhar um triângulo: 1 estrela na primeira linha, 2 na segunda… até 5 na quinta. Use dois <code>for</code> (sem o atalho <code>"*" * n</code>).</p>
+<pre class="script" data-file="main.py">for linha in range(1, 6):
+    for estrela in range(5):
+        print("*", end="")
+    print()
+</pre>
+<pre class="solucao" data-file="main.py">for linha in range(1, 6):
+    for estrela in range(linha):
+        print("*", end="")
+    print()
+</pre>
+</div>
+
+<p>Conseguiu? Agora tente o desafio: o triângulo invertido, ou o triângulo "encostado à direita" (espaços antes das estrelas, como na pirâmide).</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Um <strong>laço aninhado</strong> é um laço dentro do bloco de outro. O de dentro dá a <strong>volta completa</strong> a cada volta do de fora; o bloco de dentro roda (voltas de fora × voltas de dentro) vezes.</li>
+  <li>A indentação diz em qual laço cada linha está: 4 espaços para o de fora, 8 para o de dentro.</li>
+  <li>Tabelas e desenhos: <code>print(…, end="")</code> no de dentro para montar a linha, <code>print()</code> no de fora para pulá-la.</li>
+  <li>Se o de dentro usar a variável do de fora (<code>range(linha)</code>), cada linha fica de um tamanho: é o triângulo.</li>
+  <li>O <code>break</code> só sai do laço de dentro; para parar tudo, use uma variável <code>achou</code> e um segundo <code>break</code>.</li>
+  <li>Dê nomes diferentes às variáveis dos dois laços (<code>fileira</code> e <code>cadeira</code>), senão o de dentro apaga o valor do de fora.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
