@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Recursão — funções que chamam a si mesmas | Guia Python</title>
+<meta name="description" content="Recursão em Python para quem está começando: o que é uma função que chama a si mesma, o caso base e o passo recursivo, a contagem regressiva, o fatorial passo a passo, somar uma lista, recursão comparada com o laço for, e o RecursionError real quando falta o caso base, com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Recursão</span></h1>
+
+<p class="intro">Você já sabe que uma função pode chamar outra: dentro de uma função, você usa <code>print()</code>, <code>len()</code> ou uma função sua. Mas uma função também pode chamar <strong>a si mesma</strong>. Isso se chama <strong>recursão</strong> (do latim <em>recurrere</em>, "voltar a correr"). Parece um truque estranho, e tem um perigo (a função que se chama para sempre), mas é um jeito elegante de resolver problemas que se repetem "em tamanho menor". Nesta aula você vai ver como ela funciona por dentro, quando usar e o que acontece quando dá errado.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é uma função <strong>recursiva</strong> e as suas duas partes: o <strong>caso base</strong> e o <strong>passo recursivo</strong>.</li>
+  <li>A fazer uma contagem regressiva sem laço nenhum.</li>
+  <li>A calcular o fatorial com <code>return</code> e a acompanhar, passo a passo, as chamadas que o Python faz.</li>
+  <li>A somar uma lista com recursão.</li>
+  <li>A comparar recursão com o laço <code>for</code> e a escolher o melhor para cada caso.</li>
+  <li>O erro real quando falta o caso base: <code>RecursionError: maximum recursion depth exceeded</code>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a fila do cinema</h2>
+<p>A Ana está numa fila enorme de cinema, no escuro, e quer saber em que lugar está. Ela não consegue contar as pessoas lá na frente. Então ela cutuca a pessoa da frente e pergunta: "em que lugar você está?". Essa pessoa também não sabe, e faz <strong>a mesma pergunta</strong> para a pessoa da frente dela. E assim por diante, até chegar na <strong>primeira pessoa da fila</strong>, que olha para a frente, não vê ninguém e responde: "eu sou a número 1".</p>
+<p>Aí a resposta volta: a segunda pessoa diz "então eu sou a 2", a terceira diz "eu sou a 3"… até chegar na Ana.</p>
+<p>Repare nas duas partes dessa história:</p>
+<ul>
+  <li><strong>A pergunta repetida em tamanho menor:</strong> cada pessoa faz a mesma pergunta, para uma fila que tem uma pessoa a menos. Em programação, é o <strong>passo recursivo</strong>: a função chama a si mesma com um problema menor.</li>
+  <li><strong>Alguém que sabe a resposta sem perguntar:</strong> a primeira da fila. É o <strong>caso base</strong>: o ponto em que a função para de se chamar e responde direto.</li>
+</ul>
+<p>Sem a primeira pessoa da fila, a pergunta passaria de mão em mão para sempre. Guarde isso: <strong>toda função recursiva precisa de um caso base</strong>.</p>
+
+<hr>
+
+<h2>1. A primeira função recursiva: a contagem regressiva</h2>
+<p>Um foguete vai ser lançado. A contagem começa em 3 e, quando chega a zero, aparece "Fogo!". Com recursão:</p>
+
+<pre class="file" data-file="contagem.py">def contagem(n):
+    if n == 0:
+        print("Fogo!")
+    else:
+        print(n)
+        contagem(n - 1)
+
+
+contagem(3)
+</pre>
+
+<dl class="anatomy">
+  <dt>def contagem(n):</dt><dd>Uma função comum, com um parâmetro <code>n</code>: o número de onde a contagem começa.</dd>
+  <dt>if n == 0:</dt><dd>O <strong>caso base</strong>: quando a contagem chega a zero, não há mais o que contar.</dd>
+  <dt>print("Fogo!")</dt><dd>O que fazer no caso base. Aqui a função termina, <strong>sem chamar a si mesma</strong>.</dd>
+  <dt>print(n)</dt><dd>Fora do caso base, mostra o número atual…</dd>
+  <dt>contagem(n - 1)</dt><dd>…e o <strong>passo recursivo</strong>: a função chama a si mesma com um número <strong>menor</strong>. Cada chamada chega um pouco mais perto do zero.</dd>
+  <dt>contagem(3)</dt><dd>A primeira chamada, feita de fora da função. É ela que põe tudo em movimento.</dd>
+</dl>
+
+<pre class="term">$ python3 contagem.py
+3
+2
+1
+Fogo!
+</pre>
+
+<p>Não há <code>for</code> nem <code>while</code> no programa, e mesmo assim os números se repetiram. O que aconteceu, chamada por chamada:</p>
+
+<ol class="passo">
+  <li><code>contagem(3)</code>: 3 não é zero. Mostra <code>3</code> e chama <code>contagem(2)</code>.</li>
+  <li><code>contagem(2)</code>: mostra <code>2</code> e chama <code>contagem(1)</code>.</li>
+  <li><code>contagem(1)</code>: mostra <code>1</code> e chama <code>contagem(0)</code>.</li>
+  <li><code>contagem(0)</code>: é o caso base. Mostra <code>Fogo!</code> e <strong>não chama mais ninguém</strong>.</li>
+  <li>A <code>contagem(0)</code> termina e volta para a <code>contagem(1)</code>, que não tem mais nada para fazer e termina também; o mesmo com a 2 e a 3. O programa acaba.</li>
+</ol>
+
+<div class="tip">
+<strong>Cada chamada tem o seu próprio <code>n</code></strong>
+<p>Quando <code>contagem(3)</code> chama <code>contagem(2)</code>, o <code>n</code> que vale 3 <strong>não muda</strong>: a nova chamada ganha um <code>n</code> novo, só dela, que vale 2. É como as pessoas da fila: cada uma tem a sua resposta. Você viu isso na aula <a href="escopo.html">Escopo</a>: as variáveis de dentro de uma função são locais, e cada chamada tem as suas.</p>
+</div>
+
+<div class="trypy" data-goal="outre:^10\n9\n8\n7\n6\n5\n4\n3\n2\n1\nFeliz Ano Novo!\n$;;src:^\s+contagem\(">
+<p class="try-task"><strong>Missão:</strong> é 31 de dezembro! Mude o programa para contar de <strong>10</strong> até 1 e, no zero, mostrar <code>Feliz Ano Novo!</code> no lugar de <code>Fogo!</code>. Continue usando a recursão (nada de <code>for</code>).</p>
+<pre class="script" data-file="main.py">def contagem(n):
+    if n == 0:
+        print("Fogo!")
+    else:
+        print(n)
+        contagem(n - 1)
+
+
+contagem(3)
+</pre>
+<pre class="solucao" data-file="main.py">def contagem(n):
+    if n == 0:
+        print("Feliz Ano Novo!")
+    else:
+        print(n)
+        contagem(n - 1)
+
+
+contagem(10)
+</pre>
+</div>
+
+<hr>
+
+<h2>2. Recursão com <code>return</code>: o fatorial</h2>
+<p>O <strong>fatorial</strong> de um número, escrito <code>5!</code> na matemática, é a multiplicação dele por todos os números inteiros menores, até o 1:</p>
+<p><code>5! = 5 × 4 × 3 × 2 × 1 = 120</code></p>
+<p>Ele aparece quando você quer saber de quantos jeitos dá para arrumar coisas em fila: 5 livros numa prateleira podem ficar em 120 ordens diferentes. Agora repare num detalhe: <code>4 × 3 × 2 × 1</code> é o <code>4!</code>. Então:</p>
+<p><code>5! = 5 × 4!</code>, e <code>4! = 4 × 3!</code>, e assim por diante, até <code>1! = 1</code>.</p>
+<p>É o mesmo problema "em tamanho menor", como a fila do cinema. Em Python, fica quase igual à matemática:</p>
+
+<pre class="file" data-file="fatorial.py">def fatorial(n):
+    if n == 1:
+        return 1
+    return n * fatorial(n - 1)
+
+
+print(fatorial(5))
+print(fatorial(1))
+print(fatorial(10))
+</pre>
+
+<dl class="anatomy">
+  <dt>if n == 1:</dt><dd>O caso base: o fatorial de 1 é 1, sem conta nenhuma.</dd>
+  <dt>return 1</dt><dd>Devolve a resposta direto (veja a aula <a href="return.html">return</a>). O <code>return</code> também termina a função, por isso não precisa de <code>else</code>.</dd>
+  <dt>return n * fatorial(n - 1)</dt><dd>O passo recursivo: "o fatorial de <code>n</code> é <code>n</code> vezes o fatorial de <code>n - 1</code>". Para fazer a multiplicação, o Python precisa <strong>primeiro</strong> descobrir quanto vale <code>fatorial(n - 1)</code>, e para isso chama a função de novo.</dd>
+</dl>
+
+<pre class="term">$ python3 fatorial.py
+120
+1
+3628800
+</pre>
+
+<h3>Acompanhando as chamadas</h3>
+<p>Na contagem, cada chamada fazia o seu trabalho <strong>antes</strong> de chamar a próxima. No fatorial é diferente: cada chamada fica <strong>esperando</strong> a resposta da próxima para poder multiplicar. Para enxergar isso, esta versão mostra uma mensagem quando cada chamada começa e quando devolve a resposta. O parâmetro extra <code>nivel</code> só serve para empurrar o texto para a direita a cada chamada (4 espaços por nível):</p>
+
+<pre class="file" data-file="fatorial_passos.py">def fatorial(n, nivel=0):
+    recuo = "    " * nivel
+    print(f"{recuo}fatorial({n}) começou")
+    if n == 1:
+        print(f"{recuo}fatorial(1) devolve 1")
+        return 1
+    resultado = n * fatorial(n - 1, nivel + 1)
+    print(f"{recuo}fatorial({n}) devolve {resultado}")
+    return resultado
+
+
+print("Resposta:", fatorial(4))
+</pre>
+
+<pre class="term">$ python3 fatorial_passos.py
+fatorial(4) começou
+    fatorial(3) começou
+        fatorial(2) começou
+            fatorial(1) começou
+            fatorial(1) devolve 1
+        fatorial(2) devolve 2
+    fatorial(3) devolve 6
+fatorial(4) devolve 24
+Resposta: 24
+</pre>
+
+<p>Leia a saída de cima para baixo. Primeiro, as chamadas <strong>descem</strong>: a 4 chama a 3, que chama a 2, que chama a 1. Nenhuma delas consegue responder ainda. A <code>fatorial(1)</code> é o caso base e responde na hora: 1. Aí as respostas <strong>sobem</strong>, cada uma usando a resposta de baixo:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Chamada</th><th>Espera por</th><th>Conta que faz quando a resposta chega</th><th>Devolve</th></tr>
+<tr><td><code>fatorial(1)</code></td><td>ninguém (caso base)</td><td>nenhuma</td><td>1</td></tr>
+<tr><td><code>fatorial(2)</code></td><td><code>fatorial(1)</code></td><td><code>2 * 1</code></td><td>2</td></tr>
+<tr><td><code>fatorial(3)</code></td><td><code>fatorial(2)</code></td><td><code>3 * 2</code></td><td>6</td></tr>
+<tr><td><code>fatorial(4)</code></td><td><code>fatorial(3)</code></td><td><code>4 * 6</code></td><td>24</td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>A pilha de chamadas</strong>
+<p>Enquanto uma chamada espera a próxima, o Python guarda o lugar dela (onde parou e quanto valem as suas variáveis), como pratos numa pilha: cada chamada nova vai para o topo, e só depois que ela termina o Python volta para a de baixo. Essa pilha se chama <strong>pilha de chamadas</strong> (em inglês, <em>call stack</em>). Ela tem um tamanho máximo, e é isso que você vai ver estourar em <a href="#errado">Quando dá errado</a>.</p>
+</div>
+
+<hr>
+
+<h2>3. Somando uma lista com recursão</h2>
+<p>A recursão não serve só para números. A Ana anotou os preços da feira numa lista e quer o total. Pense assim: o total da lista é <strong>o primeiro preço mais o total do resto</strong>. E o total de uma lista vazia é zero (o caso base).</p>
+
+<pre class="file" data-file="soma_lista.py">def somar(precos):
+    if not precos:
+        return 0
+    return precos[0] + somar(precos[1:])
+
+
+compras = [12.5, 8.0, 4.25, 30.0]
+print(somar(compras))
+print(somar([]))
+</pre>
+
+<dl class="anatomy">
+  <dt>if not precos:</dt><dd>O caso base. Uma lista vazia vale <code>False</code> numa condição (veja a aula <a href="booleanos.html">Booleanos</a>), então <code>not precos</code> é verdade quando a lista está vazia.</dd>
+  <dt>return 0</dt><dd>A soma de nenhum preço é zero.</dd>
+  <dt>precos[0]</dt><dd>O primeiro preço da lista (aula <a href="listas-acessar.html">Acessando Itens</a>).</dd>
+  <dt>precos[1:]</dt><dd>Uma fatia com <strong>todos menos o primeiro</strong>: uma lista um item menor. É o "problema em tamanho menor".</dd>
+  <dt>somar(precos[1:])</dt><dd>O passo recursivo: a soma do resto.</dd>
+</dl>
+
+<pre class="term">$ python3 soma_lista.py
+54.75
+0
+</pre>
+
+<p>As chamadas foram: <code>somar([12.5, 8.0, 4.25, 30.0])</code> → <code>somar([8.0, 4.25, 30.0])</code> → <code>somar([4.25, 30.0])</code> → <code>somar([30.0])</code> → <code>somar([])</code>, que devolve 0. Na volta: <code>30.0 + 0</code>, <code>4.25 + 30.0</code>, <code>8.0 + 34.25</code> e <code>12.5 + 42.25</code> = <code>54.75</code>.</p>
+
+<div class="tip">
+<strong>Como pensar uma função recursiva</strong>
+<p>Faça sempre as mesmas duas perguntas:</p>
+<ol>
+  <li><strong>Qual é o caso mais simples, que eu sei responder sem conta nenhuma?</strong> (zero, 1, a lista vazia, o texto vazio.) Esse é o caso base.</li>
+  <li><strong>Se alguém me der a resposta do problema um pouco menor, como eu chego na resposta do problema inteiro?</strong> Esse é o passo recursivo.</li>
+</ol>
+<p>E confira: cada chamada tem de chegar <strong>mais perto</strong> do caso base (<code>n - 1</code>, <code>precos[1:]</code>). Se não chegar, a função nunca para.</p>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+<p>Tudo o que se faz com recursão também se faz com um laço. O fatorial de 5, de três jeitos:</p>
+
+<p><strong>1. Com recursão</strong>, como você viu acima (<code>fatorial.py</code>).</p>
+
+<p><strong>2. Com um laço <code>for</code></strong> (aulas <a href="for.html">for</a> e <a href="range.html">range()</a>): começa em 1 e vai multiplicando por 2, 3, 4 e 5.</p>
+<pre class="file" data-file="laco.py">def fatorial(n):
+    resultado = 1
+    for numero in range(2, n + 1):
+        resultado = resultado * numero
+    return resultado
+
+
+print(fatorial(5))
+</pre>
+<pre class="term">$ python3 laco.py
+120
+</pre>
+
+<p><strong>3. Com a função pronta do módulo <code>math</code></strong> (aula <a href="math.html">O Módulo math</a>):</p>
+<pre class="term">$ python3 -c "import math; print(math.factorial(5))"
+120
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td>Recursão</td><td>Quando o problema é naturalmente "ele mesmo, em tamanho menor": pastas dentro de pastas, uma árvore genealógica, um menu com submenus, dicionários dentro de dicionários. Aí a versão recursiva costuma ser a mais curta e a mais fácil de ler</td></tr>
+<tr><td>Laço (<code>for</code> / <code>while</code>)</td><td>Na maioria dos casos do dia a dia, como somar, contar e repetir. Não tem limite de profundidade e é o que os programadores Python esperam ler</td></tr>
+<tr><td>Função pronta (<code>math.factorial</code>, <code>sum</code>)</td><td>Sempre que existir. Já está testada e é mais rápida. Para somar uma lista, use <code>sum(compras)</code> (aula <a href="funcoes-embutidas.html">Funções Embutidas</a>)</td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>Por que aprender recursão, então?</strong>
+<p>Porque há problemas em que o laço fica complicado e a recursão fica simples: percorrer uma pasta que tem subpastas, que têm outras subpastas, sem saber quantos níveis existem. E porque você vai encontrá-la no código dos outros. Os exemplos desta aula (contagem, fatorial, soma) são simples de propósito, para você ver o mecanismo; no dia a dia, para eles, prefira o laço ou a função pronta.</p>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Esqueceu o caso base: <code>RecursionError</code></strong>
+<p>A Ana apagou, sem querer, o <code>if</code> da contagem. Agora a função <strong>sempre</strong> chama a si mesma:</p>
+<pre class="file" data-file="sem_base.py">def contagem(n):
+    print(n)
+    contagem(n - 1)
+
+
+contagem(3)
+</pre>
+<p>O programa mostra 3, 2, 1, 0 e não para: -1, -2, -3… Ninguém diz "chega". Depois de 999 números, o Python desiste:</p>
+<pre class="term">$ python3 sem_base.py
+3
+2
+1
+0
+-1
+-2                                          « …e assim por centenas de linhas…
+-994
+-995
+Traceback (most recent call last):
+  File "/home/ana/sem_base.py", line 6, in &lt;module&gt;
+    contagem(3)
+    ~~~~~~~~^^^
+  File "/home/ana/sem_base.py", line 3, in contagem
+    contagem(n - 1)
+    ~~~~~~~~^^^^^^^
+  File "/home/ana/sem_base.py", line 3, in contagem
+    contagem(n - 1)
+    ~~~~~~~~^^^^^^^
+  File "/home/ana/sem_base.py", line 3, in contagem
+    contagem(n - 1)
+    ~~~~~~~~^^^^^^^
+  [Previous line repeated 996 more times]
+RecursionError: maximum recursion depth exceeded
+</pre>
+<p>(As linhas do meio, de <code>-3</code> a <code>-993</code>, foram cortadas aqui; no terminal da Ana elas aparecem todas.) Linha por linha, o traceback (a "mensagem de erro"; veja a aula <a href="erros.html">Lendo uma Mensagem de Erro</a>):</p>
+<dl class="anatomy">
+  <dt>Traceback (most recent call last):</dt><dd>"Rastro (a chamada mais recente por último)". Abaixo vem o caminho das chamadas, da primeira até a que deu erro.</dd>
+  <dt>File "/home/ana/sem_base.py", line 6, in &lt;module&gt;</dt><dd>A primeira chamada: a linha 6 do arquivo, fora de qualquer função (<code>&lt;module&gt;</code> quer dizer "no corpo do programa").</dd>
+  <dt>contagem(3) e ~~~~~~~~^^^</dt><dd>A linha que foi executada. Os sinais <code>~</code> e <code>^</code> embaixo marcam o trecho exato: a chamada da função.</dd>
+  <dt>File "/home/ana/sem_base.py", line 3, in contagem</dt><dd>Dentro da <code>contagem</code>, a linha 3 chamou a <code>contagem</code> de novo. O mesmo trecho aparece três vezes…</dd>
+  <dt>[Previous line repeated 996 more times]</dt><dd>"A linha anterior se repetiu mais 996 vezes". Em vez de encher a tela com mil blocos iguais, o Python resume. Somando: 3 blocos mostrados + 996 = 999 chamadas da <code>contagem</code> empilhadas, uma esperando a outra.</dd>
+  <dt>RecursionError: maximum recursion depth exceeded</dt><dd>O nome do erro e a explicação: "erro de recursão: a profundidade máxima de recursão foi ultrapassada". A pilha de chamadas encheu.</dd>
+</dl>
+<p><strong>Como consertar:</strong> devolva o caso base (<code>if n == 0:</code>) para a função.</p>
+</div>
+
+<div class="note">
+<strong>Qual é o limite?</strong>
+<p>O Python limita quantas chamadas podem ficar empilhadas, para que uma recursão sem fim termine num erro claro em vez de travar o computador. No Python 3.14 do Ubuntu da Ana, o limite é <strong>1000</strong>, e dá para consultá-lo:</p>
+<pre class="term">$ python3 -c "import sys; print(sys.getrecursionlimit())"
+1000
+</pre>
+<p>O <code>&lt;module&gt;</code> (o corpo do programa) conta como uma das mil; por isso couberam 999 chamadas da <code>contagem</code>. O número pode ser outro em outro lugar: o editor do guia roda o Python dentro do navegador, e lá o limite pode ser diferente. Não decore o número; lembre que <strong>existe</strong> um limite. Existe também a função <code>sys.setrecursionlimit()</code>, que muda esse limite, mas ela não conserta uma função sem caso base: só faz o erro demorar mais para aparecer.</p>
+</div>
+
+<div class="cenario">
+<strong>O caso base existe, mas a chamada passa direto por ele</strong>
+<p>O <code>fatorial</code> da seção 2 está certo para 1, 2, 3… Mas veja o que acontece com <code>fatorial(0)</code>:</p>
+<pre class="file" data-file="fatorial_negativo.py">def fatorial(n):
+    if n == 1:
+        return 1
+    return n * fatorial(n - 1)
+
+
+print(fatorial(0))
+</pre>
+<pre class="term">$ python3 fatorial_negativo.py
+Traceback (most recent call last):
+  File "/home/ana/fatorial_negativo.py", line 7, in &lt;module&gt;
+    print(fatorial(0))
+  File "/home/ana/fatorial_negativo.py", line 4, in fatorial
+    return n * fatorial(n - 1)
+               ~~~~~~~~^^^^^^^           « daqui em diante, o mesmo bloco se repete
+  File "/home/ana/fatorial_negativo.py", line 4, in fatorial
+    return n * fatorial(n - 1)
+               ~~~~~~~~^^^^^^^
+  [Previous line repeated 996 more times]
+RecursionError: maximum recursion depth exceeded
+</pre>
+<p>(Algumas repetições do bloco foram cortadas aqui.) O caso base é <code>n == 1</code>, mas a conta começou no 0: 0, -1, -2, -3… a função nunca passa pelo 1. O caso base existe, mas está <strong>fora do caminho</strong>. <strong>Como consertar:</strong> use um caso base que pegue esses números também. Na matemática, o fatorial de 0 é 1, então:</p>
+<pre class="file" data-file="fatorial.py">def fatorial(n):
+    if n &lt;= 1:
+        return 1
+    return n * fatorial(n - 1)
+</pre>
+<p>Com <code>n &lt;= 1</code> (menor ou igual a 1), tanto o 1 quanto o 0 param a recursão. (Para números negativos, que não têm fatorial, o certo seria avisar com um erro; a aula <a href="raise.html">raise</a> mostra como.)</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu o <code>return</code> no passo recursivo: <code>TypeError</code></strong>
+<p>Aqui o caso base está certo, mas falta a palavra <code>return</code> na última linha:</p>
+<pre class="file" data-file="sem_return.py">def fatorial(n):
+    if n == 1:
+        return 1
+    n * fatorial(n - 1)
+
+
+print(fatorial(5))
+</pre>
+<pre class="term">$ python3 sem_return.py
+Traceback (most recent call last):
+  File "/home/ana/sem_return.py", line 7, in &lt;module&gt;
+    print(fatorial(5))
+          ~~~~~~~~^^^
+  File "/home/ana/sem_return.py", line 4, in fatorial
+    n * fatorial(n - 1)
+        ~~~~~~~~^^^^^^^
+  File "/home/ana/sem_return.py", line 4, in fatorial
+    n * fatorial(n - 1)
+        ~~~~~~~~^^^^^^^
+  File "/home/ana/sem_return.py", line 4, in fatorial
+    n * fatorial(n - 1)
+    ~~^~~~~~~~~~~~~~~~~
+TypeError: unsupported operand type(s) for *: 'int' and 'NoneType'
+</pre>
+<p>Desta vez o erro é outro. As chamadas desceram até <code>fatorial(1)</code>, que devolveu 1. A <code>fatorial(2)</code> calculou <code>2 * 1</code>… e jogou o resultado fora, porque não tem <code>return</code>. Uma função que termina sem <code>return</code> devolve <code>None</code> (aula <a href="none.html">O Valor None</a>). Aí a <code>fatorial(3)</code> tentou fazer <code>3 * None</code>, e o Python reclamou: "tipos não suportados para <code>*</code>: <code>'int'</code> (número inteiro) e <code>'NoneType'</code> (o tipo do <code>None</code>)". Repare na última marca, <code>~~^~~~~~~~~~~~~~~~~</code>: o <code>^</code> aponta para o <code>*</code>, a operação que falhou. <strong>Como consertar:</strong> <code>return n * fatorial(n - 1)</code>.</p>
+</div>
+
+<div class="trypy" data-goal="out:Fogo!;;semerro">
+<p class="try-task"><strong>Missão:</strong> esta contagem não para nunca e termina em <code>RecursionError</code>. Rode para ver o erro, depois conserte a função para ela mostrar 3, 2, 1 e <code>Fogo!</code>.</p>
+<pre class="script" data-file="main.py">def contagem(n):
+    print(n)
+    contagem(n - 1)
+
+
+contagem(3)
+</pre>
+<pre class="solucao" data-file="main.py">def contagem(n):
+    if n == 0:
+        print("Fogo!")
+    else:
+        print(n)
+        contagem(n - 1)
+
+
+contagem(3)
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Termo</th><th>O que é</th><th>Exemplo</th></tr>
+<tr><td>Função recursiva</td><td>Função que chama a si mesma</td><td><code>def contagem(n): … contagem(n - 1)</code></td></tr>
+<tr><td>Caso base</td><td>Onde a função responde direto e <strong>para</strong> de se chamar</td><td><code>if n == 0:</code>, <code>if not precos:</code></td></tr>
+<tr><td>Passo recursivo</td><td>A chamada a si mesma, com um problema menor</td><td><code>return n * fatorial(n - 1)</code></td></tr>
+<tr><td>Pilha de chamadas</td><td>As chamadas que estão esperando a resposta da seguinte</td><td><code>fatorial(4)</code> espera <code>fatorial(3)</code>…</td></tr>
+<tr><td><code>sys.getrecursionlimit()</code></td><td>O tamanho máximo da pilha</td><td>1000 no Python do Ubuntu da Ana</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>RecursionError: maximum recursion depth exceeded</code></td><td>Falta o caso base, ou a chamada não chega nele (o número passa direto, ou não diminui)</td></tr>
+<tr><td><code>[Previous line repeated 996 more times]</code> no traceback</td><td>A mesma chamada se repetiu muitas vezes: quase sempre uma recursão sem fim</td></tr>
+<tr><td><code>TypeError: unsupported operand type(s) for *: 'int' and 'NoneType'</code></td><td>Faltou o <code>return</code> no passo recursivo: a chamada devolveu <code>None</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O caso base</h3>
+<p>Complete o caso base da contagem regressiva: ela deve parar quando chegar a zero.</p>
+<div class="ex-code">def contagem(n):<br>&nbsp;&nbsp;&nbsp;&nbsp;if n == <input data-answer="0" aria-label="valor do caso base">:<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print("Fogo!")<br>&nbsp;&nbsp;&nbsp;&nbsp;else:<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(n)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;contagem(n <input data-answer="- 1|-1" aria-label="passo">)</div>
+</div>
+
+<div class="exercise">
+<h3>2. Quanto vale?</h3>
+<p>Usando o <code>fatorial</code> da seção 2, quanto vale <code>fatorial(3)</code>?</p>
+<div class="ex-code">fatorial(3) = <input data-answer="6" aria-label="resultado"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. O que é o <strong>caso base</strong> de uma função recursiva?</p>
+<label><input type="radio" name="q3"> A primeira linha da função, o <code>def</code></label>
+<label><input type="radio" name="q3"> O caso em que a função responde direto, sem chamar a si mesma</label>
+<label><input type="radio" name="q3"> A chamada que a função faz a si mesma</label>
+<label><input type="radio" name="q3"> O maior número que a função aceita</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Um programa terminou com <code>RecursionError: maximum recursion depth exceeded</code>. O que é mais provável?</p>
+<label><input type="radio" name="q4"> O computador está sem memória e precisa ser reiniciado</label>
+<label><input type="radio" name="q4"> Funções não podem chamar a si mesmas em Python</label>
+<label><input type="radio" name="q4"> A função nunca chega ao caso base (ele falta, ou a chamada passa direto por ele)</label>
+<label><input type="radio" name="q4"> Faltou importar o módulo <code>sys</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Para somar os preços de uma lista no dia a dia, o que é mais recomendado?</p>
+<label><input type="radio" name="q5"> A função pronta <code>sum(precos)</code></label>
+<label><input type="radio" name="q5"> Sempre uma função recursiva</label>
+<label><input type="radio" name="q5"> Aumentar o limite com <code>sys.setrecursionlimit()</code></label>
+<label><input type="radio" name="q5"> Não dá para somar listas em Python</label>
+</div>
+
+<h3>Missão final: somando de 1 até n</h3>
+
+<div class="trypy" data-goal="out:5050;;semerro;;src:^\s+.*\bsoma_ate\(">
+<p class="try-task"><strong>Missão:</strong> complete a função <code>soma_ate(n)</code> para devolver <code>1 + 2 + … + n</code>, <strong>com recursão</strong>. Dica: a soma de 1 até 1 é 1 (caso base), e a soma até <code>n</code> é <code>n</code> mais a soma até <code>n - 1</code>. A resposta para 100 deve ser 5050.</p>
+<pre class="script" data-file="main.py">def soma_ate(n):
+    # escreva aqui o caso base e o passo recursivo
+    pass
+
+
+print(soma_ate(100))
+</pre>
+<pre class="solucao" data-file="main.py">def soma_ate(n):
+    if n == 1:
+        return 1
+    return n + soma_ate(n - 1)
+
+
+print(soma_ate(100))
+</pre>
+</div>
+
+<p>Conseguiu? Agora uma curiosidade: no Python do Ubuntu da Ana, <code>soma_ate(5000)</code> termina em <code>RecursionError</code>, porque 5000 chamadas não cabem numa pilha de 1000. (No editor do guia, o limite pode ser outro.) Um laço <code>for</code>, ou a fórmula <code>n * (n + 1) // 2</code>, soma até 5000 ou até um milhão sem problema nenhum: é um bom lembrete de quando a recursão não é a melhor escolha.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Uma função <strong>recursiva</strong> chama a si mesma, sempre com um problema <strong>menor</strong>.</li>
+  <li>Ela tem duas partes: o <strong>caso base</strong> (responde direto e para) e o <strong>passo recursivo</strong> (chama a si mesma com um problema menor).</li>
+  <li>Cada chamada tem as suas próprias variáveis. As chamadas "descem" até o caso base e as respostas "sobem" de volta.</li>
+  <li>Sem caso base, ou com um caso base fora do caminho, a função não para: <code>RecursionError: maximum recursion depth exceeded</code>, com <code>[Previous line repeated … more times]</code> no traceback.</li>
+  <li>O Python limita a pilha de chamadas (1000 no Ubuntu da Ana; pode ser outro número em outro lugar).</li>
+  <li>Tudo o que se faz com recursão se faz com laço. Use recursão quando o problema é "ele mesmo em tamanho menor" (pastas dentro de pastas); no resto, laço ou função pronta.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
