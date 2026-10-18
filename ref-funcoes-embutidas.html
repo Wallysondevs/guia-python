@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Funções Embutidas — referência das 71 funções do Python 3.14 | Guia Python</title>
+<meta name="description" content="Referência rápida de todas as 71 funções embutidas do Python 3.14 (print, input, len, sum, min, max, round, sorted, zip, map, int, str, isinstance, getattr, open, eval…), agrupadas por assunto, com exemplo curto, resultado real e o link para a aula de cada uma.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Funções Embutidas</span></h1>
+
+<p class="intro">Esta é a página de consulta rápida das <strong>funções embutidas</strong> (em inglês, <em>built-in functions</em>): as 71 funções que já vêm prontas no Python 3.14 e funcionam em qualquer programa, sem <code>import</code>. Elas estão agrupadas pelo que fazem: mostrar, converter, fazer contas, percorrer listas, examinar objetos e rodar código. Cada linha traz um exemplo curto e o resultado que ele dá de verdade. A explicação passo a passo das mais usadas, com exercícios, está na aula <a href="funcoes-embutidas.html">Funções Embutidas (len, sum, max…)</a>.</p>
+
+<div class="note">
+<strong>Como ler as tabelas</strong>
+<ul>
+  <li><strong>Exemplo</strong> é o que você digitaria depois do <code>&gt;&gt;&gt;</code> do <a href="repl.html">modo interativo</a>.</li>
+  <li><strong>Resultado</strong> é o que o Python 3.14.4 respondeu no computador da Ana. Textos aparecem entre aspas (<code>'Ana'</code>), como o modo interativo mostra; com <code>print()</code> as aspas não aparecem.</li>
+  <li>Quando o exemplo dá erro, o resultado mostra a <strong>última linha</strong> da mensagem (o tipo do erro e a explicação, em inglês). A mensagem completa, com o <code>Traceback</code>, aparece logo abaixo.</li>
+  <li>Algumas "funções" da lista, como <code>int</code>, <code>str</code> e <code>list</code>, são na verdade <strong>classes</strong> (tipos). Você as chama como funções para criar ou converter valores, e por isso a documentação oficial as põe na mesma lista.</li>
+  <li>Resultados com <code>0x…</code> (endereços na memória) mudam a cada execução.</li>
+</ul>
+</div>
+
+<p>Assim fica no terminal. Repare como o Python, quando dá erro, sublinha a parte da linha que falhou (<code>~~~^^^^</code>):</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; round(8.5)
+8
+&gt;&gt;&gt; sorted(["Bia", "ana", "Caio"], key=str.lower)
+['ana', 'Bia', 'Caio']
+&gt;&gt;&gt; divmod(17, 5)
+(3, 2)
+&gt;&gt;&gt; len(42)
+Traceback (most recent call last):
+  File "&lt;python-input-3&gt;", line 1, in &lt;module&gt;
+    len(42)
+    ~~~^^^^
+TypeError: object of type 'int' has no len()
+&gt;&gt;&gt; max([])
+Traceback (most recent call last):
+  File "&lt;python-input-4&gt;", line 1, in &lt;module&gt;
+    max([])
+    ~~~^^^^
+ValueError: max() iterable argument is empty
+&gt;&gt;&gt; exit()
+</pre>
+
+<p>A última linha de cada erro diz o que houve: <code>TypeError: object of type 'int' has no len()</code> = "um objeto do tipo int não tem tamanho" (número não tem <code>len</code>); <code>ValueError: max() iterable argument is empty</code> = "o argumento do max() está vazio" (não há maior numa lista vazia).</p>
+
+<p>Pule direto para o grupo que você procura:</p>
+<ul>
+  <li><a href="#mostrar">Mostrar e ler</a>: <code>print</code>, <code>input</code>, <code>repr</code>, <code>ascii</code>, <code>format</code></li>
+  <li><a href="#converter">Converter tipos</a>: <code>int</code>, <code>float</code>, <code>str</code>, <code>bool</code>, <code>list</code>, <code>dict</code>, <code>chr</code>, <code>ord</code>, <code>hex</code>…</li>
+  <li><a href="#numeros">Números e contas</a>: <code>abs</code>, <code>round</code>, <code>pow</code>, <code>divmod</code>, <code>sum</code>, <code>min</code>, <code>max</code></li>
+  <li><a href="#percorrer">Contar, ordenar e percorrer</a>: <code>len</code>, <code>sorted</code>, <code>reversed</code>, <code>enumerate</code>, <code>zip</code>, <code>map</code>, <code>filter</code>, <code>range</code>, <code>iter</code>, <code>next</code>, <code>all</code>, <code>any</code>, <code>slice</code></li>
+  <li><a href="#objetos">Examinar objetos</a>: <code>type</code>, <code>isinstance</code>, <code>id</code>, <code>hash</code>, <code>callable</code>, <code>dir</code>, <code>vars</code>, <code>getattr</code>…</li>
+  <li><a href="#classes">Para escrever classes</a>: <code>object</code>, <code>property</code>, <code>classmethod</code>, <code>staticmethod</code>, <code>super</code></li>
+  <li><a href="#codigo">Código, escopo, arquivos e bytes</a>: <code>open</code>, <code>eval</code>, <code>exec</code>, <code>compile</code>, <code>globals</code>, <code>locals</code>, <code>__import__</code>, <code>memoryview</code>, <code>aiter</code>, <code>anext</code>, <code>breakpoint</code>, <code>help</code></li>
+  <li><a href="#az">Todas de A a Z</a></li>
+</ul>
+
+<hr>
+
+<h2 id="mostrar">Mostrar e ler</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Função</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>print(valores…)</code></td><td>Mostra os valores na tela, separados por um espaço, e pula a linha no fim (<em>print</em> = "imprimir").</td><td><code>print("Ana", 7.5, True)</code></td><td><code>Ana 7.5 True</code></td><td><a href="print.html">print()</a></td></tr>
+<tr><td></td><td><code>sep=</code> troca o separador</td><td><code>print("Ana", "Bia", sep=", ")</code></td><td><code>Ana, Bia</code></td><td><a href="print-sep-end.html">As Opções sep e end</a></td></tr>
+<tr><td></td><td><code>end=</code> troca o fim da linha (o padrão é <code>"\n"</code>, a quebra de linha)</td><td><code>print("sem pular", end="!")</code></td><td><code>sem pular!</code> (e o próximo texto continua na mesma linha)</td><td><a href="print-sep-end.html">As Opções sep e end</a></td></tr>
+<tr><td></td><td><code>file=</code> escreve num arquivo aberto em vez da tela</td><td><code>print("pão", file=arq)</code></td><td>a linha <code>pão</code> vai para o arquivo</td><td><a href="arquivos-escrever.html">Escrevendo Arquivos</a></td></tr>
+<tr><td><code>input(pergunta)</code></td><td>Mostra a pergunta, espera a pessoa digitar e apertar Enter e devolve o que ela digitou, <strong>sempre como texto</strong> (<code>str</code>).</td><td><code>nome = input("Nome: ")</code></td><td>a tela mostra <code>Nome: </code>; se a Ana digitar <code>Ana</code>, <code>nome</code> vale <code>'Ana'</code></td><td><a href="input.html">input()</a></td></tr>
+<tr><td><code>repr(x)</code></td><td>O valor escrito "como no código": textos com aspas, caracteres especiais à mostra. É o que o modo interativo usa para mostrar resultados.</td><td><code>print(repr("olá\n"))</code></td><td><code>'olá\n'</code></td><td><a href="metodos-especiais.html">Métodos Especiais</a></td></tr>
+<tr><td></td><td></td><td><code>repr("Ana")</code></td><td><code>"'Ana'"</code></td><td></td></tr>
+<tr><td><code>ascii(x)</code></td><td>Como o <code>repr</code>, mas troca as letras fora do ASCII (acentos, ç) por códigos <code>\x…</code>.</td><td><code>ascii("Conceição")</code></td><td><code>"'Concei\\xe7\\xe3o'"</code></td><td><a href="strings-escape.html">Caracteres de Escape</a></td></tr>
+<tr><td><code>format(valor, especificação)</code></td><td>Formata um valor com as mesmas regras do <code>{:…}</code> das f-strings.</td><td><code>format(3.14159, ".2f")</code></td><td><code>'3.14'</code></td><td><a href="ref-formatacao.html">Formatação</a></td></tr>
+<tr><td></td><td>separador de milhar</td><td><code>format(1234.5, ",.2f")</code></td><td><code>'1,234.50'</code></td><td></td></tr>
+<tr><td></td><td></td><td><code>format(1234567, "_")</code></td><td><code>'1_234_567'</code></td><td></td></tr>
+<tr><td></td><td>porcentagem</td><td><code>format(0.25, ".0%")</code></td><td><code>'25%'</code></td><td></td></tr>
+<tr><td></td><td>alinhar à direita em 6 posições</td><td><code>format("Ana", "&gt;6")</code></td><td><code>'&nbsp;&nbsp;&nbsp;Ana'</code></td><td><a href="f-strings.html">f-strings</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="converter">Converter tipos (e criar valores)</h2>
+
+<p>Cada tipo do Python tem uma função com o mesmo nome que converte (transforma) um valor para aquele tipo. Chamada sem nada, ela cria um valor "vazio": <code>int()</code> é <code>0</code>, <code>str()</code> é <code>''</code>, <code>list()</code> é <code>[]</code>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Função</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>int(x)</code></td><td>Converte para número inteiro (<em>integer</em>).</td><td><code>int("42")</code></td><td><code>42</code></td><td><a href="conversao.html">Conversão de Tipos</a></td></tr>
+<tr><td></td><td>De um <code>float</code>, <strong>corta</strong> as casas decimais (não arredonda)</td><td><code>int(7.9)</code>, <code>int(-7.9)</code></td><td><code>7</code>, <code>-7</code></td><td></td></tr>
+<tr><td></td><td>Texto com ponto não vira <code>int</code></td><td><code>int("7.5")</code></td><td><code>ValueError: invalid literal for int() with base 10: '7.5'</code></td><td></td></tr>
+<tr><td><code>int(texto, base)</code></td><td>Lê o texto numa outra base: 2 (binário), 16 (hexadecimal)…</td><td><code>int("101", 2)</code>, <code>int("ff", 16)</code></td><td><code>5</code>, <code>255</code></td><td><a href="numeros.html">Números</a></td></tr>
+<tr><td><code>float(x)</code></td><td>Converte para número com casas decimais (<em>float</em>, "ponto flutuante"). Use ponto, não vírgula.</td><td><code>float("7.5")</code></td><td><code>7.5</code></td><td><a href="conversao.html">Conversão de Tipos</a></td></tr>
+<tr><td></td><td>aceita notação científica e infinito</td><td><code>float("1e3")</code>, <code>float("inf")</code></td><td><code>1000.0</code>, <code>inf</code></td><td></td></tr>
+<tr><td></td><td>texto que não é número</td><td><code>float("abc")</code></td><td><code>ValueError: could not convert string to float: 'abc'</code></td><td></td></tr>
+<tr><td><code>str(x)</code></td><td>Converte qualquer valor em texto (<em>string</em>).</td><td><code>str(42)</code>, <code>str(None)</code></td><td><code>'42'</code>, <code>'None'</code></td><td><a href="strings.html">Strings</a></td></tr>
+<tr><td><code>bool(x)</code></td><td>Diz se o valor conta como verdadeiro. Zero, texto vazio, lista vazia e <code>None</code> são <code>False</code>; o resto é <code>True</code>.</td><td><code>bool(0)</code>, <code>bool("")</code>, <code>bool([])</code></td><td><code>False</code>, <code>False</code>, <code>False</code></td><td><a href="booleanos.html">Booleanos</a></td></tr>
+<tr><td></td><td>Cuidado: o texto <code>"0"</code> não é vazio!</td><td><code>bool("0")</code>, <code>bool([0])</code></td><td><code>True</code>, <code>True</code></td><td></td></tr>
+<tr><td><code>complex(real, imag)</code></td><td>Número complexo (com a parte imaginária <code>j</code>).</td><td><code>complex(2, 3)</code></td><td><code>(2+3j)</code></td><td><a href="numeros.html">Números</a></td></tr>
+<tr><td><code>list(x)</code></td><td>Cria uma lista com os itens de <code>x</code>.</td><td><code>list("Ana")</code></td><td><code>['A', 'n', 'a']</code></td><td><a href="listas.html">Listas</a></td></tr>
+<tr><td></td><td></td><td><code>list(range(4))</code></td><td><code>[0, 1, 2, 3]</code></td><td></td></tr>
+<tr><td><code>tuple(x)</code></td><td>Cria uma tupla (uma sequência que não muda).</td><td><code>tuple([1, 2, 3])</code></td><td><code>(1, 2, 3)</code></td><td><a href="tuplas.html">Tuplas</a></td></tr>
+<tr><td><code>set(x)</code></td><td>Cria um conjunto: sem repetidos e sem ordem garantida.</td><td><code>set([3, 1, 3, 2, 1])</code></td><td><code>{1, 2, 3}</code></td><td><a href="conjuntos.html">Conjuntos</a></td></tr>
+<tr><td><code>frozenset(x)</code></td><td>Conjunto "congelado": não muda depois de criado.</td><td><code>frozenset([2, 1, 2])</code></td><td><code>frozenset({1, 2})</code></td><td><a href="ref-metodos-conjunto.html">Métodos de Conjunto</a></td></tr>
+<tr><td><code>dict(…)</code></td><td>Cria um dicionário, com argumentos nomeados…</td><td><code>dict(nome="Ana", idade=30)</code></td><td><code>{'nome': 'Ana', 'idade': 30}</code></td><td><a href="dicionarios.html">Dicionários</a></td></tr>
+<tr><td></td><td>…ou com uma lista de pares</td><td><code>dict([("pão", 0.5), ("leite", 4.0)])</code></td><td><code>{'pão': 0.5, 'leite': 4.0}</code></td><td></td></tr>
+<tr><td><code>bytes(texto, codificação)</code></td><td>Os bytes do texto (o que é gravado no disco). Em UTF-8, o <code>á</code> ocupa 2 bytes.</td><td><code>bytes("olá", "utf-8")</code></td><td><code>b'ol\xc3\xa1'</code></td><td><a href="arquivos.html">Abrindo Arquivos</a></td></tr>
+<tr><td></td><td>com um número: tantos bytes zerados</td><td><code>bytes(3)</code></td><td><code>b'\x00\x00\x00'</code></td><td></td></tr>
+<tr><td><code>bytearray(x)</code></td><td>Como <code>bytes</code>, mas pode ser alterado.</td><td><code>bytearray(b"pao")</code></td><td><code>bytearray(b'pao')</code></td><td></td></tr>
+<tr><td><code>chr(n)</code></td><td>A letra que tem o código Unicode <code>n</code> (<em>character</em>).</td><td><code>chr(65)</code>, <code>chr(233)</code></td><td><code>'A'</code>, <code>'é'</code></td><td><a href="strings.html">Strings</a></td></tr>
+<tr><td><code>ord(letra)</code></td><td>O contrário: o código Unicode da letra.</td><td><code>ord("A")</code>, <code>ord("ç")</code></td><td><code>65</code>, <code>231</code></td><td></td></tr>
+<tr><td><code>bin(n)</code></td><td>O inteiro escrito em binário, como texto.</td><td><code>bin(10)</code></td><td><code>'0b1010'</code></td><td><a href="numeros.html">Números</a></td></tr>
+<tr><td><code>oct(n)</code></td><td>Em octal (base 8).</td><td><code>oct(8)</code></td><td><code>'0o10'</code></td><td></td></tr>
+<tr><td><code>hex(n)</code></td><td>Em hexadecimal (base 16).</td><td><code>hex(255)</code></td><td><code>'0xff'</code></td><td></td></tr>
+</table>
+</div>
+
+<div class="tip">
+<strong>Novo no 3.14: <code>float.from_number()</code></strong> <span class="versao">3.14</span>
+<p>O Python 3.14 ganhou <code>float.from_number(x)</code> e <code>complex.from_number(x)</code>: convertem um <strong>número</strong> e recusam texto (dão <code>TypeError</code>), ao contrário de <code>float("7.5")</code>. No lab: <code>float.from_number(5)</code> deu <code>5.0</code>. Elas não estão na lista de funções embutidas (são métodos dos tipos <code>float</code> e <code>complex</code>), e não existem no Python 3.13.</p>
+</div>
+
+<hr>
+
+<h2 id="numeros">Números e contas</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Função</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>abs(x)</code></td><td>Valor absoluto: o número sem o sinal.</td><td><code>abs(-7)</code>, <code>abs(-2.5)</code></td><td><code>7</code>, <code>2.5</code></td><td><a href="funcoes-embutidas.html">Funções Embutidas</a></td></tr>
+<tr><td><code>round(x)</code></td><td>Arredonda para o inteiro mais próximo. No meio exato, vai para o <strong>par</strong>.</td><td><code>round(7.5)</code>, <code>round(8.5)</code></td><td><code>8</code>, <code>8</code></td><td><a href="funcoes-embutidas.html">Funções Embutidas</a></td></tr>
+<tr><td><code>round(x, casas)</code></td><td>Arredonda para tantas casas decimais.</td><td><code>round(7.456, 2)</code></td><td><code>7.46</code></td><td></td></tr>
+<tr><td></td><td>casas negativas arredondam dezenas, centenas…</td><td><code>round(1234, -2)</code></td><td><code>1200</code></td><td></td></tr>
+<tr><td></td><td>o <code>2.675</code> guardado no computador é um pouco menor que 2.675</td><td><code>round(2.675, 2)</code></td><td><code>2.67</code></td><td><a href="numeros.html">Números</a></td></tr>
+<tr><td><code>pow(base, exp)</code></td><td>Potência, como <code>base ** exp</code>.</td><td><code>pow(2, 10)</code>, <code>pow(2, -1)</code></td><td><code>1024</code>, <code>0.5</code></td><td><a href="operadores-aritmeticos.html">Operadores Aritméticos</a></td></tr>
+<tr><td><code>pow(base, exp, mod)</code></td><td>Potência e depois o resto da divisão por <code>mod</code>, de um jeito rápido.</td><td><code>pow(3, 4, 5)</code></td><td><code>1</code> (81 dividido por 5 deixa resto 1)</td><td></td></tr>
+<tr><td><code>divmod(a, b)</code></td><td>O quociente inteiro e o resto, juntos: o mesmo que <code>(a // b, a % b)</code>.</td><td><code>divmod(17, 5)</code></td><td><code>(3, 2)</code></td><td><a href="operadores-aritmeticos.html">Operadores Aritméticos</a></td></tr>
+<tr><td></td><td>com negativos, o quociente arredonda para baixo</td><td><code>divmod(-17, 5)</code></td><td><code>(-4, 3)</code></td><td></td></tr>
+<tr><td><code>sum(itens)</code></td><td>Soma todos os itens.</td><td><code>sum([7.5, 8.0, 6.5])</code></td><td><code>22.0</code></td><td><a href="funcoes-embutidas.html">Funções Embutidas</a></td></tr>
+<tr><td><code>sum(itens, inicio)</code></td><td>Começa a soma de um valor (o padrão é 0).</td><td><code>sum([1, 2, 3], 10)</code></td><td><code>16</code></td><td></td></tr>
+<tr><td></td><td>somar decimais é preciso desde o 3.12</td><td><code>sum([0.1] * 10)</code></td><td><code>1.0</code></td><td></td></tr>
+<tr><td><code>min(…)</code></td><td>O menor: de vários valores ou dos itens de uma lista.</td><td><code>min(7.5, 8.0, 6.5)</code></td><td><code>6.5</code></td><td><a href="funcoes-embutidas.html">Funções Embutidas</a></td></tr>
+<tr><td></td><td>num texto, a "menor" letra</td><td><code>min("banana")</code></td><td><code>'a'</code></td><td></td></tr>
+<tr><td><code>max(…)</code></td><td>O maior.</td><td><code>max([7.5, 8.0, 6.5])</code></td><td><code>8.0</code></td><td><a href="funcoes-embutidas.html">Funções Embutidas</a></td></tr>
+<tr><td></td><td><code>key=</code> compara por um critério (aqui, o tamanho)</td><td><code>max(["arroz", "sal", "macarrão"], key=len)</code></td><td><code>'macarrão'</code></td><td></td></tr>
+<tr><td></td><td>ignorando maiúsculas</td><td><code>min(["Bia", "ana", "Caio"], key=str.lower)</code></td><td><code>'ana'</code></td><td></td></tr>
+<tr><td></td><td><code>default=</code> para a lista vazia</td><td><code>max([], default=0)</code></td><td><code>0</code></td><td></td></tr>
+<tr><td></td><td>sem <code>default</code></td><td><code>max([])</code></td><td><code>ValueError: max() iterable argument is empty</code></td><td></td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>Python mais antigo</strong>
+<p>Até o Python 3.11, <code>sum([0.1] * 10)</code> dava <code>0.9999999999999999</code> (ilustrativo: o laboratório do guia só tem o 3.14). Desde o 3.12, o <code>sum()</code> soma números decimais com um método mais preciso. O resultado <code>1.0</code> desta tabela é o do Python 3.14.</p>
+</div>
+
+<hr>
+
+<h2 id="percorrer">Contar, ordenar e percorrer</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Função</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>len(x)</code></td><td>Quantos itens (ou letras) tem (<em>length</em> = "comprimento"). Letra acentuada conta 1.</td><td><code>len("Conceição")</code></td><td><code>9</code></td><td><a href="funcoes-embutidas.html">Funções Embutidas</a></td></tr>
+<tr><td></td><td>lista, dicionário (conta as chaves)</td><td><code>len([7.5, 8.0, 6.5])</code>, <code>len({"a": 1, "b": 2})</code></td><td><code>3</code>, <code>2</code></td><td></td></tr>
+<tr><td></td><td>número não tem tamanho</td><td><code>len(42)</code></td><td><code>TypeError: object of type 'int' has no len()</code></td><td></td></tr>
+<tr><td><code>sorted(x)</code></td><td>Uma lista <strong>nova</strong>, em ordem. O original não muda.</td><td><code>sorted([3, 1, 2])</code></td><td><code>[1, 2, 3]</code></td><td><a href="listas-ordenar.html">Ordenando Listas</a></td></tr>
+<tr><td></td><td>do maior para o menor</td><td><code>sorted([3, 1, 2], reverse=True)</code></td><td><code>[3, 2, 1]</code></td><td></td></tr>
+<tr><td></td><td>maiúsculas vêm antes das minúsculas…</td><td><code>sorted(["Bia", "ana", "Caio"])</code></td><td><code>['Bia', 'Caio', 'ana']</code></td><td></td></tr>
+<tr><td></td><td>…a não ser com <code>key=str.lower</code></td><td><code>sorted(["Bia", "ana", "Caio"], key=str.lower)</code></td><td><code>['ana', 'Bia', 'Caio']</code></td><td></td></tr>
+<tr><td></td><td>de um dicionário, ordena as chaves</td><td><code>sorted({"pão": 0.5, "café": 18.9})</code></td><td><code>['café', 'pão']</code></td><td><a href="dicionarios-percorrer.html">Percorrendo um Dicionário</a></td></tr>
+<tr><td><code>reversed(x)</code></td><td>Percorre de trás para a frente. Devolve um <strong>iterador</strong> (veja abaixo), não uma lista.</td><td><code>list(reversed([1, 2, 3]))</code></td><td><code>[3, 2, 1]</code></td><td><a href="listas-ordenar.html">Ordenando Listas</a></td></tr>
+<tr><td></td><td>sem o <code>list()</code>, você vê só o iterador</td><td><code>reversed([1, 2, 3])</code></td><td><code>&lt;list_reverseiterator object at 0x…&gt;</code></td><td></td></tr>
+<tr><td><code>enumerate(x)</code></td><td>Dá cada item junto com a sua posição.</td><td><code>list(enumerate(["pão", "leite"]))</code></td><td><code>[(0, 'pão'), (1, 'leite')]</code></td><td><a href="enumerate-zip.html">enumerate() e zip()</a></td></tr>
+<tr><td></td><td><code>start=</code> muda o número inicial</td><td><code>list(enumerate(["pão", "leite"], start=1))</code></td><td><code>[(1, 'pão'), (2, 'leite')]</code></td><td></td></tr>
+<tr><td><code>zip(a, b, …)</code></td><td>Anda em várias listas ao mesmo tempo, formando pares.</td><td><code>list(zip(["pão", "leite"], [0.5, 4.0]))</code></td><td><code>[('pão', 0.5), ('leite', 4.0)]</code></td><td><a href="enumerate-zip.html">enumerate() e zip()</a></td></tr>
+<tr><td></td><td>junto com <code>dict()</code></td><td><code>dict(zip(["pão", "leite"], [0.5, 4.0]))</code></td><td><code>{'pão': 0.5, 'leite': 4.0}</code></td><td></td></tr>
+<tr><td></td><td>para na menor</td><td><code>list(zip([1, 2, 3], "ab"))</code></td><td><code>[(1, 'a'), (2, 'b')]</code></td><td></td></tr>
+<tr><td></td><td><code>strict=True</code> exige o mesmo tamanho</td><td><code>list(zip([1, 2, 3], "ab", strict=True))</code></td><td><code>ValueError: zip() argument 2 is shorter than argument 1</code></td><td></td></tr>
+<tr><td><code>map(função, x)</code></td><td>Aplica a função em cada item.</td><td><code>list(map(int, ["7", "8", "10"]))</code></td><td><code>[7, 8, 10]</code></td><td><a href="map-filter.html">map() e filter()</a></td></tr>
+<tr><td></td><td></td><td><code>list(map(str.upper, ["pão", "café"]))</code></td><td><code>['PÃO', 'CAFÉ']</code></td><td></td></tr>
+<tr><td></td><td>com duas listas, a função recebe um item de cada</td><td><code>list(map(pow, [2, 3], [3, 2]))</code></td><td><code>[8, 9]</code></td><td></td></tr>
+<tr><td></td><td><span class="versao">3.14</span> <code>strict=True</code>, como no <code>zip</code></td><td><code>list(map(pow, [2, 3, 4], [3, 2], strict=True))</code></td><td><code>ValueError: map() argument 2 is shorter than argument 1</code></td><td></td></tr>
+<tr><td><code>filter(função, x)</code></td><td>Fica só com os itens em que a função responde verdadeiro.</td><td><code>list(filter(lambda n: n &gt;= 7, [7.5, 5.0, 8.0]))</code></td><td><code>[7.5, 8.0]</code></td><td><a href="map-filter.html">map() e filter()</a></td></tr>
+<tr><td></td><td>com <code>None</code>, tira os valores "vazios"</td><td><code>list(filter(None, [0, 3, "", "Ana", None]))</code></td><td><code>[3, 'Ana']</code></td><td></td></tr>
+<tr><td><code>range(fim)</code></td><td>Os inteiros de 0 até <strong>antes</strong> do <code>fim</code>.</td><td><code>list(range(5))</code></td><td><code>[0, 1, 2, 3, 4]</code></td><td><a href="range.html">range()</a></td></tr>
+<tr><td><code>range(início, fim, passo)</code></td><td>Começando em <code>início</code>, de <code>passo</code> em <code>passo</code>.</td><td><code>list(range(1, 11, 3))</code></td><td><code>[1, 4, 7, 10]</code></td><td></td></tr>
+<tr><td></td><td>passo negativo conta para trás</td><td><code>list(range(10, 0, -2))</code></td><td><code>[10, 8, 6, 4, 2]</code></td><td></td></tr>
+<tr><td></td><td>sem o <code>list()</code></td><td><code>range(5)</code></td><td><code>range(0, 5)</code></td><td></td></tr>
+<tr><td><code>iter(x)</code></td><td>Cria um iterador: um "marcador" que entrega um item por vez.</td><td><code>it = iter(["pão", "leite"])</code></td><td>(nada aparece)</td><td><a href="iteradores.html">Iteradores</a></td></tr>
+<tr><td><code>next(it)</code></td><td>O próximo item do iterador.</td><td><code>next(it)</code>, <code>next(it)</code></td><td><code>'pão'</code>, <code>'leite'</code></td><td><a href="iteradores.html">Iteradores</a></td></tr>
+<tr><td></td><td>quando acabam os itens</td><td><code>next(it)</code></td><td><code>StopIteration</code></td><td></td></tr>
+<tr><td></td><td>com um valor padrão, não dá erro</td><td><code>next(it, "acabou")</code></td><td><code>'acabou'</code></td><td></td></tr>
+<tr><td><code>all(x)</code></td><td>"<strong>Todos</strong> são verdadeiros?"</td><td><code>all([True, True, False])</code></td><td><code>False</code></td><td><a href="funcoes-embutidas.html">Funções Embutidas</a></td></tr>
+<tr><td></td><td>todas as notas são pelo menos 5?</td><td><code>all(n &gt;= 5 for n in [7.5, 5.0, 8.0])</code></td><td><code>True</code></td><td></td></tr>
+<tr><td></td><td>de uma lista vazia</td><td><code>all([])</code></td><td><code>True</code></td><td></td></tr>
+<tr><td><code>any(x)</code></td><td>"<strong>Algum</strong> é verdadeiro?"</td><td><code>any([False, 0, "Ana"])</code></td><td><code>True</code></td><td><a href="funcoes-embutidas.html">Funções Embutidas</a></td></tr>
+<tr><td></td><td>de uma lista vazia</td><td><code>any([])</code></td><td><code>False</code></td><td></td></tr>
+<tr><td><code>slice(início, fim)</code></td><td>Uma fatia guardada numa variável, para usar com <code>[ ]</code>.</td><td><code>fatia = slice(1, 3)</code><br><code>"Python"[fatia]</code></td><td><code>'yt'</code></td><td><a href="strings-fatias.html">Índices e Fatias</a></td></tr>
+<tr><td></td><td>a mesma fatia numa lista</td><td><code>[10, 20, 30, 40][fatia]</code></td><td><code>[20, 30]</code></td><td></td></tr>
+</table>
+</div>
+
+<div class="tip">
+<strong>Por que tanto <code>list(…)</code>?</strong>
+<p><code>reversed</code>, <code>enumerate</code>, <code>zip</code>, <code>map</code> e <code>filter</code> não montam a lista inteira de uma vez: entregam um item por vez, quando você pede (num <code>for</code>, por exemplo). Por isso gastam pouca memória. Para <strong>ver</strong> todos os itens no modo interativo, ponha dentro de <code>list()</code>. Num <code>for</code>, use direto: <code>for i, item in enumerate(lista):</code>.</p>
+</div>
+
+<hr>
+
+<h2 id="objetos">Examinar objetos</h2>
+
+<p>Nos exemplos com <code>p</code>, a Ana criou antes uma classe vazia e um produto: <code>class Produto: pass</code> e <code>p = Produto()</code>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Função</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>type(x)</code></td><td>O tipo do valor.</td><td><code>type(7.5)</code>, <code>type("Ana")</code></td><td><code>&lt;class 'float'&gt;</code>, <code>&lt;class 'str'&gt;</code></td><td><a href="type.html">Descobrindo o Tipo</a></td></tr>
+<tr><td><code>isinstance(x, tipo)</code></td><td>"<code>x</code> é desse tipo?" Aceita uma tupla de tipos.</td><td><code>isinstance(7.5, (int, float))</code></td><td><code>True</code></td><td><a href="type.html">Descobrindo o Tipo</a></td></tr>
+<tr><td></td><td><code>True</code> também conta como <code>int</code></td><td><code>isinstance(True, int)</code></td><td><code>True</code></td><td><a href="booleanos.html">Booleanos</a></td></tr>
+<tr><td><code>issubclass(A, B)</code></td><td>"A classe <code>A</code> herda de <code>B</code>?"</td><td><code>issubclass(bool, int)</code></td><td><code>True</code></td><td><a href="heranca.html">Herança</a></td></tr>
+<tr><td><code>id(x)</code></td><td>Um número que identifica o objeto enquanto ele existe (muda a cada execução). Dois nomes com o mesmo <code>id</code> são o mesmo objeto.</td><td><code>id(p) == id(p)</code></td><td><code>True</code></td><td><a href="operadores-is-in.html">is e in</a></td></tr>
+<tr><td><code>hash(x)</code></td><td>O "resumo" numérico que dicionários e conjuntos usam. Só existe para valores que não mudam.</td><td><code>hash(42)</code></td><td><code>42</code></td><td><a href="mutabilidade.html">Mutável × Imutável</a></td></tr>
+<tr><td></td><td>lista pode mudar, então não tem <code>hash</code></td><td><code>hash([1, 2])</code></td><td><code>TypeError: unhashable type: 'list'</code></td><td></td></tr>
+<tr><td><code>callable(x)</code></td><td>"Dá para chamar com <code>( )</code>?" Funções e classes, sim.</td><td><code>callable(len)</code>, <code>callable(42)</code></td><td><code>True</code>, <code>False</code></td><td><a href="funcoes.html">Funções</a></td></tr>
+<tr><td><code>dir(x)</code></td><td>A lista de nomes (atributos e métodos) do objeto. Sem argumento, os nomes que existem agora.</td><td><code>[n for n in dir("") if not n.startswith("_")][:5]</code></td><td><code>['capitalize', 'casefold', 'center', 'count', 'encode']</code></td><td><a href="atributos-metodos.html">Atributos e Métodos</a></td></tr>
+<tr><td><code>setattr(obj, nome, valor)</code></td><td>Cria ou troca um atributo pelo nome escrito num texto. O mesmo que <code>p.preco = 4.5</code>.</td><td><code>setattr(p, "preco", 4.5)</code></td><td>(nada aparece)</td><td><a href="atributos-metodos.html">Atributos e Métodos</a></td></tr>
+<tr><td><code>getattr(obj, nome)</code></td><td>Lê um atributo pelo nome.</td><td><code>getattr(p, "preco")</code></td><td><code>4.5</code></td><td></td></tr>
+<tr><td></td><td>com um valor padrão</td><td><code>getattr(p, "estoque", 0)</code></td><td><code>0</code></td><td></td></tr>
+<tr><td></td><td>sem padrão, se não existe</td><td><code>getattr(p, "estoque")</code></td><td><code>AttributeError: 'Produto' object has no attribute 'estoque'</code></td><td></td></tr>
+<tr><td><code>hasattr(obj, nome)</code></td><td>"Tem esse atributo?"</td><td><code>hasattr(p, "preco")</code></td><td><code>True</code></td><td></td></tr>
+<tr><td><code>vars(obj)</code></td><td>Os atributos do objeto, num dicionário.</td><td><code>vars(p)</code></td><td><code>{'preco': 4.5}</code></td><td><a href="classes.html">Classes e Objetos</a></td></tr>
+<tr><td><code>delattr(obj, nome)</code></td><td>Apaga um atributo. O mesmo que <code>del p.preco</code>.</td><td><code>delattr(p, "preco")</code> e depois <code>vars(p)</code></td><td><code>{}</code></td><td></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="classes">Para escrever classes</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Função</th><th>O que faz</th><th>Uso</th><th>Aula</th></tr>
+<tr><td><code>object</code></td><td>A classe "mãe" de todas as classes. Toda classe herda dela, mesmo sem escrever.</td><td><code>issubclass(Produto, object)</code> → <code>True</code></td><td><a href="heranca.html">Herança</a></td></tr>
+<tr><td><code>property</code></td><td>Faz um método ser lido como atributo (sem parênteses). Usada como <code>@property</code>.</td><td><code>conta.saldo</code></td><td><a href="property.html">@property</a></td></tr>
+<tr><td><code>classmethod</code></td><td>Método que recebe a <strong>classe</strong> (<code>cls</code>) em vez do objeto. Usada como <code>@classmethod</code>.</td><td><code>Conta.vazia()</code></td><td><a href="classmethod-staticmethod.html">@classmethod e @staticmethod</a></td></tr>
+<tr><td><code>staticmethod</code></td><td>Método que não recebe nem o objeto nem a classe. Usada como <code>@staticmethod</code>.</td><td><code>Conta.taxa()</code></td><td><a href="classmethod-staticmethod.html">@classmethod e @staticmethod</a></td></tr>
+<tr><td><code>super()</code></td><td>Chama o método da classe mãe, de dentro da classe filha.</td><td><code>super().__init__(saldo)</code></td><td><a href="heranca.html">Herança</a></td></tr>
+</table>
+</div>
+
+<p>As quatro juntas, num programa da Ana:</p>
+
+<pre class="file" data-file="conta.py">class Conta:
+    def __init__(self, saldo):
+        self._saldo = saldo
+
+    @property
+    def saldo(self):
+        return self._saldo
+
+    @classmethod
+    def vazia(cls):
+        return cls(0)
+
+    @staticmethod
+    def taxa():
+        return 2.5
+
+class Poupanca(Conta):
+    def __init__(self, saldo):
+        super().__init__(saldo)
+        self.juros = 0.5
+
+print(Conta(100).saldo)
+print(Conta.vazia().saldo)
+print(Conta.taxa())
+print(Poupanca(50).saldo)
+</pre>
+
+<pre class="term">$ python3 conta.py
+100
+0
+2.5
+50
+</pre>
+
+<hr>
+
+<h2 id="codigo">Código, escopo, arquivos e bytes</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Função</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>open(caminho, modo)</code></td><td>Abre um arquivo para ler (<code>"r"</code>), escrever (<code>"w"</code>) ou acrescentar (<code>"a"</code>). Use com <code>with</code> e diga a codificação.</td><td><code>with open("lista.txt", "w", encoding="utf-8") as arq:</code></td><td>cria <code>lista.txt</code></td><td><a href="arquivos.html">Abrindo Arquivos</a></td></tr>
+<tr><td><code>help(x)</code></td><td>Mostra a ajuda de uma função, classe ou módulo. No modo interativo, abre num visualizador: saia com <kbd>q</kbd>.</td><td><code>help(len)</code></td><td><code>len(obj, /)</code><br><code>Return the number of items in a container.</code></td><td><a href="repl.html">O Modo Interativo</a></td></tr>
+<tr><td><code>eval(texto)</code></td><td>Calcula uma <strong>expressão</strong> escrita num texto e devolve o valor.</td><td><code>eval("2 + 3 * 4")</code></td><td><code>14</code></td><td></td></tr>
+<tr><td></td><td>com um dicionário de variáveis</td><td><code>eval("preco * 2", {"preco": 4.5})</code></td><td><code>9.0</code></td><td></td></tr>
+<tr><td><code>exec(texto)</code></td><td>Roda <strong>comandos</strong> escritos num texto. Não devolve nada.</td><td><code>exec("total = 10 + 5")</code> e depois <code>total</code></td><td><code>15</code></td><td></td></tr>
+<tr><td><code>compile(texto, nome, modo)</code></td><td>Transforma o texto em código pronto para <code>eval</code> ou <code>exec</code>.</td><td><code>eval(compile("1 + 1", "&lt;texto&gt;", "eval"))</code></td><td><code>2</code></td><td></td></tr>
+<tr><td><code>globals()</code></td><td>Dicionário com as variáveis globais (do programa todo).</td><td><code>"total" in globals()</code></td><td><code>True</code></td><td><a href="escopo.html">Escopo</a></td></tr>
+<tr><td><code>locals()</code></td><td>Dicionário com as variáveis locais (da função que está rodando).</td><td><code>def f():</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;x = 1</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;return locals()</code><br><code>f()</code></td><td><code>{'x': 1}</code></td><td><a href="escopo.html">Escopo</a></td></tr>
+<tr><td><code>__import__(nome)</code></td><td>O que o <code>import</code> usa por baixo. No seu código, prefira <code>import</code>.</td><td><code>m = __import__("math")</code><br><code>m.sqrt(16)</code></td><td><code>4.0</code></td><td><a href="modulos.html">Módulos e import</a></td></tr>
+<tr><td><code>memoryview(x)</code></td><td>Uma "janela" para os bytes de outro objeto, sem copiá-los.</td><td><code>mv = memoryview(b"Ana")</code><br><code>mv[0]</code>, <code>bytes(mv[1:])</code></td><td><code>65</code>, <code>b'na'</code></td><td></td></tr>
+<tr><td><code>aiter(x)</code>, <code>anext(it)</code></td><td>Os <code>iter</code> e <code>next</code> da programação assíncrona: usados com <code>await</code>, dentro de <code>async def</code>.</td><td><code>print(await anext(it))</code></td><td>o próximo item (no programa abaixo, <code>3</code>)</td><td><a href="asyncio.html">asyncio</a></td></tr>
+<tr><td><code>breakpoint()</code></td><td>Pausa o programa naquela linha e abre o depurador <code>pdb</code>, para você olhar as variáveis.</td><td><code>breakpoint()</code></td><td>aparece o prompt <code>(Pdb)</code></td><td><a href="depuracao.html">Depurando com pdb</a></td></tr>
+</table>
+</div>
+
+<pre class="file" data-file="contagem.py">import asyncio
+
+async def contagem():
+    for n in [3, 2, 1]:
+        yield n
+
+async def main():
+    it = aiter(contagem())
+    print(await anext(it))
+    print(await anext(it))
+
+asyncio.run(main())
+</pre>
+
+<pre class="term">$ python3 contagem.py
+3
+2
+</pre>
+
+<div class="warning">
+<strong>Nunca use <code>eval</code> ou <code>exec</code> com o que o usuário digitou</strong>
+<p><code>eval(input())</code> roda <strong>qualquer</strong> código que a pessoa digitar, inclusive um que apague arquivos. Para transformar o que foi digitado em número, use <code>int()</code> ou <code>float()</code>.</p>
+</div>
+
+<div class="note">
+<strong>Só no modo interativo: <code>exit</code>, <code>quit</code>, <code>copyright</code>, <code>credits</code>, <code>license</code></strong>
+<p>Estes cinco nomes também existem sem <code>import</code>, mas não estão na lista oficial de funções embutidas: o Python os acrescenta ao começar, para o modo interativo. <code>exit()</code> e <code>quit()</code> saem do <code>&gt;&gt;&gt;</code>. Num programa, para encerrar, use <code>sys.exit()</code> (veja <a href="os-sys.html">Os Módulos os e sys</a>).</p>
+</div>
+
+<hr>
+
+<h2>Experimente</h2>
+
+<div class="trypy" data-goal="out:4 itens;;out:total R$ 36.8;;out:mais caro R$ 18.9;;out:mais barato R$ 0.5;;src:\bsum\(;;src:\bmax\(;;src:\bmin\(;;src:\blen\(">
+<p class="try-task"><strong>Missão:</strong> a Ana anotou os preços da feira numa lista. Troque os <code>?</code> pelas funções embutidas certas (<code>len</code>, <code>sum</code>, <code>max</code> e <code>min</code>) para mostrar <code>4 itens, total R$ 36.8, mais caro R$ 18.9, mais barato R$ 0.5</code>. Use <code>round(…, 2)</code> no total.</p>
+<pre class="script" data-file="main.py">precos = [4.5, 12.9, 0.5, 18.9]
+
+quantos = "?"
+total = "?"
+mais_caro = "?"
+mais_barato = "?"
+print(f"{quantos} itens, total R$ {total}, mais caro R$ {mais_caro}, mais barato R$ {mais_barato}")
+</pre>
+<pre class="solucao" data-file="main.py">precos = [4.5, 12.9, 0.5, 18.9]
+
+quantos = len(precos)
+total = round(sum(precos), 2)
+mais_caro = max(precos)
+mais_barato = min(precos)
+print(f"{quantos} itens, total R$ {total}, mais caro R$ {mais_caro}, mais barato R$ {mais_barato}")
+</pre>
+</div>
+
+<div class="trypy">
+<p class="try-task"><strong>Livre:</strong> teste qualquer função desta página. Troque os valores, junte funções umas dentro das outras.</p>
+<pre class="script" data-file="main.py">nomes = ["Bia", "ana", "Caio", "Davi"]
+notas = [8.5, 9.0, 6.5, 7.0]
+
+print(sorted(nomes, key=str.lower))
+print(list(zip(nomes, notas)))
+for posicao, nome in enumerate(nomes, start=1):
+    print(posicao, nome)
+print("Todos passaram?", all(n &gt;= 7 for n in notas))
+print("Alguém tirou 9 ou mais?", any(n &gt;= 9 for n in notas))
+print(type(notas), len(notas), round(sum(notas) / len(notas), 2))
+</pre>
+</div>
+
+<hr>
+
+<h2 id="az">Todas de A a Z</h2>
+
+<p>As 71 funções da lista oficial do Python 3.14 (<a href="https://docs.python.org/3/library/functions.html">docs.python.org/3/library/functions.html</a>), cada uma com o grupo onde ela aparece nesta página.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Funções</th><th>Grupo</th></tr>
+<tr><td><code>abs</code> · <code>aiter</code> · <code>all</code> · <code>anext</code> · <code>any</code> · <code>ascii</code></td><td><a href="#numeros">contas</a> · <a href="#codigo">código</a> · <a href="#percorrer">percorrer</a> · <a href="#codigo">código</a> · <a href="#percorrer">percorrer</a> · <a href="#mostrar">mostrar</a></td></tr>
+<tr><td><code>bin</code> · <code>bool</code> · <code>breakpoint</code> · <code>bytearray</code> · <code>bytes</code></td><td><a href="#converter">converter</a> · <a href="#converter">converter</a> · <a href="#codigo">código</a> · <a href="#converter">converter</a> · <a href="#converter">converter</a></td></tr>
+<tr><td><code>callable</code> · <code>chr</code> · <code>classmethod</code> · <code>compile</code> · <code>complex</code></td><td><a href="#objetos">objetos</a> · <a href="#converter">converter</a> · <a href="#classes">classes</a> · <a href="#codigo">código</a> · <a href="#converter">converter</a></td></tr>
+<tr><td><code>delattr</code> · <code>dict</code> · <code>dir</code> · <code>divmod</code></td><td><a href="#objetos">objetos</a> · <a href="#converter">converter</a> · <a href="#objetos">objetos</a> · <a href="#numeros">contas</a></td></tr>
+<tr><td><code>enumerate</code> · <code>eval</code> · <code>exec</code></td><td><a href="#percorrer">percorrer</a> · <a href="#codigo">código</a> · <a href="#codigo">código</a></td></tr>
+<tr><td><code>filter</code> · <code>float</code> · <code>format</code> · <code>frozenset</code></td><td><a href="#percorrer">percorrer</a> · <a href="#converter">converter</a> · <a href="#mostrar">mostrar</a> · <a href="#converter">converter</a></td></tr>
+<tr><td><code>getattr</code> · <code>globals</code></td><td><a href="#objetos">objetos</a> · <a href="#codigo">código</a></td></tr>
+<tr><td><code>hasattr</code> · <code>hash</code> · <code>help</code> · <code>hex</code></td><td><a href="#objetos">objetos</a> · <a href="#objetos">objetos</a> · <a href="#codigo">código</a> · <a href="#converter">converter</a></td></tr>
+<tr><td><code>id</code> · <code>input</code> · <code>int</code> · <code>isinstance</code> · <code>issubclass</code> · <code>iter</code></td><td><a href="#objetos">objetos</a> · <a href="#mostrar">mostrar</a> · <a href="#converter">converter</a> · <a href="#objetos">objetos</a> · <a href="#objetos">objetos</a> · <a href="#percorrer">percorrer</a></td></tr>
+<tr><td><code>len</code> · <code>list</code> · <code>locals</code></td><td><a href="#percorrer">percorrer</a> · <a href="#converter">converter</a> · <a href="#codigo">código</a></td></tr>
+<tr><td><code>map</code> · <code>max</code> · <code>memoryview</code> · <code>min</code></td><td><a href="#percorrer">percorrer</a> · <a href="#numeros">contas</a> · <a href="#codigo">código</a> · <a href="#numeros">contas</a></td></tr>
+<tr><td><code>next</code></td><td><a href="#percorrer">percorrer</a></td></tr>
+<tr><td><code>object</code> · <code>oct</code> · <code>open</code> · <code>ord</code></td><td><a href="#classes">classes</a> · <a href="#converter">converter</a> · <a href="#codigo">código</a> · <a href="#converter">converter</a></td></tr>
+<tr><td><code>pow</code> · <code>print</code> · <code>property</code></td><td><a href="#numeros">contas</a> · <a href="#mostrar">mostrar</a> · <a href="#classes">classes</a></td></tr>
+<tr><td><code>range</code> · <code>repr</code> · <code>reversed</code> · <code>round</code></td><td><a href="#percorrer">percorrer</a> · <a href="#mostrar">mostrar</a> · <a href="#percorrer">percorrer</a> · <a href="#numeros">contas</a></td></tr>
+<tr><td><code>set</code> · <code>setattr</code> · <code>slice</code> · <code>sorted</code> · <code>staticmethod</code> · <code>str</code> · <code>sum</code> · <code>super</code></td><td><a href="#converter">converter</a> · <a href="#objetos">objetos</a> · <a href="#percorrer">percorrer</a> · <a href="#percorrer">percorrer</a> · <a href="#classes">classes</a> · <a href="#converter">converter</a> · <a href="#numeros">contas</a> · <a href="#classes">classes</a></td></tr>
+<tr><td><code>tuple</code> · <code>type</code></td><td><a href="#converter">converter</a> · <a href="#objetos">objetos</a></td></tr>
+<tr><td><code>vars</code></td><td><a href="#objetos">objetos</a></td></tr>
+<tr><td><code>zip</code></td><td><a href="#percorrer">percorrer</a></td></tr>
+<tr><td><code>__import__</code></td><td><a href="#codigo">código</a></td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>E no Python 3.15?</strong>
+<p>A documentação do Python 3.15 (lançado em outubro de 2026) acrescenta duas funções embutidas à lista, que passa a ter 73: <code>frozendict</code> (um dicionário que não muda depois de criado, como o <code>frozenset</code> é para o <code>set</code>) e <code>sentinel</code> (para criar valores "marcadores" únicos). Elas <strong>não existem no Python 3.14</strong>, o do Ubuntu 26.04 e o do editor do guia; por isso esta página não traz exemplos delas. Veja <a href="novidades.html">Novidades do Python 3.14 e 3.15</a>.</p>
+</div>
+
+<div class="warning">
+<strong>Não use esses nomes nas suas variáveis</strong>
+<p>Se você escrever <code>sum = 0</code>, <code>list = [1, 2]</code> ou <code>max = 10</code>, a função embutida fica escondida pela sua variável, e a próxima chamada dá <code>TypeError: 'int' object is not callable</code>. O caso completo está na aula <a href="funcoes-embutidas.html">Funções Embutidas</a>. Prefira <code>total</code>, <code>itens</code>, <code>maior</code>.</p>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>São 71 funções embutidas no Python 3.14: estão sempre disponíveis, sem <code>import</code>.</li>
+  <li>Mostrar e ler: <code>print</code>, <code>input</code> (que sempre devolve texto), <code>repr</code>, <code>format</code>.</li>
+  <li>Converter: <code>int</code>, <code>float</code>, <code>str</code>, <code>bool</code>, <code>list</code>, <code>tuple</code>, <code>set</code>, <code>dict</code>; e <code>chr</code>/<code>ord</code> entre letras e códigos.</li>
+  <li>Contas: <code>abs</code>, <code>round</code> (no meio vai para o par), <code>pow</code>, <code>divmod</code>, <code>sum</code>, <code>min</code>, <code>max</code> (com <code>key=</code> e <code>default=</code>).</li>
+  <li>Percorrer: <code>len</code>, <code>sorted</code>, <code>reversed</code>, <code>enumerate</code>, <code>zip</code>, <code>map</code>, <code>filter</code>, <code>range</code>, <code>all</code>, <code>any</code>. Várias devolvem um iterador: use <code>list()</code> para ver.</li>
+  <li>Examinar: <code>type</code>, <code>isinstance</code>, <code>dir</code>, <code>vars</code>, <code>getattr</code>/<code>setattr</code>/<code>hasattr</code>/<code>delattr</code>.</li>
+  <li><span class="versao">3.14</span> <code>map()</code> ganhou <code>strict=True</code>; <code>float.from_number()</code> e <code>complex.from_number()</code> são novos.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
