@@ -450,7 +450,7 @@ ValueError: acabou o pó de café</pre>
 <ul>
   <li><strong>Com <code>return_exceptions=True</code></strong> ("devolver as exceções"), o erro do café não para nada: ele vira um item da lista de resultados, no lugar do café. O pão chegou normalmente. Depois, você confere cada item.</li>
   <li><strong>Sem essa opção</strong>, o primeiro erro sobe pelo <code>await</code> do <code>gather</code> e, como ninguém trata, encerra o programa.</li>
-  <li>O traceback passa por várias linhas de dentro do <code>asyncio</code> (o <code>asyncio.run</code>, o laço de eventos). Para entender o erro, olhe as linhas que são do <strong>seu</strong> arquivo, de baixo para cima: a linha 11, na <code>fazer_cafe</code>, lançou o erro; a linha 17, na <code>main</code>, estava esperando no <code>gather</code>. No editor do guia aparecem também linhas de <code>/lib/guia/_guia_editor.py</code> e <code>/lib/python314.zip/asyncio/…</code>: são do próprio editor e da biblioteca, e podem ser puladas do mesmo jeito.</li>
+  <li>O traceback passa por várias linhas de dentro do <code>asyncio</code> (o <code>asyncio.run</code>, o laço de eventos). Para entender o erro, olhe as linhas que são do <strong>seu</strong> arquivo, de baixo para cima: a linha 11, na <code>fazer_cafe</code>, lançou o erro; a linha 17, na <code>main</code>, estava esperando no <code>gather</code>. No editor do guia, o traceback sai igual a este.</li>
 </ul>
 
 <hr>
