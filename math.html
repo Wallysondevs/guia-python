@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python math — raiz, arredondamento, pi e mais | Guia Python</title>
+<meta name="description" content="O módulo math para quem está começando: pi, e e inf, raiz quadrada (sqrt, isqrt, cbrt), arredondar para cima e para baixo (ceil, floor, trunc) e o round que arredonda o 2.5 para 2, fatorial, MDC, MMC e combinações, logaritmos, ângulos em radianos, hypot e dist, isclose para comparar números com vírgula, e os erros reais do Python 3.14.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">math</span></h1>
+
+<p class="intro">Somar, subtrair, multiplicar e dividir o Python faz sem ajuda (aula <a href="operadores-aritmeticos.html">Operadores Aritméticos</a>). Mas e a raiz quadrada? E arredondar <strong>para cima</strong>, para saber quantas caixas de ovos a padaria precisa? E o pi, para calcular o tamanho da pizza? Para isso existe o módulo <code>math</code> ("matemática"): a calculadora científica do Python, que já vem instalada.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>As constantes <code>math.pi</code>, <code>math.e</code> e <code>math.inf</code>.</li>
+  <li>Raízes: <code>sqrt</code>, <code>isqrt</code>, <code>cbrt</code>, e a diferença para o <code>**</code>.</li>
+  <li>A arredondar para cima, para baixo e "cortando": <code>ceil</code>, <code>floor</code>, <code>trunc</code>, e a surpresa do <code>round(2.5)</code>.</li>
+  <li>Contas de inteiros: fatorial, MDC, MMC, combinações.</li>
+  <li>Logaritmos, ângulos (em radianos!) e distâncias.</li>
+  <li>Por que <code>0.1 + 0.2 == 0.3</code> dá <code>False</code>, e o <code>math.isclose</code>.</li>
+  <li>Os erros reais: raiz de negativo, logaritmo de zero, texto no lugar de número, número grande demais.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a calculadora científica da gaveta</h2>
+<p>A calculadora comum, a do caixa da padaria, tem as quatro operações. Para as outras contas existe a calculadora científica, cheia de botões a mais: √, π, sen, log, x!. O módulo <code>math</code> é essa calculadora: você a pega com <code>import math</code> (como na aula <a href="modulos.html">Módulos e import</a>) e "aperta os botões" com <code>math.nome(…)</code>.</p>
+
+<pre class="file" data-file="exemplo.py">import math
+
+print(math.sqrt(49))
+</pre>
+
+<pre class="term">$ python3 exemplo.py
+7.0
+</pre>
+
+<p>Os nomes das funções são abreviações em inglês, as mesmas usadas nas calculadoras e em outras linguagens. A tabela da <a href="#referencia">Referência rápida</a> traz todos, com a tradução.</p>
+
+<hr>
+
+<h2>1. As constantes: <code>pi</code>, <code>e</code>, <code>inf</code></h2>
+
+<pre class="file" data-file="constantes.py">import math
+
+print("pi =", math.pi)
+print("e =", math.e)
+print("tau =", math.tau)
+print("infinito:", math.inf)
+print(math.inf &gt; 10**100)
+</pre>
+
+<pre class="term">$ python3 constantes.py
+pi = 3.141592653589793
+e = 2.718281828459045
+tau = 6.283185307179586
+infinito: inf
+True
+</pre>
+
+<dl class="anatomy">
+  <dt>math.pi</dt><dd>O π: quantas vezes o contorno de um círculo é maior que o diâmetro. Com 15 casas, muito mais preciso que o "3,14" da escola.</dd>
+  <dt>math.e</dt><dd>O número de Euler, a base dos logaritmos naturais (aparece em juros compostos e crescimento).</dd>
+  <dt>math.tau</dt><dd>Duas vezes o pi (uma volta completa, em radianos).</dd>
+  <dt>math.inf</dt><dd>"Infinito": maior que qualquer número. Útil como ponto de partida para achar um mínimo (<code>menor = math.inf</code>).</dd>
+</dl>
+
+<p>São valores, e não funções: sem parênteses. O nome todo em minúsculas, apesar de serem constantes, é uma exceção antiga do <code>math</code>.</p>
+
+<div class="trypy" data-goal="out:706.86;;src:math\.pi">
+<p class="try-task"><strong>Missão:</strong> a área de um círculo é π × raio². O programa usa 3.14 e erra a área da pizza. Troque pelo <code>math.pi</code> (lembre do <code>import</code>) e veja a área certa: <code>706.86</code>.</p>
+<pre class="script" data-file="main.py">raio = 15
+area = 3.14 * raio ** 2
+print(f"Pizza de {raio} cm de raio: {area:.2f} cm²")
+</pre>
+<pre class="solucao" data-file="main.py">import math
+
+raio = 15
+area = math.pi * raio ** 2
+print(f"Pizza de {raio} cm de raio: {area:.2f} cm²")
+</pre>
+</div>
+
+<hr>
+
+<h2>2. Raízes e potências</h2>
+
+<pre class="file" data-file="raizes.py">import math
+
+print(math.sqrt(49))
+print(math.sqrt(2))
+print(49 ** 0.5)
+print(math.cbrt(27))
+print(math.isqrt(50))
+print(math.pow(2, 10))
+print(2 ** 10)
+</pre>
+
+<pre class="term">$ python3 raizes.py
+7.0
+1.4142135623730951
+7.0
+3.0000000000000004
+7
+1024.0
+1024
+</pre>
+
+<dl class="anatomy">
+  <dt>math.sqrt(49)</dt><dd>Raiz quadrada (<em>square root</em>). Sempre devolve <code>float</code>: <code>7.0</code>, e não <code>7</code>.</dd>
+  <dt>49 ** 0.5</dt><dd>A mesma raiz, sem o <code>math</code>: elevar a meio é tirar a raiz quadrada.</dd>
+  <dt>math.cbrt(27)</dt><dd>Raiz cúbica (<em>cube root</em>). Repare: <code>3.0000000000000004</code>, e não <code>3.0</code>. É o arredondamento interno dos números com vírgula, explicado na seção 6. Esse último algarismo depende da biblioteca de matemática do sistema: no editor do guia, que roda no navegador, a mesma conta dá <code>3.0</code>. Mais um motivo para nunca esperar que um <code>float</code> dê um valor exato.</dd>
+  <dt>math.isqrt(50)</dt><dd>A raiz inteira (<em>integer square root</em>): o maior inteiro cujo quadrado cabe em 50. 7 × 7 = 49 cabe; 8 × 8 = 64 não.</dd>
+  <dt>math.pow(2, 10)</dt><dd>Potência, sempre em <code>float</code>. O <code>2 ** 10</code> faz a mesma conta e mantém o inteiro.</dd>
+</dl>
+
+<div class="tip">
+<strong><code>**</code> ou <code>math.pow</code>?</strong>
+<p>No dia a dia, use <code>**</code>: não precisa de <code>import</code>, e com inteiros dá um inteiro exato (até para números enormes, como <code>2 ** 100</code>). O <code>math.pow</code> converte tudo para <code>float</code>. Para a raiz quadrada, <code>math.sqrt(x)</code> deixa a intenção mais clara que <code>x ** 0.5</code>.</p>
+</div>
+
+<hr>
+
+<h2>3. Arredondando: <code>ceil</code>, <code>floor</code>, <code>trunc</code> e <code>round</code></h2>
+<p>A padaria tem 50 ovos e cada caixa leva 12. Quantas caixas a Ana precisa?</p>
+
+<pre class="file" data-file="caixas.py">import math
+
+ovos = 50
+por_caixa = 12
+
+print("Divisão:", ovos / por_caixa)
+print("Caixas cheias:", ovos // por_caixa)
+print("Caixas necessárias:", math.ceil(ovos / por_caixa))
+</pre>
+
+<pre class="term">$ python3 caixas.py
+Divisão: 4.166666666666667
+Caixas cheias: 4
+Caixas necessárias: 5
+</pre>
+
+<p>A divisão dá 4,17. A divisão inteira (<code>//</code>) diz quantas caixas ficam <strong>cheias</strong>: 4. Mas sobram 2 ovos, que também precisam de caixa: são <strong>5</strong> caixas. "Arredondar para cima" é o <code>math.ceil</code> (<em>ceiling</em>, "teto"). Sempre que a pergunta for "quantos eu preciso para caber tudo" (caixas, ônibus, páginas), é <code>ceil</code>.</p>
+
+<p>Os quatro jeitos de arredondar, lado a lado:</p>
+
+<pre class="file" data-file="arredondar.py">import math
+
+for numero in [2.3, 2.7, -2.3, -2.7]:
+    print(f"{numero:5}  ceil={math.ceil(numero):3}  floor={math.floor(numero):3}  trunc={math.trunc(numero):3}  round={round(numero):3}")
+</pre>
+
+<pre class="term">$ python3 arredondar.py
+  2.3  ceil=  3  floor=  2  trunc=  2  round=  2
+  2.7  ceil=  3  floor=  2  trunc=  2  round=  3
+ -2.3  ceil= -2  floor= -3  trunc= -2  round= -2
+ -2.7  ceil= -2  floor= -3  trunc= -2  round= -3
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Função</th><th>Faz</th><th>2.7 vira</th><th>-2.7 vira</th></tr>
+<tr><td><code>math.ceil(x)</code></td><td>Para cima, rumo ao "teto" (<em>ceiling</em>)</td><td>3</td><td>-2</td></tr>
+<tr><td><code>math.floor(x)</code></td><td>Para baixo, rumo ao "chão" (<em>floor</em>)</td><td>2</td><td>-3</td></tr>
+<tr><td><code>math.trunc(x)</code></td><td>Corta as casas decimais (<em>truncate</em>), como o <code>int(x)</code></td><td>2</td><td>-2</td></tr>
+<tr><td><code>round(x)</code></td><td>Para o inteiro mais próximo (não precisa de <code>import</code>)</td><td>3</td><td>-3</td></tr>
+</table>
+</div>
+
+<p>Com os negativos, a diferença aparece: "para baixo" de -2.7 é -3 (mais longe do zero), mas "cortar" -2.7 dá -2.</p>
+
+<h3>A surpresa do <code>round</code>: o 2.5 vira 2</h3>
+
+<pre class="file" data-file="round_meio.py">for numero in [0.5, 1.5, 2.5, 3.5]:
+    print(numero, "-&gt;", round(numero))
+print(round(2.675, 2))
+</pre>
+
+<pre class="term">$ python3 round_meio.py
+0.5 -&gt; 0
+1.5 -&gt; 2
+2.5 -&gt; 2
+3.5 -&gt; 4
+2.67
+</pre>
+
+<p>Na escola, o ",5" sempre sobe. No Python, quando o número está <strong>exatamente no meio</strong>, o <code>round</code> vai para o vizinho <strong>par</strong>: 0.5 → 0, 1.5 → 2, 2.5 → 2, 3.5 → 4. É o "arredondamento do banqueiro", usado de propósito: somando muitos valores arredondados, metade sobe e metade desce, e o erro não se acumula para um lado só.</p>
+
+<p>E o <code>round(2.675, 2)</code>, que deveria dar 2.68, deu 2.67 por outro motivo: o 2.675 guardado no computador é, na verdade, um tiquinho menor que 2.675 (seção 6). Para dinheiro, a forma mais simples é formatar na hora de mostrar (<code>f"{valor:.2f}"</code>, aula <a href="f-strings.html">f-strings</a>); quando cada centavo importa, existe o módulo <code>decimal</code>.</p>
+
+<div class="trypy" data-goal="out:Ônibus necessários: 4;;src:ceil">
+<p class="try-task"><strong>Missão:</strong> a excursão da escola tem 130 alunos, e cada ônibus leva 40. O programa diz que bastam 3 ônibus, e 10 alunos ficariam para trás. Use o <code>math.ceil</code> para calcular certo.</p>
+<pre class="script" data-file="main.py">alunos = 130
+por_onibus = 40
+
+print("Ônibus necessários:", alunos // por_onibus)
+</pre>
+<pre class="solucao" data-file="main.py">import math
+
+alunos = 130
+por_onibus = 40
+
+print("Ônibus necessários:", math.ceil(alunos / por_onibus))
+</pre>
+</div>
+
+<hr>
+
+<h2>4. Contas com inteiros</h2>
+
+<pre class="file" data-file="contas.py">import math
+
+print("5! =", math.factorial(5))
+print("MDC de 12 e 18:", math.gcd(12, 18))
+print("MMC de 4 e 6:", math.lcm(4, 6))
+print("Duplas possíveis entre 6 pessoas:", math.comb(6, 2))
+print("Pódios possíveis entre 6 corredores:", math.perm(6, 3))
+print("Produto:", math.prod([2, 3, 4]))
+print("Valor absoluto:", math.fabs(-7), abs(-7))
+</pre>
+
+<pre class="term">$ python3 contas.py
+5! = 120
+MDC de 12 e 18: 6
+MMC de 4 e 6: 12
+Duplas possíveis entre 6 pessoas: 15
+Pódios possíveis entre 6 corredores: 120
+Produto: 24
+Valor absoluto: 7.0 7
+</pre>
+
+<dl class="anatomy">
+  <dt>math.factorial(5)</dt><dd>Fatorial: 5 × 4 × 3 × 2 × 1 = 120. De quantas formas 5 pessoas podem fazer uma fila.</dd>
+  <dt>math.gcd(12, 18)</dt><dd>MDC, o máximo divisor comum (<em>greatest common divisor</em>): o maior número que divide os dois. 6.</dd>
+  <dt>math.lcm(4, 6)</dt><dd>MMC, o mínimo múltiplo comum (<em>least common multiple</em>). Um remédio de 4 em 4 horas e outro de 6 em 6 coincidem a cada 12 horas.</dd>
+  <dt>math.comb(6, 2)</dt><dd>Combinações: quantos grupos de 2 dá para formar com 6 pessoas, sem importar a ordem. 15 duplas.</dd>
+  <dt>math.perm(6, 3)</dt><dd>Permutações (arranjos): quantas sequências de 3 com 6 pessoas, <strong>importando</strong> a ordem (1º, 2º e 3º lugar). 120 pódios.</dd>
+  <dt>math.prod([2, 3, 4])</dt><dd>Multiplica todos os itens da lista, como o <code>sum</code> soma: 24.</dd>
+  <dt>math.fabs(-7)</dt><dd>O valor absoluto, em <code>float</code>. O <code>abs()</code> embutido faz o mesmo e mantém o tipo; prefira ele.</dd>
+</dl>
+
+<hr>
+
+<h2>5. Logaritmos, ângulos e distâncias</h2>
+
+<h3>Logaritmos</h3>
+
+<pre class="file" data-file="potencias.py">import math
+
+print(math.log10(1000))
+print(math.log2(1024))
+print(math.log(math.e))
+print(math.log(8, 2))
+print(math.exp(1))
+</pre>
+
+<pre class="term">$ python3 potencias.py
+3.0
+10.0
+1.0
+3.0
+2.718281828459045
+</pre>
+
+<p>O logaritmo responde "a que potência eu elevo a base para chegar neste número?". 10 elevado a <strong>3</strong> dá 1000: <code>log10(1000)</code> é 3. Na base 2, 2 elevado a 10 dá 1024. O <code>math.log(x)</code> sozinho usa a base <code>e</code>; com um segundo argumento, a base que você quiser. O <code>exp(x)</code> é o caminho de volta: <code>e</code> elevado a <code>x</code>. Uma aplicação do dia a dia:</p>
+
+<pre class="file" data-file="juros.py">import math
+
+inicial = 1000
+taxa = 0.01
+meses = math.log(2) / math.log(1 + taxa)
+print(f"A 1% ao mês, o dinheiro dobra em {math.ceil(meses)} meses ({meses:.2f})")
+</pre>
+
+<pre class="term">$ python3 juros.py
+A 1% ao mês, o dinheiro dobra em 70 meses (69.66)
+</pre>
+
+<h3>Ângulos: o Python pensa em radianos</h3>
+
+<pre class="file" data-file="angulos.py">import math
+
+print(math.radians(180))
+print(math.degrees(math.pi / 2))
+print(math.sin(math.radians(30)))
+print(math.cos(math.radians(60)))
+print(math.sin(math.pi))
+print(math.sin(30))
+</pre>
+
+<pre class="term">$ python3 angulos.py
+3.141592653589793
+90.0
+0.49999999999999994
+0.5000000000000001
+1.2246467991473532e-16
+-0.9880316240928618
+</pre>
+
+<p>As funções de trigonometria (<code>sin</code> = seno, <code>cos</code> = cosseno, <code>tan</code> = tangente) recebem o ângulo em <strong>radianos</strong>, e não em graus. Meia volta (180°) é π radianos. Por isso:</p>
+<ul>
+  <li><code>math.radians(graus)</code> converte graus em radianos, e <code>math.degrees(radianos)</code> faz o contrário;</li>
+  <li><code>math.sin(math.radians(30))</code> dá o seno de 30°: <code>0.49999999999999994</code>, que é 0,5 com aquele "tiquinho" de erro da seção 6;</li>
+  <li><code>math.sin(math.pi)</code> deveria ser 0, e deu <code>1.2246467991473532e-16</code>. O <code>e-16</code> quer dizer "vezes 10 elevado a -16": 0,00000000000000012. Praticamente zero;</li>
+  <li><code>math.sin(30)</code>, sem converter, calcula o seno de 30 <strong>radianos</strong> (quase 5 voltas inteiras), e dá um número que não tem nada a ver com 0,5. Não dá erro: só a resposta errada.</li>
+</ul>
+
+<h3>Distâncias: <code>hypot</code> e <code>dist</code></h3>
+
+<pre class="file" data-file="escada.py">import math
+
+altura = 4
+distancia = 3
+escada = math.hypot(altura, distancia)
+print("A escada precisa ter", escada, "metros")
+print(math.dist((0, 0), (3, 4)))
+</pre>
+
+<pre class="term">$ python3 escada.py
+A escada precisa ter 5.0 metros
+5.0
+</pre>
+
+<p>Para alcançar uma janela a 4 metros de altura, com o pé da escada a 3 metros da parede, o Pitágoras diz: √(4² + 3²) = 5. O <code>math.hypot</code> (de <em>hipotenusa</em>) faz essa conta. O <code>math.dist</code> é a distância entre dois pontos, cada um como uma <a href="tuplas.html">tupla</a> de coordenadas.</p>
+
+<hr>
+
+<h2>6. Números com vírgula não são exatos: <code>math.isclose</code></h2>
+
+<pre class="file" data-file="floats.py">import math
+
+print(0.1 + 0.2)
+print(0.1 + 0.2 == 0.3)
+print(math.isclose(0.1 + 0.2, 0.3))
+print(sum([0.1] * 10))
+print(math.fsum([0.1] * 10))
+</pre>
+
+<pre class="term">$ python3 floats.py
+0.30000000000000004
+False
+True
+1.0
+1.0
+</pre>
+
+<p>O computador guarda os números em binário (zeros e uns), e alguns números que são "redondos" para nós, como 0,1, viram uma dízima infinita em binário, como 1/3 vira 0,333… em decimal. Ele guarda uma aproximação muito boa, mas não exata. Na maior parte do tempo, você nem percebe. Mas, numa comparação com <code>==</code>, o "tiquinho" faz diferença: <code>0.1 + 0.2</code> dá <code>0.30000000000000004</code>, que não é igual a <code>0.3</code>.</p>
+
+<dl class="anatomy">
+  <dt>math.isclose(a, b)</dt><dd>"Estão perto o bastante?" (<em>is close</em>). Responde <code>True</code> se a diferença for minúscula em relação ao tamanho dos números. É o jeito certo de comparar <code>float</code>.</dd>
+  <dt>math.isclose(a, b, abs_tol=0.01)</dt><dd>Com uma tolerância que você escolhe: "diferença de até 1 centavo".</dd>
+  <dt>math.fsum(lista)</dt><dd>Uma soma de <code>float</code> com cuidado extra contra esses erros. Desde o Python 3.12, o próprio <code>sum()</code> também soma <code>float</code> com mais cuidado (por isso os dois deram <code>1.0</code>); num Python mais antigo, <code>sum([0.1] * 10)</code> dá <code>0.9999999999999999</code>.</dd>
+</dl>
+
+<div class="warning">
+<strong>Regra prática</strong>
+<p>Nunca compare dois <code>float</code> com <code>==</code>. Use <code>math.isclose(a, b)</code>. Com inteiros (<code>int</code>), o <code>==</code> é sempre exato e pode ser usado à vontade.</p>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma conta</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Conta</th><th>Com <code>math</code></th><th>Sem <code>math</code></th><th>Qual usar</th></tr>
+<tr><td>Raiz quadrada</td><td><code>math.sqrt(x)</code></td><td><code>x ** 0.5</code></td><td><code>math.sqrt</code>: mais claro (e avisa se <code>x</code> for negativo)</td></tr>
+<tr><td>Potência</td><td><code>math.pow(2, 10)</code> → <code>1024.0</code></td><td><code>2 ** 10</code> → <code>1024</code></td><td><code>**</code>: exato com inteiros</td></tr>
+<tr><td>Valor absoluto</td><td><code>math.fabs(-7)</code> → <code>7.0</code></td><td><code>abs(-7)</code> → <code>7</code></td><td><code>abs</code>: embutido e mantém o tipo</td></tr>
+<tr><td>Cortar as decimais</td><td><code>math.trunc(2.7)</code></td><td><code>int(2.7)</code></td><td>Tanto faz; <code>int</code> é o mais comum</td></tr>
+<tr><td>Arredondar para baixo (positivos)</td><td><code>math.floor(a / b)</code></td><td><code>a // b</code></td><td><code>//</code> para divisão de inteiros</td></tr>
+<tr><td>Arredondar para cima</td><td><code>math.ceil(a / b)</code></td><td><code>-(-a // b)</code></td><td><code>math.ceil</code>: o truque sem <code>math</code> ninguém entende</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Raiz de número negativo: <code>ValueError</code></strong>
+<pre class="file" data-file="erro_raiz.py">import math
+
+print(math.sqrt(-9))
+</pre>
+<pre class="term">$ python3 erro_raiz.py
+Traceback (most recent call last):
+  File "/home/ana/erro_raiz.py", line 3, in &lt;module&gt;
+    print(math.sqrt(-9))
+          ~~~~~~~~~^^^^
+ValueError: expected a nonnegative input, got -9.0
+</pre>
+<p>"Erro de valor: esperava uma entrada não negativa, recebi -9.0." Nos números reais, não existe raiz quadrada de número negativo (nenhum número vezes ele mesmo dá -9). O tipo do argumento está certo (é um número); o <strong>valor</strong> é que não serve, por isso <code>ValueError</code>. <strong>Como consertar:</strong> confira o valor antes (<code>if x &gt;= 0:</code>) ou trate o erro com <code>try</code>/<code>except ValueError</code>.</p>
+</div>
+
+<div class="note">
+<strong>Python mais antigo</strong>
+<p>A mensagem que diz o que era esperado e o valor recebido é novidade do Python 3.14 <span class="versao">3.14</span>. No Python 3.13 (o do Debian 13), a raiz de negativo e o logaritmo de zero dão só <code>ValueError: math domain error</code> ("erro de domínio": o número está fora dos valores que a função aceita).</p>
+</div>
+
+<div class="cenario">
+<strong>Logaritmo de zero</strong>
+<pre class="file" data-file="erro_log.py">import math
+
+print(math.log(0))
+</pre>
+<pre class="term">$ python3 erro_log.py
+Traceback (most recent call last):
+  File "/home/ana/erro_log.py", line 3, in &lt;module&gt;
+    print(math.log(0))
+          ~~~~~~~~^^^
+ValueError: expected a positive input
+</pre>
+<p>"Esperava uma entrada positiva." Nenhuma potência de <code>e</code> dá zero (nem número negativo), então o logaritmo só existe para números maiores que zero. <strong>Como consertar:</strong> garanta que o valor é positivo antes de calcular.</p>
+</div>
+
+<div class="cenario">
+<strong>Texto no lugar de número: <code>TypeError</code></strong>
+<pre class="file" data-file="erro_texto.py">import math
+
+lado = input("Área do quadrado: ")
+print(math.sqrt(lado))
+</pre>
+<pre class="term">$ python3 erro_texto.py
+Área do quadrado: 16
+Traceback (most recent call last):
+  File "/home/ana/erro_texto.py", line 4, in &lt;module&gt;
+    print(math.sqrt(lado))
+          ~~~~~~~~~^^^^^^
+TypeError: must be real number, not str
+</pre>
+<p>"Precisa ser um número real, não <code>str</code>." O <code>input()</code> sempre devolve <strong>texto</strong>, mesmo quando a pessoa digita só algarismos (aula <a href="input.html">input()</a>). Desta vez é <code>TypeError</code>: o problema é o <strong>tipo</strong>, não o valor. <strong>Como consertar:</strong> <code>math.sqrt(float(lado))</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Fatorial de negativo, ou de <code>float</code></strong>
+<pre class="file" data-file="erro_fat.py">import math
+
+print(math.factorial(-3))
+</pre>
+<pre class="term">$ python3 erro_fat.py
+Traceback (most recent call last):
+  File "/home/ana/erro_fat.py", line 3, in &lt;module&gt;
+    print(math.factorial(-3))
+          ~~~~~~~~~~~~~~^^^^
+ValueError: factorial() not defined for negative values
+</pre>
+<pre class="file" data-file="erro_fat2.py">import math
+
+print(math.factorial(4.0))
+</pre>
+<pre class="term">$ python3 erro_fat2.py
+Traceback (most recent call last):
+  File "/home/ana/erro_fat2.py", line 3, in &lt;module&gt;
+    print(math.factorial(4.0))
+          ~~~~~~~~~~~~~~^^^^^
+TypeError: 'float' object cannot be interpreted as an integer
+</pre>
+<p>O fatorial só existe para inteiros a partir de zero. Com -3, "não definido para valores negativos"; com <code>4.0</code> (que é <code>float</code>, mesmo sendo "redondo"), "um <code>float</code> não pode ser interpretado como inteiro". <strong>Como consertar:</strong> passe um <code>int</code>: <code>math.factorial(int(x))</code>, se tiver certeza de que <code>x</code> não tem casas decimais.</p>
+</div>
+
+<div class="cenario">
+<strong>Resultado grande demais: <code>OverflowError</code></strong>
+<pre class="file" data-file="erro_exp.py">import math
+
+print(math.exp(1000))
+</pre>
+<pre class="term">$ python3 erro_exp.py
+Traceback (most recent call last):
+  File "/home/ana/erro_exp.py", line 3, in &lt;module&gt;
+    print(math.exp(1000))
+          ~~~~~~~~^^^^^^
+OverflowError: math range error
+</pre>
+<p>"Erro de transbordamento: fora do alcance." O <code>e</code> elevado a 1000 tem mais de 400 algarismos, e um <code>float</code> só vai até perto de 1,8 × 10<sup>308</sup>. Os inteiros do Python não têm esse limite (<code>2 ** 2000</code> funciona), mas as funções do <code>math</code> trabalham com <code>float</code>. <strong>Como consertar:</strong> é raro no dia a dia; se acontecer, confira se a conta faz sentido (um expoente errado, por exemplo).</p>
+</div>
+
+<div class="cenario">
+<strong>Comparar <code>float</code> com <code>==</code>: o erro sem mensagem</strong>
+<p>O pior erro com números com vírgula não aparece na tela: <code>0.1 + 0.2 == 0.3</code> dá <code>False</code>, e um <code>if</code> que dependia disso simplesmente segue pelo caminho errado. Você viu na seção 6. <strong>Como consertar:</strong> <code>math.isclose(0.1 + 0.2, 0.3)</code>.</p>
+</div>
+
+<hr>
+
+<h2 id="referencia">Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Exemplo</th></tr>
+<tr><td><code>math.pi</code>, <code>math.e</code>, <code>math.tau</code></td><td>π, e, 2π</td><td><code>3.141592653589793</code></td></tr>
+<tr><td><code>math.inf</code></td><td>Infinito</td><td><code>math.inf &gt; 10**100</code> → <code>True</code></td></tr>
+<tr><td><code>math.sqrt(x)</code></td><td>Raiz quadrada (<em>square root</em>)</td><td><code>math.sqrt(49)</code> → <code>7.0</code></td></tr>
+<tr><td><code>math.isqrt(n)</code></td><td>Raiz quadrada inteira</td><td><code>math.isqrt(50)</code> → <code>7</code></td></tr>
+<tr><td><code>math.cbrt(x)</code></td><td>Raiz cúbica (<em>cube root</em>)</td><td><code>math.cbrt(27)</code> → <code>3.0000000000000004</code> (ou <code>3.0</code>)</td></tr>
+<tr><td><code>math.pow(x, y)</code></td><td>Potência em <code>float</code></td><td><code>math.pow(2, 10)</code> → <code>1024.0</code></td></tr>
+<tr><td><code>math.ceil(x)</code></td><td>Arredonda para cima (<em>ceiling</em>, teto)</td><td><code>math.ceil(4.1)</code> → <code>5</code></td></tr>
+<tr><td><code>math.floor(x)</code></td><td>Arredonda para baixo (<em>floor</em>, chão)</td><td><code>math.floor(4.9)</code> → <code>4</code></td></tr>
+<tr><td><code>math.trunc(x)</code></td><td>Corta as decimais (<em>truncate</em>)</td><td><code>math.trunc(-2.7)</code> → <code>-2</code></td></tr>
+<tr><td><code>round(x)</code> / <code>round(x, n)</code></td><td>Mais próximo (no meio, vai para o par); embutido</td><td><code>round(2.5)</code> → <code>2</code></td></tr>
+<tr><td><code>math.factorial(n)</code></td><td>Fatorial</td><td><code>math.factorial(5)</code> → <code>120</code></td></tr>
+<tr><td><code>math.gcd(a, b)</code> / <code>math.lcm(a, b)</code></td><td>MDC / MMC</td><td><code>math.gcd(12, 18)</code> → <code>6</code></td></tr>
+<tr><td><code>math.comb(n, k)</code> / <code>math.perm(n, k)</code></td><td>Combinações / arranjos</td><td><code>math.comb(6, 2)</code> → <code>15</code></td></tr>
+<tr><td><code>math.prod(lista)</code></td><td>Multiplica todos os itens</td><td><code>math.prod([2, 3, 4])</code> → <code>24</code></td></tr>
+<tr><td><code>math.log(x)</code>, <code>math.log(x, base)</code></td><td>Logaritmo natural / numa base</td><td><code>math.log(8, 2)</code> → <code>3.0</code></td></tr>
+<tr><td><code>math.log10(x)</code>, <code>math.log2(x)</code></td><td>Logaritmo na base 10 / 2</td><td><code>math.log10(1000)</code> → <code>3.0</code></td></tr>
+<tr><td><code>math.exp(x)</code></td><td><code>e</code> elevado a <code>x</code></td><td><code>math.exp(1)</code> → <code>2.718281828459045</code></td></tr>
+<tr><td><code>math.sin(x)</code>, <code>cos</code>, <code>tan</code></td><td>Seno, cosseno, tangente (em radianos)</td><td><code>math.sin(math.radians(30))</code></td></tr>
+<tr><td><code>math.radians(g)</code> / <code>math.degrees(r)</code></td><td>Graus → radianos / radianos → graus</td><td><code>math.radians(180)</code> → <code>3.14159…</code></td></tr>
+<tr><td><code>math.hypot(a, b)</code></td><td>Hipotenusa: √(a² + b²)</td><td><code>math.hypot(4, 3)</code> → <code>5.0</code></td></tr>
+<tr><td><code>math.dist(p, q)</code></td><td>Distância entre dois pontos</td><td><code>math.dist((0, 0), (3, 4))</code> → <code>5.0</code></td></tr>
+<tr><td><code>math.isclose(a, b)</code></td><td>Compara <code>float</code> com tolerância</td><td><code>math.isclose(0.1 + 0.2, 0.3)</code> → <code>True</code></td></tr>
+<tr><td><code>math.fsum(lista)</code></td><td>Soma de <code>float</code> com precisão extra</td><td><code>math.fsum([0.1] * 10)</code> → <code>1.0</code></td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>ValueError: expected a nonnegative input, got -9.0</code> (3.13: <code>math domain error</code>)</td><td>Raiz de número negativo</td></tr>
+<tr><td><code>ValueError: expected a positive input</code></td><td>Logaritmo de zero ou de negativo</td></tr>
+<tr><td><code>TypeError: must be real number, not str</code></td><td>Texto (do <code>input</code>, de um arquivo) no lugar de número: converta</td></tr>
+<tr><td><code>ValueError: factorial() not defined for negative values</code></td><td>Fatorial de negativo</td></tr>
+<tr><td><code>TypeError: 'float' object cannot be interpreted as an integer</code></td><td>Função que só aceita <code>int</code> recebeu <code>float</code></td></tr>
+<tr><td><code>OverflowError: math range error</code></td><td>Resultado maior do que um <code>float</code> aguenta</td></tr>
+<tr><td>Seno de 30 dá <code>-0.988…</code></td><td>Ângulo em graus: converta com <code>math.radians</code></td></tr>
+<tr><td><code>==</code> entre <code>float</code> dá <code>False</code> inesperado</td><td>Use <code>math.isclose</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A raiz</h3>
+<p>Complete para mostrar a raiz quadrada de 144:</p>
+<div class="ex-code">import math<br>print(math.<input data-answer="sqrt" aria-label="função">(144))</div>
+</div>
+
+<div class="exercise">
+<h3>2. Para cima</h3>
+<p>Qual o resultado de <code>math.ceil(7.01)</code>?</p>
+<div class="ex-code"><input data-answer="8" aria-label="resultado"></div>
+</div>
+
+<div class="exercise">
+<h3>3. O arredondamento do banqueiro</h3>
+<p>Qual o resultado de <code>round(4.5)</code>?</p>
+<div class="ex-code"><input data-answer="4" aria-label="resultado"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. A Ana precisa de 23 metros de fita, e cada rolo tem 5 metros. Qual conta diz quantos rolos comprar?</p>
+<label><input type="radio" name="q4"> <code>23 // 5</code></label>
+<label><input type="radio" name="q4"> <code>round(23 / 5)</code></label>
+<label><input type="radio" name="q4"> <code>math.ceil(23 / 5)</code></label>
+<label><input type="radio" name="q4"> <code>math.floor(23 / 5)</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. Por que <code>math.sin(90)</code> não dá 1?</p>
+<label><input type="radio" name="q5"> Porque falta o <code>import</code></label>
+<label><input type="radio" name="q5"> Porque o <code>sin</code> recebe o ângulo em radianos; o certo é <code>math.sin(math.radians(90))</code></label>
+<label><input type="radio" name="q5"> Porque o seno de 90° é 0</label>
+<label><input type="radio" name="q5"> Porque o Python arredonda errado</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. Qual é o jeito certo de conferir se <code>total</code> (um <code>float</code>) vale 0.3?</p>
+<label><input type="radio" name="q6"> <code>total == 0.3</code></label>
+<label><input type="radio" name="q6"> <code>total is 0.3</code></label>
+<label><input type="radio" name="q6"> <code>round(total) == 0.3</code></label>
+<label><input type="radio" name="q6"> <code>math.isclose(total, 0.3)</code></label>
+</div>
+
+<h3>Missão final: o troco</h3>
+
+<div class="trypy" data-goal="out:Troco certo: 0.30;;src:isclose;;semerro">
+<p class="try-task"><strong>Missão:</strong> um cliente pagou R$ 1,00 por um pão de R$ 0,70, e o caixa conferiu o troco de 30 centavos com <code>==</code>. Rode: ele diz que o troco está errado! Troque a comparação por <code>math.isclose</code> para o programa mostrar <code>Troco certo: 0.30</code>.</p>
+<pre class="script" data-file="main.py">pago = 1.00
+preco = 0.70
+troco = pago - preco
+
+print("Troco calculado:", troco)
+if troco == 0.30:
+    print(f"Troco certo: {troco:.2f}")
+else:
+    print("Troco errado!")
+</pre>
+<pre class="solucao" data-file="main.py">import math
+
+pago = 1.00
+preco = 0.70
+troco = pago - preco
+
+print("Troco calculado:", troco)
+if math.isclose(troco, 0.30):
+    print(f"Troco certo: {troco:.2f}")
+else:
+    print("Troco errado!")
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>import math</code> traz a calculadora científica: <code>math.pi</code>, <code>math.sqrt</code>, <code>math.ceil</code>…</li>
+  <li>Raiz quadrada: <code>math.sqrt(x)</code> (sempre <code>float</code>); potência: prefira o <code>**</code>.</li>
+  <li>Para cima: <code>math.ceil</code> ("quantas caixas preciso"); para baixo: <code>math.floor</code>; cortando: <code>math.trunc</code> ou <code>int</code>.</li>
+  <li><code>round</code> leva o ",5" exato para o número <strong>par</strong>: <code>round(2.5)</code> é 2.</li>
+  <li>Fatorial, MDC, MMC, combinações: <code>factorial</code>, <code>gcd</code>, <code>lcm</code>, <code>comb</code>, <code>perm</code>.</li>
+  <li>Seno, cosseno e tangente recebem <strong>radianos</strong>: converta com <code>math.radians</code>.</li>
+  <li>Números com vírgula têm pequenos erros de arredondamento: compare com <code>math.isclose</code>, nunca com <code>==</code>.</li>
+  <li>Valor fora do que a função aceita dá <code>ValueError</code>; tipo errado (como um texto) dá <code>TypeError</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
