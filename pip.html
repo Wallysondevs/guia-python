@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python pip — instalando pacotes de outras pessoas | Guia Python</title>
+<meta name="description" content="O pip para quem está começando: o que é um pacote e o PyPI, por que o Ubuntu recusa o pip install com o erro externally-managed-environment (PEP 668), as saídas pelo apt e pelo ambiente virtual, e os comandos pip install, list, show, freeze, uninstall e o requirements.txt, com as saídas reais do terminal.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">pip</span></h1>
+
+<p class="intro">O Python já vem com muita coisa pronta: <code>math</code>, <code>random</code>, <code>datetime</code>, <code>json</code>… É a <strong>biblioteca padrão</strong>, que você conheceu na aula <a href="modulos.html">Módulos e import</a>. Mas o mundo do Python é muito maior do que isso: milhares de pessoas escrevem módulos e os deixam disponíveis de graça, para qualquer um usar. Para trazer esses módulos para o seu computador existe o <code>pip</code>, o <strong>instalador de pacotes</strong> do Python. Nesta aula você vai usá-lo de verdade, no terminal da Ana, e vai entender por que a primeira tentativa, no Ubuntu, sempre dá erro.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é um <strong>pacote</strong> e o que é o <strong>PyPI</strong>, a "loja" de onde o <code>pip</code> baixa.</li>
+  <li>Por que o <code>pip install</code> do Ubuntu responde <code>externally-managed-environment</code>, e o que é a PEP 668.</li>
+  <li>As três saídas: o pacote do <code>apt</code>, o <strong>ambiente virtual</strong> e (para programas) o <code>pipx</code>.</li>
+  <li>A instalar, listar, ver detalhes, atualizar e remover pacotes: <code>pip install</code>, <code>list</code>, <code>show</code>, <code>uninstall</code>.</li>
+  <li>A anotar os pacotes do projeto num <code>requirements.txt</code> com <code>pip freeze</code>, e a reinstalar tudo com <code>pip install -r</code>.</li>
+  <li>Os erros reais: nome digitado errado, sem internet, esqueceu de ativar o ambiente.</li>
+</ul>
+</div>
+
+<div class="warning">
+<strong>Esta é uma aula de terminal</strong>
+<p>O <code>pip</code> é um programa que roda no <strong>terminal</strong> do seu computador, não dentro de um programa Python. Por isso, quase tudo aqui é mostrado em janelas de terminal, com o que o Ubuntu da Ana respondeu de verdade. O editor do guia (o "Experimente") não instala pacotes; as caixas desta aula treinam o que dá para treinar nele: ler um <code>requirements.txt</code> e reconhecer o erro de pacote que falta.</p>
+</div>
+
+<hr>
+
+<h2>A ideia: a loja de aplicativos do Python</h2>
+<p>Pense no celular da Ana. Ele já vem com alguns aplicativos de fábrica: a câmera, o relógio, a calculadora. Quando ela quer outro (um app de receitas, um jogo), abre a loja de aplicativos, procura pelo nome e toca em "instalar". Ninguém precisa escrever o app; alguém já escreveu e deixou na loja.</p>
+
+<p>No Python é igual:</p>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>No celular</th><th>No Python</th></tr>
+<tr><td>Os apps de fábrica</td><td>A <strong>biblioteca padrão</strong>: <code>math</code>, <code>random</code>, <code>json</code>… (já vem com o Python)</td></tr>
+<tr><td>Um app da loja</td><td>Um <strong>pacote</strong> (em inglês, <em>package</em>): um ou mais módulos que outra pessoa escreveu</td></tr>
+<tr><td>A loja de aplicativos</td><td>O <strong>PyPI</strong> (<em>Python Package Index</em>, "índice de pacotes do Python"), no site <code>pypi.org</code>, com centenas de milhares de pacotes</td></tr>
+<tr><td>O botão "instalar"</td><td>O comando <code>pip install nome-do-pacote</code></td></tr>
+</table>
+</div>
+
+<p>O nome <code>pip</code> é uma brincadeira recursiva em inglês: <em>"pip installs packages"</em>, "o pip instala pacotes". Nesta aula, o pacote de exemplo é o <strong><code>requests</code></strong> ("pedidos"), um dos mais usados do mundo: ele deixa um programa Python conversar com sites da internet com uma linha só.</p>
+
+<hr>
+
+<h2>1. O <code>pip</code> já está aí?</h2>
+<p>No Ubuntu 26.04 da Ana, o <code>pip</code> veio instalado junto com o Python (é o pacote <code>python3-pip</code> do Ubuntu). Para conferir, peça a versão:</p>
+
+<pre class="term">$ python3 --version
+Python 3.14.4
+$ pip --version
+pip 25.1.1 from /usr/lib/python3/dist-packages/pip (python 3.14)
+$ pip3 --version
+pip 25.1.1 from /usr/lib/python3/dist-packages/pip (python 3.14)
+</pre>
+
+<dl class="anatomy">
+  <dt>pip 25.1.1</dt><dd>A versão do <code>pip</code>. Ele tem as versões dele, separadas das do Python.</dd>
+  <dt>from /usr/lib/python3/dist-packages/pip</dt><dd>"De onde" ele veio: a pasta do sistema onde o Ubuntu guarda os módulos Python que <strong>ele</strong> instalou.</dd>
+  <dt>(python 3.14)</dt><dd>Para qual Python esse <code>pip</code> instala. Isso importa: cada Python tem o seu <code>pip</code>.</dd>
+</dl>
+
+<p><code>pip</code> e <code>pip3</code> são o mesmo programa (o "3" é de Python 3). Existe ainda uma terceira forma, que você vai ver muito em tutoriais: <code>python3 -m pip</code>. O <code>-m</code> quer dizer "rode o módulo": você pede ao próprio <code>python3</code> que rode o <code>pip</code> dele. A vantagem é não ter dúvida de qual Python vai receber o pacote. Para ver o que já está instalado, use <code>list</code> ("listar"):</p>
+
+<pre class="term">$ python3 -m pip list
+Package           Version
+----------------- ---------------
+command-not-found 0.3
+packaging         26.0
+pip               25.1.1
+python-apt        3.1.0+ubuntu1.1
+wheel             0.46.3
+</pre>
+
+<p>Poucos pacotes, e todos foram instalados pelo <strong>Ubuntu</strong>, não pela Ana. O <code>command-not-found</code>, por exemplo, é o programa que sugere "você quis dizer <code>python3</code>?" quando alguém digita <code>python</code>. Guarde essa informação: o próprio Ubuntu usa o Python para fazer o trabalho dele.</p>
+
+<div class="note">
+<strong>Não tem o <code>pip</code>?</strong>
+<p>Se o seu terminal responder <code>Comando 'pip' não encontrado</code>, o pacote do Ubuntu não está instalado. Instale com <code>sudo apt install python3-pip python3-venv</code> (o <code>sudo</code> pede a sua senha; detalhes na aula <a href="instalar.html">Instalar o Python</a>).</p>
+</div>
+
+<hr>
+
+<h2>2. A primeira tentativa: <code>externally-managed-environment</code></h2>
+<p>A Ana quer usar o <code>requests</code>. Ela confere que ele não existe ainda (o Python responde com um <code>ModuleNotFoundError</code>, "módulo não encontrado") e manda instalar:</p>
+
+<pre class="term">$ python3 -c "import requests"
+Traceback (most recent call last):
+  File "&lt;string&gt;", line 1, in &lt;module&gt;
+    import requests
+ModuleNotFoundError: No module named 'requests'
+$ pip install requests
+error: externally-managed-environment
+
+× This environment is externally managed
+╰─&gt; To install Python packages system-wide, try apt install
+    python3-xyz, where xyz is the package you are trying to
+    install.
+
+    If you wish to install a non-Debian-packaged Python package,
+    create a virtual environment using python3 -m venv path/to/venv.
+    Then use path/to/venv/bin/python and path/to/venv/bin/pip. Make
+    sure you have python3-full installed.
+
+    If you wish to install a non-Debian packaged Python application,
+    it may be easiest to use pipx install xyz, which will manage a
+    virtual environment for you. Make sure you have pipx installed.
+
+    See /usr/share/doc/python3.14/README.venv for more information.
+
+note: If you believe this is a mistake, please contact your Python installation or OS distribution provider. You can override this, at the risk of breaking your Python installation or OS, by passing --break-system-packages.
+hint: See PEP 668 for the detailed specification.
+</pre>
+
+<p>(O <code>python3 -c "…"</code> roda um pedacinho de código direto do terminal, sem criar arquivo: o <code>-c</code> é de "comando".) O <code>pip</code> se recusou a instalar. Não é defeito: é de propósito. A mensagem está em inglês; leia com calma, parte por parte:</p>
+
+<dl class="anatomy">
+  <dt>error: externally-managed-environment</dt><dd>"Erro: ambiente gerenciado por fora." Este Python pertence ao sistema, e quem cuida dos pacotes dele é outro programa (o <code>apt</code> do Ubuntu), não o <code>pip</code>.</dd>
+  <dt>try apt install python3-xyz</dt><dd>Primeira saída: "tente o <code>apt install python3-xyz</code>, onde xyz é o pacote que você quer". Ou seja, peça o pacote ao Ubuntu.</dd>
+  <dt>create a virtual environment using python3 -m venv</dt><dd>Segunda saída: "crie um <strong>ambiente virtual</strong>" e instale lá dentro, à vontade.</dd>
+  <dt>pipx install xyz</dt><dd>Terceira saída, para quando o pacote é um <strong>programa</strong> que você quer usar no terminal (e não um módulo para importar).</dd>
+  <dt>--break-system-packages</dt><dd>"Quebrar os pacotes do sistema": uma opção que força a instalação. O nome já avisa o risco.</dd>
+  <dt>hint: See PEP 668</dt><dd>"Dica: veja a PEP 668", o documento que criou essa regra.</dd>
+</dl>
+
+<p>Mesmo com <code>pip3</code>, com <code>python3 -m pip</code> ou com <code>pip install --user requests</code> (que instalaria só para a Ana), a resposta é a mesma, letra por letra.</p>
+
+<h3>Por que o Ubuntu bloqueia: a PEP 668</h3>
+<p>Uma <strong>PEP</strong> (<em>Python Enhancement Proposal</em>, "proposta de melhoria do Python") é um documento público em que a comunidade decide uma regra do Python. A PEP 668 resolveu um problema antigo: o mesmo Python servia ao mesmo tempo para os programas da pessoa e para os programas do sistema. Lembra do <code>command-not-found</code> e do <code>python-apt</code> na lista lá de cima? São ferramentas do Ubuntu escritas em Python. Se a Ana instalasse com o <code>pip</code> uma versão diferente de um módulo que elas usam, uma atualização do sistema poderia parar de funcionar, e ninguém saberia por quê.</p>
+
+<p>A solução: o sistema coloca um arquivo chamado <code>EXTERNALLY-MANAGED</code> na pasta do Python, e o <code>pip</code>, ao encontrá-lo, se recusa a mexer ali. A mensagem que você leu vem desse arquivo:</p>
+
+<pre class="term">$ cat /usr/lib/python3.14/EXTERNALLY-MANAGED
+[externally-managed]
+Error=To install Python packages system-wide, try apt install
+ python3-xyz, where xyz is the package you are trying to
+ install.
+
+ If you wish to install a non-Debian-packaged Python package,
+ create a virtual environment using python3 -m venv path/to/venv.
+ Then use path/to/venv/bin/python and path/to/venv/bin/pip. Make
+ sure you have python3-full installed.
+
+ If you wish to install a non-Debian packaged Python application,
+ it may be easiest to use pipx install xyz, which will manage a
+ virtual environment for you. Make sure you have pipx installed.
+
+ See /usr/share/doc/python3.14/README.venv for more information.
+</pre>
+
+<div class="note">
+<strong>Em outros sistemas</strong>
+<p>O Debian (desde a versão 12) e outras distribuições fazem o mesmo; o Ubuntu, desde a 23.04. Por isso tantos tutoriais antigos mandam rodar só <code>pip install</code> e, no seu computador, dá esse erro. No Windows e no macOS com o Python baixado do <code>python.org</code>, não há esse arquivo e o <code>pip install</code> funciona direto; mesmo assim, a boa prática é a mesma de todo lugar: <strong>um ambiente virtual por projeto</strong>.</p>
+</div>
+
+<hr>
+
+<h2>3. Saída 1: o pacote do Ubuntu (<code>apt</code>)</h2>
+<p>Os pacotes Python mais famosos também existem como pacotes do Ubuntu, com o nome <code>python3-</code> na frente. O <code>apt-cache policy</code> mostra se existe e qual versão o Ubuntu oferece:</p>
+
+<pre class="term">$ apt-cache policy python3-requests
+python3-requests:
+  Instalado: (nenhum)
+  Candidato: 2.32.5+dfsg-1ubuntu1.1
+  Tabela de versão:
+     2.32.5+dfsg-1ubuntu1.1 500
+        500 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages
+        500 http://security.ubuntu.com/ubuntu resolute-security/main amd64 Packages
+     2.32.5+dfsg-1ubuntu1 500
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+</pre>
+
+<p>"Instalado: (nenhum)", "Candidato: 2.32.5": existe, ainda não está instalado, e a versão é a 2.32.5. Instalar pacotes do sistema exige ser administrador, então o comando leva <code>sudo</code> na frente. Sem ele, o <code>apt</code> reclama:</p>
+
+<pre class="term">$ apt install python3-requests
+
+WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
+Erro: Não foi possível abrir arquivo de trava /var/lib/dpkg/lock-frontend - open (13: Permissão negada)
+Erro: Não é possível adquirir a trava da interface do dpkg (/var/lib/dpkg/lock-frontend), você é root?
+</pre>
+
+<p>"Você é root?" (o administrador). O certo é <code>sudo apt install python3-requests</code>, que pede a senha da Ana e instala. (O laboratório do guia não tem <code>sudo</code>, então essa última linha não aparece aqui rodando; ela é a mesma da aula <a href="instalar.html">Instalar o Python</a>.)</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>O <code>apt</code> é bom quando…</th><th>…mas tem limites</th></tr>
+<tr><td>O pacote é famoso e você quer o mesmo em todos os seus programas</td><td>Nem todo pacote do PyPI existe no Ubuntu</td></tr>
+<tr><td>Você quer que as atualizações do sistema cuidem dele</td><td>A versão é a que o Ubuntu escolheu (a 2.32.5, aqui), e não a mais nova do PyPI</td></tr>
+<tr><td>—</td><td>Precisa de <code>sudo</code>, e vale para o computador inteiro</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>4. Saída 2: o ambiente virtual (o jeito de todo dia)</h2>
+<p>Um <strong>ambiente virtual</strong> é uma pasta com uma "cópia" particular do Python, só para um projeto. Lá dentro, o <code>pip</code> é seu: instala o que quiser, na versão que quiser, sem <code>sudo</code> e sem encostar no Python do sistema. Ele tem uma aula só para ele, <a href="venv.html">Ambientes Virtuais (venv)</a>; aqui você só precisa de três comandos para começar. A Ana cria a pasta do projeto da lojinha, cria o ambiente e o <strong>ativa</strong>:</p>
+
+<pre class="term">$ mkdir loja
+$ cd loja
+$ python3 -m venv .venv
+$ source .venv/bin/activate
+(.venv) ana@notebook:~/loja$ which pip
+/home/ana/loja/.venv/bin/pip
+(.venv) ana@notebook:~/loja$ pip list
+Package Version
+------- -------
+pip     25.1.1
+</pre>
+
+<dl class="anatomy">
+  <dt>python3 -m venv .venv</dt><dd>Cria o ambiente virtual numa pasta chamada <code>.venv</code>, dentro do projeto.</dd>
+  <dt>source .venv/bin/activate</dt><dd>Ativa o ambiente: a partir daqui, <code>python</code> e <code>pip</code> são os de dentro da <code>.venv</code>.</dd>
+  <dt>(.venv)</dt><dd>O começo do prompt mudou: é o terminal avisando que o ambiente está ativo.</dd>
+  <dt>which pip</dt><dd>"Qual <code>pip</code>?": agora é o que está em <code>/home/ana/loja/.venv/bin/</code>.</dd>
+  <dt>pip list</dt><dd>Um ambiente novo vem vazio: só o próprio <code>pip</code>.</dd>
+</dl>
+
+<hr>
+
+<h2>5. <code>pip install</code>: instalando de verdade</h2>
+<p>Com o ambiente ativo, o mesmo comando que deu erro agora funciona:</p>
+
+<pre class="term">(.venv) ana@notebook:~/loja$ pip install requests
+Collecting requests
+  Downloading requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+Collecting charset_normalizer&lt;4,&gt;=2 (from requests)
+  Downloading charset_normalizer-3.5.2-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (46 kB)
+Collecting idna&lt;4,&gt;=2.5 (from requests)
+  Downloading idna-3.20-py3-none-any.whl.metadata (7.2 kB)
+Collecting urllib3&lt;3,&gt;=1.26 (from requests)
+  Downloading urllib3-2.8.0-py3-none-any.whl.metadata (7.4 kB)
+Collecting certifi&gt;=2023.5.7 (from requests)
+  Downloading certifi-2026.7.22-py3-none-any.whl.metadata (2.5 kB)
+Downloading requests-2.34.2-py3-none-any.whl (73 kB)
+Downloading charset_normalizer-3.5.2-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (255 kB)
+Downloading idna-3.20-py3-none-any.whl (69 kB)
+Downloading urllib3-2.8.0-py3-none-any.whl (135 kB)
+Downloading certifi-2026.7.22-py3-none-any.whl (136 kB)
+Installing collected packages: urllib3, idna, charset_normalizer, certifi, requests
+
+Successfully installed certifi-2026.7.22 charset_normalizer-3.5.2 idna-3.20 requests-2.34.2 urllib3-2.8.0
+</pre>
+
+<p>Muita coisa para um comando só. Vá por partes:</p>
+
+<dl class="anatomy">
+  <dt>Collecting requests</dt><dd>"Juntando o <code>requests</code>": o <code>pip</code> foi ao PyPI e achou a versão mais nova, a 2.34.2.</dd>
+  <dt>Collecting charset_normalizer&lt;4,&gt;=2 (from requests)</dt><dd>O <code>requests</code> precisa de outros pacotes para funcionar: as <strong>dependências</strong>. Esta linha diz "o <code>requests</code> pediu um <code>charset_normalizer</code> com versão menor que 4 e maior ou igual a 2". O <code>pip</code> resolve isso sozinho.</dd>
+  <dt>Downloading … .whl (73 kB)</dt><dd>Baixando o arquivo do pacote. <code>.whl</code> (de <em>wheel</em>, "roda") é o formato de pacote pronto para instalar.</dd>
+  <dt>Installing collected packages: …</dt><dd>Instalando os cinco: o <code>requests</code> e as quatro dependências.</dd>
+  <dt>Successfully installed …</dt><dd>"Instalado com sucesso", com a versão de cada um.</dd>
+</dl>
+
+<p>Pediu um, vieram cinco. É normal: pacotes são feitos de outros pacotes, como um bolo é feito de farinha, ovos e açúcar. Agora a lista do ambiente mostra todos:</p>
+
+<pre class="term">(.venv) ana@notebook:~/loja$ pip list
+Package            Version
+------------------ ---------
+certifi            2026.7.22
+charset-normalizer 3.5.2
+idna               3.20
+pip                25.1.1
+requests           2.34.2
+urllib3            2.8.0
+</pre>
+
+<h3>Usando o pacote</h3>
+<p>Instalado, o pacote se importa igual a um módulo da biblioteca padrão, com <code>import</code>. A Ana escreve um programinha que visita um site de exemplo:</p>
+
+<pre class="file" data-file="baixar.py">import requests
+
+resposta = requests.get("https://example.com")
+print("Código:", resposta.status_code)
+print("Tipo:", resposta.headers["Content-Type"])
+print("Tamanho:", len(resposta.text), "caracteres")
+</pre>
+
+<dl class="anatomy">
+  <dt>import requests</dt><dd>Importa o pacote que acabou de ser instalado.</dd>
+  <dt>requests.get("https://example.com")</dt><dd>"Pegue" a página desse endereço, como o navegador faz. A resposta do site fica na variável <code>resposta</code>.</dd>
+  <dt>resposta.status_code</dt><dd>O código da resposta: 200 quer dizer "deu certo" (o famoso 404 é "página não encontrada").</dd>
+  <dt>resposta.headers["Content-Type"]</dt><dd>O tipo do conteúdo que o site mandou.</dd>
+  <dt>resposta.text</dt><dd>O conteúdo da página, como texto.</dd>
+</dl>
+
+<pre class="term">(.venv) ana@notebook:~/loja$ python baixar.py
+Código: 200
+Tipo: text/html; charset=utf-8
+Tamanho: 577 caracteres
+</pre>
+
+<p>Repare que, com o ambiente ativo, o comando <code>python</code> (sem o 3) existe: é o Python da <code>.venv</code>. Fora do ambiente, no Ubuntu, só existe <code>python3</code>.</p>
+
+<hr>
+
+<h2>6. <code>pip show</code>: os detalhes de um pacote</h2>
+<p>Para saber mais de um pacote instalado (versão, de quem ele depende, onde ficou), use <code>show</code> ("mostrar"):</p>
+
+<pre class="term">(.venv) ana@notebook:~/loja$ pip show requests
+Name: requests
+Version: 2.34.2
+Summary: Python HTTP for Humans.
+Home-page:
+Author:
+Author-email: Kenneth Reitz &lt;me@kennethreitz.org&gt;
+License: Apache-2.0
+Location: /home/ana/loja/.venv/lib/python3.14/site-packages
+Requires: certifi, charset_normalizer, idna, urllib3
+Required-by:
+</pre>
+
+<dl class="anatomy">
+  <dt>Name / Version</dt><dd>Nome e versão instalada.</dd>
+  <dt>Summary</dt><dd>Um resumo de uma linha: "HTTP em Python para humanos".</dd>
+  <dt>Location</dt><dd>A pasta onde ele foi parar: <code>site-packages</code>, <strong>dentro</strong> da <code>.venv</code> da lojinha. O sistema ficou intocado.</dd>
+  <dt>Requires</dt><dd>"Precisa de": as dependências.</dd>
+  <dt>Required-by</dt><dd>"É exigido por": quais outros pacotes instalados dependem dele (nenhum, aqui).</dd>
+</dl>
+
+<hr>
+
+<h2>7. <code>pip freeze</code> e o <code>requirements.txt</code></h2>
+<p>Daqui a um mês, a Ana vai querer rodar a lojinha no computador da Bia. Como a Bia vai saber quais pacotes instalar, e em quais versões? O <code>pip freeze</code> ("congelar") imprime a lista exata, num formato que o próprio <code>pip</code> entende:</p>
+
+<pre class="term">(.venv) ana@notebook:~/loja$ pip freeze
+certifi==2026.7.22
+charset-normalizer==3.5.2
+idna==3.20
+requests==2.34.2
+urllib3==2.8.0
+(.venv) ana@notebook:~/loja$ pip freeze &gt; requirements.txt
+(.venv) ana@notebook:~/loja$ cat requirements.txt
+certifi==2026.7.22
+charset-normalizer==3.5.2
+idna==3.20
+requests==2.34.2
+urllib3==2.8.0
+</pre>
+
+<dl class="anatomy">
+  <dt>requests==2.34.2</dt><dd>Uma linha por pacote: o nome, dois sinais de igual e a versão exata. É uma "foto" do ambiente.</dd>
+  <dt>&gt; requirements.txt</dt><dd>O <code>&gt;</code> do terminal manda a saída para um arquivo em vez da tela. <code>requirements.txt</code> ("requisitos") é o nome que todo projeto Python usa para essa lista.</dd>
+</dl>
+
+<p>Do outro lado, a Bia cria o ambiente dela e instala tudo de uma vez com <code>-r</code> (de <em>requirement</em>, "leia a lista deste arquivo"). Para mostrar, a Ana tira o <code>requests</code> do ambiente e pede a lista de volta:</p>
+
+<pre class="term">(.venv) ana@notebook:~/loja$ pip uninstall -y requests
+Found existing installation: requests 2.34.2
+Uninstalling requests-2.34.2:
+  Successfully uninstalled requests-2.34.2
+(.venv) ana@notebook:~/loja$ pip install -r requirements.txt
+Requirement already satisfied: certifi==2026.7.22 in ./.venv/lib/python3.14/site-packages (from -r requirements.txt (line 1)) (2026.7.22)
+Requirement already satisfied: charset-normalizer==3.5.2 in ./.venv/lib/python3.14/site-packages (from -r requirements.txt (line 2)) (3.5.2)
+Requirement already satisfied: idna==3.20 in ./.venv/lib/python3.14/site-packages (from -r requirements.txt (line 3)) (3.20)
+Collecting requests==2.34.2 (from -r requirements.txt (line 4))
+  Using cached requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+Requirement already satisfied: urllib3==2.8.0 in ./.venv/lib/python3.14/site-packages (from -r requirements.txt (line 5)) (2.8.0)
+Using cached requests-2.34.2-py3-none-any.whl (73 kB)
+Installing collected packages: requests
+Successfully installed requests-2.34.2
+</pre>
+
+<p>"Requirement already satisfied" quer dizer "requisito já atendido": o que já estava lá, o <code>pip</code> pulou. Só o <code>requests</code>, que faltava, foi instalado, e da <strong>versão anotada</strong> (2.34.2). "Using cached" ("usando o guardado"): o <code>pip</code> guarda uma cópia do que já baixou e não baixa de novo.</p>
+
+<div class="tip">
+<strong>O que vai para o git, o que não vai</strong>
+<p>O <code>requirements.txt</code> é pequeno e é a "receita" do projeto: guarde-o junto com o código. A pasta <code>.venv</code> é grande e pode ser recriada a qualquer momento a partir da receita: não a copie para outro computador nem a coloque no git.</p>
+</div>
+
+<p>Um <code>requirements.txt</code> é só um arquivo de texto, então um programa Python consegue lê-lo como qualquer outro (a aula <a href="arquivos-ler.html">Lendo Arquivos</a> mostra como). Experimente:</p>
+
+<div class="trypy" data-goal="out:requests na versão 2.34.2;;src:split;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa mostra as linhas do <code>requirements.txt</code> do jeito que estão. Troque o <code>print</code> para mostrar cada pacote no formato <code>requests na versão 2.34.2</code>. Dica: <code>linha.split("==")</code> separa o nome da versão (aula <a href="strings-metodos.html">Métodos de Texto</a>).</p>
+<pre class="script" data-file="main.py">with open("requirements.txt", encoding="utf-8") as arquivo:
+    for linha in arquivo:
+        linha = linha.strip()
+        print(linha)
+</pre>
+<pre class="script" data-file="requirements.txt">certifi==2026.7.22
+charset-normalizer==3.5.2
+idna==3.20
+requests==2.34.2
+urllib3==2.8.0
+</pre>
+<pre class="solucao" data-file="main.py">with open("requirements.txt", encoding="utf-8") as arquivo:
+    for linha in arquivo:
+        linha = linha.strip()
+        nome, versao = linha.split("==")
+        print(f"{nome} na versão {versao}")
+</pre>
+</div>
+
+<hr>
+
+<h2>8. Escolher a versão, atualizar e remover</h2>
+
+<h3>Uma versão exata: <code>==</code></h3>
+<p>Às vezes um projeto precisa de uma versão mais antiga. Escreva o nome, <code>==</code> e a versão. As aspas evitam que o terminal estranhe algum símbolo:</p>
+
+<pre class="term">(.venv) ana@notebook:~/loja$ pip install "requests==2.32.3"
+Collecting requests==2.32.3
+  Downloading requests-2.32.3-py3-none-any.whl.metadata (4.6 kB)
+Requirement already satisfied: charset-normalizer&lt;4,&gt;=2 in ./.venv/lib/python3.14/site-packages (from requests==2.32.3) (3.5.2)
+Requirement already satisfied: idna&lt;4,&gt;=2.5 in ./.venv/lib/python3.14/site-packages (from requests==2.32.3) (3.20)
+Requirement already satisfied: urllib3&lt;3,&gt;=1.21.1 in ./.venv/lib/python3.14/site-packages (from requests==2.32.3) (2.8.0)
+Requirement already satisfied: certifi&gt;=2017.4.17 in ./.venv/lib/python3.14/site-packages (from requests==2.32.3) (2026.7.22)
+Downloading requests-2.32.3-py3-none-any.whl (64 kB)
+Installing collected packages: requests
+  Attempting uninstall: requests
+    Found existing installation: requests 2.34.2
+    Uninstalling requests-2.34.2:
+      Successfully uninstalled requests-2.34.2
+Successfully installed requests-2.32.3
+</pre>
+
+<p>O <code>pip</code> tirou a 2.34.2 ("Attempting uninstall", "tentando desinstalar") e pôs a 2.32.3 no lugar. Num ambiente cabe <strong>uma</strong> versão de cada pacote por vez.</p>
+
+<h3>A mais nova: <code>--upgrade</code></h3>
+<p>Pedir de novo um pacote que já está instalado não faz nada (o <code>pip</code> responde "Requirement already satisfied"). Para trocar pela versão mais nova, use <code>--upgrade</code> ("atualizar") ou a forma curta <code>-U</code>:</p>
+
+<pre class="term">(.venv) ana@notebook:~/loja$ pip install --upgrade requests
+Requirement already satisfied: requests in ./.venv/lib/python3.14/site-packages (2.32.3)
+Collecting requests
+  Using cached requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+Requirement already satisfied: charset_normalizer&lt;4,&gt;=2 in ./.venv/lib/python3.14/site-packages (from requests) (3.5.2)
+Requirement already satisfied: idna&lt;4,&gt;=2.5 in ./.venv/lib/python3.14/site-packages (from requests) (3.20)
+Requirement already satisfied: urllib3&lt;3,&gt;=1.26 in ./.venv/lib/python3.14/site-packages (from requests) (2.8.0)
+Requirement already satisfied: certifi&gt;=2023.5.7 in ./.venv/lib/python3.14/site-packages (from requests) (2026.7.22)
+Using cached requests-2.34.2-py3-none-any.whl (73 kB)
+Installing collected packages: requests
+  Attempting uninstall: requests
+    Found existing installation: requests 2.32.3
+    Uninstalling requests-2.32.3:
+      Successfully uninstalled requests-2.32.3
+Successfully installed requests-2.34.2
+(.venv) ana@notebook:~/loja$ python -c "import requests; print(requests.__version__)"
+2.34.2
+</pre>
+
+<h3>Remover: <code>pip uninstall</code></h3>
+<p><code>uninstall</code> ("desinstalar") mostra o que vai apagar e pergunta antes. Responda <code>y</code> (de <em>yes</em>, "sim"):</p>
+
+<pre class="term">(.venv) ana@notebook:~/loja$ pip uninstall requests
+Found existing installation: requests 2.34.2
+Uninstalling requests-2.34.2:
+  Would remove:
+    /home/ana/loja/.venv/lib/python3.14/site-packages/requests-2.34.2.dist-info/*
+    /home/ana/loja/.venv/lib/python3.14/site-packages/requests/*
+Proceed (Y/n)? y
+  Successfully uninstalled requests-2.34.2
+</pre>
+
+<p>"Would remove" é "removeria"; "Proceed (Y/n)?", "continuar?". O <code>Y</code> maiúsculo indica a resposta padrão: só apertar Enter também vale como sim. Com <code>-y</code> (como na seção anterior), o <code>pip</code> não pergunta. Repare que só o <code>requests</code> saiu: as dependências que vieram com ele continuam lá.</p>
+
+<hr>
+
+<h2>Formas diferentes de instalar um pacote</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Jeito</th><th>Exemplo</th><th>Quando usar</th></tr>
+<tr><td><code>pip install</code> num ambiente virtual ativo</td><td><code>pip install requests</code></td><td><strong>Quase sempre.</strong> Cada projeto com os seus pacotes, nas versões que ele precisa, sem <code>sudo</code></td></tr>
+<tr><td><code>python -m pip</code> no ambiente</td><td><code>python -m pip install requests</code></td><td>O mesmo, sem dúvida de qual Python recebe o pacote. É a forma que a documentação oficial prefere</td></tr>
+<tr><td>Pacote do sistema</td><td><code>sudo apt install python3-requests</code></td><td>Um pacote famoso que você quer em todos os scripts soltos do computador, na versão do Ubuntu</td></tr>
+<tr><td><code>pipx</code></td><td><code>pipx install nome</code></td><td>O pacote é um <strong>programa</strong> de terminal (não um módulo para importar). O <code>pipx</code> (instale com <code>sudo apt install pipx</code>) cria um ambiente só para ele, sozinho</td></tr>
+<tr><td><code>--break-system-packages</code></td><td><code>pip install --break-system-packages requests</code></td><td><strong>Evite.</strong> Força o <code>pip</code> a mexer no Python do sistema; pode quebrar ferramentas do Ubuntu numa atualização futura</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong><code>error: externally-managed-environment</code></strong>
+<p>Você já viu na seção 2: é o <code>pip install</code> fora de um ambiente virtual, no Python do sistema. <strong>Como consertar:</strong> crie e ative um ambiente (<code>python3 -m venv .venv</code> e <code>source .venv/bin/activate</code>) e repita o comando; ou use <code>sudo apt install python3-nome</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O nome do pacote digitado errado</strong>
+<pre class="term">(.venv) ana@notebook:~/loja$ pip install requets
+ERROR: Could not find a version that satisfies the requirement requets (from versions: none)
+ERROR: No matching distribution found for requets
+</pre>
+<p>"Não achei uma versão que atenda ao requisito <code>requets</code> (versões: nenhuma)." O <code>pip</code> não sugere o nome certo: ele só sabe que não existe nenhum pacote com esse nome no PyPI. <strong>Como consertar:</strong> confira a grafia (era <code>requests</code>, com <strong>s</strong> antes do <strong>t</strong>). Na dúvida, procure o nome exato em <code>pypi.org</code>.</p>
+<div class="warning">
+<strong>Cuidado com nomes parecidos</strong>
+<p>Qualquer pessoa pode publicar no PyPI, e já houve casos de pacotes maliciosos com nomes quase iguais aos famosos, esperando um erro de digitação. Copie o nome da página oficial do pacote e desconfie de nomes com uma letra trocada.</p>
+</div>
+</div>
+
+<div class="cenario">
+<strong>Sem internet</strong>
+<p>O <code>pip</code> baixa do PyPI, então precisa de internet. Sem ela, ele tenta de novo cinco vezes e desiste:</p>
+<pre class="term">(.venv) ana@notebook:~/loja$ pip install rich
+WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('&lt;pip._vendor.urllib3.connection.HTTPSConnection object at 0x7f00f73296a0&gt;: Failed to establish a new connection: [Errno -3] Falha temporário na resolução de nome')': /simple/rich/
+WARNING: Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('&lt;pip._vendor.urllib3.connection.HTTPSConnection object at 0x7f00f732c7d0&gt;: Failed to establish a new connection: [Errno -3] Falha temporário na resolução de nome')': /simple/rich/
+WARNING: Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('&lt;pip._vendor.urllib3.connection.HTTPSConnection object at 0x7f00f732c910&gt;: Failed to establish a new connection: [Errno -3] Falha temporário na resolução de nome')': /simple/rich/
+WARNING: Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('&lt;pip._vendor.urllib3.connection.HTTPSConnection object at 0x7f00f732ca50&gt;: Failed to establish a new connection: [Errno -3] Falha temporário na resolução de nome')': /simple/rich/
+WARNING: Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('&lt;pip._vendor.urllib3.connection.HTTPSConnection object at 0x7f00f732cb90&gt;: Failed to establish a new connection: [Errno -3] Falha temporário na resolução de nome')': /simple/rich/
+ERROR: Could not find a version that satisfies the requirement rich (from versions: none)
+ERROR: No matching distribution found for rich
+</pre>
+<p>Cada <code>WARNING: Retrying</code> é uma nova tentativa ("total=4", "total=3"… são as que ainda restam). O pedaço que explica tudo é <code>Failed to establish a new connection</code> ("não consegui me conectar") e <code>Falha temporário na resolução de nome</code> ("falha temporária ao resolver o nome"): o computador não conseguiu achar o endereço do PyPI. (O "temporário" com erro de concordância está assim mesmo na tradução do sistema.) O final é igual ao do nome errado, o que confunde: <strong>leia as linhas de cima</strong> antes de concluir que o pacote não existe. <strong>Como consertar:</strong> confira a internet e tente de novo.</p>
+</div>
+
+<div class="cenario">
+<strong>Instalou, mas o Python diz que não existe</strong>
+<p>A Ana abriu um terminal novo no dia seguinte e rodou o programa:</p>
+<pre class="term">$ cd loja
+$ python3 baixar.py
+Traceback (most recent call last):
+  File "/home/ana/loja/baixar.py", line 1, in &lt;module&gt;
+    import requests
+ModuleNotFoundError: No module named 'requests'
+</pre>
+<dl class="anatomy">
+  <dt>Traceback (most recent call last):</dt><dd>"Rastro (a chamada mais recente por último)": o começo de toda mensagem de erro do Python.</dd>
+  <dt>File "/home/ana/loja/baixar.py", line 1</dt><dd>O erro foi na linha 1 do <code>baixar.py</code>.</dd>
+  <dt>import requests</dt><dd>A linha culpada.</dd>
+  <dt>ModuleNotFoundError: No module named 'requests'</dt><dd>"Não existe módulo chamado <code>requests</code>".</dd>
+</dl>
+<p>Mas ela instalou ontem! Instalou, sim: <strong>dentro da <code>.venv</code></strong>. Repare no prompt: não começa com <code>(.venv)</code>. Cada terminal novo começa com o ambiente desativado, e o <code>python3</code> que rodou foi o do sistema, que não tem o <code>requests</code>. <strong>Como consertar:</strong> ative o ambiente (ou chame o Python dele direto, <code>.venv/bin/python baixar.py</code>):</p>
+<pre class="term">$ source .venv/bin/activate
+(.venv) ana@notebook:~/loja$ python baixar.py
+Código: 200
+Tipo: text/html; charset=utf-8
+Tamanho: 577 caracteres
+</pre>
+</div>
+
+<div class="cenario">
+<strong><code>apt install</code> sem <code>sudo</code></strong>
+<p><code>Não é possível adquirir a trava da interface do dpkg (…), você é root?</code>: instalar pacotes do Ubuntu é tarefa de administrador (seção 3). <strong>Como consertar:</strong> <code>sudo apt install python3-requests</code>. E nunca o contrário: <strong>não use <code>sudo pip install</code></strong>; o <code>pip</code> com <code>sudo</code> mexeria justamente na pasta que a PEP 668 protege.</p>
+</div>
+
+<p>O <code>ModuleNotFoundError</code> é um erro como outro qualquer, e um programa pode se preparar para ele com <code>try</code> e <code>except</code> (aula <a href="try-except.html">try e except</a>): em vez de explodir, ele avisa o que falta instalar. O módulo <code>graficos_da_padaria</code> abaixo não existe em lugar nenhum, de propósito.</p>
+
+<div class="trypy" data-goal="out:pip install graficos_da_padaria;;semerro">
+<p class="try-task"><strong>Missão:</strong> rode e veja o <code>ModuleNotFoundError</code>. Depois, coloque o <code>import</code> dentro de um <code>try</code> e, no <code>except ModuleNotFoundError as erro:</code>, mostre <code>Instale com: pip install graficos_da_padaria</code> (o nome do módulo que faltou fica em <code>erro.name</code>).</p>
+<pre class="script" data-file="main.py">import graficos_da_padaria
+
+print("Gráficos prontos!")
+</pre>
+<pre class="solucao" data-file="main.py">try:
+    import graficos_da_padaria
+    print("Gráficos prontos!")
+except ModuleNotFoundError as erro:
+    print(f"Falta o módulo {erro.name}.")
+    print(f"Instale com: pip install {erro.name}")
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Comando</th><th>O que faz</th></tr>
+<tr><td><code>pip --version</code></td><td>Mostra a versão do <code>pip</code> e para qual Python ele instala</td></tr>
+<tr><td><code>pip install nome</code></td><td>Baixa do PyPI e instala o pacote (e as dependências)</td></tr>
+<tr><td><code>pip install "nome==1.2.3"</code></td><td>Instala uma versão exata</td></tr>
+<tr><td><code>pip install --upgrade nome</code> (ou <code>-U</code>)</td><td>Troca pela versão mais nova</td></tr>
+<tr><td><code>pip install -r requirements.txt</code></td><td>Instala tudo o que está na lista do arquivo</td></tr>
+<tr><td><code>pip list</code></td><td>Lista os pacotes instalados, com as versões</td></tr>
+<tr><td><code>pip show nome</code></td><td>Detalhes de um pacote: versão, local, dependências</td></tr>
+<tr><td><code>pip freeze</code></td><td>Lista os pacotes no formato <code>nome==versão</code></td></tr>
+<tr><td><code>pip freeze &gt; requirements.txt</code></td><td>Grava essa lista no arquivo</td></tr>
+<tr><td><code>pip uninstall nome</code> (<code>-y</code> para não perguntar)</td><td>Remove o pacote</td></tr>
+<tr><td><code>python -m pip …</code></td><td>Qualquer um dos comandos acima, pelo <code>pip</code> do Python que está rodando</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>error: externally-managed-environment</code></td><td><code>pip install</code> no Python do sistema (PEP 668): use um ambiente virtual ou o <code>apt</code></td></tr>
+<tr><td><code>No matching distribution found for …</code></td><td>Nome errado, ou sem internet (leia as linhas de cima: <code>Retrying</code>, <code>Failed to establish a new connection</code>)</td></tr>
+<tr><td><code>ModuleNotFoundError: No module named '…'</code> depois de instalar</td><td>O ambiente virtual não está ativo (o prompt não começa com <code>(.venv)</code>)</td></tr>
+<tr><td><code>você é root?</code> no <code>apt</code></td><td>Faltou o <code>sudo</code></td></tr>
+<tr><td><code>Comando 'pip' não encontrado</code></td><td>Falta o pacote <code>python3-pip</code> do Ubuntu</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Instalar</h3>
+<p>Com o ambiente virtual ativo, complete o comando que instala o pacote <code>requests</code>:</p>
+<div class="ex-code">pip <input data-answer="install" aria-label="subcomando"> requests</div>
+</div>
+
+<div class="exercise">
+<h3>2. A lista do projeto</h3>
+<p>Complete o comando que grava os pacotes do ambiente no arquivo de requisitos:</p>
+<div class="ex-code">pip <input data-answer="freeze" aria-label="subcomando"> &gt; <input data-answer="requirements.txt" aria-label="arquivo"></div>
+</div>
+
+<div class="exercise">
+<h3>3. Instalar a partir da lista</h3>
+<p>Complete a opção que faz o <code>pip</code> ler o arquivo:</p>
+<div class="ex-code">pip install <input data-answer="-r|--requirement" aria-label="opção"> requirements.txt</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. No Ubuntu, fora de qualquer ambiente virtual, <code>pip install requests</code> responde <code>externally-managed-environment</code>. Por quê?</p>
+<label><input type="radio" name="q4"> O pacote <code>requests</code> não existe</label>
+<label><input type="radio" name="q4"> O Python do sistema é cuidado pelo <code>apt</code>, e a PEP 668 impede o <code>pip</code> de mexer nele</label>
+<label><input type="radio" name="q4"> Falta internet</label>
+<label><input type="radio" name="q4"> Faltou o <code>sudo</code> antes do <code>pip</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. A Ana pediu só o <code>requests</code>, e o <code>pip</code> instalou cinco pacotes. O que são os outros quatro?</p>
+<label><input type="radio" name="q5"> Propagandas que vêm junto</label>
+<label><input type="radio" name="q5"> Cópias de segurança do <code>requests</code></label>
+<label><input type="radio" name="q5"> Dependências: pacotes de que o <code>requests</code> precisa para funcionar</label>
+<label><input type="radio" name="q5"> Versões antigas do <code>requests</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Num terminal novo, <code>python3 baixar.py</code> dá <code>ModuleNotFoundError: No module named 'requests'</code>, mas ontem a Ana instalou o pacote na <code>.venv</code>. O que falta?</p>
+<label><input type="radio" name="q6"> Ativar o ambiente com <code>source .venv/bin/activate</code></label>
+<label><input type="radio" name="q6"> Instalar com <code>sudo pip install requests</code></label>
+<label><input type="radio" name="q6"> Apagar a <code>.venv</code></label>
+<label><input type="radio" name="q6"> Usar <code>--break-system-packages</code></label>
+</div>
+
+<h3>Missão final: conferir a receita</h3>
+
+<div class="trypy" data-goal="out:Faltam: rich;;semerro">
+<p class="try-task"><strong>Missão:</strong> a Bia recebeu o <code>requirements.txt</code> da lojinha, e o <code>pip list</code> do ambiente dela está na lista <code>instalados</code>. Complete o programa para mostrar <code>Faltam: rich</code>, ou seja, os nomes do arquivo que <strong>não</strong> estão em <code>instalados</code>, separados por vírgula.</p>
+<pre class="script" data-file="main.py">instalados = ["certifi", "idna", "requests", "urllib3", "charset-normalizer"]
+faltam = []
+
+with open("requirements.txt", encoding="utf-8") as arquivo:
+    for linha in arquivo:
+        nome = linha.strip().split("==")[0]
+        # se o nome não estiver em instalados, guarde em faltam
+
+print("Faltam:", ", ".join(faltam))
+</pre>
+<pre class="script" data-file="requirements.txt">certifi==2026.7.22
+charset-normalizer==3.5.2
+idna==3.20
+requests==2.34.2
+rich==14.1.0
+urllib3==2.8.0
+</pre>
+<pre class="solucao" data-file="main.py">instalados = ["certifi", "idna", "requests", "urllib3", "charset-normalizer"]
+faltam = []
+
+with open("requirements.txt", encoding="utf-8") as arquivo:
+    for linha in arquivo:
+        nome = linha.strip().split("==")[0]
+        if nome not in instalados:
+            faltam.append(nome)
+
+print("Faltam:", ", ".join(faltam))
+</pre>
+</div>
+
+<p>No computador de verdade, quem faz essa conta é o próprio <code>pip install -r requirements.txt</code>: ele pula o que já está lá ("Requirement already satisfied") e instala só o que falta.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Um <strong>pacote</strong> é código que outra pessoa escreveu; o <strong>PyPI</strong> (<code>pypi.org</code>) é a loja; o <code>pip</code> é o instalador.</li>
+  <li>No Ubuntu (e no Debian, e em outras distribuições), <code>pip install</code> no Python do sistema dá <code>externally-managed-environment</code>: é a <strong>PEP 668</strong> protegendo as ferramentas do sistema.</li>
+  <li>As saídas: <strong>ambiente virtual</strong> (o jeito de todo dia), <code>sudo apt install python3-nome</code> (pacotes famosos, na versão do Ubuntu) e <code>pipx</code> (programas de terminal). Evite <code>--break-system-packages</code> e <code>sudo pip</code>.</li>
+  <li>No ambiente ativo: <code>pip install</code>, <code>pip list</code>, <code>pip show</code>, <code>pip install --upgrade</code>, <code>pip uninstall</code>.</li>
+  <li><code>pip freeze &gt; requirements.txt</code> grava a receita do projeto; <code>pip install -r requirements.txt</code> refaz o ambiente em outro lugar.</li>
+  <li><code>ModuleNotFoundError</code> depois de instalar quase sempre é o ambiente desativado: olhe se o prompt começa com <code>(.venv)</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
