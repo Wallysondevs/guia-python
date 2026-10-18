@@ -1,0 +1,844 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Projeto: Notas da Turma — CSV, médias e relatório | Guia Python</title>
+<meta name="description" content="Projeto passo a passo em Python: as notas da turma num arquivo CSV. Versão 1 lê o notas.csv com csv.DictReader, versão 2 calcula a média e a situação (aprovado ou recuperação), versão 3 monta um relatório alinhado com f-strings e ordenado pela média, versão 4 grava o resultado.csv com csv.DictWriter, com as saídas reais e os erros de verdade (vírgula decimal, nota vazia, coluna errada, arquivo fora da pasta).">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Projeto: Notas da Turma</span></h1>
+
+<p class="intro">A professora da escola do bairro guarda as notas da turma numa planilha e, todo bimestre, faz as contas à mão: a média de cada aluno, quem passou, quem vai para a recuperação. A Ana se ofereceu para automatizar isso. A planilha é exportada como <strong>CSV</strong> (um arquivo de texto com os valores separados por vírgulas, aula <a href="csv.html">Arquivos CSV</a>), e o programa vai ler esse arquivo, calcular tudo, mostrar um relatório arrumado e gravar o resultado num CSV novo, pronto para abrir na planilha. Quatro versões, uma novidade por vez.</p>
+
+<div class="note">
+<strong>Neste projeto você vai usar</strong>
+<ul>
+  <li><a href="arquivos.html">open e with</a> e o módulo <a href="csv.html">csv</a> (<code>DictReader</code> e <code>DictWriter</code>).</li>
+  <li><a href="dicionarios.html">Dicionários</a> e <a href="listas.html">listas</a>, com <a href="conversao.html">float()</a> para transformar texto em número.</li>
+  <li><a href="funcoes.html">Funções</a> com <a href="return.html">return</a>, e <a href="if-else.html">if e else</a> para a situação.</li>
+  <li><a href="f-strings.html">f-strings</a> com alinhamento (<a href="ref-formatacao.html">Formatação</a>) para o relatório.</li>
+  <li><a href="listas-ordenar.html">sort</a> com <a href="lambda.html">lambda</a> para ordenar pela média, e <a href="list-comprehension.html">list comprehension</a> para contar os aprovados.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>O que vamos construir</h2>
+<p>A pasta do projeto tem o arquivo de notas que a professora exportou:</p>
+
+<pre class="file" data-file="notas.csv">nome,turma,nota1,nota2,nota3
+Bia,A,8.0,9.5,7.0
+Caio,B,6.0,5.5,5.0
+Duda,A,9.0,10.0,9.5
+Enzo,B,7.0,7.0,7.0
+Gabi,A,4.5,6.0,5.5
+Hugo,B,10.0,8.5,9.0
+</pre>
+
+<p>A primeira linha é o <strong>cabeçalho</strong>: o nome de cada coluna. Cada linha seguinte é um aluno, com a turma e as três notas do bimestre. A regra da escola: média <strong>7 ou mais</strong>, aprovado; abaixo de 7, recuperação. Esta é a versão final rodando no computador da Ana:</p>
+
+<pre class="term" data-cwd="~/projetos/notas">$ python3 notas.py
+Aluno    Turma   Média  Situação
+------------------------------------
+Duda       A      9.50  aprovado
+Hugo       B      9.17  aprovado
+Bia        A      8.17  aprovado
+Enzo       B      7.00  aprovado
+Caio       B      5.50  recuperação
+Gabi       A      5.33  recuperação
+------------------------------------
+Média da turma: 7.44
+Aprovados: 4 de 6
+Gravei resultado.csv
+$ cat resultado.csv
+nome,turma,media,situacao
+Duda,A,9.50,aprovado
+Hugo,B,9.17,aprovado
+Bia,A,8.17,aprovado
+Enzo,B,7.00,aprovado
+Caio,B,5.50,recuperação
+Gabi,A,5.33,recuperação</pre>
+
+<p>(O <code>cat</code> mostra o conteúdo de um arquivo de texto no terminal.) As quatro versões:</p>
+<ol class="passo">
+  <li><a href="#versao1">Ler o CSV</a> com <code>csv.DictReader</code>.</li>
+  <li><a href="#versao2">Média e situação</a>, em funções.</li>
+  <li><a href="#versao3">O relatório</a>, alinhado e ordenado pela média.</li>
+  <li><a href="#versao4">Gravar o resultado.csv</a> com <code>csv.DictWriter</code>.</li>
+</ol>
+
+<h3>Antes de começar</h3>
+<p>Crie a pasta do projeto, entre nela e salve lá o <code>notas.csv</code> de cima (num editor de texto, ou exportando da planilha como "CSV separado por vírgulas"). O programa vai se chamar <code>notas.py</code>, na mesma pasta:</p>
+
+<pre class="term">$ mkdir -p projetos/notas
+$ cd projetos/notas</pre>
+
+<p>As caixas <strong>Experimente</strong> deste projeto têm duas abas: o programa (<code>main.py</code>) e o <code>notas.csv</code>, que fica na mesma pasta do programa. Você pode mexer nas notas da aba do CSV e rodar de novo para ver o resultado mudar.</p>
+
+<hr>
+
+<h2 id="versao1">Versão 1 · Ler o CSV</h2>
+
+<pre class="file" data-file="notas.py">import csv
+
+with open("notas.csv", newline="", encoding="utf-8") as arquivo:
+    alunos = list(csv.DictReader(arquivo))
+
+print(f"{len(alunos)} alunos lidos")
+print(alunos[0])
+for aluno in alunos:
+    print(aluno["nome"], aluno["turma"])
+</pre>
+
+<dl class="anatomy">
+  <dt>import csv</dt><dd>O módulo da biblioteca padrão que entende arquivos CSV: separa as colunas, lida com aspas e vírgulas dentro dos valores.</dd>
+  <dt>open("notas.csv", newline="", encoding="utf-8")</dt><dd>Abre o arquivo para leitura. O <code>newline=""</code> é a recomendação da documentação para arquivos CSV (o módulo <code>csv</code> cuida das quebras de linha sozinho), e o <code>encoding="utf-8"</code> garante que os acentos sejam lidos certo. A aula <a href="csv.html">Arquivos CSV</a> explica os dois.</dd>
+  <dt>csv.DictReader(arquivo)</dt><dd>Lê cada linha como um <strong>dicionário</strong>, usando o cabeçalho como chaves. O cabeçalho em si não vira aluno.</dd>
+  <dt>list(…)</dt><dd>Junta todos os dicionários numa lista, para usar depois que o <code>with</code> fechar o arquivo.</dd>
+  <dt>aluno["nome"]</dt><dd>Cada valor se pega pelo nome da coluna, e não pela posição. Se a professora mudar a ordem das colunas, o programa continua certo.</dd>
+</dl>
+
+<pre class="term" data-cwd="~/projetos/notas">$ python3 notas.py
+6 alunos lidos
+{'nome': 'Bia', 'turma': 'A', 'nota1': '8.0', 'nota2': '9.5', 'nota3': '7.0'}
+Bia A
+Caio B
+Duda A
+Enzo B
+Gabi A
+Hugo B</pre>
+
+<p>Olhe bem o dicionário da Bia: <code>'nota1': '8.0'</code>, <strong>com aspas</strong>. Tudo o que vem de um CSV é <strong>texto</strong>, inclusive as notas. Para fazer conta, a versão 2 vai precisar converter com <code>float()</code>. Esquecer isso é o erro mais comum deste projeto (veja <a href="#errado">Quando dá errado</a>).</p>
+
+<div class="trypy" data-goal="out:Caio está na turma B;;out:Gabi está na turma A;;semerro">
+<p class="try-task"><strong>Missão:</strong> em vez de só o nome, faça o programa mostrar uma frase por aluno, como <code>Caio está na turma B</code>, usando as colunas <code>nome</code> e <code>turma</code>.</p>
+<pre class="script" data-file="main.py">import csv
+
+with open("notas.csv", newline="", encoding="utf-8") as arquivo:
+    alunos = list(csv.DictReader(arquivo))
+
+for aluno in alunos:
+    print(aluno["nome"])
+</pre>
+<pre class="script" data-file="notas.csv">nome,turma,nota1,nota2,nota3
+Bia,A,8.0,9.5,7.0
+Caio,B,6.0,5.5,5.0
+Duda,A,9.0,10.0,9.5
+Enzo,B,7.0,7.0,7.0
+Gabi,A,4.5,6.0,5.5
+Hugo,B,10.0,8.5,9.0
+</pre>
+<pre class="solucao" data-file="main.py">import csv
+
+with open("notas.csv", newline="", encoding="utf-8") as arquivo:
+    alunos = list(csv.DictReader(arquivo))
+
+for aluno in alunos:
+    print(f"{aluno['nome']} está na turma {aluno['turma']}")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao2">Versão 2 · Média e situação</h2>
+<p>Agora as contas. Cada tarefa vira uma <strong>função</strong> com um nome claro: uma lê o arquivo e já converte as notas, outra calcula a média, outra decide a situação.</p>
+
+<pre class="file" data-file="notas.py">import csv
+
+
+def ler_alunos(caminho):
+    alunos = []
+    with open(caminho, newline="", encoding="utf-8") as arquivo:
+        for linha in csv.DictReader(arquivo):
+            notas = [float(linha["nota1"]), float(linha["nota2"]), float(linha["nota3"])]
+            alunos.append({"nome": linha["nome"], "turma": linha["turma"], "notas": notas})
+    return alunos
+
+
+def media(notas):
+    return sum(notas) / len(notas)
+
+
+def situacao(m):
+    if m &gt;= 7:
+        return "aprovado"
+    return "recuperação"
+
+
+for aluno in ler_alunos("notas.csv"):
+    m = media(aluno["notas"])
+    print(f"{aluno['nome']}: {m:.2f} {situacao(m)}")
+</pre>
+
+<dl class="anatomy">
+  <dt>def ler_alunos(caminho):</dt><dd>Lê o CSV e devolve uma lista de alunos já "limpos": cada um é um dicionário com <code>nome</code>, <code>turma</code> e <code>notas</code>, uma lista de <strong>números</strong>.</dd>
+  <dt>float(linha["nota1"])</dt><dd>Converte o texto <code>'8.0'</code> no número <code>8.0</code>. A conversão é feita <strong>uma vez</strong>, na leitura; o resto do programa já recebe números.</dd>
+  <dt>sum(notas) / len(notas)</dt><dd>A média: a soma das notas dividida pela quantidade (aula <a href="funcoes-embutidas.html">Funções Embutidas</a>). Se um dia houver quatro notas, a conta continua certa.</dd>
+  <dt>if m &gt;= 7: return "aprovado"</dt><dd>A regra da escola. Repare no <code>&gt;=</code>: com 7,00 exato, o aluno passa.</dd>
+  <dt>{m:.2f}</dt><dd>A média com duas casas: <code>8.1666…</code> aparece como <code>8.17</code>. O valor guardado não muda; só o jeito de mostrar.</dd>
+</dl>
+
+<pre class="term" data-cwd="~/projetos/notas">$ python3 notas.py
+Bia: 8.17 aprovado
+Caio: 5.50 recuperação
+Duda: 9.50 aprovado
+Enzo: 7.00 aprovado                « 7,00 exato: passou, por causa do &gt;=
+Gabi: 5.33 recuperação
+Hugo: 9.17 aprovado</pre>
+
+<div class="trypy" data-goal="out:Caio: 5.50 recuperação;;out:Enzo: 7.00 aprovado;;out:Bia: 8.17 aprovado;;semerro">
+<p class="try-task"><strong>Missão:</strong> a função <code>situacao</code> ainda devolve <code>"?"</code> para todo mundo. Escreva a regra: <code>"aprovado"</code> se a média for 7 ou mais; senão, <code>"recuperação"</code>. Atenção ao Enzo, que tem 7,00 exato: ele deve aparecer como <code>Enzo: 7.00 aprovado</code>.</p>
+<pre class="script" data-file="main.py">import csv
+
+
+def ler_alunos(caminho):
+    alunos = []
+    with open(caminho, newline="", encoding="utf-8") as arquivo:
+        for linha in csv.DictReader(arquivo):
+            notas = [float(linha["nota1"]), float(linha["nota2"]), float(linha["nota3"])]
+            alunos.append({"nome": linha["nome"], "turma": linha["turma"], "notas": notas})
+    return alunos
+
+
+def media(notas):
+    return sum(notas) / len(notas)
+
+
+def situacao(m):
+    return "?"  # troque: "aprovado" se m for 7 ou mais; senão, "recuperação"
+
+
+for aluno in ler_alunos("notas.csv"):
+    m = media(aluno["notas"])
+    print(f"{aluno['nome']}: {m:.2f} {situacao(m)}")
+</pre>
+<pre class="script" data-file="notas.csv">nome,turma,nota1,nota2,nota3
+Bia,A,8.0,9.5,7.0
+Caio,B,6.0,5.5,5.0
+Duda,A,9.0,10.0,9.5
+Enzo,B,7.0,7.0,7.0
+Gabi,A,4.5,6.0,5.5
+Hugo,B,10.0,8.5,9.0
+</pre>
+<pre class="solucao" data-file="main.py">import csv
+
+
+def ler_alunos(caminho):
+    alunos = []
+    with open(caminho, newline="", encoding="utf-8") as arquivo:
+        for linha in csv.DictReader(arquivo):
+            notas = [float(linha["nota1"]), float(linha["nota2"]), float(linha["nota3"])]
+            alunos.append({"nome": linha["nome"], "turma": linha["turma"], "notas": notas})
+    return alunos
+
+
+def media(notas):
+    return sum(notas) / len(notas)
+
+
+def situacao(m):
+    if m &gt;= 7:
+        return "aprovado"
+    return "recuperação"
+
+
+for aluno in ler_alunos("notas.csv"):
+    m = media(aluno["notas"])
+    print(f"{aluno['nome']}: {m:.2f} {situacao(m)}")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao3">Versão 3 · O relatório</h2>
+<p>A professora quer imprimir uma tabela: os alunos do melhor para o pior, com as colunas alinhadas, e um resumo da turma no fim. A média e a situação passam a ser guardadas em cada aluno, para o relatório e a ordenação usarem.</p>
+
+<pre class="file" data-file="notas.py">import csv
+
+
+def ler_alunos(caminho):
+    alunos = []
+    with open(caminho, newline="", encoding="utf-8") as arquivo:
+        for linha in csv.DictReader(arquivo):
+            notas = [float(linha["nota1"]), float(linha["nota2"]), float(linha["nota3"])]
+            alunos.append({"nome": linha["nome"], "turma": linha["turma"], "notas": notas})
+    return alunos
+
+
+def media(notas):
+    return sum(notas) / len(notas)
+
+
+def situacao(m):
+    if m &gt;= 7:
+        return "aprovado"
+    return "recuperação"
+
+
+def relatorio(alunos):
+    print(f"{'Aluno':&lt;8}{'Turma':^7}{'Média':&gt;7}  Situação")
+    print("-" * 36)
+    for aluno in alunos:
+        print(f"{aluno['nome']:&lt;8}{aluno['turma']:^7}{aluno['media']:&gt;7.2f}  {aluno['situacao']}")
+    print("-" * 36)
+    aprovados = [a for a in alunos if a["situacao"] == "aprovado"]
+    media_turma = sum(a["media"] for a in alunos) / len(alunos)
+    print(f"Média da turma: {media_turma:.2f}")
+    print(f"Aprovados: {len(aprovados)} de {len(alunos)}")
+
+
+alunos = ler_alunos("notas.csv")
+for aluno in alunos:
+    aluno["media"] = media(aluno["notas"])
+    aluno["situacao"] = situacao(aluno["media"])
+
+alunos.sort(key=lambda a: a["media"], reverse=True)
+relatorio(alunos)
+</pre>
+
+<h3>As partes novas, uma por uma</h3>
+<dl class="anatomy">
+  <dt>aluno["media"] = media(aluno["notas"])</dt><dd>Acrescenta duas chaves em cada dicionário de aluno, <code>media</code> e <code>situacao</code>, calculadas uma vez só.</dd>
+  <dt>alunos.sort(key=lambda a: a["media"], reverse=True)</dt><dd>Ordena a lista <strong>pela média</strong>. O <code>key</code> diz <strong>o que comparar</strong> em cada aluno (uma <code>lambda</code>, função de uma linha, aula <a href="lambda.html">lambda</a>), e o <code>reverse=True</code> põe a maior primeiro (aula <a href="listas-ordenar.html">Ordenando Listas</a>).</dd>
+  <dt>{'Aluno':&lt;8}</dt><dd>O texto <code>Aluno</code> alinhado à <strong>esquerda</strong> num espaço de 8 caracteres. O que sobra vira espaço em branco.</dd>
+  <dt>{'Turma':^7}</dt><dd>Centralizado em 7 caracteres.</dd>
+  <dt>{aluno['media']:&gt;7.2f}</dt><dd>O número alinhado à <strong>direita</strong> em 7 caracteres, com duas casas. Números alinhados à direita deixam as vírgulas uma embaixo da outra.</dd>
+  <dt>"-" * 36</dt><dd>Repete o traço 36 vezes: a linha da tabela (aula <a href="strings-juntar.html">Juntar e Repetir Textos</a>).</dd>
+  <dt>[a for a in alunos if a["situacao"] == "aprovado"]</dt><dd>Uma lista só com os aprovados (aula <a href="list-comprehension.html">List Comprehension</a>); o <code>len</code> dela conta quantos são.</dd>
+  <dt>sum(a["media"] for a in alunos)</dt><dd>Soma as médias de todos os alunos, sem criar uma lista no meio.</dd>
+</dl>
+
+<pre class="term" data-cwd="~/projetos/notas">$ python3 notas.py
+Aluno    Turma   Média  Situação
+------------------------------------
+Duda       A      9.50  aprovado
+Hugo       B      9.17  aprovado
+Bia        A      8.17  aprovado
+Enzo       B      7.00  aprovado
+Caio       B      5.50  recuperação
+Gabi       A      5.33  recuperação
+------------------------------------
+Média da turma: 7.44
+Aprovados: 4 de 6</pre>
+
+<p>As colunas ficaram alinhadas porque cada campo ocupa sempre o mesmo número de caracteres, seja qual for o nome. (Num nome com mais de 8 letras, o alinhamento quebraria: o f-string nunca corta um texto, só completa os que são menores.)</p>
+
+<div class="trypy" data-goal="outre:Duda[\s\S]*Hugo[\s\S]*Bia[\s\S]*Enzo[\s\S]*Caio[\s\S]*Gabi;;src:\.sort\(|sorted\(;;semerro">
+<p class="try-task"><strong>Missão:</strong> o relatório está saindo na ordem do arquivo. Na linha marcada, ordene a lista <code>alunos</code> da <strong>maior</strong> média para a menor, para a Duda aparecer primeiro e a Gabi por último.</p>
+<pre class="script" data-file="main.py">import csv
+
+
+def ler_alunos(caminho):
+    alunos = []
+    with open(caminho, newline="", encoding="utf-8") as arquivo:
+        for linha in csv.DictReader(arquivo):
+            notas = [float(linha["nota1"]), float(linha["nota2"]), float(linha["nota3"])]
+            alunos.append({"nome": linha["nome"], "turma": linha["turma"], "notas": notas})
+    return alunos
+
+
+def media(notas):
+    return sum(notas) / len(notas)
+
+
+def situacao(m):
+    if m &gt;= 7:
+        return "aprovado"
+    return "recuperação"
+
+
+def relatorio(alunos):
+    print(f"{'Aluno':&lt;8}{'Turma':^7}{'Média':&gt;7}  Situação")
+    print("-" * 36)
+    for aluno in alunos:
+        print(f"{aluno['nome']:&lt;8}{aluno['turma']:^7}{aluno['media']:&gt;7.2f}  {aluno['situacao']}")
+    print("-" * 36)
+    aprovados = [a for a in alunos if a["situacao"] == "aprovado"]
+    media_turma = sum(a["media"] for a in alunos) / len(alunos)
+    print(f"Média da turma: {media_turma:.2f}")
+    print(f"Aprovados: {len(aprovados)} de {len(alunos)}")
+
+
+alunos = ler_alunos("notas.csv")
+for aluno in alunos:
+    aluno["media"] = media(aluno["notas"])
+    aluno["situacao"] = situacao(aluno["media"])
+
+# ordene aqui os alunos, da maior média para a menor
+relatorio(alunos)
+</pre>
+<pre class="script" data-file="notas.csv">nome,turma,nota1,nota2,nota3
+Bia,A,8.0,9.5,7.0
+Caio,B,6.0,5.5,5.0
+Duda,A,9.0,10.0,9.5
+Enzo,B,7.0,7.0,7.0
+Gabi,A,4.5,6.0,5.5
+Hugo,B,10.0,8.5,9.0
+</pre>
+<pre class="solucao" data-file="main.py">import csv
+
+
+def ler_alunos(caminho):
+    alunos = []
+    with open(caminho, newline="", encoding="utf-8") as arquivo:
+        for linha in csv.DictReader(arquivo):
+            notas = [float(linha["nota1"]), float(linha["nota2"]), float(linha["nota3"])]
+            alunos.append({"nome": linha["nome"], "turma": linha["turma"], "notas": notas})
+    return alunos
+
+
+def media(notas):
+    return sum(notas) / len(notas)
+
+
+def situacao(m):
+    if m &gt;= 7:
+        return "aprovado"
+    return "recuperação"
+
+
+def relatorio(alunos):
+    print(f"{'Aluno':&lt;8}{'Turma':^7}{'Média':&gt;7}  Situação")
+    print("-" * 36)
+    for aluno in alunos:
+        print(f"{aluno['nome']:&lt;8}{aluno['turma']:^7}{aluno['media']:&gt;7.2f}  {aluno['situacao']}")
+    print("-" * 36)
+    aprovados = [a for a in alunos if a["situacao"] == "aprovado"]
+    media_turma = sum(a["media"] for a in alunos) / len(alunos)
+    print(f"Média da turma: {media_turma:.2f}")
+    print(f"Aprovados: {len(aprovados)} de {len(alunos)}")
+
+
+alunos = ler_alunos("notas.csv")
+for aluno in alunos:
+    aluno["media"] = media(aluno["notas"])
+    aluno["situacao"] = situacao(aluno["media"])
+
+alunos.sort(key=lambda a: a["media"], reverse=True)
+relatorio(alunos)
+</pre>
+</div>
+
+<p>Dá para fazer com <code>alunos.sort(…)</code>, que ordena a própria lista, ou com <code>alunos = sorted(alunos, …)</code>, que cria uma lista nova ordenada. Os dois aceitam <code>key</code> e <code>reverse</code>.</p>
+
+<hr>
+
+<h2 id="versao4">Versão 4 · Gravar o <code>resultado.csv</code></h2>
+<p>Por fim, o resultado vai para um arquivo que a professora abre na planilha. Uma função nova, <code>gravar_resultado</code>, usa o <code>csv.DictWriter</code>, o caminho de volta do <code>DictReader</code>:</p>
+
+<pre class="file" data-file="notas.py">import csv
+
+
+def ler_alunos(caminho):
+    alunos = []
+    with open(caminho, newline="", encoding="utf-8") as arquivo:
+        for linha in csv.DictReader(arquivo):
+            notas = [float(linha["nota1"]), float(linha["nota2"]), float(linha["nota3"])]
+            alunos.append({"nome": linha["nome"], "turma": linha["turma"], "notas": notas})
+    return alunos
+
+
+def media(notas):
+    return sum(notas) / len(notas)
+
+
+def situacao(m):
+    if m &gt;= 7:
+        return "aprovado"
+    return "recuperação"
+
+
+def relatorio(alunos):
+    print(f"{'Aluno':&lt;8}{'Turma':^7}{'Média':&gt;7}  Situação")
+    print("-" * 36)
+    for aluno in alunos:
+        print(f"{aluno['nome']:&lt;8}{aluno['turma']:^7}{aluno['media']:&gt;7.2f}  {aluno['situacao']}")
+    print("-" * 36)
+    aprovados = [a for a in alunos if a["situacao"] == "aprovado"]
+    media_turma = sum(a["media"] for a in alunos) / len(alunos)
+    print(f"Média da turma: {media_turma:.2f}")
+    print(f"Aprovados: {len(aprovados)} de {len(alunos)}")
+
+
+def gravar_resultado(alunos, caminho):
+    with open(caminho, "w", newline="", encoding="utf-8") as arquivo:
+        escritor = csv.DictWriter(arquivo, fieldnames=["nome", "turma", "media", "situacao"])
+        escritor.writeheader()
+        for aluno in alunos:
+            escritor.writerow({
+                "nome": aluno["nome"],
+                "turma": aluno["turma"],
+                "media": f"{aluno['media']:.2f}",
+                "situacao": aluno["situacao"],
+            })
+
+
+alunos = ler_alunos("notas.csv")
+for aluno in alunos:
+    aluno["media"] = media(aluno["notas"])
+    aluno["situacao"] = situacao(aluno["media"])
+
+alunos.sort(key=lambda a: a["media"], reverse=True)
+relatorio(alunos)
+gravar_resultado(alunos, "resultado.csv")
+print("Gravei resultado.csv")
+</pre>
+
+<dl class="anatomy">
+  <dt>open(caminho, "w", newline="", encoding="utf-8")</dt><dd>Abre para <strong>escrever</strong> (<code>"w"</code>, de <em>write</em>). Se o arquivo não existe, é criado; se existe, é <strong>apagado e reescrito</strong> (aula <a href="arquivos-escrever.html">Escrevendo Arquivos</a>).</dd>
+  <dt>csv.DictWriter(arquivo, fieldnames=[…])</dt><dd>Um escritor que recebe dicionários. O <code>fieldnames</code> diz quais colunas, e em que ordem.</dd>
+  <dt>escritor.writeheader()</dt><dd>Escreve a linha do cabeçalho, com os nomes das colunas.</dd>
+  <dt>escritor.writerow({…})</dt><dd>Escreve uma linha. As chaves do dicionário têm de ser exatamente os <code>fieldnames</code>.</dd>
+  <dt>f"{aluno['media']:.2f}"</dt><dd>A média vai para o arquivo como texto com duas casas, <code>9.50</code>, e não <code>9.5</code> nem <code>9.166666666666666</code>.</dd>
+  <dt>"notas" não está na lista</dt><dd>O dicionário de cada aluno tem a chave <code>notas</code>, mas ela não vai para o arquivo: o <code>writerow</code> recebe um dicionário novo, só com as quatro colunas.</dd>
+</dl>
+
+<pre class="term" data-cwd="~/projetos/notas">$ python3 notas.py
+Aluno    Turma   Média  Situação
+------------------------------------
+Duda       A      9.50  aprovado
+Hugo       B      9.17  aprovado
+Bia        A      8.17  aprovado
+Enzo       B      7.00  aprovado
+Caio       B      5.50  recuperação
+Gabi       A      5.33  recuperação
+------------------------------------
+Média da turma: 7.44
+Aprovados: 4 de 6
+Gravei resultado.csv
+$ cat resultado.csv
+nome,turma,media,situacao
+Duda,A,9.50,aprovado
+Hugo,B,9.17,aprovado
+Bia,A,8.17,aprovado
+Enzo,B,7.00,aprovado
+Caio,B,5.50,recuperação
+Gabi,A,5.33,recuperação</pre>
+
+<div class="note">
+<strong>O fim de linha do CSV</strong>
+<p>Por padrão, o módulo <code>csv</code> termina cada linha com <code>\r\n</code> (o fim de linha do Windows), como pede a especificação dos arquivos CSV. No terminal isso não aparece, e as planilhas leem sem problema. É por isso que o <code>newline=""</code> é importante também na gravação: sem ele, em alguns sistemas, cada linha ganharia uma quebra a mais.</p>
+</div>
+
+<div class="trypy" data-goal="arquivo:resultado.csv~nome,turma,media,situacao;;arquivo:resultado.csv~Caio,B,5.50,recuperação;;arquivo:resultado.csv~Duda,A,9.50,aprovado;;semerro">
+<p class="try-task"><strong>Missão:</strong> a função <code>gravar_resultado</code> ainda está vazia, e o programa diz "Gravei resultado.csv" sem gravar nada (mentindo!). Escreva o corpo dela com <code>csv.DictWriter</code>: o cabeçalho <code>nome,turma,media,situacao</code> e uma linha por aluno, com a média em duas casas, como <code>Caio,B,5.50,recuperação</code>.</p>
+<pre class="script" data-file="main.py">import csv
+
+
+def ler_alunos(caminho):
+    alunos = []
+    with open(caminho, newline="", encoding="utf-8") as arquivo:
+        for linha in csv.DictReader(arquivo):
+            notas = [float(linha["nota1"]), float(linha["nota2"]), float(linha["nota3"])]
+            alunos.append({"nome": linha["nome"], "turma": linha["turma"], "notas": notas})
+    return alunos
+
+
+def media(notas):
+    return sum(notas) / len(notas)
+
+
+def situacao(m):
+    if m &gt;= 7:
+        return "aprovado"
+    return "recuperação"
+
+
+def relatorio(alunos):
+    print(f"{'Aluno':&lt;8}{'Turma':^7}{'Média':&gt;7}  Situação")
+    print("-" * 36)
+    for aluno in alunos:
+        print(f"{aluno['nome']:&lt;8}{aluno['turma']:^7}{aluno['media']:&gt;7.2f}  {aluno['situacao']}")
+    print("-" * 36)
+    aprovados = [a for a in alunos if a["situacao"] == "aprovado"]
+    media_turma = sum(a["media"] for a in alunos) / len(alunos)
+    print(f"Média da turma: {media_turma:.2f}")
+    print(f"Aprovados: {len(aprovados)} de {len(alunos)}")
+
+
+def gravar_resultado(alunos, caminho):
+    pass  # troque: grave nome, turma, media (com 2 casas) e situacao com csv.DictWriter
+
+
+alunos = ler_alunos("notas.csv")
+for aluno in alunos:
+    aluno["media"] = media(aluno["notas"])
+    aluno["situacao"] = situacao(aluno["media"])
+
+alunos.sort(key=lambda a: a["media"], reverse=True)
+relatorio(alunos)
+gravar_resultado(alunos, "resultado.csv")
+print("Gravei resultado.csv")
+</pre>
+<pre class="script" data-file="notas.csv">nome,turma,nota1,nota2,nota3
+Bia,A,8.0,9.5,7.0
+Caio,B,6.0,5.5,5.0
+Duda,A,9.0,10.0,9.5
+Enzo,B,7.0,7.0,7.0
+Gabi,A,4.5,6.0,5.5
+Hugo,B,10.0,8.5,9.0
+</pre>
+<pre class="solucao" data-file="main.py">import csv
+
+
+def ler_alunos(caminho):
+    alunos = []
+    with open(caminho, newline="", encoding="utf-8") as arquivo:
+        for linha in csv.DictReader(arquivo):
+            notas = [float(linha["nota1"]), float(linha["nota2"]), float(linha["nota3"])]
+            alunos.append({"nome": linha["nome"], "turma": linha["turma"], "notas": notas})
+    return alunos
+
+
+def media(notas):
+    return sum(notas) / len(notas)
+
+
+def situacao(m):
+    if m &gt;= 7:
+        return "aprovado"
+    return "recuperação"
+
+
+def relatorio(alunos):
+    print(f"{'Aluno':&lt;8}{'Turma':^7}{'Média':&gt;7}  Situação")
+    print("-" * 36)
+    for aluno in alunos:
+        print(f"{aluno['nome']:&lt;8}{aluno['turma']:^7}{aluno['media']:&gt;7.2f}  {aluno['situacao']}")
+    print("-" * 36)
+    aprovados = [a for a in alunos if a["situacao"] == "aprovado"]
+    media_turma = sum(a["media"] for a in alunos) / len(alunos)
+    print(f"Média da turma: {media_turma:.2f}")
+    print(f"Aprovados: {len(aprovados)} de {len(alunos)}")
+
+
+def gravar_resultado(alunos, caminho):
+    with open(caminho, "w", newline="", encoding="utf-8") as arquivo:
+        escritor = csv.DictWriter(arquivo, fieldnames=["nome", "turma", "media", "situacao"])
+        escritor.writeheader()
+        for aluno in alunos:
+            escritor.writerow({
+                "nome": aluno["nome"],
+                "turma": aluno["turma"],
+                "media": f"{aluno['media']:.2f}",
+                "situacao": aluno["situacao"],
+            })
+
+
+alunos = ler_alunos("notas.csv")
+for aluno in alunos:
+    aluno["media"] = media(aluno["notas"])
+    aluno["situacao"] = situacao(aluno["media"])
+
+alunos.sort(key=lambda a: a["media"], reverse=True)
+relatorio(alunos)
+gravar_resultado(alunos, "resultado.csv")
+print("Gravei resultado.csv")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Esquecer o <code>float()</code>: <code>unsupported operand type(s) for +: 'int' and 'str'</code></strong>
+<pre class="file" data-file="notas.py">import csv
+
+with open("notas.csv", newline="", encoding="utf-8") as arquivo:
+    for linha in csv.DictReader(arquivo):
+        notas = [linha["nota1"], linha["nota2"], linha["nota3"]]
+        print(linha["nome"], sum(notas) / 3)
+</pre>
+<pre class="term" data-cwd="~/projetos/notas">$ python3 notas.py
+Traceback (most recent call last):
+  File "/home/ana/projetos/notas/notas.py", line 6, in &lt;module&gt;
+    print(linha["nome"], sum(notas) / 3)
+                         ~~~^^^^^^^
+TypeError: unsupported operand type(s) for +: 'int' and 'str'</pre>
+<p>"Tipos de operando não suportados para <code>+</code>: <code>int</code> e <code>str</code>". O <code>sum</code> começa do número 0 e vai somando: <code>0 + '8.0'</code>, um número com um texto. As notas vieram do CSV como texto. <strong>Como consertar:</strong> converta cada nota com <code>float()</code> antes de somar, de preferência logo na leitura, como na versão 2.</p>
+</div>
+
+<div class="cenario">
+<strong>Nome de coluna errado: <code>KeyError</code></strong>
+<pre class="file" data-file="notas.py">import csv
+
+with open("notas.csv", newline="", encoding="utf-8") as arquivo:
+    for linha in csv.DictReader(arquivo):
+        print(linha["Nome"])
+</pre>
+<pre class="term" data-cwd="~/projetos/notas">$ python3 notas.py
+Traceback (most recent call last):
+  File "/home/ana/projetos/notas/notas.py", line 5, in &lt;module&gt;
+    print(linha["Nome"])
+          ~~~~~^^^^^^^^
+KeyError: 'Nome'</pre>
+<p>No cabeçalho do arquivo está <code>nome</code>, com minúscula, e as chaves do <code>DictReader</code> são <strong>exatamente</strong> o que está no cabeçalho. <strong>Como consertar:</strong> confira a primeira linha do CSV (um <code>print(alunos[0])</code>, como na versão 1, mostra as chaves de verdade) e use o mesmo nome. Se a planilha tiver espaços no cabeçalho (<code>nota 1</code>), a chave também terá.</p>
+</div>
+
+<div class="cenario">
+<strong>Nota com vírgula: <code>could not convert string to float: '5,5'</code></strong>
+<p>A professora digitou uma nota do Caio à moda brasileira, com vírgula. No CSV, como a vírgula separa as colunas, a planilha pôs aspas em volta do valor:</p>
+<pre class="file" data-file="notas.csv">nome,turma,nota1,nota2,nota3
+Bia,A,8.0,9.5,7.0
+Caio,B,6.0,"5,5",5.0
+…
+</pre>
+<pre class="term" data-cwd="~/projetos/notas">$ python3 notas.py
+Traceback (most recent call last):
+  File "/home/ana/projetos/notas/notas.py", line 23, in &lt;module&gt;
+    for aluno in ler_alunos("notas.csv"):
+                 ~~~~~~~~~~^^^^^^^^^^^^^
+  File "/home/ana/projetos/notas/notas.py", line 8, in ler_alunos
+    notas = [float(linha["nota1"]), float(linha["nota2"]), float(linha["nota3"])]
+                                    ~~~~~^^^^^^^^^^^^^^^^
+ValueError: could not convert string to float: '5,5'</pre>
+<p>O <code>csv</code> leu certo (tirou as aspas e entregou <code>'5,5'</code>), mas o <code>float()</code> só entende <strong>ponto</strong> como separador decimal. O rastro mostra o caminho: a linha 23 chamou o <code>ler_alunos</code>, e a linha 8, dentro dele, falhou; os <code>^^^</code> apontam o <code>float(linha["nota2"])</code>, a segunda nota. <strong>Como consertar:</strong> troque a vírgula antes de converter, <code>float(linha["nota2"].replace(",", "."))</code>, ou exporte a planilha com ponto. (Planilhas em português costumam exportar com <strong>ponto e vírgula</strong> entre as colunas e vírgula nos decimais; a aula <a href="csv.html">Arquivos CSV</a> mostra o <code>delimiter=";"</code>.)</p>
+</div>
+
+<div class="cenario">
+<strong>Nota em branco: <code>could not convert string to float: ''</code></strong>
+<p>Se uma célula da planilha ficou vazia (<code>Caio,B,6.0,,5.0</code>), a mensagem é a mesma, com um texto vazio entre as aspas:</p>
+<pre class="term" data-cwd="~/projetos/notas">$ python3 notas.py
+Traceback (most recent call last):
+  File "/home/ana/projetos/notas/notas.py", line 23, in &lt;module&gt;
+    for aluno in ler_alunos("notas.csv"):
+                 ~~~~~~~~~~^^^^^^^^^^^^^
+  File "/home/ana/projetos/notas/notas.py", line 8, in ler_alunos
+    notas = [float(linha["nota1"]), float(linha["nota2"]), float(linha["nota3"])]
+                                    ~~~~~^^^^^^^^^^^^^^^^
+ValueError: could not convert string to float: ''</pre>
+<p><code>''</code> é o texto vazio: não há número nenhum para converter. <strong>Como consertar:</strong> decida a regra com a professora (nota em branco vale zero? o aluno fica de fora?) e escreva no programa, por exemplo com um <code>try</code>/<code>except ValueError</code> (aula <a href="try-except.html">try e except</a>) que avisa qual aluno está com a nota faltando.</p>
+</div>
+
+<div class="cenario">
+<strong>Rodar de outra pasta: <code>FileNotFoundError</code></strong>
+<pre class="term">$ python3 projetos/notas/notas.py
+Traceback (most recent call last):
+  File "/home/ana/projetos/notas/notas.py", line 23, in &lt;module&gt;
+    for aluno in ler_alunos("notas.csv"):
+                 ~~~~~~~~~~^^^^^^^^^^^^^
+  File "/home/ana/projetos/notas/notas.py", line 6, in ler_alunos
+    with open(caminho, newline="", encoding="utf-8") as arquivo:
+         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'notas.csv'</pre>
+<p>A Ana estava na pasta pessoal (<code>~</code>) e rodou o programa pelo caminho. O programa e o CSV estão juntos em <code>projetos/notas</code>, mas o <code>open("notas.csv")</code> procura o arquivo na pasta <strong>onde o terminal está</strong>, e não na pasta do programa. <strong>Como consertar:</strong> entre na pasta do projeto antes (<code>cd projetos/notas</code>) e rode <code>python3 notas.py</code>. (A aula <a href="pathlib.html">pathlib</a> mostra como achar a pasta do próprio programa, para ele funcionar de qualquer lugar.)</p>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de guardar cada aluno</h2>
+<p>Neste projeto, cada aluno é um <strong>dicionário</strong>. Seria possível usar outras estruturas:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Exemplo</th><th>Quando usar</th></tr>
+<tr><td>Dicionário</td><td><code>aluno["media"]</code></td><td>O que o projeto usa: casa direto com o <code>DictReader</code> e o <code>DictWriter</code>, e as chaves têm nome</td></tr>
+<tr><td>Lista ou tupla</td><td><code>aluno[3]</code></td><td>Evite aqui: <code>aluno[3]</code> não diz nada a quem lê, e uma coluna nova bagunça as posições</td></tr>
+<tr><td>Classe <code>Aluno</code></td><td><code>aluno.media</code></td><td>Quando o aluno passa a ter comportamento (a média virando um <a href="property.html">@property</a>, por exemplo). Veja as <a href="dataclasses.html">Dataclasses</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Desafios extras</h2>
+<ul>
+  <li><strong>Reprovado:</strong> acrescente uma terceira situação, <code>reprovado</code>, para média abaixo de 5. Quem fica com a Gabi (5,33)?</li>
+  <li><strong>Por turma:</strong> mostre a média de cada turma (A e B) e quantos aprovados cada uma teve. Um dicionário com a turma como chave ajuda (aula <a href="dicionarios-percorrer.html">Percorrendo um Dicionário</a>).</li>
+  <li><strong>Vírgula decimal:</strong> faça o <code>ler_alunos</code> aceitar <code>5,5</code> e <code>5.5</code>, e avisar (sem quebrar) quando uma nota estiver em branco.</li>
+  <li><strong>O nome do arquivo na linha de comando:</strong> receba o nome do CSV em <code>sys.argv</code> (aula <a href="os-sys.html">Os Módulos os e sys</a>), para usar o mesmo programa com outras turmas.</li>
+</ul>
+
+<hr>
+
+<h2>Referência rápida do projeto</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Peça</th><th>O que faz</th></tr>
+<tr><td><code>open("notas.csv", newline="", encoding="utf-8")</code></td><td>Abre o CSV para ler</td></tr>
+<tr><td><code>list(csv.DictReader(arquivo))</code></td><td>Lista de dicionários, um por linha; chaves = cabeçalho</td></tr>
+<tr><td><code>float(linha["nota1"])</code></td><td>Texto do CSV → número</td></tr>
+<tr><td><code>sum(notas) / len(notas)</code></td><td>Média</td></tr>
+<tr><td><code>alunos.sort(key=lambda a: a["media"], reverse=True)</code></td><td>Ordena da maior média para a menor</td></tr>
+<tr><td><code>f"{nome:&lt;8}{turma:^7}{media:&gt;7.2f}"</code></td><td>Colunas alinhadas: esquerda, centro, direita</td></tr>
+<tr><td><code>open(caminho, "w", newline="", encoding="utf-8")</code></td><td>Abre para gravar (apaga o que havia)</td></tr>
+<tr><td><code>csv.DictWriter(arquivo, fieldnames=[…])</code></td><td>Escritor de dicionários</td></tr>
+<tr><td><code>writeheader()</code> / <code>writerow({…})</code></td><td>Grava o cabeçalho / uma linha</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O leitor de dicionários</h3>
+<p>Complete o nome da classe do módulo <code>csv</code> que lê cada linha como dicionário:</p>
+<div class="ex-code">for linha in csv.<input data-answer="DictReader" aria-label="classe">(arquivo):</div>
+</div>
+
+<div class="exercise">
+<h3>2. Texto em número</h3>
+<p>Complete para transformar a nota lida do CSV num número com casas decimais:</p>
+<div class="ex-code">nota = <input data-answer="float" aria-label="função">(linha["nota1"])</div>
+</div>
+
+<div class="exercise">
+<h3>3. Alinhado à direita</h3>
+<p>Complete o formato que mostra a média alinhada à direita em 7 caracteres, com duas casas:</p>
+<div class="ex-code">f"{media:<input data-answer="&gt;7.2f" aria-label="formato">}"</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. A versão 1 mostrou <code>'nota1': '8.0'</code>, com aspas. O que isso quer dizer?</p>
+<label><input type="radio" name="q4"> Que a nota foi digitada errado no CSV</label>
+<label><input type="radio" name="q4"> Que tudo o que vem do CSV é texto, e as notas precisam de <code>float()</code> para virar número</label>
+<label><input type="radio" name="q4"> Que o <code>DictReader</code> está com defeito</label>
+<label><input type="radio" name="q4"> Que a nota é 0</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. Por que o Enzo, com média 7,00, aparece como aprovado?</p>
+<label><input type="radio" name="q5"> Por causa do arredondamento do <code>:.2f</code></label>
+<label><input type="radio" name="q5"> Porque o <code>sort</code> o colocou entre os primeiros</label>
+<label><input type="radio" name="q5"> Porque a regra usa <code>m &gt;= 7</code>, e 7 é maior <strong>ou igual</strong> a 7</label>
+<label><input type="radio" name="q5"> Porque ele é da turma B</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. O que acontece com um <code>resultado.csv</code> que já existia quando o programa abre o arquivo com <code>"w"</code>?</p>
+<label><input type="radio" name="q6"> É apagado e reescrito do zero</label>
+<label><input type="radio" name="q6"> As linhas novas vão para o fim</label>
+<label><input type="radio" name="q6"> Dá <code>FileExistsError</code></label>
+<label><input type="radio" name="q6"> Nada: o programa não grava se o arquivo existir</label>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><strong>Versão 1</strong>: <code>csv.DictReader</code> lê cada linha como dicionário, com o cabeçalho como chaves. Tudo vem como <strong>texto</strong>.</li>
+  <li><strong>Versão 2</strong>: <code>float()</code> na leitura, uma função para a média e outra para a situação (<code>&gt;= 7</code>, aprovado).</li>
+  <li><strong>Versão 3</strong>: <code>sort(key=…, reverse=True)</code> ordena pela média; <code>:&lt;</code>, <code>:^</code> e <code>:&gt;</code> nas f-strings alinham as colunas.</li>
+  <li><strong>Versão 4</strong>: <code>csv.DictWriter</code> com <code>writeheader()</code> e <code>writerow()</code> grava o <code>resultado.csv</code>; o <code>"w"</code> apaga o que havia.</li>
+  <li>Os erros típicos: nota sem <code>float()</code> (<code>TypeError</code>), coluna com outro nome (<code>KeyError</code>), vírgula decimal ou nota vazia (<code>ValueError</code>) e o programa rodado de outra pasta (<code>FileNotFoundError</code>).</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
