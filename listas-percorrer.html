@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Percorrendo uma Lista — for, range(len()), enumerate e while | Guia Python</title>
+<meta name="description" content="Como passar por todos os itens de uma lista em Python: for item in lista, lista numerada, range(len()) e enumerate() para ter o índice, somar, contar, achar o maior, procurar com break, percorrer com while, e os erros reais do Python 3.14: o item usado como índice, o while com &lt;=, o for em len() e os dois-pontos esquecidos.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Percorrendo uma Lista</span></h1>
+
+<p class="intro">Quase tudo o que se faz com uma lista começa do mesmo jeito: passar pelos itens, <strong>um de cada vez</strong>. A Ana confere a lista de compras item por item; a professora soma as notas da turma uma a uma; o caixa passa os produtos e vai somando os preços. "Passar por todos os itens" se diz <strong>percorrer</strong> a lista (em inglês, <em>iterate</em>, "iterar"). Você já conhece a ferramenta, o <code>for</code> (aula <a href="for.html">for</a>); aqui você vai ver as formas de usá-lo com listas e as tarefas mais comuns: numerar, somar, contar, achar o maior e procurar.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A percorrer uma lista com <code>for item in lista:</code>, e o costume dos nomes no singular e no plural.</li>
+  <li>Três jeitos de ter o <strong>número</strong> do item: um contador, <code>range(len(lista))</code> e <code>enumerate()</code>.</li>
+  <li>As tarefas clássicas: somar, contar quem cumpre uma condição, achar o maior, procurar e parar.</li>
+  <li>A percorrer com <code>while</code>, e quando isso faz sentido.</li>
+  <li>Os erros reais: o item usado como índice, o <code>while</code> com <code>&lt;=</code>, o <code>for</code> em <code>len()</code>, a lista inteira no lugar do item e os dois-pontos esquecidos.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: o dedo que desce pela lista</h2>
+<p>No mercado, a Ana põe o dedo no primeiro item da lista, pega o produto, desce o dedo para o próximo, pega o produto, e assim até o fim. Ela faz <strong>a mesma coisa</strong> com cada item; só muda o item da vez. O <code>for</code> é esse dedo: a cada volta, ele aponta para um item e roda o bloco de código com ele.</p>
+
+<hr>
+
+<h2>1. <code>for item in lista</code></h2>
+
+<pre class="file" data-file="percorrer.py">compras = ["arroz", "feijão", "café", "leite"]
+for item in compras:
+    print(f"Não esqueça: {item}")
+print("Pronto, lista conferida!")
+</pre>
+
+<dl class="anatomy">
+  <dt>for</dt><dd>"Para": a palavra que começa a repetição.</dd>
+  <dt>item</dt><dd>A variável que recebe, a cada volta, um item da lista: primeiro <code>"arroz"</code>, depois <code>"feijão"</code>… Você escolhe o nome.</dd>
+  <dt>in compras</dt><dd>"Em compras": a lista que vai ser percorrida, do primeiro ao último item, na ordem.</dd>
+  <dt>:</dt><dd>Os dois-pontos abrem o bloco que se repete.</dd>
+  <dt>    print(…)</dt><dd>O bloco, com 4 espaços. Roda uma vez para cada item: 4 itens, 4 voltas.</dd>
+  <dt>print("Pronto…")</dt><dd>Sem os espaços, já está fora do bloco: roda uma vez só, depois que a lista acabou.</dd>
+</dl>
+
+<pre class="term">$ python3 percorrer.py
+Não esqueça: arroz
+Não esqueça: feijão
+Não esqueça: café
+Não esqueça: leite
+Pronto, lista conferida!
+</pre>
+
+<div class="tip">
+<strong>Plural para a lista, singular para o item</strong>
+<p>O costume é dar à lista um nome no plural e à variável do <code>for</code> o mesmo nome no singular: <code>for aluno in alunos</code>, <code>for nota in notas</code>, <code>for preco in precos</code>. Lido em voz alta, faz sentido: "para cada aluno em alunos". E, dentro do bloco, ninguém confunde a lista com o item.</p>
+</div>
+
+<p>Se a lista estiver vazia, o bloco simplesmente não roda nenhuma vez, e o programa segue em frente sem erro:</p>
+
+<pre class="file" data-file="vazia_for.py">compras = []
+for item in compras:
+    print(item)
+print(f"Fim. A lista tinha {len(compras)} itens.")
+</pre>
+
+<pre class="term">$ python3 vazia_for.py
+Fim. A lista tinha 0 itens.
+</pre>
+
+<hr>
+
+<h2>2. E o número do item?</h2>
+<p>A Ana quer a lista <strong>numerada</strong>: "1. arroz", "2. feijão"… O <code>for item in compras</code> dá o item, mas não diz em que volta está. Há três jeitos de ter o número.</p>
+
+<h3>Um contador</h3>
+
+<pre class="file" data-file="numerada.py">compras = ["arroz", "feijão", "café", "leite"]
+numero = 1
+for item in compras:
+    print(f"{numero}. {item}")
+    numero += 1
+</pre>
+
+<pre class="term">$ python3 numerada.py
+1. arroz
+2. feijão
+3. café
+4. leite
+</pre>
+
+<p>Uma variável começa em 1 antes do laço e aumenta 1 a cada volta. Funciona, mas são duas linhas a mais, e é fácil esquecer o <code>numero += 1</code>.</p>
+
+<h3><code>range(len(lista))</code>: percorrer os índices</h3>
+
+<pre class="file" data-file="indices.py">compras = ["arroz", "feijão", "café", "leite"]
+for i in range(len(compras)):
+    print(f"Índice {i}: {compras[i]}")
+</pre>
+
+<pre class="term">$ python3 indices.py
+Índice 0: arroz
+Índice 1: feijão
+Índice 2: café
+Índice 3: leite
+</pre>
+
+<p>Aqui o <code>for</code> não percorre a lista: percorre os números 0, 1, 2, 3 (o <code>range(4)</code>, aula <a href="range.html">range()</a>), e o item vem de <code>compras[i]</code>. É o jeito que você usou em <a href="listas-alterar.html">Alterando Itens</a> para <strong>mudar</strong> cada item, porque para escrever em <code>compras[i]</code> é preciso o índice.</p>
+
+<h3><code>enumerate()</code>: o índice e o item juntos</h3>
+
+<pre class="file" data-file="enumerar.py">compras = ["arroz", "feijão", "café", "leite"]
+for i, item in enumerate(compras):
+    print(i, item)
+for numero, item in enumerate(compras, start=1):
+    print(f"{numero}. {item}")
+</pre>
+
+<pre class="term">$ python3 enumerar.py
+0 arroz
+1 feijão
+2 café
+3 leite
+1. arroz
+2. feijão
+3. café
+4. leite
+</pre>
+
+<dl class="anatomy">
+  <dt>enumerate(compras)</dt><dd>"Enumerar": a cada volta, entrega <strong>dois</strong> valores, o número e o item.</dd>
+  <dt>for i, item in …</dt><dd>Duas variáveis, separadas por vírgula: a primeira recebe o número, a segunda o item.</dd>
+  <dt>start=1</dt><dd>Começa a contar do 1 em vez do 0: perfeito para mostrar a pessoas.</dd>
+</dl>
+
+<p>O <code>enumerate</code> é o jeito preferido dos programadores Python: uma linha, sem contador para esquecer, sem <code>compras[i]</code>. Ele tem mais detalhes, que estão na aula <a href="enumerate-zip.html">enumerate() e zip()</a>.</p>
+
+<div class="trypy" data-goal="out:1. arroz;;out:4. leite;;src:\bfor\b">
+<p class="try-task"><strong>Missão:</strong> o programa mostra a lista com colchetes. Troque o <code>print</code> por um <code>for</code> que mostre a lista numerada a partir do 1: <code>1. arroz</code>, <code>2. feijão</code>… (use <code>enumerate(compras, start=1)</code> ou um contador).</p>
+<pre class="script" data-file="main.py">compras = ["arroz", "feijão", "café", "leite"]
+print(compras)
+</pre>
+<pre class="solucao" data-file="main.py">compras = ["arroz", "feijão", "café", "leite"]
+for numero, item in enumerate(compras, start=1):
+    print(f"{numero}. {item}")
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Somando: o total do carrinho</h2>
+<p>A tarefa mais clássica: somar todos os valores. A ideia é ter uma variável que <strong>acumula</strong>: começa em zero e, a cada volta, recebe mais um valor.</p>
+
+<pre class="file" data-file="total.py">precos = [4.50, 12.00, 8.75, 12.25]
+total = 0
+for preco in precos:
+    total += preco
+print(f"Total: R$ {total:.2f}")
+print(f"Com sum(): R$ {sum(precos):.2f}")
+</pre>
+
+<pre class="term">$ python3 total.py
+Total: R$ 37.50
+Com sum(): R$ 37.50
+</pre>
+
+<ol class="passo">
+  <li>Antes do laço: <code>total = 0</code>. O acumulador precisa existir e começar do zero.</li>
+  <li>Volta 1: <code>total</code> = 0 + 4.50 = 4.50.</li>
+  <li>Volta 2: 4.50 + 12.00 = 16.50.</li>
+  <li>Volta 3: 16.50 + 8.75 = 25.25.</li>
+  <li>Volta 4: 25.25 + 12.25 = 37.50. A lista acabou; o <code>print</code>, fora do bloco, mostra o total.</li>
+</ol>
+
+<p>O <code>:.2f</code> mostra duas casas decimais (aula <a href="f-strings.html">f-strings</a>). E, para somar uma lista de números, o Python já tem pronta a função <code>sum()</code> (aula <a href="funcoes-embutidas.html">Funções Embutidas</a>). Aprender o laço continua valendo a pena: ele serve para tudo o que o <code>sum</code> não faz, como somar só alguns itens ou somar preço × quantidade.</p>
+
+<hr>
+
+<h2>4. Contando e achando o maior</h2>
+<p>A professora quer saber quantos alunos passaram (nota 6 ou mais) e qual foi a maior nota. Os dois cabem no mesmo laço, cada um com a sua variável:</p>
+
+<pre class="file" data-file="contar.py">notas = [7.0, 4.5, 8.5, 6.0, 9.5, 5.0]
+aprovados = 0
+maior = notas[0]
+for nota in notas:
+    if nota &gt;= 6:
+        aprovados += 1
+    if nota &gt; maior:
+        maior = nota
+print(f"Aprovados: {aprovados} de {len(notas)}")
+print(f"Maior nota: {maior}")
+</pre>
+
+<pre class="term">$ python3 contar.py
+Aprovados: 4 de 6
+Maior nota: 9.5
+</pre>
+
+<dl class="anatomy">
+  <dt>aprovados = 0 … aprovados += 1</dt><dd>Um <strong>contador</strong>: começa em zero e soma 1 só quando o <code>if</code> é verdadeiro.</dd>
+  <dt>maior = notas[0]</dt><dd>O "campeão até agora" começa sendo a primeira nota. (Começar em 0 também daria certo aqui, mas não daria com números negativos; começar pelo primeiro item sempre funciona, desde que a lista não esteja vazia.)</dd>
+  <dt>if nota &gt; maior: maior = nota</dt><dd>Cada nota é comparada com o campeão; se for maior, toma o lugar dele.</dd>
+</dl>
+
+<p>Para o maior e o menor, o Python também tem funções prontas: <code>max(notas)</code> e <code>min(notas)</code>. O laço é o jeito de fazer quando a regra é sua (por exemplo, "o aluno com a maior nota", e não só a nota).</p>
+
+<hr>
+
+<h2>5. Procurando e parando no meio</h2>
+<p>Para saber <strong>se</strong> a Carla está na turma, o <code>in</code> basta (aula <a href="listas.html">Listas</a>). Mas às vezes você quer fazer algo quando achar, e não precisa olhar o resto. O <code>break</code> (aula <a href="break-continue.html">break e continue</a>) para o laço na hora:</p>
+
+<pre class="file" data-file="procurar_for.py">turma = ["Ana", "Bruno", "Carla", "Davi", "Eva"]
+procurado = "Carla"
+for aluno in turma:
+    print(f"Olhando {aluno}...")
+    if aluno == procurado:
+        print(f"Achei {procurado}!")
+        break
+</pre>
+
+<pre class="term">$ python3 procurar_for.py
+Olhando Ana...
+Olhando Bruno...
+Olhando Carla...
+Achei Carla!
+</pre>
+
+<p>O Davi e a Eva nem foram olhados: depois do <code>break</code>, o laço acabou. E se ninguém for achado? O <code>for</code> tem um <code>else</code> que roda só quando o laço chega ao fim <strong>sem</strong> <code>break</code>; ele tem aula própria: <a href="lacos-else.html">else nos Laços</a>.</p>
+
+<hr>
+
+<h2>6. Percorrendo com <code>while</code></h2>
+<p>Também dá para percorrer uma lista com <code>while</code> (aula <a href="while.html">while</a>), controlando o índice à mão:</p>
+
+<pre class="file" data-file="percorrer_while.py">compras = ["arroz", "feijão", "café"]
+i = 0
+while i &lt; len(compras):
+    print(i, compras[i])
+    i += 1
+</pre>
+
+<pre class="term">$ python3 percorrer_while.py
+0 arroz
+1 feijão
+2 café
+</pre>
+
+<p>Três coisas para acertar: o índice começa em 0, a condição é <code>i &lt; len(compras)</code> (<strong>menor</strong>, e não menor ou igual) e o <code>i += 1</code> não pode faltar, senão o laço nunca acaba. É muito mais fácil errar do que com o <code>for</code>; por isso, para percorrer uma lista do começo ao fim, use o <code>for</code>. O <code>while</code> faz sentido quando a lista muda durante o laço, como a fila que é atendida até acabar (<code>while fila: fila.pop(0)</code>, aula <a href="listas-remover.html">Removendo Itens</a>).</p>
+
+<hr>
+
+<h2>Formas diferentes de percorrer: qual usar</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Você precisa de</th><th>Escreva</th><th>Observação</th></tr>
+<tr><td>Só os itens</td><td><code>for item in lista:</code></td><td>O jeito padrão. Use sempre que puder</td></tr>
+<tr><td>O item e o número dele</td><td><code>for i, item in enumerate(lista):</code></td><td>Com <code>start=1</code>, numera para pessoas</td></tr>
+<tr><td>O índice, para <strong>alterar</strong> a lista</td><td><code>for i in range(len(lista)):</code></td><td><code>lista[i] = …</code> dentro do bloco</td></tr>
+<tr><td>Os itens de trás para frente</td><td><code>for item in reversed(lista):</code></td><td>Veja <a href="listas-ordenar.html">Ordenando Listas</a></td></tr>
+<tr><td>Ir até a lista acabar, tirando itens</td><td><code>while lista:</code></td><td>A fila: <code>lista.pop(0)</code> dentro do bloco</td></tr>
+<tr><td>Uma lista nova a partir de outra</td><td><code>[… for item in lista]</code></td><td>Aula <a href="list-comprehension.html">List Comprehension</a></td></tr>
+<tr><td>A soma, o maior, o menor</td><td><code>sum(lista)</code>, <code>max(lista)</code>, <code>min(lista)</code></td><td>Sem laço nenhum</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Usar o item como se fosse o índice</strong>
+<pre class="file" data-file="erro_indice_str.py">compras = ["arroz", "feijão", "café"]
+for i in compras:
+    print(compras[i])
+</pre>
+<pre class="term">$ python3 erro_indice_str.py
+Traceback (most recent call last):
+  File "/home/ana/erro_indice_str.py", line 3, in &lt;module&gt;
+    print(compras[i])
+          ~~~~~~~^^^
+TypeError: list indices must be integers or slices, not str
+</pre>
+<p>Linha por linha:</p>
+<ul>
+  <li><code>line 3</code>: o erro foi no <code>print</code>, logo na primeira volta.</li>
+  <li>Os <code>^^^</code> marcam o <code>[i]</code>: o índice é o problema.</li>
+  <li><code>TypeError: list indices must be integers or slices, not str</code>: "os índices de uma lista precisam ser inteiros ou fatias, e não textos".</li>
+</ul>
+<p>O nome <code>i</code> enganou: <code>for i in compras</code> põe em <code>i</code> os <strong>itens</strong> (<code>"arroz"</code>, <code>"feijão"</code>…), e não os índices. E <code>compras["arroz"]</code> não faz sentido. <strong>Como consertar:</strong> se você quer os itens, use-os direto: <code>for item in compras: print(item)</code>. Se quer os índices, <code>for i in range(len(compras)):</code>. Dar nomes claros (<code>item</code> para itens, <code>i</code> só para índices) evita esse erro.</p>
+</div>
+
+<div class="cenario">
+<strong>O <code>while</code> com <code>&lt;=</code>: uma volta a mais</strong>
+<pre class="file" data-file="erro_while.py">compras = ["arroz", "feijão", "café"]
+i = 0
+while i &lt;= len(compras):
+    print(compras[i])
+    i += 1
+</pre>
+<pre class="term">$ python3 erro_while.py
+arroz
+feijão
+café
+Traceback (most recent call last):
+  File "/home/ana/erro_while.py", line 4, in &lt;module&gt;
+    print(compras[i])
+          ~~~~~~~^^^
+IndexError: list index out of range
+</pre>
+<p>Os três itens saíram e, só depois, veio o erro. Com <code>&lt;=</code>, o laço rodou também com <code>i</code> valendo 3, e <code>compras[3]</code> não existe (os índices vão de 0 a 2). <strong>Como consertar:</strong> <code>while i &lt; len(compras):</code>. O mesmo erro acontece com <code>range(len(compras) + 1)</code>. Melhor ainda: use o <code>for item in compras</code>, que não tem índice para errar.</p>
+</div>
+
+<div class="cenario">
+<strong><code>for i in len(lista)</code>: faltou o <code>range</code></strong>
+<pre class="file" data-file="erro_len.py">compras = ["arroz", "feijão", "café"]
+for i in len(compras):
+    print(compras[i])
+</pre>
+<pre class="term">$ python3 erro_len.py
+Traceback (most recent call last):
+  File "/home/ana/erro_len.py", line 2, in &lt;module&gt;
+    for i in len(compras):
+             ~~~^^^^^^^^^
+TypeError: 'int' object is not iterable
+</pre>
+<p>"O objeto <code>int</code> não é iterável", ou seja, não dá para percorrer um número. O <code>len(compras)</code> é o número 3, e o <code>for</code> precisa de algo com vários itens. <strong>Como consertar:</strong> <code>for i in range(len(compras)):</code>, porque é o <code>range</code> que transforma o 3 nos números 0, 1, 2.</p>
+</div>
+
+<div class="cenario">
+<strong>A lista inteira no lugar do item</strong>
+<pre class="file" data-file="erro_lista_toda.py">compras = ["arroz", "feijão", "café"]
+for item in compras:
+    print(f"Comprar: {compras}")
+</pre>
+<pre class="term">$ python3 erro_lista_toda.py
+Comprar: ['arroz', 'feijão', 'café']
+Comprar: ['arroz', 'feijão', 'café']
+Comprar: ['arroz', 'feijão', 'café']
+</pre>
+<p>Sem erro, mas a lista inteira saiu três vezes. Dentro do bloco, a Ana escreveu <code>compras</code> (a lista) em vez de <code>item</code> (o item da vez). O laço rodou 3 vezes, como devia, e mostrou a mesma coisa em todas. <strong>Como consertar:</strong> <code>print(f"Comprar: {item}")</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Os dois-pontos esquecidos</strong>
+<pre class="file" data-file="erro_ponto.py">compras = ["arroz", "feijão", "café"]
+for item in compras
+    print(item)
+</pre>
+<pre class="term">$ python3 erro_ponto.py
+  File "/home/ana/erro_ponto.py", line 2
+    for item in compras
+                       ^
+SyntaxError: expected ':'
+</pre>
+<p>"Esperava <code>:</code>". O <code>^</code> aponta para o fim da linha 2, exatamente onde os dois-pontos deveriam estar. Como todo <code>SyntaxError</code>, nada rodou. <strong>Como consertar:</strong> <code>for item in compras:</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Tirar ou pôr itens enquanto percorre</strong>
+<p>Remover itens da lista dentro de um <code>for</code> que anda por ela pula itens, sem erro nenhum. Você viu o porquê, passo a passo, em <a href="listas-remover.html">Removendo Itens</a>. E alterar a variável do laço (<code>item = …</code>) não altera a lista: veja <a href="listas-alterar.html">Alterando Itens</a>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>A cada volta, você tem</th></tr>
+<tr><td><code>for item in lista:</code></td><td>O item</td></tr>
+<tr><td><code>for i in range(len(lista)):</code></td><td>O índice (o item é <code>lista[i]</code>)</td></tr>
+<tr><td><code>for i, item in enumerate(lista):</code></td><td>O índice (do 0) e o item</td></tr>
+<tr><td><code>for n, item in enumerate(lista, start=1):</code></td><td>O número (do 1) e o item</td></tr>
+<tr><td><code>i = 0</code> / <code>while i &lt; len(lista):</code> / <code>i += 1</code></td><td>O índice, controlado à mão</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Tarefa</th><th>Antes do laço</th><th>Dentro do laço</th><th>Pronto</th></tr>
+<tr><td>Somar</td><td><code>total = 0</code></td><td><code>total += valor</code></td><td><code>sum(lista)</code></td></tr>
+<tr><td>Contar quem cumpre uma condição</td><td><code>conta = 0</code></td><td><code>if condição: conta += 1</code></td><td>—</td></tr>
+<tr><td>Achar o maior</td><td><code>maior = lista[0]</code></td><td><code>if valor &gt; maior: maior = valor</code></td><td><code>max(lista)</code></td></tr>
+<tr><td>Procurar e parar</td><td>—</td><td><code>if achou: … break</code></td><td><code>x in lista</code> (só para saber se está)</td></tr>
+<tr><td>Montar outra lista</td><td><code>nova = []</code></td><td><code>nova.append(…)</code></td><td>List comprehension</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>TypeError: list indices must be integers or slices, not str</code></td><td><code>for i in lista</code> deu itens, e você usou <code>lista[i]</code></td></tr>
+<tr><td><code>IndexError: list index out of range</code> depois do último item</td><td><code>while i &lt;= len(lista)</code> ou <code>range(len(lista) + 1)</code></td></tr>
+<tr><td><code>TypeError: 'int' object is not iterable</code></td><td><code>for i in len(lista)</code>: faltou o <code>range</code></td></tr>
+<tr><td>A lista inteira se repete na saída</td><td>Usou o nome da lista no lugar da variável do laço</td></tr>
+<tr><td><code>SyntaxError: expected ':'</code></td><td>Faltaram os dois-pontos no fim do <code>for</code></td></tr>
+<tr><td>O laço nunca termina (<code>while</code>)</td><td>Faltou o <code>i += 1</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Para cada aluno</h3>
+<p>Complete o laço que mostra cada aluno da lista <code>alunos</code>:</p>
+<div class="ex-code"><input data-answer="for" aria-label="palavra-chave" size="4"> aluno <input data-answer="in" aria-label="palavra-chave" size="3"> alunos:<br>&nbsp;&nbsp;&nbsp;&nbsp;print(aluno)</div>
+</div>
+
+<div class="exercise">
+<h3>2. Contando a partir do 1</h3>
+<p>Complete para o <code>enumerate</code> começar do 1:</p>
+<div class="ex-code">for n, item in enumerate(compras, start=<input data-answer="1" aria-label="início" size="3">):</div>
+</div>
+
+<div class="exercise">
+<h3>3. Quantas voltas?</h3>
+<p>Quantas vezes o bloco de <code>for nota in []:</code> roda?</p>
+<div class="ex-code"><input data-answer="0" aria-label="voltas" size="3"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Em <code>for x in ["a", "b", "c"]:</code>, o que <code>x</code> vale na segunda volta?</p>
+<label><input type="radio" name="q4"> <code>1</code></label>
+<label><input type="radio" name="q4"> <code>"b"</code></label>
+<label><input type="radio" name="q4"> <code>["a", "b"]</code></label>
+<label><input type="radio" name="q4"> <code>2</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. Qual laço percorre os <strong>índices</strong> de uma lista de 3 itens sem erro?</p>
+<label><input type="radio" name="q5"> <code>for i in len(lista):</code></label>
+<label><input type="radio" name="q5"> <code>for i in range(len(lista) + 1):</code></label>
+<label><input type="radio" name="q5"> <code>for i in range(1, len(lista) + 1):</code> e <code>lista[i]</code></label>
+<label><input type="radio" name="q5"> <code>for i in range(len(lista)):</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Para somar uma lista de preços com um laço, o que vem antes do <code>for</code>?</p>
+<label><input type="radio" name="q6"> <code>total = 0</code></label>
+<label><input type="radio" name="q6"> <code>total = precos[0]</code>, sempre</label>
+<label><input type="radio" name="q6"> Nada: o <code>total += preco</code> cria a variável</label>
+<label><input type="radio" name="q6"> <code>total = []</code></label>
+</div>
+
+<h3>Missão final: o caixa do mercado</h3>
+
+<div class="trypy" data-goal="out:Total: R$ 37.50;;out:Itens acima de R$ 10: 2;;src:\bfor\b">
+<p class="try-task"><strong>Missão:</strong> complete o laço para o programa mostrar o <strong>total</strong> da compra e <strong>quantos itens custam mais de R$ 10</strong>. Faça com o <code>for</code> (sem <code>sum</code>).</p>
+<pre class="script" data-file="main.py">precos = [4.50, 12.00, 8.75, 12.25]
+total = 0
+caros = 0
+for preco in precos:
+    pass  # troque esta linha
+print(f"Total: R$ {total:.2f}")
+print(f"Itens acima de R$ 10: {caros}")
+</pre>
+<pre class="solucao" data-file="main.py">precos = [4.50, 12.00, 8.75, 12.25]
+total = 0
+caros = 0
+for preco in precos:
+    total += preco
+    if preco &gt; 10:
+        caros += 1
+print(f"Total: R$ {total:.2f}")
+print(f"Itens acima de R$ 10: {caros}")
+</pre>
+</div>
+
+<p>O <code>pass</code> do código inicial é uma instrução que não faz nada: ele só segura o lugar do bloco, que não pode ficar vazio.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>for item in lista:</code> roda o bloco uma vez para cada item, na ordem. Lista vazia: zero voltas, sem erro.</li>
+  <li>Nome da lista no plural, da variável no singular: <code>for nota in notas</code>.</li>
+  <li>Para ter o número: <code>enumerate(lista)</code> (com <code>start=1</code> para pessoas); para alterar a lista: <code>range(len(lista))</code>.</li>
+  <li>Somar, contar e achar o maior seguem a mesma receita: uma variável criada <strong>antes</strong> do laço e atualizada <strong>dentro</strong>. Para os casos simples, existem <code>sum</code>, <code>max</code> e <code>min</code>.</li>
+  <li><code>break</code> para o laço quando você achou o que procurava.</li>
+  <li>O <code>while</code> também percorre, mas é fácil errar (<code>&lt;=</code>, <code>i += 1</code> esquecido); prefira o <code>for</code>.</li>
+  <li><code>for i in lista</code> dá <strong>itens</strong>, não índices: <code>lista[i]</code> ali dá <code>TypeError</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
