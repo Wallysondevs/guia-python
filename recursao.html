@@ -288,7 +288,7 @@ print(fatorial(5))
 
 contagem(3)
 </pre>
-<p>O programa mostra 3, 2, 1, 0 e não para: -1, -2, -3… Ninguém diz "chega". Depois de 999 números, o Python desiste:</p>
+<p>O programa mostra 3, 2, 1, 0 e não para: -1, -2, -3… Ninguém diz "chega". No terminal da Ana, depois de 999 números, o Python desiste:</p>
 <pre class="term">$ python3 sem_base.py
 3
 2
@@ -332,7 +332,7 @@ RecursionError: maximum recursion depth exceeded
 <pre class="term">$ python3 -c "import sys; print(sys.getrecursionlimit())"
 1000
 </pre>
-<p>O <code>&lt;module&gt;</code> (o corpo do programa) conta como uma das mil; por isso couberam 999 chamadas da <code>contagem</code>. O número pode ser outro em outro lugar: o editor do guia roda o Python dentro do navegador, e lá o limite pode ser diferente. Não decore o número; lembre que <strong>existe</strong> um limite. Existe também a função <code>sys.setrecursionlimit()</code>, que muda esse limite, mas ela não conserta uma função sem caso base: só faz o erro demorar mais para aparecer.</p>
+<p>O <code>&lt;module&gt;</code> (o corpo do programa) conta como uma das mil; por isso couberam 999 chamadas da <code>contagem</code>. Os números do traceback podem variar de um lugar para outro. No editor do guia, que roda o Python dentro do navegador, o <code>sys.getrecursionlimit()</code> também responde 1000, mas o próprio editor ocupa uma das chamadas: lá a contagem mostra um número a menos, e o traceback diz <code>[Previous line repeated 995 more times]</code>. Em outros computadores e versões, o limite pode ser outro. Não decore o número; lembre que <strong>existe</strong> um limite. Existe também a função <code>sys.setrecursionlimit()</code>, que muda esse limite, mas ela não conserta uma função sem caso base: só faz o erro demorar mais para aparecer.</p>
 </div>
 
 <div class="cenario">
@@ -503,7 +503,7 @@ print(soma_ate(100))
 </pre>
 </div>
 
-<p>Conseguiu? Agora uma curiosidade: no Python do Ubuntu da Ana, <code>soma_ate(5000)</code> termina em <code>RecursionError</code>, porque 5000 chamadas não cabem numa pilha de 1000. (No editor do guia, o limite pode ser outro.) Um laço <code>for</code>, ou a fórmula <code>n * (n + 1) // 2</code>, soma até 5000 ou até um milhão sem problema nenhum: é um bom lembrete de quando a recursão não é a melhor escolha.</p>
+<p>Conseguiu? Agora uma curiosidade: no Python do Ubuntu da Ana, <code>soma_ate(5000)</code> termina em <code>RecursionError</code>, porque 5000 chamadas não cabem numa pilha de 1000. (No editor do guia, também.) Um laço <code>for</code>, ou a fórmula <code>n * (n + 1) // 2</code>, soma até 5000 ou até um milhão sem problema nenhum: é um bom lembrete de quando a recursão não é a melhor escolha.</p>
 
 <hr>
 
@@ -513,7 +513,7 @@ print(soma_ate(100))
   <li>Ela tem duas partes: o <strong>caso base</strong> (responde direto e para) e o <strong>passo recursivo</strong> (chama a si mesma com um problema menor).</li>
   <li>Cada chamada tem as suas próprias variáveis. As chamadas "descem" até o caso base e as respostas "sobem" de volta.</li>
   <li>Sem caso base, ou com um caso base fora do caminho, a função não para: <code>RecursionError: maximum recursion depth exceeded</code>, com <code>[Previous line repeated … more times]</code> no traceback.</li>
-  <li>O Python limita a pilha de chamadas (1000 no Ubuntu da Ana; pode ser outro número em outro lugar).</li>
+  <li>O Python limita a pilha de chamadas (1000 no Ubuntu da Ana e no editor do guia; pode ser outro em outro lugar).</li>
   <li>Tudo o que se faz com recursão se faz com laço. Use recursão quando o problema é "ele mesmo em tamanho menor" (pastas dentro de pastas); no resto, laço ou função pronta.</li>
 </ul>
 
