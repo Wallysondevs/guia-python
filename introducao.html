@@ -89,8 +89,8 @@ for item in compras:
 
 <p>O interpretador mais usado (o que vem no Linux, o do site oficial e o do editor do guia) se chama <strong>CPython</strong>, porque é escrito na linguagem C. O próprio Python confirma:</p>
 
-<pre class="term">$ python3 -c "import platform; print(platform.python_implementation())"
-CPython</pre>
+<pre class="term">$ python3 -c "import sys; print(sys.implementation.name)"
+cpython                                             « o nome do interpretador, em minúsculas</pre>
 
 <p>(O <code>-c</code> manda o <code>python3</code> rodar o texto que vem logo depois, em vez de um arquivo. É um atalho para testar uma linha só.)</p>
 
