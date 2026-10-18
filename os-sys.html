@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python os e sys — conversando com o sistema e com o próprio Python | Guia Python</title>
+<meta name="description" content="Os módulos os e sys para quem está começando: a pasta atual (os.getcwd, os.chdir), o que tem nela (os.listdir), criar pastas (os.mkdir), as variáveis de ambiente (os.environ), e do lado do Python sys.argv, sys.exit e o código de saída, sys.path, sys.version e sys.version_info, com as saídas e os erros reais do terminal.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">os</span> e <span class="hl">sys</span></h1>
+
+<p class="intro">Um programa não vive sozinho: ele roda dentro de um <strong>sistema operacional</strong> (o Ubuntu da Ana), numa pasta, com um usuário, e foi chamado por alguém, de algum jeito. Dois módulos da biblioteca padrão deixam o seu programa olhar em volta. O <code>os</code> (de <em>operating system</em>, "sistema operacional") conversa com o <strong>sistema</strong>: pastas, arquivos, variáveis de ambiente. O <code>sys</code> (de <em>system</em>, "sistema") conversa com o <strong>próprio Python</strong>: os argumentos que chegaram, a versão, onde ele procura os módulos e como encerrar o programa.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>Com o <code>os</code>: a pasta atual (<code>os.getcwd</code>, <code>os.chdir</code>), o conteúdo de uma pasta (<code>os.listdir</code>), criar pastas (<code>os.mkdir</code>), testar se algo existe (<code>os.path.exists</code>).</li>
+  <li>As <strong>variáveis de ambiente</strong> com <code>os.environ</code>, e por que <code>.get()</code> é mais seguro que <code>[…]</code>.</li>
+  <li>Com o <code>sys</code>: <code>sys.argv</code>, <code>sys.exit</code> e o <strong>código de saída</strong>, <code>sys.path</code>, <code>sys.version</code> e <code>sys.version_info</code>.</li>
+  <li>Os erros reais: <code>FileNotFoundError</code>, <code>FileExistsError</code>, <code>KeyError</code> e o arquivo seu que "esconde" um módulo do Python.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: olhar pela janela e olhar no espelho</h2>
+<p>Quando a Ana chega para trabalhar na padaria, ela faz duas coisas sem pensar. Olha <strong>em volta</strong>: em qual sala está, o que tem nas prateleiras, se tem algum bilhete na porta. E olha <strong>para si mesma</strong>: qual é a tarefa do dia, quem pediu, a que horas pode ir embora.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Módulo</th><th>Olha para…</th><th>Exemplos de pergunta</th></tr>
+<tr><td><code>os</code></td><td>O sistema, em volta do programa (a janela)</td><td>Em qual pasta estou? O que tem nela? Quem é o usuário?</td></tr>
+<tr><td><code>sys</code></td><td>O Python que está rodando o programa (o espelho)</td><td>Com quais argumentos fui chamado? Qual é a minha versão? Como eu termino avisando que deu erro?</td></tr>
+</table>
+</div>
+
+<p>Os dois vêm com o Python; basta o <code>import</code>. Esta aula mostra as partes que um iniciante usa de verdade. Para trabalhar com caminhos de arquivos e pastas, o Python moderno tem um módulo próprio, mais confortável, que ganhou aula só para ele: <a href="pathlib.html">Pastas e Caminhos (pathlib)</a>.</p>
+
+<div class="warning">
+<strong>No terminal e no editor, respostas diferentes</strong>
+<p>As respostas do <code>os</code> e do <code>sys</code> dependem de <strong>onde</strong> o programa roda. As janelas de terminal desta aula mostram o computador da Ana (usuária <code>ana</code>, pasta <code>/home/ana</code>, Ubuntu). O editor do guia roda o Python dentro do navegador, numa pasta e com variáveis próprias; lá, <code>os.getcwd()</code> ou <code>os.environ.get("HOME")</code> podem responder outra coisa. As missões desta aula não dependem disso.</p>
+</div>
+
+<hr>
+
+<h2>1. Em qual pasta estou? <code>os.getcwd()</code> e <code>os.listdir()</code></h2>
+<p>Todo programa roda "dentro" de uma pasta, a <strong>pasta atual</strong> (em inglês, <em>current working directory</em>). É a mesma ideia do <code>pwd</code> do terminal. Quando o programa abre <code>"estoque.csv"</code> sem dizer a pasta, é nela que o Python procura. A Ana tem a pasta da lojinha, com alguns arquivos e uma subpasta <code>fotos</code>, vazia:</p>
+
+<pre class="file" data-file="pasta.py">import os
+
+print("Estou em:", os.getcwd())
+print("Aqui tem:", os.listdir())
+print("Em fotos:", os.listdir("fotos"))
+</pre>
+
+<pre class="term" data-cwd="~/loja">$ python3 pasta.py
+Estou em: /home/ana/loja
+Aqui tem: ['clientes.json', 'vendas.py', 'pasta.py', 'estoque.csv', 'fotos']
+Em fotos: []
+</pre>
+
+<dl class="anatomy">
+  <dt>os.getcwd()</dt><dd>"Pegue a pasta atual" (<em>get current working directory</em>). Devolve o caminho completo, como texto.</dd>
+  <dt>os.listdir()</dt><dd>"Liste a pasta": uma lista com os nomes do que tem dentro, arquivos e pastas misturados. Sem argumento, lista a pasta atual.</dd>
+  <dt>os.listdir("fotos")</dt><dd>Com um nome, lista aquela pasta. <code>[]</code> é a lista vazia: a pasta existe, mas não tem nada.</dd>
+</dl>
+
+<p>Repare na <strong>ordem</strong>: não é alfabética. O <code>os.listdir</code> devolve os nomes na ordem em que o sistema guardou, que pode mudar de um computador para outro. Quando a ordem importa, use <code>sorted(os.listdir())</code> (aula <a href="listas-ordenar.html">Ordenando Listas</a>).</p>
+
+<h3>A pasta atual é de onde você chamou, não de onde está o arquivo</h3>
+<p>Agora a Ana roda o <strong>mesmo</strong> programa, mas a partir da pasta de cima:</p>
+
+<pre class="term" data-cwd="~/loja">$ cd ..
+$ python3 loja/pasta.py
+Estou em: /home/ana
+Aqui tem: ['.bash_history', 'Modelos', '.bash_logout', 'Imagens', '.config', 'Documentos', '.bashrc', 'Público', 'Downloads', 'loja', 'Área de trabalho', 'Vídeos', '.profile', 'Música']
+Traceback (most recent call last):
+  File "/home/ana/loja/pasta.py", line 5, in &lt;module&gt;
+    print("Em fotos:", os.listdir("fotos"))
+                       ~~~~~~~~~~^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'fotos'
+</pre>
+
+<p>A pasta atual agora é <code>/home/ana</code>, porque foi lá que a Ana estava ao chamar o programa. Por isso o <code>listdir()</code> mostrou a pasta pessoal dela (com os arquivos escondidos, que começam com ponto), e o <code>"fotos"</code> não foi encontrado: não existe <code>/home/ana/fotos</code>. Guarde esta regra, que pega muita gente: <strong>nomes sem pasta são procurados a partir da pasta atual</strong>, e a pasta atual depende de onde o programa foi chamado.</p>
+
+<div class="trypy" data-goal="out:CSV: estoque.csv, vendas.csv;;src:listdir;;semerro">
+<p class="try-task"><strong>Missão:</strong> a pasta deste programa tem quatro arquivos (veja as abas). Mostre só os <code>.csv</code>, em ordem alfabética, no formato <code>CSV: estoque.csv, vendas.csv</code>. Dica: <code>nome.endswith(".csv")</code> (aula <a href="strings-metodos.html">Métodos de Texto</a>).</p>
+<pre class="script" data-file="main.py">import os
+
+nomes = sorted(os.listdir())
+print(nomes)
+</pre>
+<pre class="script" data-file="vendas.csv">produto,quantidade
+bolo de cenoura,3
+</pre>
+<pre class="script" data-file="estoque.csv">produto,estoque
+farinha,12
+</pre>
+<pre class="script" data-file="avisos.txt">Fechado no feriado.
+</pre>
+<pre class="solucao" data-file="main.py">import os
+
+nomes = sorted(os.listdir())
+planilhas = []
+for nome in nomes:
+    if nome.endswith(".csv"):
+        planilhas.append(nome)
+print("CSV:", ", ".join(planilhas))
+</pre>
+</div>
+
+<hr>
+
+<h2>2. Criar pastas e mudar de pasta: <code>os.mkdir</code>, <code>os.path.exists</code>, <code>os.chdir</code></h2>
+
+<pre class="file" data-file="mexe.py">import os
+
+print(os.path.exists("relatorios"))
+os.mkdir("relatorios")
+print(os.path.exists("relatorios"))
+os.chdir("relatorios")
+print("Agora em:", os.getcwd())
+print(os.name, repr(os.sep))
+</pre>
+
+<pre class="term" data-cwd="~/loja">$ python3 mexe.py
+False
+True
+Agora em: /home/ana/loja/relatorios
+posix '/'
+$ pwd
+/home/ana/loja
+</pre>
+
+<dl class="anatomy">
+  <dt>os.path.exists("relatorios")</dt><dd>"O caminho existe?": <code>True</code> ou <code>False</code>. Antes, não existia; depois do <code>mkdir</code>, sim.</dd>
+  <dt>os.mkdir("relatorios")</dt><dd>Cria a pasta (de <em>make directory</em>, como o <code>mkdir</code> do terminal).</dd>
+  <dt>os.chdir("relatorios")</dt><dd>Muda a pasta atual do <strong>programa</strong> (<em>change directory</em>, como o <code>cd</code>).</dd>
+  <dt>os.name</dt><dd>O "tipo" de sistema: <code>'posix'</code> no Linux e no macOS, <code>'nt'</code> no Windows.</dd>
+  <dt>os.sep</dt><dd>O separador de pastas: <code>'/'</code> aqui; <code>'\\'</code> no Windows.</dd>
+</dl>
+
+<p>Repare no <code>pwd</code> depois: o terminal continuou em <code>~/loja</code>. O <code>os.chdir</code> mudou a pasta só <strong>do programa</strong>, enquanto ele rodava; um programa não consegue mudar a pasta do terminal que o chamou. (É o mesmo motivo de o <code>activate</code> do ambiente virtual precisar do <code>source</code>, na aula <a href="venv.html">venv</a>.)</p>
+
+<p>E se rodar o mesmo programa de novo? A pasta já existe:</p>
+
+<pre class="term" data-cwd="~/loja">$ python3 mexe.py
+True
+Traceback (most recent call last):
+  File "/home/ana/loja/mexe.py", line 4, in &lt;module&gt;
+    os.mkdir("relatorios")
+    ~~~~~~~~^^^^^^^^^^^^^^
+FileExistsError: [Errno 17] File exists: 'relatorios'
+</pre>
+
+<p><code>FileExistsError</code>: "o arquivo já existe" (para o sistema, pasta também é um tipo de arquivo). O <code>os.mkdir</code> não cria por cima. Para "crie se ainda não existir", use <code>os.makedirs("relatorios", exist_ok=True)</code>, que também cria as pastas do meio (<code>"relatorios/2026/outubro"</code>) de uma vez.</p>
+
+<hr>
+
+<h2>3. Variáveis de ambiente: <code>os.environ</code></h2>
+<p>Todo programa recebe do sistema um conjunto de <strong>variáveis de ambiente</strong>: pares nome → valor que dizem coisas sobre o lugar onde ele está rodando. Quem é o usuário, qual é a pasta pessoal, qual é o idioma. No Python, elas ficam em <code>os.environ</code>, que funciona como um dicionário (aula <a href="dicionarios.html">Dicionários</a>):</p>
+
+<pre class="file" data-file="ambiente.py">import os
+
+print("HOME:", os.environ["HOME"])
+print("USER:", os.environ["USER"])
+print("LANG:", os.environ["LANG"])
+print("EDITOR:", os.environ.get("EDITOR"))
+print("LOJA_MODO:", os.environ.get("LOJA_MODO", "normal"))
+</pre>
+
+<pre class="term" data-cwd="~/loja">$ python3 ambiente.py
+HOME: /home/ana
+USER: ana
+LANG: pt_BR.UTF-8
+EDITOR: nano
+LOJA_MODO: normal
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Variável</th><th>O que guarda</th></tr>
+<tr><td><code>HOME</code></td><td>A pasta pessoal do usuário</td></tr>
+<tr><td><code>USER</code></td><td>O nome do usuário</td></tr>
+<tr><td><code>LANG</code></td><td>Idioma e codificação: português do Brasil, UTF-8</td></tr>
+<tr><td><code>EDITOR</code></td><td>O editor de texto preferido (o <code>nano</code>, aqui)</td></tr>
+<tr><td><code>PATH</code></td><td>As pastas onde o terminal procura os programas (a que o <code>activate</code> muda)</td></tr>
+</table>
+</div>
+
+<dl class="anatomy">
+  <dt>os.environ["HOME"]</dt><dd>Pega o valor pelo nome, com colchetes. Se a variável não existir, dá erro.</dd>
+  <dt>os.environ.get("EDITOR")</dt><dd>O <code>.get</code> dos dicionários: devolve o valor, ou <code>None</code> se não existir. Sem erro.</dd>
+  <dt>os.environ.get("LOJA_MODO", "normal")</dt><dd>Com um segundo argumento: o valor padrão, quando a variável não existe. A <code>LOJA_MODO</code> não existe, então veio <code>normal</code>.</dd>
+</dl>
+
+<h3>Mandando uma variável para o programa</h3>
+<p>No terminal, dá para criar uma variável só para um comando, escrevendo <code>NOME=valor</code> antes dele:</p>
+
+<pre class="term" data-cwd="~/loja">$ LOJA_MODO=teste python3 ambiente.py
+HOME: /home/ana
+USER: ana
+LANG: pt_BR.UTF-8
+EDITOR: nano
+LOJA_MODO: teste
+</pre>
+
+<p>É um jeito muito usado de configurar um programa sem mudar o código: modo de teste, endereço de um servidor, uma senha que não pode ficar escrita no arquivo. O programa lê com <code>os.environ.get</code>, e quem chama decide o valor.</p>
+
+<div class="trypy" data-goal="out:Modo: normal;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa quebra com <code>KeyError</code>, porque a variável <code>LOJA_MODO</code> não existe aqui. Troque os colchetes por <code>.get</code>, com <code>"normal"</code> como valor padrão, para mostrar <code>Modo: normal</code>.</p>
+<pre class="script" data-file="main.py">import os
+
+modo = os.environ["LOJA_MODO"]
+print("Modo:", modo)
+</pre>
+<pre class="solucao" data-file="main.py">import os
+
+modo = os.environ.get("LOJA_MODO", "normal")
+print("Modo:", modo)
+</pre>
+</div>
+
+<hr>
+
+<h2>4. <code>sys.argv</code>: com o que o programa foi chamado</h2>
+<p>Você já conheceu o <code>sys.argv</code> na aula <a href="argparse.html">argparse</a>: é a lista com o nome do programa e os argumentos que vieram depois dele, todos como texto.</p>
+
+<pre class="term">$ python3 -c "import sys; print(sys.argv)" a b
+['-c', 'a', 'b']
+</pre>
+
+<p>Com <code>python3 -c</code>, não há arquivo, e o item 0 vira <code>'-c'</code>; com um arquivo, é o nome dele (<code>'ola.py'</code>). Para programas com mais de um ou dois argumentos, prefira o <code>argparse</code>.</p>
+
+<hr>
+
+<h2>5. <code>sys.exit</code>: terminar o programa (e avisar como foi)</h2>
+<p>Todo programa, ao terminar, devolve ao sistema um número: o <strong>código de saída</strong>. <strong>0</strong> quer dizer "deu tudo certo"; qualquer outro número quer dizer "deu algum problema". No terminal, <code>echo $?</code> mostra o código do último comando. Quem decide o número é o <code>sys.exit</code>:</p>
+
+<pre class="file" data-file="saida.py">import sys
+
+if len(sys.argv) &lt; 2:
+    print("Uso: python3 saida.py PRODUTO", file=sys.stderr)
+    sys.exit(1)
+
+print("Procurando", sys.argv[1])
+sys.exit(0)
+</pre>
+
+<pre class="term" data-cwd="~/loja">$ python3 saida.py bolo
+Procurando bolo
+$ echo $?
+0
+$ python3 saida.py
+Uso: python3 saida.py PRODUTO
+$ echo $?
+1
+</pre>
+
+<dl class="anatomy">
+  <dt>sys.exit(1)</dt><dd>Termina o programa <strong>ali mesmo</strong>, com o código 1. As linhas de baixo não rodam.</dd>
+  <dt>sys.exit(0)</dt><dd>Termina com "deu certo". No fim do arquivo é opcional: um programa que chega ao fim sem erro já sai com 0.</dd>
+  <dt>file=sys.stderr</dt><dd>Manda o <code>print</code> para a <strong>saída de erros</strong> (<em>standard error</em>), um segundo canal de saída, separado do normal (<code>sys.stdout</code>). Na tela, os dois aparecem juntos.</dd>
+</dl>
+
+<p>Para que dois canais? Para quem chama poder separar. Com <code>2&gt;/dev/null</code>, o terminal joga fora a saída de erros, e a mensagem de uso some; mas o código 1 continua lá, avisando que algo deu errado:</p>
+
+<pre class="term" data-cwd="~/loja">$ python3 saida.py 2&gt;/dev/null
+$ echo $?
+1
+</pre>
+
+<p>Esse número é o que scripts e outros programas olham para saber se o seu programa funcionou (a aula <a href="subprocess.html">subprocess</a> mostra o Python fazendo isso).</p>
+
+<h3>Formas de chamar o <code>sys.exit</code></h3>
+<p>Com um <strong>texto</strong> em vez de número, o Python mostra o texto na saída de erros e sai com o código 1. É o jeito mais curto de "parar com uma mensagem":</p>
+
+<pre class="file" data-file="saida2.py">import sys
+
+sys.exit("Erro: o arquivo de estoque não foi encontrado.")
+</pre>
+
+<pre class="term" data-cwd="~/loja">$ python3 saida2.py
+Erro: o arquivo de estoque não foi encontrado.
+$ echo $?
+1
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Chamada</th><th>Código de saída</th><th>Quando usar</th></tr>
+<tr><td>(chegar ao fim do programa)</td><td>0</td><td>O normal: deu certo</td></tr>
+<tr><td><code>sys.exit()</code> ou <code>sys.exit(0)</code></td><td>0</td><td>Terminar antes do fim, com sucesso</td></tr>
+<tr><td><code>sys.exit(1)</code>, <code>sys.exit(2)</code>…</td><td>O número dado</td><td>Terminar com erro; cada número pode indicar um tipo de problema (o <code>argparse</code> usa 2 para "chamou errado")</td></tr>
+<tr><td><code>sys.exit("mensagem")</code></td><td>1</td><td>Terminar com erro e uma mensagem para a pessoa</td></tr>
+<tr><td>(uma exceção não tratada)</td><td>1</td><td>O Python mostra o traceback e sai com 1</td></tr>
+</table>
+</div>
+
+<h3>Por dentro: o <code>SystemExit</code></h3>
+<p>O <code>sys.exit</code> não "desliga" o Python na hora: ele <strong>lança uma exceção</strong>, a <code>SystemExit</code>. Se ninguém a pegar, o programa termina. Por isso um <code>try</code> consegue segurá-la:</p>
+
+<pre class="file" data-file="saida3.py">import sys
+
+try:
+    sys.exit(3)
+except SystemExit as e:
+    print("Pegou o SystemExit, código", e.code)
+print("O programa continuou.")
+</pre>
+
+<pre class="term" data-cwd="~/loja">$ python3 saida3.py
+Pegou o SystemExit, código 3
+O programa continuou.
+$ echo $?
+0
+</pre>
+
+<p>Na prática, você quase nunca faz isso de propósito. O cuidado é o contrário: um <code>except:</code> sem nome, que pega <strong>tudo</strong>, também engole o <code>sys.exit</code>. Escreva sempre o nome da exceção no <code>except</code> (aula <a href="try-except.html">try e except</a>).</p>
+
+<div class="trypy" data-goal="exit:2;;out:Uso: python3 main.py PRODUTO">
+<p class="try-task"><strong>Missão:</strong> nesta caixa o programa é chamado sem argumentos e quebra com <code>IndexError</code> (código 1). Antes de usar o <code>sys.argv[1]</code>, confira: se não veio argumento, mostre <code>Uso: python3 main.py PRODUTO</code> e termine com o código <strong>2</strong>.</p>
+<pre class="script" data-file="main.py">import sys
+
+produto = sys.argv[1]
+print("Procurando", produto)
+</pre>
+<pre class="solucao" data-file="main.py">import sys
+
+if len(sys.argv) &lt; 2:
+    print("Uso: python3 main.py PRODUTO", file=sys.stderr)
+    sys.exit(2)
+
+produto = sys.argv[1]
+print("Procurando", produto)
+</pre>
+</div>
+
+<hr>
+
+<h2>6. <code>sys.path</code>: onde o Python procura os módulos</h2>
+<p>Quando você escreve <code>import random</code>, como o Python sabe onde está o <code>random</code>? Ele procura numa lista de pastas, em ordem, e usa o <strong>primeiro</strong> que encontrar. A lista é o <code>sys.path</code>:</p>
+
+<pre class="file" data-file="caminhos.py">import sys
+
+for pasta in sys.path:
+    print(repr(pasta))
+</pre>
+
+<pre class="term" data-cwd="~/loja">$ python3 caminhos.py
+'/home/ana/loja'
+'/usr/lib/python314.zip'
+'/usr/lib/python3.14'
+'/usr/lib/python3.14/lib-dynload'
+'/usr/local/lib/python3.14/dist-packages'
+'/usr/lib/python3/dist-packages'
+</pre>
+
+<dl class="anatomy">
+  <dt>'/home/ana/loja'</dt><dd>A <strong>primeira</strong> pasta é a do programa. É por isso que um módulo seu, no mesmo lugar, é encontrado (aula <a href="modulos-proprios.html">Criando seu Módulo</a>).</dd>
+  <dt>'/usr/lib/python3.14'</dt><dd>A biblioteca padrão: <code>random.py</code>, <code>json</code>, <code>os.py</code>…</dd>
+  <dt>'…/python314.zip', 'lib-dynload'</dt><dd>Outros lugares da biblioteca padrão (o zip nem existe; o Python só procura nele se existir).</dd>
+  <dt>'…/dist-packages'</dt><dd>Os pacotes instalados pelo Ubuntu (<code>apt</code>). Num ambiente virtual, aparece aqui o <code>site-packages</code> da <code>.venv</code> (aula <a href="venv.html">venv</a>).</dd>
+</dl>
+
+<p>O <code>repr()</code> mostra cada texto com as aspas, para que um item vazio (<code>''</code>) também apareça. A pasta do programa vir primeiro é cômodo, mas tem uma armadilha, que está em <a href="#errado">Quando dá errado</a>.</p>
+
+<hr>
+
+<h2>7. <code>sys.version</code> e <code>sys.version_info</code>: qual Python está rodando</h2>
+
+<pre class="file" data-file="versao.py">import sys
+
+print(sys.version)
+print(sys.version_info)
+print(sys.version_info.major, sys.version_info.minor)
+print(sys.platform)
+print(sys.executable)
+if sys.version_info &lt; (3, 12):
+    print("Este programa precisa do Python 3.12 ou mais novo.")
+else:
+    print("Versão boa.")
+</pre>
+
+<pre class="term" data-cwd="~/loja">$ python3 versao.py
+3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]
+sys.version_info(major=3, minor=14, micro=4, releaselevel='final', serial=0)
+3 14
+linux
+/usr/bin/python3
+Versão boa.
+</pre>
+
+<dl class="anatomy">
+  <dt>sys.version</dt><dd>Um texto para <strong>pessoas</strong> lerem: a versão (3.14.4), a data em que esse Python foi compilado e o compilador usado (GCC).</dd>
+  <dt>sys.version_info</dt><dd>A mesma versão, em partes, para <strong>programas</strong> usarem: <code>major</code> (3), <code>minor</code> (14), <code>micro</code> (4) e o estágio (<code>'final'</code> é a versão lançada, não um teste).</dd>
+  <dt>sys.version_info &lt; (3, 12)</dt><dd>Compara com uma tupla (aula <a href="tuplas.html">Tuplas</a>), parte por parte: 3 com 3, depois 14 com 12. É o jeito certo de conferir a versão.</dd>
+  <dt>sys.platform</dt><dd>O sistema: <code>'linux'</code>, <code>'win32'</code> no Windows, <code>'darwin'</code> no macOS.</dd>
+  <dt>sys.executable</dt><dd>O caminho do Python que está rodando (você usou na aula <a href="venv.html">venv</a>).</dd>
+</dl>
+
+<div class="tip">
+<strong>Não compare versões como texto</strong>
+<p><code>sys.version &gt;= "3.9"</code> parece funcionar, mas compara letra por letra: <code>"3.14"</code> é "menor" que <code>"3.9"</code>, porque o caractere <code>1</code> vem antes do <code>9</code>. Compare sempre o <code>sys.version_info</code> com uma tupla de números.</p>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Tarefa</th><th>Com <code>os</code></th><th>Outra forma</th><th>Qual usar</th></tr>
+<tr><td>Pasta atual</td><td><code>os.getcwd()</code></td><td><code>Path.cwd()</code> (pathlib)</td><td>As duas servem; com pathlib, o resultado já vem pronto para montar caminhos</td></tr>
+<tr><td>Listar uma pasta</td><td><code>os.listdir("fotos")</code></td><td><code>Path("fotos").iterdir()</code></td><td><code>os.listdir</code> para só os nomes; pathlib quando você vai abrir os arquivos</td></tr>
+<tr><td>Existe?</td><td><code>os.path.exists("x")</code></td><td><code>Path("x").exists()</code></td><td>Em código novo, pathlib</td></tr>
+<tr><td>Criar pasta</td><td><code>os.makedirs("a/b", exist_ok=True)</code></td><td><code>Path("a/b").mkdir(parents=True, exist_ok=True)</code></td><td>Tanto faz; evite o <code>os.mkdir</code> sozinho quando a pasta pode já existir</td></tr>
+<tr><td>Variável de ambiente</td><td><code>os.environ.get("X", "padrão")</code></td><td><code>os.environ["X"]</code></td><td><code>.get</code>, a não ser que o programa não possa rodar sem ela</td></tr>
+<tr><td>Parar com erro</td><td>—</td><td><code>sys.exit("mensagem")</code> ou <code>raise</code></td><td><code>sys.exit</code> para encerrar o programa; <code>raise</code> dentro de funções (aula <a href="raise.html">raise</a>)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong><code>FileNotFoundError</code>: a pasta não existe (ou o programa está em outra pasta)</strong>
+<pre class="file" data-file="listar.py">import os
+
+print(os.listdir("fotografias"))
+</pre>
+<pre class="term" data-cwd="~/loja">$ python3 listar.py
+Traceback (most recent call last):
+  File "/home/ana/loja/listar.py", line 3, in &lt;module&gt;
+    print(os.listdir("fotografias"))
+          ~~~~~~~~~~^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'fotografias'
+</pre>
+<dl class="anatomy">
+  <dt>File "/home/ana/loja/listar.py", line 3</dt><dd>O erro foi na linha 3.</dd>
+  <dt>~~~~~~~~~~^^^^^^^^^^^^^^^</dt><dd>As marcas apontam a chamada <code>os.listdir("fotografias")</code>.</dd>
+  <dt>FileNotFoundError</dt><dd>"Arquivo não encontrado".</dd>
+  <dt>[Errno 2] No such file or directory: 'fotografias'</dt><dd>"Erro número 2 do sistema: não existe arquivo ou pasta com esse nome". O <code>Errno</code> é o código que o próprio Linux deu.</dd>
+</dl>
+<p>A pasta se chama <code>fotos</code>. E lembre do caso da seção 1: o nome pode estar certo e o programa ter sido chamado de <strong>outra pasta</strong>. <strong>Como consertar:</strong> confira o nome e confira o <code>os.getcwd()</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>FileExistsError</code>: criar uma pasta que já existe</strong>
+<p>Você viu na seção 2: <code>os.mkdir("relatorios")</code> na segunda vez dá <code>FileExistsError: [Errno 17] File exists: 'relatorios'</code>. <strong>Como consertar:</strong> <code>os.makedirs("relatorios", exist_ok=True)</code>, ou teste antes com <code>os.path.exists</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>KeyError</code>: a variável de ambiente não existe</strong>
+<pre class="file" data-file="chave.py">import os
+
+print(os.environ["LOJA_SENHA"])
+</pre>
+<pre class="term" data-cwd="~/loja">$ python3 chave.py
+Traceback (most recent call last):
+  File "/home/ana/loja/chave.py", line 3, in &lt;module&gt;
+    print(os.environ["LOJA_SENHA"])
+          ~~~~~~~~~~^^^^^^^^^^^^^^
+  File "&lt;frozen os&gt;", line 709, in __getitem__
+KeyError: 'LOJA_SENHA'
+</pre>
+<p>O traceback tem duas partes: a linha 3 do seu programa e uma linha <code>File "&lt;frozen os&gt;"</code>, que é o código do próprio módulo <code>os</code> ("frozen", "congelado", porque ele vem embutido no Python). O erro aconteceu lá dentro, mas a causa está na sua linha. <code>KeyError: 'LOJA_SENHA'</code> é o mesmo erro de um dicionário sem aquela chave. <strong>Como consertar:</strong> <code>os.environ.get("LOJA_SENHA")</code>, ou rode com a variável: <code>LOJA_SENHA=... python3 chave.py</code>. Se o programa não tem como funcionar sem ela, uma mensagem clara é melhor que o traceback: <code>sys.exit("Defina a variável LOJA_SENHA.")</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Um arquivo seu com o nome de um módulo do Python</strong>
+<p>A Ana fez um teste numa pasta <code>sorteio</code> e chamou o arquivo de <code>random.py</code>. Depois escreveu o programa do sorteio:</p>
+<pre class="file" data-file="sortear.py">import random
+
+print(random.randint(1, 10))
+</pre>
+<pre class="term" data-cwd="~/sorteio">$ python3 sortear.py
+Este é o random.py da Ana, não o do Python!
+Traceback (most recent call last):
+  File "/home/ana/sorteio/sortear.py", line 3, in &lt;module&gt;
+    print(random.randint(1, 10))
+          ^^^^^^^^^^^^^^
+AttributeError: module 'random' has no attribute 'randint' (consider renaming '/home/ana/sorteio/random.py' since it has the same name as the standard library module named 'random' and prevents importing that standard library module)
+</pre>
+<p>Lembra da ordem do <code>sys.path</code>? A pasta do programa vem <strong>primeiro</strong>. O <code>import random</code> achou o <code>random.py</code> da Ana antes do <code>random</code> do Python, rodou o <code>print</code> dele e, claro, ali não existe <code>randint</code>. <code>AttributeError: module 'random' has no attribute 'randint'</code> é "o módulo <code>random</code> não tem o atributo <code>randint</code>". E o Python ainda dá a dica entre parênteses: "considere renomear <code>/home/ana/sorteio/random.py</code>, porque ele tem o mesmo nome do módulo <code>random</code> da biblioteca padrão e impede que ele seja importado". <strong>Como consertar:</strong> renomeie o arquivo (<code>meu_sorteio.py</code>). Nunca dê aos seus arquivos nomes de módulos do Python: <code>random.py</code>, <code>math.py</code>, <code>os.py</code>, <code>json.py</code>, <code>csv.py</code>…</p>
+<div class="note">
+<strong>A dica é nova</strong>
+<p>A frase "consider renaming…" apareceu no Python 3.13. Num Python mais antigo, o erro vem só como <code>AttributeError: module 'random' has no attribute 'randint'</code>, e você precisa lembrar sozinho dessa armadilha.</p>
+</div>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Código</th><th>O que faz</th></tr>
+<tr><td><code>os.getcwd()</code></td><td>A pasta atual, como texto</td></tr>
+<tr><td><code>os.chdir("pasta")</code></td><td>Muda a pasta atual do programa</td></tr>
+<tr><td><code>os.listdir()</code> / <code>os.listdir("pasta")</code></td><td>Lista os nomes (em ordem qualquer; use <code>sorted</code>)</td></tr>
+<tr><td><code>os.mkdir("pasta")</code></td><td>Cria uma pasta (erro se já existir)</td></tr>
+<tr><td><code>os.makedirs("a/b", exist_ok=True)</code></td><td>Cria as pastas, se ainda não existirem</td></tr>
+<tr><td><code>os.path.exists("x")</code></td><td><code>True</code> se o arquivo ou a pasta existe</td></tr>
+<tr><td><code>os.environ["NOME"]</code> / <code>os.environ.get("NOME", padrão)</code></td><td>Uma variável de ambiente (com erro / sem erro)</td></tr>
+<tr><td><code>os.name</code>, <code>os.sep</code></td><td><code>'posix'</code> ou <code>'nt'</code>; <code>'/'</code> ou <code>'\\'</code></td></tr>
+<tr><td><code>sys.argv</code></td><td>O programa e os argumentos, como lista de textos</td></tr>
+<tr><td><code>sys.exit(n)</code> / <code>sys.exit("msg")</code></td><td>Termina com o código n / com a mensagem e o código 1</td></tr>
+<tr><td><code>print(..., file=sys.stderr)</code></td><td>Escreve na saída de erros</td></tr>
+<tr><td><code>sys.path</code></td><td>As pastas onde o <code>import</code> procura, em ordem</td></tr>
+<tr><td><code>sys.version</code> / <code>sys.version_info</code></td><td>A versão do Python, como texto / em partes</td></tr>
+<tr><td><code>sys.platform</code>, <code>sys.executable</code></td><td>O sistema; o caminho do Python em uso</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A pasta atual</h3>
+<p>Complete para mostrar a pasta em que o programa está rodando:</p>
+<div class="ex-code">import os
+print(os.<input data-answer="getcwd" aria-label="função">())</div>
+</div>
+
+<div class="exercise">
+<h3>2. Sem erro se não existir</h3>
+<p>Complete para ler a variável <code>LOJA_MODO</code>, com <code>"normal"</code> se ela não existir:</p>
+<div class="ex-code">modo = os.environ.<input data-answer="get" aria-label="método">("LOJA_MODO", "normal")</div>
+</div>
+
+<div class="exercise">
+<h3>3. Terminar com erro</h3>
+<p>Que número o <code>sys.exit</code> deve receber para dizer "deu tudo certo"?</p>
+<div class="ex-code">sys.exit(<input data-answer="0" aria-label="código">)</div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. A Ana roda <code>python3 loja/pasta.py</code> estando em <code>/home/ana</code>. O que <code>os.getcwd()</code> mostra?</p>
+<label><input type="radio" name="q4"> <code>/home/ana/loja</code>, a pasta do arquivo</label>
+<label><input type="radio" name="q4"> <code>/</code></label>
+<label><input type="radio" name="q4"> <code>/home/ana</code>, a pasta de onde o programa foi chamado</label>
+<label><input type="radio" name="q4"> <code>loja/pasta.py</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. Por que um arquivo chamado <code>random.py</code> na pasta do programa atrapalha o <code>import random</code>?</p>
+<label><input type="radio" name="q5"> Porque o Python proíbe esse nome</label>
+<label><input type="radio" name="q5"> Porque a pasta do programa vem primeiro no <code>sys.path</code>, e o Python usa o primeiro <code>random</code> que encontra</label>
+<label><input type="radio" name="q5"> Porque o <code>random</code> do Python foi apagado</label>
+<label><input type="radio" name="q5"> Não atrapalha</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. Qual é o jeito certo de conferir se o Python é o 3.12 ou mais novo?</p>
+<label><input type="radio" name="q6"> <code>sys.version &gt;= "3.12"</code></label>
+<label><input type="radio" name="q6"> <code>sys.platform == "3.12"</code></label>
+<label><input type="radio" name="q6"> <code>os.name &gt;= 3.12</code></label>
+<label><input type="radio" name="q6"> <code>sys.version_info &gt;= (3, 12)</code></label>
+</div>
+
+<h3>Missão final: o programa confere antes de começar</h3>
+
+<div class="trypy" data-goal="out:Faltou a pasta: fotos;;exit:1">
+<p class="try-task"><strong>Missão:</strong> antes de trabalhar, o programa da lojinha confere se as pastas de que precisa existem. A pasta <code>fotos</code> não existe aqui. Para cada nome da lista, se <code>os.path.exists(nome)</code> for falso, termine com <code>sys.exit(f"Faltou a pasta: {nome}")</code>. Se todas existirem, mostre <code>Tudo pronto.</code>.</p>
+<pre class="script" data-file="main.py">import os
+import sys
+
+necessarias = ["fotos", "relatorios"]
+
+for nome in necessarias:
+    print("Conferindo", nome)
+
+print("Tudo pronto.")
+</pre>
+<pre class="solucao" data-file="main.py">import os
+import sys
+
+necessarias = ["fotos", "relatorios"]
+
+for nome in necessarias:
+    print("Conferindo", nome)
+    if not os.path.exists(nome):
+        sys.exit(f"Faltou a pasta: {nome}")
+
+print("Tudo pronto.")
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>os</code> conversa com o sistema; <code>sys</code>, com o próprio Python.</li>
+  <li><code>os.getcwd()</code> é a pasta atual, que depende de <strong>onde o programa foi chamado</strong>; nomes sem pasta são procurados a partir dela.</li>
+  <li><code>os.listdir</code> lista (em ordem qualquer), <code>os.mkdir</code>/<code>os.makedirs</code> criam, <code>os.path.exists</code> testa, <code>os.chdir</code> muda a pasta só do programa.</li>
+  <li><code>os.environ</code> são as variáveis de ambiente; prefira <code>os.environ.get("NOME", padrão)</code>.</li>
+  <li><code>sys.exit(n)</code> termina com o código n (0 = deu certo); <code>sys.exit("msg")</code> mostra a mensagem e sai com 1. Por dentro, é a exceção <code>SystemExit</code>.</li>
+  <li><code>sys.path</code> é onde o <code>import</code> procura, começando pela pasta do programa: não dê aos seus arquivos nomes de módulos do Python.</li>
+  <li><code>sys.version_info &gt;= (3, 12)</code> confere a versão do jeito certo.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
