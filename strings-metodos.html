@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Métodos de Texto — upper, strip, replace, split… | Guia Python</title>
+<meta name="description" content="Os métodos de string mais usados em Python, para quem está começando: upper, lower, title e capitalize (com ç e ã funcionando), strip para limpar espaços, replace para trocar, split para quebrar, find e index para procurar, startswith, endswith, count e isdigit, por que o método não muda o texto e os erros reais: AttributeError, ValueError, TypeError.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Métodos</span> de Texto</h1>
+
+<p class="intro">Um texto no Python vem com uma caixa de ferramentas: deixar tudo em maiúsculas, tirar os espaços que o usuário digitou sem querer, trocar uma palavra por outra, quebrar uma frase em palavras, procurar onde está o <code>@</code> de um email. Essas ferramentas se chamam <strong>métodos</strong>, e você as usa com um ponto depois do texto: <code>nome.upper()</code>. Esta aula apresenta os mais usados, um de cada vez, com acentos e cedilha (que funcionam muito bem), e o erro que todo mundo comete: achar que o método muda o texto.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é um método e como se escreve: <code>texto.metodo()</code>.</li>
+  <li>A mudar maiúsculas e minúsculas: <code>upper()</code>, <code>lower()</code>, <code>title()</code>, <code>capitalize()</code>.</li>
+  <li>A limpar espaços das pontas com <code>strip()</code>, e a trocar pedaços com <code>replace()</code>.</li>
+  <li>A quebrar um texto em pedaços com <code>split()</code>.</li>
+  <li>A procurar com <code>find()</code>, <code>index()</code>, <code>startswith()</code>, <code>endswith()</code> e <code>count()</code>, e a testar com <code>isdigit()</code> e <code>isalpha()</code>.</li>
+  <li>Por que <code>nome.upper()</code> sozinho não muda <code>nome</code>, e os erros reais: <code>AttributeError</code>, <code>ValueError</code>, <code>TypeError</code>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: o canivete do texto</h2>
+<p>Pense num canivete suíço: um objeto só, com várias ferramentas dobradas dentro (a faca, a tesoura, o abridor). Você não precisa ir buscar a tesoura em outro lugar; ela já vem com o canivete. Um texto do Python é assim: cada texto já traz as suas ferramentas, e você as "abre" com um <strong>ponto</strong>.</p>
+
+<dl class="anatomy">
+  <dt>nome</dt><dd>O texto (ou a variável que guarda o texto) em que a ferramenta vai trabalhar.</dd>
+  <dt>.</dt><dd>O ponto quer dizer "a ferramenta deste texto…".</dd>
+  <dt>upper</dt><dd>O nome do método (em inglês, "de cima": as letras maiúsculas, que nas gráficas antigas ficavam na caixa de cima).</dd>
+  <dt>( )</dt><dd>Os parênteses <strong>usam</strong> a ferramenta, como numa função. Alguns métodos pedem informações dentro deles, como <code>replace("pão", "bolo")</code>.</dd>
+</dl>
+
+<p>Um <strong>método</strong> é uma função que pertence a um tipo de valor. <code>len(nome)</code> é uma função comum, que serve para muitos tipos; <code>nome.upper()</code> é um método, que só os textos têm.</p>
+
+<hr>
+
+<h2>1. Maiúsculas e minúsculas</h2>
+
+<pre class="file" data-file="maiusculas2.py">cidade = "São Luís do Maranhão"
+
+print(cidade.upper())
+print(cidade.lower())
+print("joão da silva".title())
+print("bom dia, ana".capitalize())
+print("AÇÃO".lower())
+print(cidade)
+</pre>
+
+<pre class="term">$ python3 maiusculas2.py
+SÃO LUÍS DO MARANHÃO
+são luís do maranhão
+João Da Silva
+Bom dia, ana
+ação
+São Luís do Maranhão
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Método</th><th>O que faz</th><th>Exemplo → resultado</th></tr>
+<tr><td><code>upper()</code></td><td>Tudo em MAIÚSCULAS</td><td><code>"São Luís".upper()</code> → <code>'SÃO LUÍS'</code></td></tr>
+<tr><td><code>lower()</code></td><td>Tudo em minúsculas</td><td><code>"AÇÃO".lower()</code> → <code>'ação'</code></td></tr>
+<tr><td><code>title()</code></td><td>A Primeira Letra De Cada Palavra</td><td><code>"joão da silva".title()</code> → <code>'João Da Silva'</code></td></tr>
+<tr><td><code>capitalize()</code></td><td>Só a primeira letra do texto todo</td><td><code>"bom dia, ana".capitalize()</code> → <code>'Bom dia, ana'</code></td></tr>
+</table>
+</div>
+
+<p>Repare em três coisas:</p>
+<ul>
+  <li><strong>Acentos e cedilha funcionam</strong>: <code>ã</code> vira <code>Ã</code>, <code>í</code> vira <code>Í</code>, <code>Ç</code> vira <code>ç</code>. Os textos do Python são Unicode, o padrão que tem as letras de todas as línguas.</li>
+  <li>O <code>title()</code> não conhece o português: ele escreveu "Da" com maiúscula, e num nome brasileiro o costume é "João da Silva". Para nomes, use com cuidado.</li>
+  <li>A última linha mostra <code>cidade</code> <strong>do jeito que era</strong>. Nenhum método mudou o texto. É o assunto da próxima seção.</li>
+</ul>
+
+<hr>
+
+<h2>2. O método não muda o texto: ele devolve um novo</h2>
+<p>Você aprendeu em <a href="strings.html">Strings</a> que textos são <strong>imutáveis</strong>. Então o <code>upper()</code> não tem como mudar o texto: ele <strong>fabrica um texto novo</strong>, em maiúsculas, e o devolve. Se você não guardar esse texto novo, ele se perde:</p>
+
+<pre class="file" data-file="metodo-novo.py">nome = "ana"
+nome.upper()
+print(nome)
+
+nome = nome.upper()
+print(nome)
+</pre>
+
+<pre class="term">$ python3 metodo-novo.py
+ana
+ANA
+</pre>
+
+<ol class="passo">
+  <li><code>nome.upper()</code> na linha 2 fabricou <code>"ANA"</code>… e ninguém guardou. O Python jogou fora.</li>
+  <li>Por isso, o primeiro <code>print</code> mostrou <code>ana</code>, ainda em minúsculas.</li>
+  <li><code>nome = nome.upper()</code> fabrica <code>"ANA"</code> e <strong>guarda</strong> na variável <code>nome</code>. Agora sim.</li>
+</ol>
+
+<div class="warning">
+<strong>Guarde o resultado</strong>
+<p>Todo método de texto que "muda" alguma coisa (<code>upper</code>, <code>lower</code>, <code>strip</code>, <code>replace</code>…) devolve um texto <strong>novo</strong>. Ou você guarda (<code>nome = nome.upper()</code>), ou usa na hora (<code>print(nome.upper())</code>). Escrever só <code>nome.upper()</code> numa linha sozinha não faz nada.</p>
+</div>
+
+<hr>
+
+<h2>3. <code>strip()</code>: limpando as pontas</h2>
+<p>Quando alguém digita o nome num formulário, é comum sobrar espaço no começo ou no fim. O <code>strip()</code> (em inglês, "descascar") tira os espaços <strong>das pontas</strong>. Os colchetes no exemplo estão ali só para você ver onde o texto começa e termina:</p>
+
+<pre class="file" data-file="strip.py">digitado = "   Ana Souza   "
+
+print("[" + digitado + "]")
+print("[" + digitado.strip() + "]")
+print("[" + digitado.lstrip() + "]")
+print("[" + digitado.rstrip() + "]")
+print("...ola!!!".strip(".!"))
+</pre>
+
+<pre class="term">$ python3 strip.py
+[   Ana Souza   ]
+[Ana Souza]
+[Ana Souza   ]
+[   Ana Souza]
+ola
+</pre>
+
+<ul>
+  <li><code>strip()</code> tirou os espaços dos dois lados, mas <strong>não</strong> o espaço do meio, entre "Ana" e "Souza".</li>
+  <li><code>lstrip()</code> tira só da esquerda (<em>left</em>); <code>rstrip()</code>, só da direita (<em>right</em>).</li>
+  <li>Com um texto dentro dos parênteses, ele tira esses caracteres das pontas, em vez de espaços: <code>strip(".!")</code> tirou os pontos e as exclamações.</li>
+</ul>
+
+<p>O <code>strip()</code> também tira das pontas as quebras de linha e as tabulações (os <code>\n</code> e <code>\t</code> da aula <a href="strings-escape.html">Caracteres de Escape</a>). Por isso ele é tão usado com o que vem do teclado e de arquivos.</p>
+
+<hr>
+
+<h2>4. Encadeando métodos</h2>
+<p>Como cada método devolve um texto, você pode chamar outro método logo em seguida, no resultado: é o <strong>encadeamento</strong>. O jeito clássico de conferir uma resposta digitada, sem ligar para espaços nem maiúsculas:</p>
+
+<pre class="file" data-file="encadear.py">resposta = "  SIM  "
+
+limpa = resposta.strip()
+limpa = limpa.lower()
+print(limpa)
+
+print(resposta.strip().lower())
+print(resposta.strip().lower() == "sim")
+</pre>
+
+<pre class="term">$ python3 encadear.py
+sim
+sim
+True
+</pre>
+
+<p><code>resposta.strip().lower()</code> se lê da esquerda para a direita: primeiro o <code>strip()</code> devolve <code>"SIM"</code>; depois o <code>lower()</code> trabalha nesse texto novo e devolve <code>"sim"</code>. As duas formas (passo a passo, ou encadeada) dão o mesmo resultado.</p>
+
+<div class="trypy" data-goal="src:\.strip\(;;src:\.lower\(;;out:True;;semerro">
+<p class="try-task"><strong>Missão:</strong> a Ana digitou <code>"  Sim "</code>, com espaços e S maiúsculo, e o programa respondeu <code>False</code>. Faça a comparação dar <code>True</code>, limpando a resposta com <code>strip()</code> e <code>lower()</code> antes de comparar.</p>
+<pre class="script" data-file="main.py">resposta = "  Sim "
+print(resposta == "sim")
+</pre>
+<pre class="solucao" data-file="main.py">resposta = "  Sim "
+print(resposta.strip().lower() == "sim")
+</pre>
+</div>
+
+<hr>
+
+<h2>5. <code>replace()</code>: trocando pedaços</h2>
+<p>O <code>replace()</code> (em inglês, "substituir") troca um pedaço do texto por outro. Ele pede dois textos: <strong>o que procurar</strong> e <strong>o que pôr no lugar</strong>.</p>
+
+<pre class="file" data-file="replace.py">recado = "Comprar pão, pão doce e leite"
+
+print(recado.replace("pão", "bolo"))
+print(recado.replace("pão", "bolo", 1))
+print(recado.replace(" e leite", ""))
+print("86 99999-0000".replace(" ", "").replace("-", ""))
+print(recado.replace("queijo", "requeijão"))
+</pre>
+
+<pre class="term">$ python3 replace.py
+Comprar bolo, bolo doce e leite
+Comprar bolo, pão doce e leite
+Comprar pão, pão doce
+86999990000
+Comprar pão, pão doce e leite
+</pre>
+
+<dl class="anatomy">
+  <dt>replace("pão", "bolo")</dt><dd>Troca <strong>todos</strong> os "pão" por "bolo". Eram dois.</dd>
+  <dt>replace("pão", "bolo", 1)</dt><dd>O terceiro valor, opcional, limita quantas trocas fazer: só a primeira.</dd>
+  <dt>replace(" e leite", "")</dt><dd>Trocar por um texto vazio é o jeito de <strong>apagar</strong> um pedaço.</dd>
+  <dt>.replace(" ", "").replace("-", "")</dt><dd>Encadeado: apaga os espaços, depois os traços. Sobram só os algarismos do telefone.</dd>
+  <dt>replace("queijo", …)</dt><dd>Se o pedaço não existe, nada é trocado, e não dá erro: volta o texto igual.</dd>
+</dl>
+
+<div class="trypy" data-goal="out:Bolo de fubá: R$ 25;;src:\.replace\(">
+<p class="try-task"><strong>Missão:</strong> a placa da padaria saiu sem acento: <code>fuba</code>. Corrija o texto com <code>replace()</code>, trocando <code>"fuba"</code> por <code>"fubá"</code>, sem mexer na primeira linha.</p>
+<pre class="script" data-file="main.py">placa = "Bolo de fuba: R$ 25"
+print(placa)
+</pre>
+<pre class="solucao" data-file="main.py">placa = "Bolo de fuba: R$ 25"
+print(placa.replace("fuba", "fubá"))
+</pre>
+</div>
+
+<hr>
+
+<h2>6. <code>split()</code>: quebrando em pedaços</h2>
+<p>O <code>split()</code> (em inglês, "dividir") faz o contrário do <code>join()</code> da aula <a href="strings-juntar.html">Juntar e Repetir Textos</a>: ele quebra o texto onde encontra um separador e devolve uma <strong>lista</strong> com os pedaços (as listas têm aula própria: <a href="listas.html">Listas</a>).</p>
+
+<pre class="file" data-file="split.py">compras = "pão, leite, café"
+print(compras.split(", "))
+
+frase = "a Ana foi à feira"
+print(frase.split())
+
+data = "18/10/2026"
+dia, mes, ano = data.split("/")
+print(dia, mes, ano)
+print(len(frase.split()))
+</pre>
+
+<pre class="term">$ python3 split.py
+['pão', 'leite', 'café']
+['a', 'Ana', 'foi', 'à', 'feira']
+18 10 2026
+5
+</pre>
+
+<ul>
+  <li><code>split(", ")</code> quebrou onde havia vírgula e espaço. O separador some do resultado.</li>
+  <li><code>split()</code> sem nada nos parênteses quebra nos <strong>espaços</strong> (quantos houver): é o jeito de separar as palavras de uma frase.</li>
+  <li><code>dia, mes, ano = data.split("/")</code> guarda cada pedaço numa variável, de uma vez (a <a href="atribuicao-multipla.html">Atribuição Múltipla</a>).</li>
+  <li><code>len(frase.split())</code> conta as <strong>palavras</strong> da frase: 5.</li>
+</ul>
+
+<hr>
+
+<h2>7. Procurando: <code>find()</code>, <code>index()</code>, <code>startswith()</code>, <code>endswith()</code>, <code>count()</code></h2>
+<p>O <code>in</code> da aula <a href="operadores-is-in.html">is e in</a> responde "tem ou não tem?". Estes métodos respondem mais: <strong>onde</strong> está, se está no <strong>começo</strong> ou no <strong>fim</strong>, e <strong>quantas vezes</strong> aparece.</p>
+
+<h3><code>find()</code> e <code>index()</code>: em que posição?</h3>
+
+<pre class="file" data-file="find.py">email = "ana.souza@email.com"
+
+print(email.find("@"))
+print(email.find("souza"))
+print(email.find("gmail"))
+print(email.index("@"))
+print(email[:email.find("@")])
+</pre>
+
+<pre class="term">$ python3 find.py
+9
+4
+-1
+9
+ana.souza
+</pre>
+
+<ul>
+  <li><code>find("@")</code> devolve o <strong>índice</strong> onde o pedaço começa: o <code>@</code> está na posição 9 (contando do zero, como em <a href="strings-fatias.html">Índices e Fatias</a>).</li>
+  <li><code>find("souza")</code> dá 4: a palavra começa no índice 4.</li>
+  <li>Quando <strong>não acha</strong>, o <code>find()</code> devolve <code>-1</code>.</li>
+  <li><code>index()</code> faz a mesma busca, mas, quando não acha, dá <strong>erro</strong> (você vai ver em <a href="#errado">Quando dá errado</a>).</li>
+  <li>Junto com uma fatia, o <code>find()</code> recorta: <code>email[:9]</code> é tudo antes do <code>@</code>, o nome do usuário.</li>
+</ul>
+
+<h3><code>startswith()</code> e <code>endswith()</code>: começa com? termina com?</h3>
+
+<pre class="file" data-file="comeca.py">arquivo = "foto-praia.jpg"
+
+print(arquivo.startswith("foto"))
+print(arquivo.endswith(".jpg"))
+print(arquivo.endswith(".png"))
+print(arquivo.endswith((".jpg", ".png")))
+print("Foto".startswith("foto"))
+</pre>
+
+<pre class="term">$ python3 comeca.py
+True
+True
+False
+True
+False
+</pre>
+
+<p><code>startswith</code> é "começa com" (<em>starts with</em>), e <code>endswith</code>, "termina com" (<em>ends with</em>). São ótimos para conferir a extensão de um arquivo. Com vários textos entre parênteses duplos, <code>endswith((".jpg", ".png"))</code> pergunta "termina com <strong>algum</strong> destes?" (os parênteses de dentro formam uma <a href="tuplas.html">tupla</a>). E, como sempre, maiúsculas contam: <code>"Foto"</code> não começa com <code>"foto"</code>.</p>
+
+<h3><code>count()</code>: quantas vezes?</h3>
+
+<pre class="file" data-file="count.py">frase = "O rato roeu a roupa do rei de Roma"
+
+print(frase.count("r"))
+print(frase.count("R"))
+print(frase.lower().count("r"))
+print(frase.count("ro"))
+print("banana".count("ana"))
+</pre>
+
+<pre class="term">$ python3 count.py
+4
+1
+5
+2
+1
+</pre>
+
+<p>São 4 erres minúsculos e 1 maiúsculo (o de Roma); com tudo em minúsculas, 5. O <code>count("ro")</code> achou "roeu" e "roupa" (o "Ro" de Roma tem maiúscula). E a última linha tem uma pegadinha: "banana" tem "ana" duas vezes, sobrepostas (b<strong>ana</strong>na e ban<strong>ana</strong>), mas o <code>count()</code> só conta pedaços que <strong>não se sobrepõem</strong>: depois de achar o primeiro, ele continua a busca depois dele.</p>
+
+<hr>
+
+<h2>8. Perguntas sobre o texto: <code>isdigit()</code> e <code>isalpha()</code></h2>
+<p>Os métodos que começam com <code>is</code> ("é…?") respondem <code>True</code> ou <code>False</code> sobre o texto inteiro:</p>
+
+<pre class="file" data-file="testes.py">print("2026".isdigit())
+print("20,5".isdigit())
+print("Ana".isalpha())
+print("Ana Maria".isalpha())
+print("ção".isalpha())
+print("".isdigit())
+</pre>
+
+<pre class="term">$ python3 testes.py
+True
+False
+True
+False
+True
+False
+</pre>
+
+<ul>
+  <li><code>isdigit()</code>: só tem algarismos? <code>"2026"</code> sim; <code>"20,5"</code> não, por causa da vírgula.</li>
+  <li><code>isalpha()</code>: só tem letras? <code>"Ana"</code> sim; <code>"Ana Maria"</code> não, por causa do espaço; <code>"ção"</code> sim: letras com acento e cedilha são letras.</li>
+  <li>Texto vazio dá <code>False</code>: não tem algarismo nenhum.</li>
+</ul>
+
+<p>Um uso comum é conferir, antes de converter com <code>int()</code>, se o que foi digitado é mesmo um número. A outra forma de fazer isso, mais completa, é a aula <a href="try-except.html">try e except</a>.</p>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Você quer…</th><th>Opções</th><th>Qual usar</th></tr>
+<tr><td>saber se o texto <strong>tem</strong> um pedaço</td><td><code>"@" in email</code> · <code>email.find("@") != -1</code> · <code>email.count("@") &gt; 0</code></td><td>O <code>in</code>: mais curto e claro</td></tr>
+<tr><td>saber <strong>onde</strong> está</td><td><code>find()</code> · <code>index()</code></td><td><code>find()</code> se "não achar" for normal (dá <code>-1</code>); <code>index()</code> se não achar for um erro</td></tr>
+<tr><td>saber se <strong>começa</strong> com</td><td><code>arquivo.startswith("foto")</code> · <code>arquivo[:4] == "foto"</code></td><td><code>startswith()</code>: não precisa contar letras</td></tr>
+<tr><td>comparar sem ligar para maiúsculas</td><td><code>a.lower() == b.lower()</code> · <code>a.upper() == b.upper()</code></td><td>Tanto faz; o costume é <code>lower()</code></td></tr>
+<tr><td>apagar um pedaço</td><td><code>replace(" e leite", "")</code> · fatias</td><td><code>replace()</code>, se você sabe <strong>o que</strong> apagar; fatias, se sabe <strong>onde</strong></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Esqueceu os parênteses</strong>
+<pre class="file" data-file="sem-parenteses.py">nome = "ana"
+print(nome.upper)
+</pre>
+<pre class="term">$ python3 sem-parenteses.py
+&lt;built-in method upper of str object at 0x7fd6517949c0&gt;
+</pre>
+<p>Não deu erro, mas também não deu <code>ANA</code>. Sem os parênteses, você não <strong>usou</strong> a ferramenta: só apontou para ela, e o Python mostrou o que ela é, "método embutido <code>upper</code> de um objeto <code>str</code>, no endereço…". (O número <code>0x7fd6517949c0</code> é um endereço na memória e muda a cada vez que você roda.) <strong>Como consertar:</strong> <code>nome.upper()</code>, com os parênteses.</p>
+</div>
+
+<div class="cenario">
+<strong>Nome do método digitado errado: <code>AttributeError</code></strong>
+<pre class="file" data-file="nome-errado.py">nome = "ana"
+print(nome.uper())
+</pre>
+<pre class="term">$ python3 nome-errado.py
+Traceback (most recent call last):
+  File "/home/ana/nome-errado.py", line 2, in &lt;module&gt;
+    print(nome.uper())
+          ^^^^^^^^^
+AttributeError: 'str' object has no attribute 'uper'. Did you mean: 'upper'?
+</pre>
+<dl class="anatomy">
+  <dt>File "/home/ana/nome-errado.py", line 2</dt><dd>O erro está na linha 2.</dd>
+  <dt>^^^^^^^^^</dt><dd>Sublinha <code>nome.uper</code>, o pedaço que falhou.</dd>
+  <dt>AttributeError:</dt><dd>"Erro de atributo". <strong>Atributo</strong> é tudo o que vem depois do ponto: métodos e outras informações de um valor.</dd>
+  <dt>'str' object has no attribute 'uper'</dt><dd>"Um objeto <code>str</code> não tem o atributo <code>uper</code>": os textos não têm nenhuma ferramenta com esse nome.</dd>
+  <dt>Did you mean: 'upper'?</dt><dd>"Você quis dizer <code>upper</code>?" O Python achou o nome parecido e sugeriu.</dd>
+</dl>
+<p><strong>Como consertar:</strong> <code>nome.upper()</code>. A lista completa dos nomes está na <a href="ref-metodos-string.html">Referência de Métodos de String</a>.</p>
+</div>
+
+<div class="cenario">
+<strong>Usou o método como se fosse uma função: <code>NameError</code></strong>
+<pre class="file" data-file="lower-variavel.py">print(upper("ana"))
+</pre>
+<pre class="term">$ python3 lower-variavel.py
+Traceback (most recent call last):
+  File "/home/ana/lower-variavel.py", line 1, in &lt;module&gt;
+    print(upper("ana"))
+          ^^^^^
+NameError: name 'upper' is not defined. Did you mean: 'super'?
+</pre>
+<p><code>name 'upper' is not defined</code>: não existe uma função solta chamada <code>upper</code>. Ela é um método, e só existe "dentro" dos textos. A dica (<code>super</code>, outra coisa do Python) não ajuda aqui. <strong>Como consertar:</strong> o texto vem antes do ponto, <code>"ana".upper()</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>index()</code> não achou: <code>ValueError</code></strong>
+<pre class="file" data-file="index-erro.py">email = "ana.souza.email.com"
+posicao = email.index("@")
+print(posicao)
+</pre>
+<pre class="term">$ python3 index-erro.py
+Traceback (most recent call last):
+  File "/home/ana/index-erro.py", line 2, in &lt;module&gt;
+    posicao = email.index("@")
+ValueError: substring not found
+</pre>
+<p><code>ValueError: substring not found</code>: "erro de valor: o pedaço não foi encontrado". O email foi digitado sem <code>@</code>, e o <code>index()</code>, ao contrário do <code>find()</code>, não devolve <code>-1</code>: ele para o programa. <strong>Como consertar:</strong> se "não achar" pode acontecer, use <code>find()</code> e confira se deu <code>-1</code>; ou teste antes com <code>"@" in email</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Número no <code>replace()</code>: <code>TypeError</code></strong>
+<pre class="file" data-file="replace-numero.py">preco = "R$ 10"
+print(preco.replace(10, 12))
+</pre>
+<pre class="term">$ python3 replace-numero.py
+Traceback (most recent call last):
+  File "/home/ana/replace-numero.py", line 2, in &lt;module&gt;
+    print(preco.replace(10, 12))
+          ~~~~~~~~~~~~~^^^^^^^^
+TypeError: replace() argument 1 must be str, not int
+</pre>
+<p><code>replace() argument 1 must be str, not int</code>: "o argumento 1 do <code>replace()</code> precisa ser <code>str</code>, não <code>int</code>". Dentro de um texto só há texto, então o que se procura e o que se põe no lugar também têm de ser textos. <strong>Como consertar:</strong> <code>preco.replace("10", "12")</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Achou que o método mudava o texto</strong>
+<p>O erro mais comum desta aula não tem mensagem nenhuma. Você já viu na seção 2: <code>nome.upper()</code> sozinho numa linha não muda <code>nome</code>. Se um texto "não mudou" depois de um <code>strip()</code> ou de um <code>replace()</code>, confira se você <strong>guardou</strong> o resultado: <code>nome = nome.strip()</code>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<p>Os métodos desta aula. A lista completa, com todos os métodos de texto, está em <a href="ref-metodos-string.html">Métodos de String</a>.</p>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Método</th><th>O que devolve</th><th>Exemplo → resultado</th></tr>
+<tr><td><code>upper()</code></td><td>Texto em maiúsculas</td><td><code>"pão".upper()</code> → <code>'PÃO'</code></td></tr>
+<tr><td><code>lower()</code></td><td>Texto em minúsculas</td><td><code>"AÇÃO".lower()</code> → <code>'ação'</code></td></tr>
+<tr><td><code>title()</code></td><td>Primeira letra de cada palavra maiúscula</td><td><code>"joão da silva".title()</code> → <code>'João Da Silva'</code></td></tr>
+<tr><td><code>capitalize()</code></td><td>Só a primeira letra do texto maiúscula</td><td><code>"bom dia".capitalize()</code> → <code>'Bom dia'</code></td></tr>
+<tr><td><code>strip()</code></td><td>Sem espaços (e quebras de linha) nas pontas</td><td><code>"  oi  ".strip()</code> → <code>'oi'</code></td></tr>
+<tr><td><code>lstrip()</code> / <code>rstrip()</code></td><td>Só da esquerda / só da direita</td><td><code>"  oi".lstrip()</code> → <code>'oi'</code></td></tr>
+<tr><td><code>replace(velho, novo)</code></td><td>Texto com as trocas feitas</td><td><code>"banana".replace("a", "o")</code> → <code>'bonono'</code></td></tr>
+<tr><td><code>split(sep)</code></td><td>Lista de pedaços</td><td><code>"a-b-c".split("-")</code> → <code>['a', 'b', 'c']</code></td></tr>
+<tr><td><code>find(pedaço)</code></td><td>Índice onde começa, ou <code>-1</code></td><td><code>"Teresina".find("e")</code> → <code>1</code></td></tr>
+<tr><td><code>index(pedaço)</code></td><td>Índice onde começa, ou <code>ValueError</code></td><td><code>"Teresina".index("e")</code> → <code>1</code></td></tr>
+<tr><td><code>startswith(pedaço)</code></td><td><code>True</code> se começa com</td><td><code>"Teresina".startswith("Tere")</code> → <code>True</code></td></tr>
+<tr><td><code>endswith(pedaço)</code></td><td><code>True</code> se termina com</td><td><code>"foto.jpg".endswith(".jpg")</code> → <code>True</code></td></tr>
+<tr><td><code>count(pedaço)</code></td><td>Quantas vezes aparece (sem sobrepor)</td><td><code>"Teresina".count("e")</code> → <code>2</code></td></tr>
+<tr><td><code>isdigit()</code></td><td><code>True</code> se só tem algarismos</td><td><code>"2026".isdigit()</code> → <code>True</code></td></tr>
+<tr><td><code>isalpha()</code></td><td><code>True</code> se só tem letras</td><td><code>"ção".isalpha()</code> → <code>True</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Grite!</h3>
+<p>Complete o método que deixa tudo em maiúsculas:</p>
+<div class="ex-code">print("bom dia".<input data-answer="upper" aria-label="método">())</div>
+</div>
+
+<div class="exercise">
+<h3>2. Limpe as pontas</h3>
+<p>O que <code>print("  oi  ".strip() + "!")</code> mostra?</p>
+<div class="ex-code"><input data-answer="oi!" aria-label="resultado"></div>
+</div>
+
+<div class="exercise">
+<h3>3. Troca de vogal</h3>
+<p>O que <code>print("banana".replace("a", "o"))</code> mostra?</p>
+<div class="ex-code"><input data-answer="bonono" aria-label="resultado"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Depois de <code>nome = "ana"</code> e <code>nome.upper()</code>, quanto vale <code>nome</code>?</p>
+<label><input type="radio" name="q4"> <code>'ANA'</code></label>
+<label><input type="radio" name="q4"> <code>'ana'</code>: o método devolveu um texto novo, que não foi guardado</label>
+<label><input type="radio" name="q4"> <code>'Ana'</code></label>
+<label><input type="radio" name="q4"> <code>None</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. Quanto vale <code>"Teresina".find("z")</code>?</p>
+<label><input type="radio" name="q5"> <code>0</code></label>
+<label><input type="radio" name="q5"> Dá <code>ValueError</code></label>
+<label><input type="radio" name="q5"> <code>-1</code></label>
+<label><input type="radio" name="q5"> <code>None</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. O que <code>"pão de queijo".split()</code> devolve?</p>
+<label><input type="radio" name="q6"> <code>['pão', 'de', 'queijo']</code></label>
+<label><input type="radio" name="q6"> <code>'pãodequeijo'</code></label>
+<label><input type="radio" name="q6"> <code>['p', 'ã', 'o', …]</code>, uma letra por item</label>
+<label><input type="radio" name="q6"> <code>3</code></label>
+</div>
+
+<h3>Missão final: o usuário do email</h3>
+
+<div class="trypy" data-goal="out:ANA.SOUZA;;src:find\(|index\(|split\(;;semerro">
+<p class="try-task"><strong>Missão:</strong> do email da Ana, mostre só o nome de usuário (tudo antes do <code>@</code>), em <strong>maiúsculas</strong>: <code>ANA.SOUZA</code>. Use <code>find()</code> (ou <code>index()</code>, ou <code>split()</code>) para achar o <code>@</code>, e <code>upper()</code>.</p>
+<pre class="script" data-file="main.py">email = "ana.souza@email.com"
+print(email)
+</pre>
+<pre class="solucao" data-file="main.py">email = "ana.souza@email.com"
+usuario = email[:email.find("@")]
+print(usuario.upper())
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Um <strong>método</strong> é uma ferramenta do próprio texto, usada com ponto e parênteses: <code>texto.upper()</code>.</li>
+  <li>Os métodos <strong>não mudam</strong> o texto (ele é imutável): devolvem um texto novo. Guarde o resultado: <code>nome = nome.strip()</code>.</li>
+  <li><code>upper</code>/<code>lower</code>/<code>title</code>/<code>capitalize</code> mudam maiúsculas, com acentos e cedilha funcionando; <code>strip</code> limpa as pontas; <code>replace</code> troca; <code>split</code> quebra numa lista.</li>
+  <li><code>find</code> diz onde (ou <code>-1</code>); <code>index</code> também, mas dá <code>ValueError</code> se não achar; <code>startswith</code>, <code>endswith</code> e <code>count</code> respondem "começa?", "termina?", "quantas vezes?".</li>
+  <li>Métodos se encadeiam: <code>resposta.strip().lower() == "sim"</code>.</li>
+  <li>Nome errado dá <code>AttributeError … Did you mean: 'upper'?</code>; sem parênteses, aparece <code>&lt;built-in method …&gt;</code> em vez do resultado.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
