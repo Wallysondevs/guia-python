@@ -104,9 +104,9 @@ No `.exercise`, `data-answer="a|b"` aceita respostas alternativas (a comparaçã
 (em construção: o que funciona, o que não funciona — threads, rede, `subprocess`, `os.system`, pip —, diferenças editor × lab, as ferramentas `tools/testar-missoes.js` e `tools/sim.js`.)
 
 ## 5. Fidelidade: o laboratório (`~/guia-python-lab/lab`, na VPS)
-É a máquina da Ana (usuária `ana`, computador `notebook`, `/home/ana`, pt_BR, Ubuntu 26.04) com o **Python 3.14 de verdade**. Toda saída de terminal mostrada numa aula vem de lá (detalhes em `~/guia-python-lab/COMO-USAR.md`):
+É a máquina da Ana (usuária `ana`, computador `notebook`, `/home/ana`, pt_BR, Ubuntu 26.04) com o **Python 3.14.4 do Ubuntu, de verdade** (sem `python-is-python3`: o comando `python` não existe, só `python3`). Toda saída de terminal mostrada numa aula vem de lá (detalhes em `~/guia-python-lab/COMO-USAR.md`):
 - programa em arquivo: crie o `.py` na home da Ana e rode `python3 arquivo.py`;
-- modo interativo (`>>>`): `-t` (terminal de verdade) ou `python3 -i`;
+- modo interativo (`>>>`): `-t` (terminal de verdade), **sempre com `| ~/guia-python-lab/tela`** (o REPL novo redesenha a linha com cores; o `tela` devolve o texto exato da tela). Mande as linhas de um bloco sem os espaços da frente: o REPL novo indenta sozinho (ver COMO-USAR);
 - **as mensagens de erro do Python saem em inglês** (`NameError: name 'nome' is not defined. Did you mean: 'nomes'?`): copie como saíram e explique em português;
 - **Privacidade:** nada da máquina real nem da VPS; só `/home/ana/…`, `ana@notebook`.
 
