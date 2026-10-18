@@ -1,0 +1,980 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Testes — assert, unittest e doctest | Guia Python</title>
+<meta name="description" content="Testes automáticos em Python para quem está começando: assert, o módulo unittest (TestCase, assertEqual, assertRaises, python3 -m unittest, os pontos, o F e o E do relatório), testes em docstrings com doctest, uma espiada no pytest e os erros reais do Python 3.14, com as funções da lojinha da Ana.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Testes</span></h1>
+
+<p class="intro">A Ana escreveu uma função que calcula o preço com desconto. Para saber se ela funciona, rodou o programa, olhou o resultado e pensou "parece certo". Uma semana depois, mexeu na função para aceitar outra coisa e… será que o desconto antigo continua certo? Ela teria de conferir tudo de novo, de cabeça. <strong>Testes automáticos</strong> resolvem isso: pequenos programas que conferem os seus programas, sozinhos, em um segundo, quantas vezes você quiser.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é um teste: uma pergunta cuja resposta você já sabe.</li>
+  <li>A conferir com <code>assert</code>, e o que o <code>AssertionError</code> quer dizer.</li>
+  <li>A organizar testes com o módulo <code>unittest</code>: <code>TestCase</code>, <code>assertEqual</code>, <code>assertRaises</code> e companhia.</li>
+  <li>A rodar tudo com <code>python3 -m unittest</code> e a ler o relatório: os pontos, o <code>F</code>, o <code>E</code>.</li>
+  <li>A escrever exemplos nas docstrings que viram testes, com <code>doctest</code>.</li>
+  <li>Como é o <code>pytest</code>, a ferramenta de fora mais usada.</li>
+  <li>Os enganos comuns: arquivo com o nome errado, método sem <code>test</code>, sem <code>self</code>, centavos que não fecham.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: provar a receita antes de servir</h2>
+<p>Na padaria do bairro, a confeiteira não serve um bolo novo sem provar. E ela prova sempre do mesmo jeito: um pedaço, "está doce o bastante? a massa está fofa?". Ela sabe de antemão como o bolo certo tem de ser, e compara.</p>
+<p>Um teste é isso: você chama a sua função com valores que <strong>você já sabe</strong> a resposta (100 reais com 10% de desconto têm de dar 90) e compara o que a função devolveu com o que devia devolver. Se bater, o teste <strong>passa</strong>. Se não bater, o teste <strong>falha</strong> e avisa onde.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Ferramenta</th><th>O que é</th><th>Vem com o Python?</th></tr>
+<tr><td><code>assert</code></td><td>Uma palavra-chave: confere uma condição numa linha</td><td>Sim (é da própria linguagem)</td></tr>
+<tr><td><code>unittest</code></td><td>Um módulo para organizar muitos testes e rodar todos de uma vez</td><td>Sim (biblioteca padrão)</td></tr>
+<tr><td><code>doctest</code></td><td>Um módulo que testa os exemplos escritos nas docstrings</td><td>Sim (biblioteca padrão)</td></tr>
+<tr><td><code>pytest</code></td><td>Uma ferramenta de terceiros, muito popular</td><td>Não: instala-se com o <a href="pip.html">pip</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. A conferência mais simples: <code>assert</code></h2>
+<p>Primeiro, o jeito "olhômetro": rodar e olhar.</p>
+
+<pre class="file" data-file="desconto.py">def preco_com_desconto(preco, porcentagem):
+    return preco - preco * porcentagem / 100
+
+print(preco_com_desconto(100, 10))
+print(preco_com_desconto(50, 20))
+</pre>
+
+<pre class="term">$ python3 desconto.py
+90.0
+40.0
+</pre>
+
+<p>Funciona, mas é você quem tem de olhar e decidir se 90.0 e 40.0 estão certos. O <code>assert</code> ("afirmar", "garantir") faz a comparação por você:</p>
+
+<pre class="file" data-file="com_assert.py">def preco_com_desconto(preco, porcentagem):
+    return preco - preco * porcentagem / 100
+
+assert preco_com_desconto(100, 10) == 90
+assert preco_com_desconto(50, 20) == 40
+assert preco_com_desconto(80, 0) == 80
+print("Todos os testes passaram.")
+</pre>
+
+<dl class="anatomy">
+  <dt>assert</dt><dd>"Garanto que o que vem a seguir é verdade". Se for, o programa segue em silêncio. Se não for, ele para com um erro.</dd>
+  <dt>preco_com_desconto(100, 10) == 90</dt><dd>A condição: a função, chamada com 100 e 10, tem de devolver 90. O <code>==</code> compara (veja <a href="operadores-comparacao.html">Comparações</a>). <code>90.0 == 90</code> é <code>True</code>: um <code>float</code> e um <code>int</code> com o mesmo valor são iguais.</dd>
+</dl>
+
+<pre class="term">$ python3 com_assert.py
+Todos os testes passaram.
+</pre>
+
+<p>Os três <code>assert</code> passaram calados, e o <code>print</code> do fim rodou. Agora, o que acontece se a função tiver um erro? A Ana, mexendo no código, esqueceu de multiplicar pelo preço:</p>
+
+<pre class="file" data-file="assert_falha.py">def preco_com_desconto(preco, porcentagem):
+    return preco - porcentagem / 100   # esqueci de multiplicar pelo preço
+
+assert preco_com_desconto(100, 10) == 90
+print("Todos os testes passaram.")
+</pre>
+
+<pre class="term">$ python3 assert_falha.py
+Traceback (most recent call last):
+  File "/home/ana/assert_falha.py", line 4, in &lt;module&gt;
+    assert preco_com_desconto(100, 10) == 90
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+</pre>
+
+<dl class="anatomy">
+  <dt>File "/home/ana/assert_falha.py", line 4</dt><dd>A linha do <code>assert</code> que não se confirmou.</dd>
+  <dt>^^^^^^^^^</dt><dd>As setinhas marcam a condição que deu <code>False</code>.</dd>
+  <dt>AssertionError</dt><dd>"Erro de afirmação": o que você garantiu não era verdade. O programa parou ali; o <code>print</code> nunca rodou.</dd>
+</dl>
+
+<p>O <code>AssertionError</code> sozinho não diz quanto a função devolveu. Dá para pôr uma mensagem depois de uma vírgula:</p>
+
+<pre class="file" data-file="assert_msg.py">def preco_com_desconto(preco, porcentagem):
+    return preco - porcentagem / 100
+
+resultado = preco_com_desconto(100, 10)
+assert resultado == 90, f"esperava 90, veio {resultado}"
+</pre>
+
+<pre class="term">$ python3 assert_msg.py
+Traceback (most recent call last):
+  File "/home/ana/assert_msg.py", line 5, in &lt;module&gt;
+    assert resultado == 90, f"esperava 90, veio {resultado}"
+           ^^^^^^^^^^^^^^^
+AssertionError: esperava 90, veio 99.9
+</pre>
+
+<p>Agora a pista está na mensagem: veio 99.9, ou seja, a função tirou só 0,10 do preço (10 / 100), e não 10%.</p>
+
+<div class="warning">
+<strong>O <code>assert</code> pode ser desligado</strong>
+<p>Quem roda o Python com a opção <code>-O</code> ("otimizar") faz <strong>todos</strong> os <code>assert</code> sumirem:</p>
+<pre class="term">$ python3 assert_O.py
+Traceback (most recent call last):
+  File "/home/ana/assert_O.py", line 1, in &lt;module&gt;
+    assert 1 == 2, "isso é falso"
+           ^^^^^^
+AssertionError: isso é falso
+$ python3 -O assert_O.py
+cheguei ao fim
+</pre>
+<p>Por isso, o <code>assert</code> serve para <strong>testes</strong> e para conferências do programador, nunca para validar o que o usuário digitou (para isso existem o <code>if</code> e o <a href="raise.html"><code>raise</code></a>).</p>
+</div>
+
+<div class="trypy" data-goal="out:Todos os testes passaram.;;semerro">
+<p class="try-task"><strong>Missão:</strong> a função <code>media()</code> calcula a média das notas da turma, mas o primeiro <code>assert</code> falha. Leia o erro, descubra o engano na função e conserte (não mexa nos <code>assert</code>).</p>
+<pre class="script" data-file="main.py">def media(notas):
+    return sum(notas) / 2
+
+assert media([8, 6]) == 7
+assert media([10, 7, 4]) == 7
+assert media([5]) == 5
+print("Todos os testes passaram.")
+</pre>
+<pre class="solucao" data-file="main.py">def media(notas):
+    return sum(notas) / len(notas)
+
+assert media([8, 6]) == 7
+assert media([10, 7, 4]) == 7
+assert media([5]) == 5
+print("Todos os testes passaram.")
+</pre>
+</div>
+
+<p>(Repare: com duas notas, <code>/ 2</code> até acerta. Foi preciso um teste com três notas para pegar o erro. Bons testes experimentam casos diferentes.)</p>
+
+<hr>
+
+<h2>2. Organizando os testes: <code>unittest</code></h2>
+<p>Com <code>assert</code> solto, o primeiro teste que falha para o programa, e você não fica sabendo dos outros. O módulo <code>unittest</code> ("teste de unidade": cada teste confere uma pequena parte, uma unidade) roda <strong>todos</strong> os testes, conta quantos passaram e mostra um relatório de cada falha.</p>
+
+<p>O costume é separar em dois arquivos: o código de verdade e os testes dele. O código da lojinha:</p>
+
+<pre class="file" data-file="loja.py">"""Funções da lojinha da Ana."""
+
+
+def preco_com_desconto(preco, porcentagem):
+    """Devolve o preço depois de aplicar o desconto (em %)."""
+    if not 0 &lt;= porcentagem &lt;= 100:
+        raise ValueError("a porcentagem deve ficar entre 0 e 100")
+    return preco - preco * porcentagem / 100
+
+
+def total_do_carrinho(itens):
+    """Soma preço × quantidade de cada item do carrinho."""
+    return sum(preco * quantidade for preco, quantidade in itens)
+
+
+def etiqueta(nome, preco):
+    """Monta o texto da etiqueta de preço."""
+    return f"{nome.upper()} - R$ {preco:.2f}".replace(".", ",")
+</pre>
+
+<p>E os testes, num arquivo cujo nome <strong>começa com <code>test</code></strong>:</p>
+
+<pre class="file" data-file="test_loja.py">import unittest
+
+from loja import etiqueta, preco_com_desconto, total_do_carrinho
+
+
+class TestDesconto(unittest.TestCase):
+
+    def test_dez_por_cento(self):
+        self.assertEqual(preco_com_desconto(100, 10), 90)
+
+    def test_sem_desconto(self):
+        self.assertEqual(preco_com_desconto(80, 0), 80)
+
+    def test_porcentagem_invalida(self):
+        with self.assertRaises(ValueError):
+            preco_com_desconto(100, 150)
+
+
+class TestCarrinho(unittest.TestCase):
+
+    def test_carrinho_vazio(self):
+        self.assertEqual(total_do_carrinho([]), 0)
+
+    def test_dois_itens(self):
+        self.assertEqual(total_do_carrinho([(4.50, 2), (10.00, 1)]), 19.00)
+
+
+class TestEtiqueta(unittest.TestCase):
+
+    def test_etiqueta(self):
+        self.assertEqual(etiqueta("café", 18.9), "CAFÉ - R$ 18,90")
+
+    def test_comeca_com_o_nome(self):
+        self.assertStartsWith(etiqueta("arroz", 27.9), "ARROZ")
+
+
+if __name__ == "__main__":
+    unittest.main()
+</pre>
+
+<dl class="anatomy">
+  <dt>from loja import …</dt><dd>Os testes importam as funções do <code>loja.py</code>, como qualquer <a href="modulos-proprios.html">módulo seu</a>. Os dois arquivos ficam na mesma pasta.</dd>
+  <dt>class TestDesconto(unittest.TestCase):</dt><dd>Uma <a href="classes.html">classe</a> que <a href="heranca.html">herda</a> de <code>unittest.TestCase</code> ("caso de teste"). Ela é só uma caixa para juntar testes do mesmo assunto. Você não precisa saber criar classes para usá-la: copie a forma.</dd>
+  <dt>def test_dez_por_cento(self):</dt><dd>Cada teste é um método cujo nome <strong>começa com <code>test</code></strong>. É assim que o <code>unittest</code> o encontra. O <code>self</code> é obrigatório.</dd>
+  <dt>self.assertEqual(a, b)</dt><dd>"Confira que <code>a</code> é igual a <code>b</code>". Se não for, o teste falha e o relatório mostra os dois valores.</dd>
+  <dt>with self.assertRaises(ValueError):</dt><dd>"Confira que o código dentro do bloco <strong>lança</strong> um <code>ValueError</code>". Aqui, o teste <strong>passa</strong> quando dá erro: uma porcentagem de 150% tem de ser recusada.</dd>
+  <dt>self.assertStartsWith(texto, início) <span class="versao">3.14</span></dt><dd>"Confira que o texto começa com…". É novo no Python 3.14, junto com <code>assertEndsWith</code>; num Python mais antigo, use <code>self.assertTrue(texto.startswith("ARROZ"))</code>.</dd>
+  <dt>unittest.main()</dt><dd>Roda os testes do arquivo quando você faz <code>python3 test_loja.py</code>. O <code>if __name__ == "__main__":</code> faz isso acontecer só quando o arquivo é rodado direto, e não quando é importado.</dd>
+</dl>
+
+<h3>Rodando: <code>python3 -m unittest</code></h3>
+<p>Na pasta dos dois arquivos, o comando <code>python3 -m unittest</code> procura sozinho todos os arquivos <code>test*.py</code>, todas as classes de teste e todos os métodos <code>test…</code>, e roda tudo:</p>
+
+<pre class="term">$ python3 -m unittest
+.......
+----------------------------------------------------------------------
+Ran 7 tests in 0.000s
+
+OK
+</pre>
+
+<dl class="anatomy">
+  <dt>.......</dt><dd>Um <strong>ponto para cada teste que passou</strong>. Sete testes, sete pontos.</dd>
+  <dt>Ran 7 tests in 0.000s</dt><dd>"Rodei 7 testes em 0,000 segundo." O tempo muda de uma vez para outra.</dd>
+  <dt>OK</dt><dd>Todos passaram. No terminal do Python 3.14, os pontos e o <code>OK</code> aparecem em verde <span class="versao">3.14</span>.</dd>
+</dl>
+
+<p>Com <code>-v</code> ("verboso", falante), aparece o nome de cada teste:</p>
+
+<pre class="term">$ python3 -m unittest -v
+test_carrinho_vazio (test_loja.TestCarrinho.test_carrinho_vazio) ... ok
+test_dois_itens (test_loja.TestCarrinho.test_dois_itens) ... ok
+test_dez_por_cento (test_loja.TestDesconto.test_dez_por_cento) ... ok
+test_porcentagem_invalida (test_loja.TestDesconto.test_porcentagem_invalida) ... ok
+test_sem_desconto (test_loja.TestDesconto.test_sem_desconto) ... ok
+test_comeca_com_o_nome (test_loja.TestEtiqueta.test_comeca_com_o_nome) ... ok
+test_etiqueta (test_loja.TestEtiqueta.test_etiqueta) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.000s
+
+OK
+</pre>
+
+<p>Cada linha diz o teste, o arquivo, a classe e o resultado. (O <code>unittest</code> roda as classes e os testes em ordem alfabética, e não na ordem do arquivo; por isso um teste nunca deve depender de outro.)</p>
+
+<h3>Lendo o relatório quando algo falha</h3>
+<p>Agora a Ana "melhorou" o <code>loja.py</code> e, sem perceber, a soma do carrinho passou a ignorar a quantidade:</p>
+
+<pre class="file" data-file="loja.py">def total_do_carrinho(itens):
+    """Soma preço × quantidade de cada item do carrinho."""
+    return sum(preco for preco, quantidade in itens)   # esqueceu a quantidade
+</pre>
+
+<p>E, num teste, ela escreveu a porcentagem entre aspas: <code>preco_com_desconto(80, "0")</code>. Rodando os testes de novo:</p>
+
+<pre class="term">$ python3 -m unittest
+.F..E..
+======================================================================
+ERROR: test_sem_desconto (test_loja.TestDesconto.test_sem_desconto)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ana/test_loja.py", line 12, in test_sem_desconto
+    self.assertEqual(preco_com_desconto(80, "0"), 80)
+                     ~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/home/ana/loja.py", line 6, in preco_com_desconto
+    if not 0 &lt;= porcentagem &lt;= 100:
+           ^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: '&lt;=' not supported between instances of 'int' and 'str'
+
+======================================================================
+FAIL: test_dois_itens (test_loja.TestCarrinho.test_dois_itens)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ana/test_loja.py", line 25, in test_dois_itens
+    self.assertEqual(total_do_carrinho([(4.50, 2), (10.00, 1)]), 19.00)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 14.5 != 19.0
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.001s
+
+FAILED (failures=1, errors=1)
+</pre>
+
+<ol class="passo">
+  <li><strong><code>.F..E..</code></strong>: um sinal por teste, na ordem em que rodaram. <code>.</code> passou; <code>F</code> (<em>failure</em>, "falha") quer dizer que um <code>assert…</code> não se confirmou; <code>E</code> (<em>error</em>, "erro") quer dizer que o teste nem chegou ao fim, porque estourou uma exceção no meio.</li>
+  <li><strong><code>ERROR: test_sem_desconto</code></strong>: o traceback mostra o caminho, de cima para baixo: o teste (linha 12 do <code>test_loja.py</code>) chamou a função, e dentro dela (linha 6 do <code>loja.py</code>) a comparação <code>0 &lt;= "0"</code> deu <code>TypeError</code>: "<code>&lt;=</code> não funciona entre <code>int</code> e <code>str</code>". O erro está no <strong>teste</strong>, que passou um texto.</li>
+  <li><strong><code>FAIL: test_dois_itens</code></strong>: aqui a função rodou até o fim, mas o resultado não bateu: <code>14.5 != 19.0</code> ("14,5 é diferente de 19,0"). Do lado esquerdo, o que a função devolveu; do direito, o esperado. 4,50 + 10,00 = 14,50: a quantidade foi esquecida. O erro está no <strong>código</strong>.</li>
+  <li><strong><code>FAILED (failures=1, errors=1)</code></strong>: o resumo final, "falhou: uma falha e um erro". Os outros cinco testes passaram e foram contados mesmo assim.</li>
+</ol>
+
+<div class="tip">
+<strong>F ou E: onde procurar</strong>
+<p>Um <code>F</code> diz "a resposta veio errada": olhe o valor que veio, e descubra quem errou a conta (o código ou o valor esperado no teste). Um <code>E</code> diz "o teste quebrou no meio": leia o traceback como qualquer outro erro do Python (veja <a href="erros.html">Lendo uma Mensagem de Erro</a>).</p>
+</div>
+
+<h3>Outras formas de rodar</h3>
+
+<pre class="term">$ python3 test_loja.py TestDesconto
+..E
+======================================================================
+ERROR: test_sem_desconto (__main__.TestDesconto.test_sem_desconto)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ana/test_loja.py", line 12, in test_sem_desconto
+    self.assertEqual(preco_com_desconto(80, "0"), 80)
+                     ~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/home/ana/loja.py", line 6, in preco_com_desconto
+    if not 0 &lt;= porcentagem &lt;= 100:
+           ^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: '&lt;=' not supported between instances of 'int' and 'str'
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.001s
+
+FAILED (errors=1)
+</pre>
+
+<p>Rodando o arquivo direto (graças ao <code>unittest.main()</code>), e só a classe <code>TestDesconto</code>: 3 testes. O arquivo aparece como <code>__main__</code>, porque foi ele que você mandou rodar.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Comando</th><th>O que roda</th></tr>
+<tr><td><code>python3 -m unittest</code></td><td>Todos os arquivos <code>test*.py</code> da pasta atual (e das subpastas que são pacotes)</td></tr>
+<tr><td><code>python3 -m unittest -v</code></td><td>O mesmo, com o nome de cada teste</td></tr>
+<tr><td><code>python3 -m unittest test_loja</code></td><td>Só o arquivo <code>test_loja.py</code> (sem o <code>.py</code>)</td></tr>
+<tr><td><code>python3 -m unittest test_loja.TestDesconto</code></td><td>Só uma classe</td></tr>
+<tr><td><code>python3 -m unittest test_loja.TestDesconto.test_dez_por_cento</code></td><td>Só um teste</td></tr>
+<tr><td><code>python3 test_loja.py</code></td><td>O arquivo, se ele tiver <code>unittest.main()</code> no fim</td></tr>
+</table>
+</div>
+
+<p>O comando termina com o código de saída 0 quando tudo passa e 1 quando algo falha (o <code>echo $?</code> mostra o código; veja <a href="os-sys.html">os e sys</a>). É assim que outros programas, como os servidores que testam o código a cada mudança, sabem se deu certo.</p>
+
+<div class="trypy" data-goal="out:Ran 3 tests;;out:OK;;exit:0;;src:assertRaises">
+<p class="try-task"><strong>Missão:</strong> a função <code>parcelas()</code> já tem um teste. Escreva mais dois: um que confira que <code>parcelas(90, 3)</code> dá <code>30.0</code>, e outro, com <code>assertRaises</code>, que confira que <code>parcelas(90, 0)</code> lança <code>ValueError</code>. O relatório tem de dizer <code>Ran 3 tests</code> e <code>OK</code>.</p>
+<pre class="script" data-file="main.py">import unittest
+
+
+def parcelas(total, vezes):
+    if vezes &lt; 1:
+        raise ValueError("o número de parcelas deve ser pelo menos 1")
+    return total / vezes
+
+
+class TestParcelas(unittest.TestCase):
+
+    def test_duas_vezes(self):
+        self.assertEqual(parcelas(100, 2), 50)
+
+    # escreva aqui os outros dois testes
+
+
+unittest.main()
+</pre>
+<pre class="solucao" data-file="main.py">import unittest
+
+
+def parcelas(total, vezes):
+    if vezes &lt; 1:
+        raise ValueError("o número de parcelas deve ser pelo menos 1")
+    return total / vezes
+
+
+class TestParcelas(unittest.TestCase):
+
+    def test_duas_vezes(self):
+        self.assertEqual(parcelas(100, 2), 50)
+
+    def test_tres_vezes(self):
+        self.assertEqual(parcelas(90, 3), 30.0)
+
+    def test_zero_vezes(self):
+        with self.assertRaises(ValueError):
+            parcelas(90, 0)
+
+
+unittest.main()
+</pre>
+</div>
+
+<p>No editor, a função e os testes ficam no mesmo arquivo, e o <code>unittest.main()</code> no fim roda os testes. No seu computador, prefira separar em <code>loja.py</code> e <code>test_loja.py</code>.</p>
+
+<h3>As conferências mais usadas</h3>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Método</th><th>Passa quando…</th></tr>
+<tr><td><code>assertEqual(a, b)</code> / <code>assertNotEqual(a, b)</code></td><td><code>a == b</code> / <code>a != b</code></td></tr>
+<tr><td><code>assertTrue(x)</code> / <code>assertFalse(x)</code></td><td><code>x</code> é verdadeiro / falso</td></tr>
+<tr><td><code>assertIs(a, b)</code> / <code>assertIsNone(x)</code></td><td><code>a is b</code> / <code>x is None</code></td></tr>
+<tr><td><code>assertIn(a, b)</code> / <code>assertNotIn(a, b)</code></td><td><code>a in b</code> / <code>a not in b</code></td></tr>
+<tr><td><code>assertIsInstance(x, tipo)</code></td><td><code>x</code> é do tipo dado</td></tr>
+<tr><td><code>assertAlmostEqual(a, b)</code></td><td><code>a</code> e <code>b</code> são iguais até a 7ª casa decimal (para <code>float</code>)</td></tr>
+<tr><td><code>assertGreater(a, b)</code> / <code>assertLess(a, b)</code></td><td><code>a &gt; b</code> / <code>a &lt; b</code></td></tr>
+<tr><td><code>with assertRaises(Erro):</code></td><td>O bloco lança aquele erro</td></tr>
+<tr><td><code>assertStartsWith(t, s)</code> / <code>assertEndsWith(t, s)</code> <span class="versao">3.14</span></td><td>O texto <code>t</code> começa / termina com <code>s</code></td></tr>
+<tr><td><code>assertHasAttr(obj, nome)</code> <span class="versao">3.14</span></td><td>O objeto tem o atributo com esse nome</td></tr>
+</table>
+</div>
+
+<p>Por que não usar <code>assert</code> dentro do <code>TestCase</code>? Funciona, mas os métodos <code>assert…</code> dão mensagens melhores: o <code>assertEqual</code> mostra os dois valores (<code>14.5 != 19.0</code>), o <code>assertIn</code> mostra o item e a lista.</p>
+
+<hr>
+
+<h2>3. Testes nos exemplos da docstring: <code>doctest</code></h2>
+<p>Lembra das <a href="docstrings.html">docstrings</a>, os textos de explicação no começo das funções? Muita gente põe nelas um exemplo de uso, copiado do modo interativo (<code>&gt;&gt;&gt;</code>). O módulo <code>doctest</code> transforma esses exemplos em testes: ele roda cada linha com <code>&gt;&gt;&gt;</code> e confere se a resposta é <strong>exatamente</strong> a que está escrita embaixo.</p>
+
+<pre class="file" data-file="precos.py">def preco_com_desconto(preco, porcentagem):
+    """Devolve o preço depois de aplicar o desconto (em %).
+
+    &gt;&gt;&gt; preco_com_desconto(100, 10)
+    90.0
+    &gt;&gt;&gt; preco_com_desconto(50, 20)
+    40.0
+    &gt;&gt;&gt; preco_com_desconto(100, 150)
+    Traceback (most recent call last):
+        ...
+    ValueError: a porcentagem deve ficar entre 0 e 100
+    """
+    if not 0 &lt;= porcentagem &lt;= 100:
+        raise ValueError("a porcentagem deve ficar entre 0 e 100")
+    return preco - preco * porcentagem / 100
+
+
+def parcelas(total, vezes):
+    """Divide o total em parcelas iguais, arredondadas em centavos.
+
+    &gt;&gt;&gt; parcelas(100, 4)
+    [25.0, 25.0, 25.0, 25.0]
+    &gt;&gt;&gt; parcelas(10, 3)
+    [3.33, 3.33, 3.33]
+    """
+    return [round(total / vezes, 2)] * vezes
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
+</pre>
+
+<dl class="anatomy">
+  <dt>&gt;&gt;&gt; preco_com_desconto(100, 10)</dt><dd>O que seria digitado no modo interativo. O <code>&gt;&gt;&gt;</code> e um espaço, depois o código.</dd>
+  <dt>90.0</dt><dd>A resposta esperada, como o Python a mostraria: <code>90.0</code>, e não <code>90</code>. O <code>doctest</code> compara o <strong>texto</strong>.</dd>
+  <dt>Traceback (most recent call last): … ValueError: …</dt><dd>Para esperar um erro, escreva a primeira linha do traceback, <code>...</code> no lugar do meio, e a última linha.</dd>
+  <dt>doctest.testmod()</dt><dd>"Teste o módulo": roda os exemplos de todas as docstrings deste arquivo.</dd>
+</dl>
+
+<pre class="term">$ python3 -m doctest precos.py
+$ echo $?
+0
+$ python3 precos.py
+</pre>
+
+<p><strong>Silêncio quer dizer que tudo passou.</strong> Tanto <code>python3 -m doctest precos.py</code> quanto <code>python3 precos.py</code> (que chama o <code>testmod()</code>) não mostram nada. Para ver o que ele fez, use <code>-v</code>:</p>
+
+<pre class="term">$ python3 -m doctest -v precos.py
+Trying:
+    parcelas(100, 4)
+Expecting:
+    [25.0, 25.0, 25.0, 25.0]
+ok
+Trying:
+    parcelas(10, 3)
+Expecting:
+    [3.33, 3.33, 3.33]
+ok
+Trying:
+    preco_com_desconto(100, 10)
+Expecting:
+    90.0
+ok
+Trying:
+    preco_com_desconto(50, 20)
+Expecting:
+    40.0
+ok
+Trying:
+    preco_com_desconto(100, 150)
+Expecting:
+    Traceback (most recent call last):
+        ...
+    ValueError: a porcentagem deve ficar entre 0 e 100
+ok
+1 item had no tests:
+    precos
+2 items passed all tests:
+   2 tests in precos.parcelas
+   3 tests in precos.preco_com_desconto
+5 tests in 3 items.
+5 passed.
+Test passed.
+</pre>
+
+<p>"Tentando… Esperando… ok", para cada exemplo. No fim: "1 item não tinha testes" (o próprio módulo, que não tem docstring), "2 itens passaram em todos os testes", "5 testes, 5 passaram".</p>
+
+<h3>Quando um exemplo não bate</h3>
+<p>A Ana reparou que 3 parcelas de 3,33 dão 9,99, e não 10. Ela escreveu na docstring o que <strong>queria</strong> (a última parcela com o centavo que sobra) e, por descuido, escreveu <code>25</code> em vez de <code>25.0</code> no outro exemplo:</p>
+
+<pre class="file" data-file="precos_erro.py">def parcelas(total, vezes):
+    """Divide o total em parcelas iguais, arredondadas em centavos.
+
+    &gt;&gt;&gt; parcelas(10, 3)
+    [3.33, 3.33, 3.34]
+    &gt;&gt;&gt; parcelas(100, 4)
+    [25, 25, 25, 25]
+    """
+    return [round(total / vezes, 2)] * vezes
+</pre>
+
+<pre class="term">$ python3 -m doctest precos_erro.py
+**********************************************************************
+File "/home/ana/precos_erro.py", line 4, in precos_erro.parcelas
+Failed example:
+    parcelas(10, 3)
+Expected:
+    [3.33, 3.33, 3.34]
+Got:
+    [3.33, 3.33, 3.33]
+**********************************************************************
+File "/home/ana/precos_erro.py", line 6, in precos_erro.parcelas
+Failed example:
+    parcelas(100, 4)
+Expected:
+    [25, 25, 25, 25]
+Got:
+    [25.0, 25.0, 25.0, 25.0]
+**********************************************************************
+1 item had failures:
+   2 of   2 in precos_erro.parcelas
+***Test Failed*** 2 failures.
+</pre>
+
+<p>Cada falha diz a linha, o exemplo, o esperado (<em>Expected</em>) e o que veio (<em>Got</em>). A primeira é uma falha "de verdade": a função ainda não faz o que a Ana quer. A segunda é só de escrita: <code>[25, 25, 25, 25]</code> e <code>[25.0, 25.0, 25.0, 25.0]</code> são iguais para o <code>==</code>, mas <strong>não como texto</strong>, e o <code>doctest</code> compara texto. É a grande fraqueza dele: um espaço a mais, a ordem dos itens de um <a href="conjuntos.html">conjunto</a>, um endereço de memória (<code>0x7f…</code>), e o teste falha.</p>
+
+<div class="trypy" data-goal="out:Test passed.;;semerro;;src:&gt;&gt;&gt; etiqueta">
+<p class="try-task"><strong>Missão:</strong> o exemplo da docstring de <code>etiqueta()</code> está com a resposta errada, e o <code>doctest</code> reclama. Rode, veja o que veio (<em>Got</em>) e corrija a resposta esperada na docstring.</p>
+<pre class="script" data-file="main.py">def etiqueta(nome, preco):
+    """Monta o texto da etiqueta de preço.
+
+    &gt;&gt;&gt; etiqueta("café", 18.9)
+    'Café - R$ 18.90'
+    """
+    return f"{nome.upper()} - R$ {preco:.2f}".replace(".", ",")
+
+
+import doctest
+doctest.testmod(verbose=True)
+</pre>
+<pre class="solucao" data-file="main.py">def etiqueta(nome, preco):
+    """Monta o texto da etiqueta de preço.
+
+    &gt;&gt;&gt; etiqueta("café", 18.9)
+    'CAFÉ - R$ 18,90'
+    """
+    return f"{nome.upper()} - R$ {preco:.2f}".replace(".", ",")
+
+
+import doctest
+doctest.testmod(verbose=True)
+</pre>
+</div>
+
+<hr>
+
+<h2>4. Uma espiada no <code>pytest</code></h2>
+<p>O <code>pytest</code> não vem com o Python, mas é a ferramenta de testes mais usada nos projetos de hoje. Nele, um teste é uma <strong>função comum</strong> com nome começando por <code>test_</code>, e a conferência é um <code>assert</code> simples, sem classe e sem <code>self.assertEqual</code>:</p>
+
+<pre class="file" data-file="test_pytest.py">from loja import preco_com_desconto, total_do_carrinho
+
+
+def test_dez_por_cento():
+    assert preco_com_desconto(100, 10) == 90
+
+
+def test_dois_itens():
+    assert total_do_carrinho([(4.50, 2), (10.00, 1)]) == 19.00
+
+
+def test_desconto_grande():
+    assert preco_com_desconto(200, 25) == 140
+</pre>
+
+<p>A Ana instalou o <code>pytest</code> num <a href="venv.html">ambiente virtual</a> (no Ubuntu, o <code>pip</code> fora de um ambiente virtual é bloqueado; veja <a href="pip.html">pip</a>) e rodou. O último teste está errado de propósito (25% de 200 é 50, e 200 − 50 = 150):</p>
+
+<pre class="term">$ python3 -m venv .venv
+$ .venv/bin/pip install -q pytest
+$ .venv/bin/pytest --version
+pytest 9.1.1
+$ .venv/bin/pytest test_pytest.py
+============================= test session starts ==============================
+platform linux -- Python 3.14.4, pytest-9.1.1, pluggy-1.7.0
+rootdir: /home/ana
+collected 3 items
+
+test_pytest.py ..F                                                       [100%]
+
+=================================== FAILURES ===================================
+_____________________________ test_desconto_grande _____________________________
+
+    def test_desconto_grande():
+&gt;       assert preco_com_desconto(200, 25) == 140
+E       assert 150.0 == 140
+E        +  where 150.0 = preco_com_desconto(200, 25)
+
+test_pytest.py:13: AssertionError
+=========================== short test summary info ============================
+FAILED test_pytest.py::test_desconto_grande - assert 150.0 == 140
+========================= 1 failed, 2 passed in 0.03s ==========================
+</pre>
+
+<p>Os mesmos pontos e o mesmo <code>F</code>. A diferença está no relatório: o <code>&gt;</code> aponta a linha que falhou, e as linhas com <code>E</code> mostram de onde veio cada valor ("150.0, que é o que <code>preco_com_desconto(200, 25)</code> devolveu"), mesmo com um <code>assert</code> comum. O <code>pytest</code> também roda, sem mudar nada, os testes escritos com <code>unittest</code> (<code>.venv/bin/pytest test_loja.py</code> dá <code>7 passed</code>). (A versão do <code>pytest</code> e o tempo mudam com o tempo; o que importa é o formato.) As missões deste guia usam o <code>unittest</code>, que vem com o Python.</p>
+
+<hr>
+
+<h2>Formas diferentes de testar</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Vantagem</th><th>Desvantagem</th><th>Quando usar</th></tr>
+<tr><td><code>assert</code> solto</td><td>Uma linha, nada para aprender</td><td>Para no primeiro erro; some com <code>-O</code></td><td>Conferências rápidas, exercícios</td></tr>
+<tr><td><code>unittest</code></td><td>Vem com o Python; roda tudo e mostra um relatório</td><td>Mais "cerimônia": classe, <code>self</code>, <code>assertEqual</code></td><td>Os testes de um programa de verdade, sem instalar nada</td></tr>
+<tr><td><code>doctest</code></td><td>O exemplo da documentação nunca fica desatualizado</td><td>Compara texto: frágil com <code>float</code>, espaços, endereços</td><td>Exemplos curtos nas docstrings</td></tr>
+<tr><td><code>pytest</code></td><td><code>assert</code> simples com relatório detalhado; muitos recursos</td><td>Precisa instalar</td><td>Projetos maiores; o mais usado no mercado</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>"NO TESTS RAN": o arquivo com o nome errado</strong>
+<p>A Ana guardou os testes num arquivo chamado <code>verifica_loja.py</code> e rodou:</p>
+<pre class="term">$ python3 -m unittest
+
+----------------------------------------------------------------------
+Ran 0 tests in 0.000s
+
+NO TESTS RAN
+$ echo $?
+5
+</pre>
+<p>"Rodei 0 testes. Nenhum teste rodou." E o código de saída é 5, o jeito do <code>unittest</code> avisar "não achei nada". A descoberta automática só olha arquivos cujo nome casa com <code>test*.py</code>. <strong>Como consertar:</strong> renomeie para <code>test_loja.py</code> (ou rode o arquivo pelo nome: <code>python3 -m unittest verifica_loja</code>). Curiosidade: <code>testes_loja.py</code> funciona, porque "testes" também começa com "test".</p>
+</div>
+
+<div class="cenario">
+<strong>O teste que nunca roda</strong>
+<pre class="file" data-file="test_esquecido.py">import unittest
+
+from loja import preco_com_desconto
+
+
+class TestDesconto(unittest.TestCase):
+
+    def test_dez_por_cento(self):
+        self.assertEqual(preco_com_desconto(100, 10), 90)
+
+    def verifica_sem_desconto(self):
+        self.assertEqual(preco_com_desconto(80, 0), 1000)   # errado de propósito
+</pre>
+<pre class="term">$ python3 -m unittest -v test_esquecido
+test_dez_por_cento (test_esquecido.TestDesconto.test_dez_por_cento) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+OK
+</pre>
+<p><code>OK</code>, mas o segundo teste (que está errado de propósito: 80 sem desconto não dá 1000) nem rodou. O método se chama <code>verifica_…</code>, e o <code>unittest</code> só roda métodos que começam com <code>test</code>. É o erro mais perigoso: tudo parece verde. <strong>Como consertar:</strong> <code>def test_sem_desconto(self):</code>. Dica: confira se o número em <code>Ran N tests</code> é o número de testes que você escreveu.</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu o <code>self</code></strong>
+<pre class="file" data-file="test_sem_self.py">import unittest
+
+from loja import preco_com_desconto
+
+
+class TestDesconto(unittest.TestCase):
+
+    def test_dez_por_cento():
+        self.assertEqual(preco_com_desconto(100, 10), 90)
+</pre>
+<pre class="term">$ python3 -m unittest test_sem_self
+E
+======================================================================
+ERROR: test_dez_por_cento (test_sem_self.TestDesconto.test_dez_por_cento)
+----------------------------------------------------------------------
+TypeError: TestDesconto.test_dez_por_cento() takes 0 positional arguments but 1 was given
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (errors=1)
+</pre>
+<p>"<code>test_dez_por_cento()</code> recebe 0 argumentos, mas foi dado 1." O <code>unittest</code> chama o método passando o objeto do teste (é isso que o <code>self</code> recebe), e o método não tinha lugar para ele. Repare que o resultado é <code>E</code>, não <code>F</code>: o teste quebrou antes de conferir qualquer coisa. <strong>Como consertar:</strong> <code>def test_dez_por_cento(self):</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Centavos que não fecham: <code>assertEqual</code> com <code>float</code></strong>
+<pre class="file" data-file="test_centavos.py">import unittest
+
+from loja import preco_com_desconto
+
+
+class TestCentavos(unittest.TestCase):
+
+    def test_igual(self):
+        self.assertEqual(0.1 + 0.2, 0.3)
+
+    def test_quase_igual(self):
+        self.assertAlmostEqual(0.1 + 0.2, 0.3)
+
+    def test_desconto_quebrado(self):
+        self.assertAlmostEqual(preco_com_desconto(19.90, 15), 16.915)
+</pre>
+<pre class="term">$ python3 -m unittest test_centavos
+.F.
+======================================================================
+FAIL: test_igual (test_centavos.TestCentavos.test_igual)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ana/test_centavos.py", line 9, in test_igual
+    self.assertEqual(0.1 + 0.2, 0.3)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+AssertionError: 0.30000000000000004 != 0.3
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.001s
+
+FAILED (failures=1)
+</pre>
+<p>Para o computador, <code>0.1 + 0.2</code> dá <code>0.30000000000000004</code>: os números com casas decimais são guardados com um errinho minúsculo (a aula <a href="numeros.html">Números</a> explica por quê). O <code>assertEqual</code> exige igualdade exata e falha. <strong>Como consertar:</strong> para <code>float</code>, use <code>assertAlmostEqual</code>, que compara até a 7ª casa decimal; os outros dois testes passaram assim.</p>
+</div>
+
+<div class="trypy" data-goal="out:Ran 3 tests;;out:OK;;exit:0">
+<p class="try-task"><strong>Missão:</strong> os testes acharam um erro em <code>total_do_carrinho()</code>. Leia o relatório (o <code>F</code>), descubra o que está errado <strong>na função</strong> e conserte. Os testes estão certos: não mexa neles.</p>
+<pre class="script" data-file="main.py">import unittest
+
+
+def total_do_carrinho(itens):
+    """Soma preço × quantidade de cada item do carrinho."""
+    total = 0
+    for preco, quantidade in itens:
+        total = preco * quantidade
+    return total
+
+
+class TestCarrinho(unittest.TestCase):
+
+    def test_vazio(self):
+        self.assertEqual(total_do_carrinho([]), 0)
+
+    def test_um_item(self):
+        self.assertEqual(total_do_carrinho([(4.50, 2)]), 9.00)
+
+    def test_tres_itens(self):
+        self.assertEqual(total_do_carrinho([(4.50, 2), (10.00, 1), (2.00, 3)]), 25.00)
+
+
+unittest.main()
+</pre>
+<pre class="solucao" data-file="main.py">import unittest
+
+
+def total_do_carrinho(itens):
+    """Soma preço × quantidade de cada item do carrinho."""
+    total = 0
+    for preco, quantidade in itens:
+        total += preco * quantidade
+    return total
+
+
+class TestCarrinho(unittest.TestCase):
+
+    def test_vazio(self):
+        self.assertEqual(total_do_carrinho([]), 0)
+
+    def test_um_item(self):
+        self.assertEqual(total_do_carrinho([(4.50, 2)]), 9.00)
+
+    def test_tres_itens(self):
+        self.assertEqual(total_do_carrinho([(4.50, 2), (10.00, 1), (2.00, 3)]), 25.00)
+
+
+unittest.main()
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>assert condição</code></td><td>Para com <code>AssertionError</code> se a condição for falsa</td></tr>
+<tr><td><code>assert condição, "mensagem"</code></td><td>O mesmo, com uma mensagem</td></tr>
+<tr><td><code>class TestAlgo(unittest.TestCase):</code></td><td>Uma caixa de testes do <code>unittest</code></td></tr>
+<tr><td><code>def test_algo(self):</code></td><td>Um teste (o nome tem de começar com <code>test</code>)</td></tr>
+<tr><td><code>self.assertEqual(veio, esperado)</code></td><td>Confere igualdade e mostra os dois valores se falhar</td></tr>
+<tr><td><code>with self.assertRaises(ValueError):</code></td><td>Confere que o bloco lança o erro</td></tr>
+<tr><td><code>unittest.main()</code></td><td>Roda os testes do arquivo</td></tr>
+<tr><td><code>python3 -m unittest [-v] [alvo]</code></td><td>Descobre e roda os testes (<code>test*.py</code>)</td></tr>
+<tr><td><code>&gt;&gt;&gt; código</code> + resposta, na docstring</td><td>Um exemplo que o <code>doctest</code> confere</td></tr>
+<tr><td><code>python3 -m doctest [-v] arquivo.py</code></td><td>Roda os exemplos das docstrings (silêncio = passou)</td></tr>
+<tr><td><code>doctest.testmod()</code></td><td>O mesmo, de dentro do programa</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>No relatório</th><th>Quer dizer</th></tr>
+<tr><td><code>.</code></td><td>Um teste passou</td></tr>
+<tr><td><code>F</code> / <code>FAIL:</code></td><td>Falha: um <code>assert…</code> não se confirmou (a resposta veio errada)</td></tr>
+<tr><td><code>E</code> / <code>ERROR:</code></td><td>Erro: o teste estourou uma exceção antes de terminar</td></tr>
+<tr><td><code>s</code></td><td>Teste pulado de propósito (<code>@unittest.skip</code>)</td></tr>
+<tr><td><code>OK</code> / <code>FAILED (failures=…, errors=…)</code></td><td>Tudo passou / quantos falharam</td></tr>
+<tr><td><code>NO TESTS RAN</code></td><td>Nenhum teste encontrado: confira os nomes (<code>test*.py</code>, <code>test…</code>)</td></tr>
+<tr><td><code>Expected:</code> / <code>Got:</code></td><td>No <code>doctest</code>: o que estava escrito / o que veio</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O método de igualdade</h3>
+<p>Complete o teste que confere que <code>dobro(4)</code> dá 8:</p>
+<div class="ex-code">self.<input data-answer="assertEqual" aria-label="método">(dobro(4), 8)</div>
+</div>
+
+<div class="exercise">
+<h3>2. O comando</h3>
+<p>Complete o comando que descobre e roda todos os testes da pasta:</p>
+<div class="ex-code">python3 -m <input data-answer="unittest" aria-label="módulo"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">3. O relatório mostrou <code>..E.</code>. O que aconteceu no terceiro teste?</p>
+<label><input type="radio" name="q3"> Passou</label>
+<label><input type="radio" name="q3"> O <code>assertEqual</code> encontrou valores diferentes</label>
+<label><input type="radio" name="q3"> Estourou uma exceção antes de terminar (por exemplo, um <code>TypeError</code>)</label>
+<label><input type="radio" name="q3"> Foi pulado</label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Num <code>TestCase</code>, qual destes métodos o <code>unittest</code> <strong>não</strong> roda?</p>
+<label><input type="radio" name="q4"> <code>def test_total(self):</code></label>
+<label><input type="radio" name="q4"> <code>def confere_total(self):</code></label>
+<label><input type="radio" name="q4"> <code>def testar_total(self):</code></label>
+<label><input type="radio" name="q4"> <code>def test(self):</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. Um <code>doctest</code> espera <code>[25, 25]</code> e a função devolve <code>[25.0, 25.0]</code>. O que acontece?</p>
+<label><input type="radio" name="q5"> Passa, porque <code>25 == 25.0</code></label>
+<label><input type="radio" name="q5"> Dá <code>TypeError</code></label>
+<label><input type="radio" name="q5"> O <code>doctest</code> ignora números</label>
+<label><input type="radio" name="q5"> Falha: o <code>doctest</code> compara o texto, e <code>[25, 25]</code> não é o mesmo texto que <code>[25.0, 25.0]</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Para comparar <code>0.1 + 0.2</code> com <code>0.3</code> num teste, o melhor é:</p>
+<label><input type="radio" name="q6"> <code>assertAlmostEqual</code></label>
+<label><input type="radio" name="q6"> <code>assertEqual</code></label>
+<label><input type="radio" name="q6"> <code>assertIs</code></label>
+<label><input type="radio" name="q6"> Não testar números com casas decimais</label>
+</div>
+
+<h3>Missão final: os testes da agenda</h3>
+
+<div class="trypy" data-goal="out:Ran 4 tests;;out:OK;;exit:0;;src:def test_\w+\(self\)">
+<p class="try-task"><strong>Missão:</strong> a função <code>formatar_telefone()</code> recebe só os números de um celular e devolve o telefone formatado. Escreva <strong>quatro</strong> testes para ela num <code>TestCase</code>: o exemplo do comentário; um telefone que já vem com espaços (<code>" 86999990002 "</code>); um com número de menos (tem de lançar <code>ValueError</code>); e um com letras (também <code>ValueError</code>). O relatório tem de dizer <code>Ran 4 tests</code> e <code>OK</code>.</p>
+<pre class="script" data-file="main.py">import unittest
+
+
+def formatar_telefone(numeros):
+    """'86999990001' vira '(86) 99999-0001'."""
+    numeros = numeros.strip()
+    if len(numeros) != 11 or not numeros.isdigit():
+        raise ValueError(f"telefone inválido: {numeros!r}")
+    return f"({numeros[:2]}) {numeros[2:7]}-{numeros[7:]}"
+
+
+# escreva aqui a classe com os quatro testes
+
+
+unittest.main()
+</pre>
+<pre class="solucao" data-file="main.py">import unittest
+
+
+def formatar_telefone(numeros):
+    """'86999990001' vira '(86) 99999-0001'."""
+    numeros = numeros.strip()
+    if len(numeros) != 11 or not numeros.isdigit():
+        raise ValueError(f"telefone inválido: {numeros!r}")
+    return f"({numeros[:2]}) {numeros[2:7]}-{numeros[7:]}"
+
+
+class TestTelefone(unittest.TestCase):
+
+    def test_formata(self):
+        self.assertEqual(formatar_telefone("86999990001"), "(86) 99999-0001")
+
+    def test_com_espacos(self):
+        self.assertEqual(formatar_telefone(" 86999990002 "), "(86) 99999-0002")
+
+    def test_curto_demais(self):
+        with self.assertRaises(ValueError):
+            formatar_telefone("8699999")
+
+    def test_com_letras(self):
+        with self.assertRaises(ValueError):
+            formatar_telefone("86abc990001")
+
+
+unittest.main()
+</pre>
+</div>
+
+<p>Agora faça uma experiência: "estrague" a função (troque <code>numeros[7:]</code> por <code>numeros[8:]</code>) e rode de novo. Os testes pegam o defeito na hora. É para isso que eles servem.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Um teste chama o seu código com valores de resposta conhecida e compara. Passou, silêncio (ou um ponto); falhou, um relatório.</li>
+  <li><code>assert condição, "mensagem"</code> é a conferência mais simples; para no primeiro erro e some com <code>python3 -O</code>.</li>
+  <li><code>unittest</code>: classes que herdam de <code>unittest.TestCase</code>, métodos <code>test…(self)</code>, conferências <code>self.assertEqual</code>, <code>assertRaises</code>, <code>assertAlmostEqual</code>…</li>
+  <li><code>python3 -m unittest</code> acha os arquivos <code>test*.py</code> e roda tudo. No relatório: <code>.</code> passou, <code>F</code> resposta errada, <code>E</code> exceção no meio. Confira o <code>Ran N tests</code>.</li>
+  <li><code>doctest</code> testa os exemplos <code>&gt;&gt;&gt;</code> das docstrings, comparando o <strong>texto</strong>. Silêncio quer dizer que passou.</li>
+  <li><code>pytest</code> (instalado num venv) usa funções e <code>assert</code> simples, com um relatório detalhado.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
