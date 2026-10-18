@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Introdução — o que é Python e para que serve | Guia Python</title>
+<meta name="description" content="O que é a linguagem Python para quem nunca programou: o que é programar, o que quer dizer linguagem interpretada, de onde veio o nome, a história de Guido van Rossum, onde o Python é usado hoje (automação, dados, inteligência artificial, sites), Python 2 e Python 3, o Zen do Python e as primeiras mensagens reais do interpretador.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Introdução</span></h1>
+
+<p class="intro">O <strong>Python</strong> (lê-se "páiton") é uma linguagem de programação criada para ser <strong>fácil de ler e de escrever</strong>. Um programa em Python parece quase uma lista de instruções em inglês simples, e por isso ele é a primeira linguagem de muita gente, de crianças na escola a cientistas. Mas não se engane com a simplicidade: o mesmo Python roda sites enormes, analisa dados de empresas, controla robôs e treina inteligências artificiais. Nesta aula você vai entender o que é programar, como o Python funciona por dentro, de onde ele veio e onde ele está hoje.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é programar e o que é uma linguagem de programação.</li>
+  <li>O que quer dizer que o Python é uma linguagem <strong>interpretada</strong>.</li>
+  <li>Por que o Python é considerado fácil, comparando com outra linguagem.</li>
+  <li>A história: Guido van Rossum, o nome tirado de um programa de humor e as versões 2 e 3.</li>
+  <li>Onde o Python é usado hoje.</li>
+  <li>O "Zen do Python", a filosofia escondida dentro da linguagem.</li>
+  <li>A sua primeira mensagem de erro de verdade, e como ler o que ela diz.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>Primeiro: o que é programar?</h2>
+<p>Um computador não "entende" nada sozinho. Ele só sabe seguir instruções, uma de cada vez, muito rápido. <strong>Programar</strong> é escrever essas instruções. Uma <strong>linguagem de programação</strong> é o idioma combinado entre você e o computador: um conjunto pequeno de palavras e símbolos, com regras rígidas sobre onde cada coisa vai.</p>
+
+<p>Pense numa <strong>receita de bolo</strong>. Ela tem uma lista de passos, em ordem: "pré-aqueça o forno", "misture os ovos com o açúcar", "<em>se</em> a massa estiver grossa, acrescente leite", "bata <em>até</em> ficar lisa". Um programa é igual: uma lista de passos, alguns com decisões ("se…") e outros com repetições ("até…"). A diferença é que o computador segue a receita <strong>ao pé da letra</strong>. Uma pessoa entende "açucar" sem acento; o computador, não. Se você escrever <code>prnt</code> em vez de <code>print</code>, ele não adivinha o que você quis dizer: ele para e reclama. Essas reclamações são as <strong>mensagens de erro</strong>, e este guia vai ensinar você a ler cada uma delas.</p>
+
+<p>Veja um programa Python de verdade. É a lista de compras da Ana:</p>
+
+<pre class="file" data-file="lista.py">compras = ["arroz", "feijão", "café"]
+for item in compras:
+    print("Comprar:", item)
+</pre>
+
+<p>Mesmo sem saber nada de Python, dá para desconfiar do que ele faz: guarda três itens numa lista chamada <code>compras</code> e, <strong>para cada item</strong> (<code>for item in compras</code>), mostra na tela (<code>print</code>, "imprimir") a palavra "Comprar:" e o item. A Ana rodou o programa no terminal do computador dela:</p>
+
+<pre class="term">$ python3 lista.py
+Comprar: arroz
+Comprar: feijão
+Comprar: café</pre>
+
+<p>Você não precisa entender cada detalhe agora: a lista tem aula própria (<a href="listas.html">Listas</a>), o <code>for</code> também (<a href="for.html">for</a>), e o <code>print</code> é o assunto de <a href="print.html">print()</a>. Por enquanto, repare em como o programa é <strong>curto</strong> e quase se lê em voz alta.</p>
+
+<p>Você mesmo pode rodar esse programa aqui, sem instalar nada. As caixas <strong>Experimente</strong> do guia rodam Python de verdade, dentro do navegador (a aula <a href="simulador.html">O Editor do Guia</a> mostra tudo o que elas fazem):</p>
+
+<div class="trypy" data-goal="out:Comprar: leite">
+<p class="try-task"><strong>Missão:</strong> rode o programa como está. Depois, acrescente <code>"leite"</code> à lista (dentro dos colchetes, depois de <code>"café"</code>, separado por vírgula) e rode de novo: deve aparecer uma quarta linha, <code>Comprar: leite</code>.</p>
+<pre class="script" data-file="main.py">compras = ["arroz", "feijão", "café"]
+for item in compras:
+    print("Comprar:", item)
+</pre>
+<pre class="solucao" data-file="main.py">compras = ["arroz", "feijão", "café", "leite"]
+for item in compras:
+    print("Comprar:", item)
+</pre>
+</div>
+
+<p>Você mudou <strong>um dado</strong> (a lista) e o programa se adaptou sozinho, sem você mexer nas outras linhas. Essa é a graça de programar: escrever a receita uma vez e usá-la com outros ingredientes.</p>
+
+<hr>
+
+<h2>O Python é uma linguagem interpretada</h2>
+<p>O processador do computador (a CPU, o "cérebro") não entende português, nem inglês, nem Python. Ele só entende <strong>código de máquina</strong>: sequências de números que querem dizer coisas como "some estes dois valores" ou "guarde isto na memória". Alguém precisa traduzir o texto do programa para essa língua. Existem dois jeitos de fazer isso:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Jeito</th><th>Como funciona</th><th>Comparação</th><th>Exemplos</th></tr>
+<tr><td><strong>Compilar</strong></td><td>Um programa chamado <strong>compilador</strong> traduz o texto inteiro <strong>antes</strong>, uma vez só, e gera um arquivo executável, que depois roda sozinho.</td><td>Traduzir um livro inteiro e imprimir a tradução. Quem lê a versão traduzida não precisa do tradutor.</td><td>C, C++, Rust, Go</td></tr>
+<tr><td><strong>Interpretar</strong></td><td>Um programa chamado <strong>interpretador</strong> lê o texto e vai executando as instruções, <strong>toda vez</strong> que o programa roda.</td><td>Um intérprete numa palestra, traduzindo frase por frase enquanto a pessoa fala. Sem o intérprete na sala, ninguém entende.</td><td><strong>Python</strong>, JavaScript, PHP, Ruby</td></tr>
+</table>
+</div>
+
+<p>O Python é <strong>interpretado</strong>. O seu programa é um arquivo de texto comum, terminado em <code>.py</code>, e quem o executa é o <strong>interpretador</strong>, um programa que, no Linux, se chama <code>python3</code>. Foi ele que a Ana chamou no terminal (<code>python3 lista.py</code>): "interpretador, leia o arquivo <code>lista.py</code> e faça o que está escrito". A aula <a href="executar.html">Rodando um Programa (.py)</a> mostra isso passo a passo.</p>
+
+<p>O interpretador mais usado (o que vem no Linux, o do site oficial e o do editor do guia) se chama <strong>CPython</strong>, porque é escrito na linguagem C. O próprio Python confirma:</p>
+
+<pre class="term">$ python3 -c "import platform; print(platform.python_implementation())"
+CPython</pre>
+
+<p>(O <code>-c</code> manda o <code>python3</code> rodar o texto que vem logo depois, em vez de um arquivo. É um atalho para testar uma linha só.)</p>
+
+<h3>O lado bom e o lado ruim</h3>
+<p>A interpretação traz uma vantagem enorme para quem está aprendendo: você escreve, roda e vê o resultado na hora, sem uma etapa de compilação no meio. Dá até para conversar com o Python linha por linha, no <a href="repl.html">modo interativo (<code>&gt;&gt;&gt;</code>)</a>. O preço é a velocidade: em contas muito pesadas, um programa Python costuma ser bem mais lento que o mesmo programa em C. Na prática, isso raramente atrapalha, porque as bibliotecas que fazem o trabalho pesado (de ciência de dados e de inteligência artificial, por exemplo) são escritas em C por baixo, e o Python só "dá as ordens".</p>
+
+<div class="note">
+<strong>Uma tradução escondida</strong>
+<p>Para ser exato: antes de executar, o CPython traduz o seu programa para um formato intermediário, o <em>bytecode</em>, que é mais rápido de executar do que o texto. Isso acontece sozinho, em milésimos de segundo, toda vez que você roda o programa. Às vezes você vai ver uma pasta chamada <code>__pycache__</code> aparecer ao lado dos seus arquivos: é ali que o Python guarda essa tradução para reaproveitar. Pode ignorar (ou apagar; ele refaz quando precisar).</p>
+</div>
+
+<hr>
+
+<h2>Por que dizem que o Python é fácil</h2>
+<p>Compare o programa mais simples que existe, o que escreve uma frase na tela, em duas linguagens. Em <strong>C</strong>:</p>
+
+<pre class="file" data-file="ola.c">#include &lt;stdio.h&gt;
+
+int main(void) {
+    printf("Olá, mundo!\n");
+    return 0;
+}
+</pre>
+
+<p>Em <strong>Python</strong>:</p>
+
+<pre class="file" data-file="ola.py">print("Olá, mundo!")
+</pre>
+
+<pre class="term">$ python3 ola.py
+Olá, mundo!</pre>
+
+<p>Uma linha. Sem <code>#include</code>, sem <code>main</code>, sem chaves, sem ponto e vírgula, sem compilar. Isso não quer dizer que o C seja ruim (ele é ótimo no que faz: veja o <a href="https://wallysondevs.github.io/guia-c/">Guia C</a>), mas mostra a escolha do Python: <strong>deixar o programa limpo</strong>, para que você pense no problema, e não na pontuação.</p>
+
+<p>Três características explicam essa fama:</p>
+<ul>
+  <li><strong>Pouca pontuação.</strong> Onde outras linguagens usam chaves <code>{ }</code> para agrupar instruções, o Python usa a própria <strong>indentação</strong> (o recuo do texto na linha). O programa é obrigado a ficar organizado. A aula <a href="sintaxe.html">Sintaxe e Indentação</a> explica essa regra, que é a mais famosa do Python.</li>
+  <li><strong>Palavras em inglês simples.</strong> <code>if</code> ("se"), <code>for</code> ("para"), <code>in</code> ("em"), <code>and</code> ("e"), <code>not</code> ("não"), <code>True</code> ("verdadeiro"). Muito programa Python se lê como uma frase.</li>
+  <li><strong>"Pilhas incluídas"</strong> (<em>batteries included</em>). O Python vem com uma biblioteca padrão gigante: ferramentas prontas para datas, contas, arquivos, sorteios, internet, planilhas CSV e muito mais. Para muita coisa, você não precisa instalar nada além do próprio Python.</li>
+</ul>
+
+<hr>
+
+<h2>Um pouco de história</h2>
+<p>No Natal de 1989, o programador holandês <strong>Guido van Rossum</strong> trabalhava num instituto de pesquisa em Amsterdã, o CWI, e queria um projeto para passar o tempo nas férias. Ele resolveu criar uma linguagem nova, que fosse mais fácil de usar do que o C e mais poderosa do que os "scripts" do terminal. Em fevereiro de 1991, publicou a primeira versão.</p>
+
+<p>E o nome? <strong>Não tem nada a ver com a cobra.</strong> Guido era fã do <em>Monty Python's Flying Circus</em>, um programa de humor britânico dos anos 1970, e queria um nome curto, diferente e um pouco misterioso. (A cobra do logotipo veio depois, porque era inevitável.) Até hoje a documentação oficial tem piadas do grupo escondidas nos exemplos: em vez de <code>foo</code> e <code>bar</code>, os nomes usados por programadores do mundo inteiro, ela usa <code>spam</code> e <code>eggs</code>, de um esquete famoso.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Ano</th><th>O que aconteceu</th></tr>
+<tr><td>1989</td><td>Guido van Rossum começa a criar o Python, nas férias de fim de ano.</td></tr>
+<tr><td>1991</td><td>Sai a primeira versão pública, a 0.9.0.</td></tr>
+<tr><td>1994</td><td>Python 1.0.</td></tr>
+<tr><td>2000</td><td>Python 2.0.</td></tr>
+<tr><td>2008</td><td><strong>Python 3.0</strong>: uma revisão grande, que corrigiu defeitos antigos, mas deixou de ser compatível com o Python 2 (um programa escrito para um nem sempre roda no outro).</td></tr>
+<tr><td>2018</td><td>Guido deixa o posto de "ditador benevolente vitalício" (o apelido que a comunidade dava a ele). Desde então, a linguagem é decidida por um conselho de cinco pessoas eleitas.</td></tr>
+<tr><td>2020</td><td>Fim do Python 2: a partir de 1º de janeiro, ele não recebe mais correções.</td></tr>
+<tr><td>2025</td><td>Sai o <strong>Python 3.14</strong>, a versão que este guia ensina (o "π-thon", por causa do 3,14). Desde 2020, sai uma versão nova todo mês de outubro.</td></tr>
+</table>
+</div>
+
+<h3>Python 2 e Python 3: por que o comando é <code>python3</code></h3>
+<p>A troca do Python 2 para o Python 3 demorou mais de dez anos, e durante esse tempo os dois conviveram no mesmo computador. Para não confundir, o Linux passou a chamar o novo de <code>python3</code>. O Python 2 morreu, mas o nome ficou: no Ubuntu, o comando é <strong><code>python3</code></strong>, e o comando <code>python</code>, sozinho, nem existe (a aula <a href="instalar.html">Instalar o Python</a> mostra o que acontece se você digitar). Os números depois do 3 são as versões: 3.12, 3.13, 3.14… Todas são "Python 3", e um programa escrito para uma roda nas seguintes quase sempre sem mudar nada.</p>
+
+<p>A Ana conferiu a versão do computador dela:</p>
+
+<pre class="term">$ python3 --version
+Python 3.14.4                                       « Python 3, versão 3.14 (a revisão 4 da 3.14)</pre>
+
+<hr>
+
+<h2>Onde o Python está hoje</h2>
+<p>O Python é uma das linguagens mais usadas do mundo. Ele aparece em quase todo lugar onde alguém precisa resolver um problema rápido, ou lidar com muitos dados:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Onde</th><th>Exemplos</th><th>Por que Python</th></tr>
+<tr><td><strong>Automação</strong></td><td>Renomear mil fotos de uma vez, juntar planilhas, mandar relatórios por email, baixar dados de um site todo dia.</td><td>Um programa de poucas linhas resolve uma tarefa que levaria horas à mão.</td></tr>
+<tr><td><strong>Ciência de dados</strong></td><td>As bibliotecas <strong>pandas</strong> (tabelas), <strong>NumPy</strong> (contas com muitos números) e <strong>Matplotlib</strong> (gráficos), e os cadernos <strong>Jupyter</strong>, onde texto, código e gráfico ficam juntos.</td><td>Analistas e cientistas querem pensar nos dados, não na linguagem.</td></tr>
+<tr><td><strong>Inteligência artificial</strong></td><td><strong>PyTorch</strong> e <strong>TensorFlow</strong>, as ferramentas mais usadas para treinar modelos de aprendizado de máquina.</td><td>O Python dá as ordens; as contas pesadas rodam em C e na placa de vídeo.</td></tr>
+<tr><td><strong>Sites e sistemas</strong></td><td>Os frameworks <strong>Django</strong> e <strong>Flask</strong>. O Instagram, por exemplo, foi construído com Django.</td><td>Escrever e mudar rápido, com muita coisa pronta.</td></tr>
+<tr><td><strong>O próprio Linux</strong></td><td>Muitos programas do sistema são escritos em Python. Um deles você vai conhecer na próxima aula: a mensagem que o Ubuntu mostra quando você digita um comando que não existe.</td><td>É fácil de manter e já vem instalado.</td></tr>
+<tr><td><strong>Dentro de outros programas</strong></td><td>O Blender (modelos 3D), o GIMP (imagens) e o LibreOffice (escritório) deixam você criar extensões e automatizar tarefas em Python.</td><td>Uma linguagem fácil para quem não é programador profissional.</td></tr>
+<tr><td><strong>Escolas</strong></td><td>É a linguagem de muitos cursos introdutórios de programação, e das plaquinhas Raspberry Pi e micro:bit usadas em sala de aula.</td><td>Dá para fazer algo útil já na primeira aula.</td></tr>
+</table>
+</div>
+
+<p>Aquele programa do Ubuntu, o que sugere o pacote quando você digita um comando que não existe, é mesmo um programa Python. A primeira linha dele diz quem deve executá-lo:</p>
+
+<pre class="term">$ head -1 /usr/lib/command-not-found
+#!/usr/bin/python3                                  « "quem lê este arquivo é o python3"
+$ file /usr/lib/command-not-found
+/usr/lib/command-not-found: Python script, ASCII text executable</pre>
+
+<p>(O <code>head -1</code> mostra a primeira linha de um arquivo, e o <code>file</code> diz que tipo de arquivo ele é: "script Python". Essa linha esquisita, que começa com <code>#!</code>, tem nome e você vai aprender a usá-la na aula <a href="executar.html">Rodando um Programa (.py)</a>.)</p>
+
+<hr>
+
+<h2>O Zen do Python</h2>
+<p>Em 1999, o programador Tim Peters resumiu a filosofia do Python em 19 frases curtas. Elas ficaram tão famosas que viraram parte da própria linguagem: estão guardadas dentro do Python, e aparecem quando você pede <code>import this</code> ("importe isto"):</p>
+
+<pre class="term">$ python3 -c "import this"
+The Zen of Python, by Tim Peters
+
+Beautiful is better than ugly.
+Explicit is better than implicit.
+Simple is better than complex.
+Complex is better than complicated.
+Flat is better than nested.
+Sparse is better than dense.
+Readability counts.
+Special cases aren't special enough to break the rules.
+Although practicality beats purity.
+Errors should never pass silently.
+Unless explicitly silenced.
+In the face of ambiguity, refuse the temptation to guess.
+There should be one-- and preferably only one --obvious way to do it.
+Although that way may not be obvious at first unless you're Dutch.
+Now is better than never.
+Although never is often better than *right* now.
+If the implementation is hard to explain, it's a bad idea.
+If the implementation is easy to explain, it may be a good idea.
+Namespaces are one honking great idea -- let's do more of those!</pre>
+
+<p>Algumas, traduzidas, que vão aparecer o tempo todo neste guia:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Em inglês</th><th>Em português</th><th>O que quer dizer na prática</th></tr>
+<tr><td>Beautiful is better than ugly.</td><td>Bonito é melhor que feio.</td><td>Capriche na aparência do código: espaços, nomes, organização.</td></tr>
+<tr><td>Simple is better than complex.</td><td>Simples é melhor que complexo.</td><td>Entre duas soluções que funcionam, escolha a mais simples.</td></tr>
+<tr><td>Readability counts.</td><td>A legibilidade conta.</td><td>Código é lido muito mais vezes do que é escrito. Escreva para quem vai ler (inclusive você, daqui a um mês).</td></tr>
+<tr><td>Errors should never pass silently.</td><td>Erros nunca devem passar em silêncio.</td><td>Quando algo dá errado, o Python avisa, em vez de seguir com um resultado errado. Por isso ele mostra tantas mensagens de erro: elas são amigas.</td></tr>
+<tr><td>In the face of ambiguity, refuse the temptation to guess.</td><td>Diante da ambiguidade, recuse a tentação de adivinhar.</td><td>Se o Python não tem certeza do que você quis, ele não chuta: ele pergunta (com um erro).</td></tr>
+<tr><td>Although that way may not be obvious at first unless you're Dutch.</td><td>Embora esse jeito possa não ser óbvio no começo, a não ser que você seja holandês.</td><td>Uma piada com o Guido, que é holandês.</td></tr>
+</table>
+</div>
+
+<div class="trypy">
+<p class="try-task"><strong>Experimente:</strong> clique em Rodar e leia o Zen do Python no próprio editor. Ele está dentro de todo Python, inclusive do que roda no seu navegador.</p>
+<pre class="script" data-file="main.py">import this
+</pre>
+</div>
+
+<hr>
+
+<h2>Python e outras linguagens</h2>
+<p>Quem começa a estudar programação ouve falar de muitas linguagens. Cada uma brilha num lugar diferente:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th>Python</th><th>JavaScript</th><th>C</th></tr>
+<tr><td><strong>Nasceu</strong></td><td>1991, Guido van Rossum</td><td>1995, Brendan Eich</td><td>1972, Dennis Ritchie</td></tr>
+<tr><td><strong>Como roda</strong></td><td>Interpretado (pelo <code>python3</code>)</td><td>Interpretado (pelo navegador ou pelo Node.js)</td><td>Compilado para código de máquina</td></tr>
+<tr><td><strong>Agrupa instruções com</strong></td><td>Indentação (o recuo)</td><td>Chaves <code>{ }</code></td><td>Chaves <code>{ }</code></td></tr>
+<tr><td><strong>Olá, mundo</strong></td><td><code>print("Olá")</code></td><td><code>console.log("Olá");</code></td><td><code>printf("Olá\n");</code> (dentro de <code>main</code>)</td></tr>
+<tr><td><strong>Velocidade</strong></td><td>Média; alta quando usa bibliotecas escritas em C</td><td>Alta</td><td>Muito alta</td></tr>
+<tr><td><strong>Famoso por</strong></td><td>Automação, dados, inteligência artificial, ensino</td><td>Páginas da web (é a única linguagem que todo navegador entende)</td><td>Sistemas operacionais, aparelhos eletrônicos</td></tr>
+</table>
+</div>
+
+<p>Nenhuma é "a melhor": cada uma resolve um tipo de problema. E a boa notícia é que as ideias de programação (variáveis, decisões, repetições, funções) são as mesmas em todas. Quem aprende a programar em Python aprende qualquer outra linguagem muito mais rápido.</p>
+
+<hr>
+
+<h2>Quando dá errado</h2>
+<p>Você ainda não escreveu programas, mas já dá para conhecer duas confusões muito comuns de quem está começando. E a primeira traz a sua primeira mensagem de erro de verdade.</p>
+
+<div class="cenario">
+<strong>Um código antigo, de Python 2</strong>
+<p>A Ana achou na internet um tutorial antigo, copiou o "Olá, mundo" de lá e salvou como <code>antigo.py</code>:</p>
+<pre class="file" data-file="antigo.py">print "Olá, mundo!"
+</pre>
+<p>No Python 3, ele não roda:</p>
+<pre class="term">$ python3 antigo.py
+  File "/home/ana/antigo.py", line 1
+    print "Olá, mundo!"
+    ^^^^^^^^^^^^^^^^^^^
+SyntaxError: Missing parentheses in call to 'print'. Did you mean print(...)?</pre>
+<p>As mensagens do Python saem <strong>em inglês</strong>, mesmo num computador em português. O guia traduz e explica cada uma. Esta, linha por linha:</p>
+<dl class="anatomy">
+  <dt>File "/home/ana/antigo.py", line 1</dt><dd>"Arquivo <code>/home/ana/antigo.py</code>, linha 1": <strong>onde</strong> está o problema. O Python diz o arquivo e o número da linha.</dd>
+  <dt>print "Olá, mundo!"</dt><dd>A própria linha com problema, copiada do seu arquivo, para você não precisar procurar.</dd>
+  <dt>^^^^^^^^^^^^^^^^^^^</dt><dd>Os acentos circunflexos ficam embaixo do trecho exato que o Python não aceitou, como alguém sublinhando a palavra errada numa prova.</dd>
+  <dt>SyntaxError</dt><dd>O <strong>tipo</strong> do erro: "erro de sintaxe". Sintaxe é a gramática da linguagem; o Python não conseguiu nem entender a frase.</dd>
+  <dt>Missing parentheses in call to 'print'.</dt><dd>"Faltam os parênteses na chamada do <code>print</code>."</dd>
+  <dt>Did you mean print(...)?</dt><dd>"Você quis dizer <code>print(...)</code>?" O Python dá a dica do conserto.</dd>
+</dl>
+<p><strong>O que aconteceu:</strong> no Python 2, o <code>print</code> era escrito sem parênteses. No Python 3, ele virou uma <strong>função</strong>, e toda função leva parênteses (aula <a href="print.html">print()</a>). O tutorial era de antes de 2008.</p>
+<p><strong>Como resolver:</strong> coloque os parênteses: <code>print("Olá, mundo!")</code>. E, para estudar, prefira material de Python 3. Se um tutorial usa <code>print</code> sem parênteses, ele é de Python 2: procure outro.</p>
+</div>
+
+<div class="cenario">
+<strong>"Dei dois cliques no arquivo <code>.py</code> e só abriu um texto"</strong>
+<p><strong>O que aconteceu:</strong> nada de errado. Um arquivo <code>.py</code> é só <strong>texto</strong>, o "código-fonte" do programa. No Linux, dois cliques nele abrem um editor de texto, como abririam uma receita salva no computador. A receita não faz o bolo sozinha: alguém precisa ler e executar.</p>
+<p><strong>Como resolver:</strong> quem executa é o interpretador. Abra o terminal e rode <code>python3 arquivo.py</code> (aula <a href="executar.html">Rodando um Programa (.py)</a>), ou use as caixas Experimente do guia, que rodam o programa com um clique.</p>
+</div>
+
+<div class="trypy" data-goal="erro:SyntaxError">
+<p class="try-task"><strong>Missão:</strong> veja com os próprios olhos a mensagem do Python 2. Apague os dois parênteses do <code>print</code> (deixe <code>print "Olá, mundo!"</code>) e clique em Rodar. A caixa deve mostrar o <code>SyntaxError</code> com a dica <code>Did you mean print(...)?</code>. Depois, ponha os parênteses de volta e rode de novo.</p>
+<pre class="script" data-file="main.py">print("Olá, mundo!")
+</pre>
+<pre class="solucao" data-file="main.py">print "Olá, mundo!"
+</pre>
+</div>
+
+<p>Errar de propósito é um ótimo jeito de aprender: você fica conhecendo a mensagem antes de precisar dela de verdade.</p>
+
+<hr>
+
+<h2>O que você vai conseguir fazer</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Ao terminar</th><th>Você consegue</th></tr>
+<tr><td><strong>Nível 1 · Iniciante</strong></td><td>Escrever e rodar programas que mostram coisas na tela, leem o que a pessoa digita, guardam valores em variáveis, fazem contas, trabalham com textos, tomam decisões (<code>if</code>) e repetem tarefas (<code>for</code> e <code>while</code>). Ler as mensagens de erro do Python.</td></tr>
+<tr><td><strong>Nível 2 · Intermediário</strong></td><td>Organizar dados em listas, tuplas, conjuntos e dicionários, criar as suas próprias funções, tratar erros com <code>try</code>, ler e gravar arquivos (texto, CSV e JSON), usar módulos e instalar pacotes com o <code>pip</code>.</td></tr>
+<tr><td><strong>Nível 3 · Avançado</strong></td><td>Criar classes e objetos, usar geradores, decoradores e outras ferramentas poderosas da linguagem, e escrever programas maiores e mais organizados.</td></tr>
+<tr><td><strong>Projetos</strong></td><td>Juntar tudo em programas completos, como os da vida da Ana: a lista de compras, as notas da turma, o estoque da lojinha.</td></tr>
+</table>
+</div>
+
+<p>Para fechar, rode o seu primeiro programa da aula:</p>
+
+<div class="trypy" data-goal="out:e eu vou aprender Python!;;src:Meu nome é (?!\?\?\?)">
+<p class="try-task"><strong>Missão:</strong> o programa já escreve a primeira linha. Complete a segunda: troque <code>???</code> pelo seu nome e coloque um <code>!</code> depois de <code>Python</code>, para a saída ficar <code>Meu nome é Ana e eu vou aprender Python!</code> (com o seu nome no lugar de Ana).</p>
+<pre class="script" data-file="main.py">print("Olá! Este é o meu primeiro programa em Python.")
+print("Meu nome é ??? e eu vou aprender Python")
+</pre>
+<pre class="solucao" data-file="main.py">print("Olá! Este é o meu primeiro programa em Python.")
+print("Meu nome é Ana e eu vou aprender Python!")
+</pre>
+</div>
+
+<p>Repare que cada <code>print</code> escreveu numa linha nova, sozinho. No Python, você não precisa avisar onde a linha acaba. A aula <a href="primeiro-programa.html">Seu Primeiro Programa</a> conta isso e muito mais.</p>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">1. O que quer dizer que o Python é uma linguagem <strong>interpretada</strong>?</p>
+<label><input type="radio" name="q1"> Que o programa só funciona dentro do navegador.</label>
+<label><input type="radio" name="q1"> Que um programa, o interpretador (<code>python3</code>), lê o seu arquivo e executa as instruções toda vez que o programa roda.</label>
+<label><input type="radio" name="q1"> Que o programa é traduzido uma vez só e vira um executável que roda sem o Python.</label>
+<label><input type="radio" name="q1"> Que o Python entende português.</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">2. De onde vem o nome "Python"?</p>
+<label><input type="radio" name="q2"> Da cobra píton, por ser uma linguagem "que engole tudo".</label>
+<label><input type="radio" name="q2"> De uma sigla em inglês para "programa fácil".</label>
+<label><input type="radio" name="q2"> Do programa de humor britânico <em>Monty Python's Flying Circus</em>, de que o criador era fã.</label>
+<label><input type="radio" name="q2"> Do sobrenome do criador.</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">3. A Ana rodou um programa e recebeu <code>SyntaxError: Missing parentheses in call to 'print'. Did you mean print(...)?</code>. O que provavelmente aconteceu?</p>
+<label><input type="radio" name="q3"> Ela copiou um código de Python 2, em que o <code>print</code> não tinha parênteses.</label>
+<label><input type="radio" name="q3"> O computador dela não tem o Python instalado.</label>
+<label><input type="radio" name="q3"> O arquivo não termina em <code>.py</code>.</label>
+<label><input type="radio" name="q3"> O texto tinha acentos, e o Python não aceita acentos.</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">4. Qual destas frases é verdadeira?</p>
+<label><input type="radio" name="q4"> O Python 2 ainda recebe correções e é o mais indicado para começar.</label>
+<label><input type="radio" name="q4"> No Python, as instruções são agrupadas com chaves <code>{ }</code>.</label>
+<label><input type="radio" name="q4"> O Python só serve para inteligência artificial.</label>
+<label><input type="radio" name="q4"> O interpretador mais usado do Python se chama CPython, porque é escrito em C.</label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. Numa mensagem de erro do Python, para que servem os <code>^^^^</code>?</p>
+<label><input type="radio" name="q5"> Indicam que o erro é grave.</label>
+<label><input type="radio" name="q5"> Ficam embaixo do trecho exato da linha que o Python não aceitou.</label>
+<label><input type="radio" name="q5"> Mostram quantas vezes o erro aconteceu.</label>
+<label><input type="radio" name="q5"> São uma decoração, sem significado.</label>
+</div>
+
+<div class="exercise">
+<h3>6. O comando do interpretador</h3>
+<p>No Ubuntu, qual é o comando que roda um programa Python? Complete:</p>
+<div class="ex-code">$ <input data-answer="python3" aria-label="comando"> lista.py</div>
+</div>
+
+<div class="exercise">
+<h3>7. A extensão</h3>
+<p>Os arquivos de programa Python terminam com qual extensão? Complete:</p>
+<div class="ex-code">lista<input data-answer=".py" aria-label="extensão"></div>
+</div>
+
+<div class="exercise">
+<h3>8. O Zen escondido</h3>
+<p>Qual instrução mostra o Zen do Python? Complete:</p>
+<div class="ex-code">import <input data-answer="this" aria-label="nome"></div>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Programar é escrever instruções, como uma receita que o computador segue ao pé da letra; quando algo não faz sentido, ele mostra uma mensagem de erro.</li>
+  <li>O Python é <strong>interpretado</strong>: o programa é um arquivo de texto <code>.py</code>, e quem o executa é o interpretador <code>python3</code> (o CPython, escrito em C).</li>
+  <li>Ele é famoso por ser <strong>fácil de ler</strong>: pouca pontuação, indentação no lugar das chaves, palavras em inglês simples e uma biblioteca padrão enorme.</li>
+  <li>Foi criado por <strong>Guido van Rossum</strong>, a partir de 1989 (primeira versão em 1991). O nome vem do <em>Monty Python</em>, não da cobra.</li>
+  <li>O Python 2 acabou em 2020. Hoje tudo é <strong>Python 3</strong>, e o comando no Linux é <code>python3</code>. Este guia ensina o <strong>3.14</strong>.</li>
+  <li>Ele está na automação, na ciência de dados, na inteligência artificial, em sites, no próprio Ubuntu e nas escolas.</li>
+  <li>As mensagens de erro saem em inglês e dizem o <strong>arquivo</strong>, a <strong>linha</strong>, o <strong>trecho</strong> (<code>^^^^</code>), o <strong>tipo</strong> do erro e, muitas vezes, uma <strong>dica</strong>.</li>
+  <li>Próximo passo: ter o Python no seu computador, em <a href="instalar.html">Instalar o Python</a>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
