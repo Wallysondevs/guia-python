@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python sep e end — o separador e o final do print() | Guia Python</title>
+<meta name="description" content="As opções sep e end do print() para quem está começando: trocar o espaço entre os valores, juntar valores sem separador, montar datas, continuar na mesma linha, linha em branco com end, a ordem dos argumentos nomeados e os erros reais do Python 3.14 (TypeError, SyntaxError) explicados em português, com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">sep e end</span></h1>
+
+<p class="intro">Na aula <a href="print.html">print()</a> você viu duas coisas que o <code>print</code> faz sozinho: põe um <strong>espaço</strong> entre os valores separados por vírgula e, no fim, <strong>pula para a linha de baixo</strong>. Quase sempre é isso que você quer. Mas às vezes a Ana precisa de uma lista separada por vírgulas, de uma data com barras, ou de duas mensagens na mesma linha. Para isso, o <code>print</code> tem duas opções: <code>sep</code> (de <em>separator</em>, "separador") e <code>end</code> (em inglês, "fim").</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A trocar o espaço entre os valores com <code>sep</code>: vírgulas, barras, nada, ou uma linha para cada valor.</li>
+  <li>A trocar o pulo de linha do fim com <code>end</code>: continuar na mesma linha ou terminar com outra coisa.</li>
+  <li>O que são <strong>argumentos nomeados</strong> (<code>nome=valor</code>) e onde eles entram nos parênteses.</li>
+  <li>A usar <code>sep</code> e <code>end</code> juntos, e por que a ordem entre eles não importa.</li>
+  <li>Os erros reais: <code>sep</code> com número, sem aspas, no lugar errado, com o nome errado ou repetido.</li>
+</ul>
+</div>
+
+<p>Os programas desta aula foram rodados com o <strong>Python 3.14</strong> na máquina fictícia da Ana (usuária <code>ana</code>, computador <code>notebook</code>), com <code>python3 arquivo.py</code>. Você pode repetir cada um nas caixas "Experimente".</p>
+
+<hr>
+
+<h2>A ideia: o que vai entre as contas de um colar, e o fecho</h2>
+<p>Imagine que a Ana está montando um colar de contas. Entre uma conta e outra ela pode pôr um nó, uma bolinha dourada ou nada. E, no fim do colar, vai um fecho.</p>
+
+<p>No <code>print</code>, as contas são os valores que você escreve entre os parênteses. O que vai <strong>entre</strong> eles é o <code>sep</code>; o que vai <strong>depois do último</strong> é o <code>end</code>. Se você não disser nada, o Python usa os de sempre:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Opção</th><th>O que é</th><th>Valor de sempre (padrão)</th></tr>
+<tr><td><code>sep</code></td><td>O texto colocado <strong>entre</strong> um valor e outro</td><td><code>" "</code>, um espaço</td></tr>
+<tr><td><code>end</code></td><td>O texto colocado <strong>depois</strong> do último valor</td><td><code>"\n"</code>, a quebra de linha</td></tr>
+</table>
+</div>
+
+<p>Esse <code>"\n"</code> é o jeito de escrever, dentro de um texto, o "pule para a linha de baixo": uma barra invertida e a letra n (de <em>newline</em>, "linha nova"). Ele tem aula própria, <a href="strings-escape.html">Caracteres de Escape</a>; aqui, basta saber que ele é a quebra de linha.</p>
+
+<p>Ou seja: um <code>print</code> comum já usa <code>sep</code> e <code>end</code>, só que com os valores padrão. As duas linhas abaixo fazem exatamente a mesma coisa:</p>
+
+<pre class="file" data-file="padrao.py">print("a", "b")
+print("a", "b", sep=" ", end="\n")
+</pre>
+
+<pre class="term">$ python3 padrao.py
+a b
+a b
+</pre>
+
+<hr>
+
+<h2>1. <code>sep</code>: o que vai entre os valores</h2>
+<p>A Ana tem três itens na lista de compras. Veja o mesmo <code>print</code> com separadores diferentes:</p>
+
+<pre class="file" data-file="sep.py">print("arroz", "feijão", "café")
+print("arroz", "feijão", "café", sep=", ")
+print("arroz", "feijão", "café", sep=" | ")
+print("arroz", "feijão", "café", sep="")
+print(18, 10, 2026, sep="/")
+</pre>
+
+<pre class="term">$ python3 sep.py
+arroz feijão café
+arroz, feijão, café
+arroz | feijão | café
+arrozfeijãocafé
+18/10/2026
+</pre>
+
+<dl class="anatomy">
+  <dt>"arroz", "feijão", "café"</dt><dd>Os valores, separados por vírgula, como na aula anterior.</dd>
+  <dt>,</dt><dd>Mais uma vírgula, separando os valores da opção.</dd>
+  <dt>sep</dt><dd>O nome da opção: "separador".</dd>
+  <dt>=</dt><dd>"Recebe": o separador vai ser o que vem a seguir. Aqui, sem espaços em volta do <code>=</code>, que é o costume nos argumentos nomeados.</dd>
+  <dt>", "</dt><dd>O novo separador, <strong>sempre um texto</strong>, entre aspas. Pode ter um caractere, vários, ou nenhum (<code>""</code>).</dd>
+</dl>
+
+<p>Repare na linha 4: com <code>sep=""</code> (aspas sem nada dentro, o <strong>texto vazio</strong>), os valores saíram grudados. E na linha 5: os valores podem ser números, mas o separador é um texto (<code>"/"</code>). Foi assim que três números viraram uma data.</p>
+
+<div class="tip">
+<strong>O separador só vai entre os valores</strong>
+<p>Ele não aparece antes do primeiro nem depois do último. Por isso <code>sep=", "</code> deu <code>arroz, feijão, café</code>, sem vírgula sobrando no fim. Com um valor só, não existe "entre", e o <code>sep</code> simplesmente não aparece.</p>
+</div>
+
+<h3>Um valor por linha</h3>
+<p>O separador pode ser a própria quebra de linha. Aí cada valor sai na sua linha, com um <code>print</code> só:</p>
+
+<pre class="file" data-file="sep-linha.py">print("arroz", "feijão", "café", sep="\n")
+</pre>
+
+<pre class="term">$ python3 sep-linha.py
+arroz
+feijão
+café
+</pre>
+
+<div class="trypy" data-goal="out:18/10/2026;;src:sep\s*=">
+<p class="try-task"><strong>Missão:</strong> a Ana quer anotar a data da feira. O programa mostra <code>18 10 2026</code>. Use <code>sep</code> para que ele mostre <code>18/10/2026</code>, sem mudar os três números.</p>
+<pre class="script" data-file="main.py">print(18, 10, 2026)
+</pre>
+<pre class="solucao" data-file="main.py">print(18, 10, 2026, sep="/")
+</pre>
+</div>
+
+<hr>
+
+<h2>2. <code>end</code>: o que vai no fim</h2>
+<p>O <code>end</code> é o que o <code>print</code> escreve depois do último valor. O padrão é <code>"\n"</code>, e é por isso que cada <code>print</code> termina numa linha nova. Troque o <code>end</code>, e o próximo <code>print</code> continua de onde o anterior parou:</p>
+
+<pre class="file" data-file="end.py">print("Bom dia", end="")
+print("Ana")
+print("Bom dia", end=", ")
+print("Ana", end="!\n")
+print("Tchau")
+</pre>
+
+<pre class="term">$ python3 end.py
+Bom diaAna
+Bom dia, Ana!
+Tchau
+</pre>
+
+<p>Vamos seguir o programa linha por linha:</p>
+<ol class="passo">
+  <li><code>print("Bom dia", end="")</code> mostra <code>Bom dia</code> e, no fim, nada (texto vazio). <strong>Não pula a linha.</strong></li>
+  <li><code>print("Ana")</code> continua na mesma linha: sai <code>Bom diaAna</code>, tudo grudado, porque nenhum dos dois <code>print</code> colocou espaço. Este tem o <code>end</code> padrão, então agora sim a linha pula.</li>
+  <li><code>print("Bom dia", end=", ")</code> mostra <code>Bom dia</code> seguido de vírgula e espaço, e fica na mesma linha.</li>
+  <li><code>print("Ana", end="!\n")</code> mostra <code>Ana</code> e termina com uma exclamação e a quebra de linha. Resultado da linha: <code>Bom dia, Ana!</code>.</li>
+  <li><code>print("Tchau")</code> começa na linha nova.</li>
+</ol>
+
+<h3>Um "carregando" na mesma linha</h3>
+<p>Um uso comum do <code>end=""</code> é ir montando uma linha aos pedaços:</p>
+
+<pre class="file" data-file="carregando.py">print("Carregando", end="")
+print(".", end="")
+print(".", end="")
+print(".", end="")
+print(" pronto!")
+</pre>
+
+<pre class="term">$ python3 carregando.py
+Carregando... pronto!
+</pre>
+
+<p>Cinco <code>print</code>, uma linha só. Quando você conhecer as <a href="for.html">repetições com <code>for</code></a>, vai poder escrever os pontinhos com um laço, em vez de repetir a linha.</p>
+
+<div class="warning">
+<strong>Termine a última linha</strong>
+<p>Se o <strong>último</strong> <code>print</code> do programa tiver <code>end=""</code>, a linha nunca é terminada, e o terminal escreve o prompt grudado nela:</p>
+<pre class="file" data-file="sem-quebra.py">print("Pedido anotado", end="")
+</pre>
+<pre class="term">$ python3 sem-quebra.py
+Pedido anotadoana@notebook:~$       «o prompt da Ana ficou colado na saída
+</pre>
+<p>Não é erro, mas fica feio. Garanta que o último <code>print</code> pule a linha (com o <code>end</code> padrão ou terminando em <code>"\n"</code>).</p>
+</div>
+
+<div class="trypy" data-goal="out:Carregando... pronto!;;src:end\s*=">
+<p class="try-task"><strong>Missão:</strong> hoje os pontinhos estão saindo um em cada linha. Use <code>end</code> para que tudo apareça numa linha só: <code>Carregando... pronto!</code></p>
+<pre class="script" data-file="main.py">print("Carregando")
+print(".")
+print(".")
+print(".")
+print(" pronto!")
+</pre>
+<pre class="solucao" data-file="main.py">print("Carregando", end="")
+print(".", end="")
+print(".", end="")
+print(".", end="")
+print(" pronto!")
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Argumentos nomeados: <code>nome=valor</code></h2>
+<p>Tudo o que você entrega a uma função dentro dos parênteses se chama <strong>argumento</strong>. Até a aula passada, os argumentos do <code>print</code> eram só os valores a mostrar, um depois do outro. O Python sabe o que fazer com eles pela <strong>posição</strong>: são os argumentos <strong>posicionais</strong>.</p>
+
+<p><code>sep</code> e <code>end</code> são diferentes: eles vão com o <strong>nome</strong> na frente, <code>sep=", "</code>. São os argumentos <strong>nomeados</strong> (ou "de palavra-chave"). Duas regras valem para eles:</p>
+
+<ul>
+  <li><strong>Vêm depois</strong> dos valores a mostrar. Primeiro o que mostrar, depois as opções.</li>
+  <li>Entre eles, <strong>a ordem não importa</strong>: como cada um tem nome, o Python sabe quem é quem.</li>
+</ul>
+
+<pre class="file" data-file="juntos.py">print("pão", "leite", "ovos", sep=", ", end=".\n")
+print("pão", "leite", "ovos", end=".\n", sep=", ")
+print("Total", 3, "itens", sep=": ", end="\n\n")
+print("Fim")
+</pre>
+
+<pre class="term">$ python3 juntos.py
+pão, leite, ovos.
+pão, leite, ovos.
+Total: 3: itens
+
+Fim
+</pre>
+
+<p>As duas primeiras linhas saíram iguais, mesmo com <code>sep</code> e <code>end</code> trocados de lugar. A terceira mostra duas coisas:</p>
+<ul>
+  <li>O <code>sep</code> vai entre <strong>todos</strong> os valores. A Ana queria <code>Total: 3 itens</code>, mas saiu <code>Total: 3: itens</code>, com o <code>": "</code> também entre o 3 e o "itens". O separador não escolhe onde entrar.</li>
+  <li><code>end="\n\n"</code> são duas quebras de linha: uma termina a linha, a outra deixa uma linha em branco antes do <code>Fim</code>.</li>
+</ul>
+
+<p>Funções têm aula própria, onde você vai criar as suas com argumentos nomeados: <a href="argumentos-padrao.html">Valores Padrão e Argumentos Nomeados</a>.</p>
+
+<div class="note">
+<strong>O <code>print</code> tem mais duas opções</strong>
+<p>Na documentação do Python, o <code>print</code> aparece assim: <code>print(*objects, sep=' ', end='\n', file=None, flush=False)</code>. O <code>*objects</code> são os valores (quantos você quiser); <code>sep</code> e <code>end</code>, os desta aula. <code>file</code> (escrever num arquivo em vez da tela) e <code>flush</code> (mostrar na hora, sem esperar) ficam para mais adiante; você não vai precisar deles por enquanto.</p>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de mostrar a mesma linha</h2>
+<p>As quatro linhas abaixo mostram <code>arroz, feijão, café</code>:</p>
+
+<pre class="file" data-file="formas.py">print("arroz", "feijão", "café", sep=", ")
+print("arroz, feijão, café")
+print("arroz" + ", " + "feijão" + ", " + "café")
+print("arroz, ", end="")
+print("feijão, ", end="")
+print("café")
+</pre>
+
+<pre class="term">$ python3 formas.py
+arroz, feijão, café
+arroz, feijão, café
+arroz, feijão, café
+arroz, feijão, café
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>sep=", "</code></td><td>Quando os valores já estão separados (vários números, várias variáveis) e você quer o mesmo separador entre todos</td></tr>
+<tr><td>Um texto só, já pronto</td><td>Quando a frase é fixa. É o mais simples de ler</td></tr>
+<tr><td>Juntar com <code>+</code></td><td>Só com textos. Fica comprido e é fácil esquecer um espaço; evite para frases longas</td></tr>
+<tr><td>Vários <code>print</code> com <code>end=""</code></td><td>Quando a linha é montada aos pedaços, um de cada vez (como o "carregando")</td></tr>
+</table>
+</div>
+
+<p>Para frases com valores no meio, como <code>Total: 3 itens</code>, o melhor caminho vai ser a <a href="f-strings.html">f-string</a>, que você vai conhecer mais adiante.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Separador que não é texto</strong>
+<pre class="file" data-file="sep-numero.py">print("pão", "leite", sep=0)
+</pre>
+<pre class="term">$ python3 sep-numero.py
+Traceback (most recent call last):
+  File "/home/ana/sep-numero.py", line 1, in &lt;module&gt;
+    print("pão", "leite", sep=0)
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: sep must be None or a string, not int
+</pre>
+<p><code>TypeError</code>, "erro de tipo": "<code>sep</code> tem de ser <code>None</code> ou uma string (texto), e não <code>int</code> (número inteiro)". Os valores mostrados podem ser números, mas o separador não. (O <code>None</code>, "nada", quer dizer "use o padrão"; ele tem aula própria, <a href="none.html">O Valor None</a>.) <strong>Como consertar:</strong> entre aspas, <code>sep="0"</code>. O mesmo vale para o <code>end</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Separador sem aspas</strong>
+<pre class="file" data-file="sep-sem-aspas.py">print("pão", "leite", sep=-)
+</pre>
+<pre class="term">$ python3 sep-sem-aspas.py
+  File "/home/ana/sep-sem-aspas.py", line 1
+    print("pão", "leite", sep=-)
+                               ^
+SyntaxError: invalid syntax
+</pre>
+<p>"Sintaxe inválida". Sem aspas, o <code>-</code> é o sinal de menos, e o Python esperava um número depois dele; encontrou o <code>)</code>, que o <code>^</code> aponta. A mensagem é genérica, mas o <code>^</code> mostra onde o Python se perdeu: olhe logo antes dele. <strong>Como consertar:</strong> <code>sep="-"</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>A opção antes dos valores</strong>
+<pre class="file" data-file="sep-antes.py">print(sep="-", "pão", "leite")
+</pre>
+<pre class="term">$ python3 sep-antes.py
+  File "/home/ana/sep-antes.py", line 1
+    print(sep="-", "pão", "leite")
+                                 ^
+SyntaxError: positional argument follows keyword argument
+</pre>
+<p>"Argumento posicional depois de argumento nomeado". Os valores a mostrar (posicionais) têm de vir <strong>antes</strong> das opções com nome. <strong>Como consertar:</strong> <code>print("pão", "leite", sep="-")</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Nome da opção digitado errado</strong>
+<pre class="file" data-file="spe.py">print("pão", "leite", spe="-")
+</pre>
+<pre class="term">$ python3 spe.py
+Traceback (most recent call last):
+  File "/home/ana/spe.py", line 1, in &lt;module&gt;
+    print("pão", "leite", spe="-")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: print() got an unexpected keyword argument 'spe'
+</pre>
+<p>"<code>print()</code> recebeu um argumento nomeado inesperado: <code>spe</code>". O <code>print</code> só conhece <code>sep</code>, <code>end</code>, <code>file</code> e <code>flush</code>; qualquer outro nome dá esse erro. Aqui o Python não deu a dica "Did you mean", então confira a escrita letra por letra. <strong>Como consertar:</strong> <code>sep="-"</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>A mesma opção duas vezes</strong>
+<pre class="file" data-file="sep-dupla.py">print("pão", "leite", sep="-", sep="+")
+</pre>
+<pre class="term">$ python3 sep-dupla.py
+  File "/home/ana/sep-dupla.py", line 1
+    print("pão", "leite", sep="-", sep="+")
+                                    ^^^^^^^
+SyntaxError: keyword argument repeated: sep
+</pre>
+<p>"Argumento nomeado repetido: <code>sep</code>". Cada opção só pode aparecer uma vez por <code>print</code>. <strong>Como consertar:</strong> fique com um só.</p>
+</div>
+
+<div class="cenario">
+<strong>Esperar o <code>sep</code> com um valor só</strong>
+<pre class="file" data-file="sep-um.py">print("pão", sep="-")
+print("pão-leite")
+</pre>
+<pre class="term">$ python3 sep-um.py
+pão
+pão-leite
+</pre>
+<p>Sem erro, mas o <code>-</code> não apareceu na primeira linha. Com um valor só, não há "entre" para o separador ocupar. Se você queria um traço no fim, a opção certa é o <code>end</code>: <code>print("pão", end="-\n")</code>.</p>
+</div>
+
+<div class="trypy" data-goal="semerro;;out:pão - leite - ovos">
+<p class="try-task"><strong>Missão:</strong> a Ana queria ver <code>pão - leite - ovos</code>, mas o programa não roda. Leia a mensagem e conserte.</p>
+<pre class="script" data-file="main.py">print(sep=" - ", "pão", "leite", "ovos")
+</pre>
+<pre class="solucao" data-file="main.py">print("pão", "leite", "ovos", sep=" - ")
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que mostra</th></tr>
+<tr><td><code>print("a", "b", "c")</code></td><td><code>a b c</code> (padrão: <code>sep=" "</code>, <code>end="\n"</code>)</td></tr>
+<tr><td><code>print("a", "b", "c", sep=", ")</code></td><td><code>a, b, c</code></td></tr>
+<tr><td><code>print("a", "b", "c", sep="")</code></td><td><code>abc</code> (sem separador)</td></tr>
+<tr><td><code>print(18, 10, 2026, sep="/")</code></td><td><code>18/10/2026</code></td></tr>
+<tr><td><code>print("a", "b", sep="\n")</code></td><td>Um valor em cada linha</td></tr>
+<tr><td><code>print("a", end="")</code></td><td><code>a</code> e não pula a linha: o próximo <code>print</code> continua ao lado</td></tr>
+<tr><td><code>print("a", end="!\n")</code></td><td><code>a!</code> e pula a linha</td></tr>
+<tr><td><code>print("a", end="\n\n")</code></td><td><code>a</code> e uma linha em branco depois</td></tr>
+<tr><td><code>print(…, sep=…, end=…)</code></td><td>Os dois juntos, em qualquer ordem, sempre depois dos valores</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>TypeError: sep must be None or a string, not int</code></td><td>Separador sem aspas que é um número: use <code>sep="0"</code></td></tr>
+<tr><td><code>SyntaxError: invalid syntax</code> (com o <code>^</code> logo depois do <code>sep=</code>)</td><td>Separador sem aspas</td></tr>
+<tr><td><code>SyntaxError: positional argument follows keyword argument</code></td><td><code>sep</code>/<code>end</code> escrito antes dos valores</td></tr>
+<tr><td><code>TypeError: print() got an unexpected keyword argument 'spe'</code></td><td>Nome da opção digitado errado</td></tr>
+<tr><td><code>SyntaxError: keyword argument repeated: sep</code></td><td>A mesma opção duas vezes</td></tr>
+<tr><td>O prompt <code>$</code> aparece grudado na saída</td><td>O último <code>print</code> tem <code>end=""</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Hora com dois-pontos</h3>
+<p>Complete para mostrar <code>14:30</code>:</p>
+<div class="ex-code">print(14, 30, <input data-answer="sep" aria-label="nome da opção">=":")</div>
+</div>
+
+<div class="exercise">
+<h3>2. Na mesma linha</h3>
+<p>Complete para que <code>Olá</code> e <code>Ana</code> saiam na mesma linha, como <code>Olá Ana</code>:</p>
+<div class="ex-code">print("Olá", end=<input data-answer="&quot; &quot;|' '" aria-label="valor do end">)<br>print("Ana")</div>
+</div>
+
+<div class="exercise">
+<h3>3. Qual é a saída?</h3>
+<p>O que mostra <code>print("a", "b", "c", sep="")</code>?</p>
+<div class="ex-code">Saída: <input data-answer="abc" aria-label="saída"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. O que mostra <code>print("Total", 5, sep=": ", end="!\n")</code>?</p>
+<label><input type="radio" name="q4"> <code>Total 5!</code></label>
+<label><input type="radio" name="q4"> <code>Total: 5</code></label>
+<label><input type="radio" name="q4"> <code>Total: 5!</code></label>
+<label><input type="radio" name="q4"> <code>Total: 5:!</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. Qual destas linhas dá erro?</p>
+<label><input type="radio" name="q5"> <code>print("a", "b", end="", sep="")</code></label>
+<label><input type="radio" name="q5"> <code>print(end="", "a", "b")</code></label>
+<label><input type="radio" name="q5"> <code>print("a", sep="-")</code></label>
+<label><input type="radio" name="q5"> <code>print(1, 2, 3, sep="\n")</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Qual é o valor padrão do <code>end</code>?</p>
+<label><input type="radio" name="q6"> <code>"\n"</code>, a quebra de linha</label>
+<label><input type="radio" name="q6"> <code>" "</code>, um espaço</label>
+<label><input type="radio" name="q6"> <code>""</code>, o texto vazio</label>
+<label><input type="radio" name="q6"> Não tem padrão: é obrigatório escrever</label>
+</div>
+
+<h3>Missão final: a etiqueta da feira</h3>
+
+<div class="trypy" data-goal="out:Feira: tomate, alface, cenoura.;;src:sep\s*=;;src:end\s*=">
+<p class="try-task"><strong>Missão:</strong> monte a etiqueta <code>Feira: tomate, alface, cenoura.</code>, com o ponto final no fim. Mantenha o primeiro <code>print</code> e use <code>end</code> nele para continuar na mesma linha; no segundo, use <code>sep</code> para as vírgulas e <code>end</code> para o ponto final.</p>
+<pre class="script" data-file="main.py">print("Feira:")
+print("tomate", "alface", "cenoura")
+</pre>
+<pre class="solucao" data-file="main.py">print("Feira:", end=" ")
+print("tomate", "alface", "cenoura", sep=", ", end=".\n")
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>sep</code> é o texto que vai <strong>entre</strong> os valores; o padrão é um espaço. <code>sep=""</code> gruda tudo; <code>sep="\n"</code> põe um valor por linha.</li>
+  <li><code>end</code> é o texto que vai <strong>depois</strong> do último valor; o padrão é <code>"\n"</code>, a quebra de linha. Com <code>end=""</code>, o próximo <code>print</code> continua na mesma linha.</li>
+  <li>Os dois são <strong>argumentos nomeados</strong> (<code>nome=valor</code>): vêm depois dos valores, e a ordem entre eles não importa.</li>
+  <li>O valor de <code>sep</code> e <code>end</code> é sempre um texto, entre aspas. Número dá <code>TypeError</code>; sem aspas, <code>SyntaxError</code>.</li>
+  <li>O <code>sep</code> entra entre <strong>todos</strong> os valores, e não aparece quando há um valor só.</li>
+  <li>Termine a última linha do programa: se o último <code>print</code> tiver <code>end=""</code>, o prompt do terminal gruda na saída.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
