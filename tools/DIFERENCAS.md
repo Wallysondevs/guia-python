@@ -742,3 +742,29 @@ Dado de 20 lados: 13
 Dado de 20 lados: 2
 ```
 <!-- /pagina:random.html -->
+
+<!-- pagina:datetime.html -->
+### datetime.html (2026-10-18 15:23 UTC)
+
+**caixa 1, código inicial (linha 125)** — saída diferente: + Agora: 2026-10-18 12:23:52.011213 | - Agora: 2026-10-18 15:23:51.960999 (esperado: data, hora e tempo medido)
+
+```python
+from datetime import date, datetime
+
+print("Hoje:", date.today())
+print("Agora:", datetime.now())
+```
+
+- editor (código de saída 0):
+
+```
+Hoje: 2026-10-18
+Agora: 2026-10-18 15:23:51.960999
+```
+- lab, python3 (código de saída 0):
+
+```
+Hoje: 2026-10-18
+Agora: 2026-10-18 12:23:52.011213
+```
+<!-- /pagina:datetime.html -->
