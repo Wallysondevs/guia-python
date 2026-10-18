@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python and, or e not — os operadores lógicos | Guia Python</title>
+<meta name="description" content="Os operadores lógicos do Python para quem nunca programou: and (e), or (ou) e not (não), as tabelas da verdade, a ordem not → and → or, o curto-circuito que evita a divisão por zero, por que and e or devolvem um dos valores (nome or &quot;visitante&quot;), a armadilha resposta == &quot;s&quot; or &quot;S&quot; e os erros reais de &amp;&amp;, || e !.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">and, or e not</span></h1>
+
+<p class="intro">Muitas perguntas do dia a dia são feitas de perguntas menores. "Posso entrar na festa?" depende de ser maior de idade <strong>e</strong> ter convite. "Ganho desconto?" depende de ser aniversário <strong>ou</strong> ser cliente VIP. "A padaria está fechada?" é o contrário de "está aberta". Para juntar e inverter perguntas, o Python tem três operadores com nomes em inglês bem simples: <code>and</code> ("e"), <code>or</code> ("ou") e <code>not</code> ("não"). Nesta aula você vai ver como eles funcionam, a ordem em que o Python os resolve, o truque do "curto-circuito" e um segredo que muda tudo: <code>and</code> e <code>or</code> nem sempre devolvem <code>True</code> ou <code>False</code>.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O <code>and</code>: verdadeiro só quando as <strong>duas</strong> partes são verdadeiras.</li>
+  <li>O <code>or</code>: verdadeiro quando <strong>pelo menos uma</strong> parte é verdadeira.</li>
+  <li>O <code>not</code>: inverte o valor.</li>
+  <li>A juntar comparações: <code>idade &gt;= 18 and tem_convite</code>.</li>
+  <li>A ordem: primeiro <code>not</code>, depois <code>and</code>, por fim <code>or</code>.</li>
+  <li>O <strong>curto-circuito</strong>: quando o Python nem olha a segunda parte, e como isso evita erros.</li>
+  <li>Que <code>and</code> e <code>or</code> devolvem um dos valores: <code>nome or "visitante"</code>.</li>
+  <li>A armadilha <code>resposta == "s" or "S"</code> e os erros de <code>&amp;&amp;</code>, <code>||</code> e <code>!</code>.</li>
+</ul>
+</div>
+
+<p>Os programas desta aula rodaram no <strong>Python 3.14</strong> da máquina da Ana (usuária <code>ana</code>, computador <code>notebook</code>), e podem ser repetidos no editor do guia.</p>
+
+<hr>
+
+<h2>A ideia: as regras da portaria</h2>
+<p>Na portaria de uma festa, o segurança segue regras:</p>
+<ul>
+  <li>"Entra quem é maior de idade <strong>e</strong> tem convite." As duas coisas são exigidas. Faltou uma, não entra.</li>
+  <li>"Ganha pulseira VIP quem faz aniversário hoje <strong>ou</strong> é amigo do dono." Basta uma.</li>
+  <li>"Quem <strong>não</strong> está na lista paga entrada." O "não" inverte a pergunta.</li>
+</ul>
+
+<p>É exatamente isso que fazem <code>and</code>, <code>or</code> e <code>not</code>. Eles trabalham com valores verdadeiros e falsos (aula <a href="booleanos.html">Booleanos</a>), quase sempre vindos de comparações (aula <a href="operadores-comparacao.html">Comparações</a>).</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Operador</th><th>Em português</th><th>É verdadeiro quando…</th></tr>
+<tr><td><code>a and b</code></td><td><code>a</code> <strong>e</strong> <code>b</code></td><td>…os <strong>dois</strong> são verdadeiros</td></tr>
+<tr><td><code>a or b</code></td><td><code>a</code> <strong>ou</strong> <code>b</code></td><td>…<strong>pelo menos um</strong> é verdadeiro</td></tr>
+<tr><td><code>not a</code></td><td><strong>não</strong> <code>a</code></td><td>…<code>a</code> é falso</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. Os três operadores</h2>
+<pre class="file" data-file="padaria_logica.py">aberta = True
+tem_pao = False
+print(aberta and tem_pao)
+print(aberta or tem_pao)
+print(not aberta)
+print(not tem_pao)
+</pre>
+
+<pre class="term">$ python3 padaria_logica.py
+False
+True
+False
+True
+</pre>
+
+<dl class="anatomy">
+  <dt>aberta and tem_pao</dt><dd>"Está aberta <strong>e</strong> tem pão?" Está aberta, mas não tem pão: <code>False</code>. Para o <code>and</code>, uma parte falsa basta para tudo ser falso.</dd>
+  <dt>aberta or tem_pao</dt><dd>"Está aberta <strong>ou</strong> tem pão?" Está aberta: <code>True</code>. Para o <code>or</code>, uma parte verdadeira basta.</dd>
+  <dt>not aberta</dt><dd>"<strong>Não</strong> está aberta?" Como está aberta, <code>False</code>.</dd>
+  <dt>not tem_pao</dt><dd>"Não tem pão?" Verdade: <code>True</code>.</dd>
+</dl>
+
+<h3>As tabelas da verdade</h3>
+<p>Como cada parte só pode ser <code>True</code> ou <code>False</code>, dá para testar todas as combinações:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; True and True
+True
+&gt;&gt;&gt; True and False
+False
+&gt;&gt;&gt; False and True
+False
+&gt;&gt;&gt; False and False
+False
+&gt;&gt;&gt; True or False
+True
+&gt;&gt;&gt; False or False
+False
+&gt;&gt;&gt; not True
+False
+&gt;&gt;&gt; not False
+True
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th><code>a</code></th><th><code>b</code></th><th><code>a and b</code></th><th><code>a or b</code></th></tr>
+<tr><td><code>True</code></td><td><code>True</code></td><td><code>True</code></td><td><code>True</code></td></tr>
+<tr><td><code>True</code></td><td><code>False</code></td><td><code>False</code></td><td><code>True</code></td></tr>
+<tr><td><code>False</code></td><td><code>True</code></td><td><code>False</code></td><td><code>True</code></td></tr>
+<tr><td><code>False</code></td><td><code>False</code></td><td><code>False</code></td><td><code>False</code></td></tr>
+</table>
+</div>
+
+<p>Resumindo a tabela: o <code>and</code> só é <code>True</code> na primeira linha (tudo verdadeiro); o <code>or</code> só é <code>False</code> na última (tudo falso).</p>
+
+<div class="tip">
+<strong>O "ou" do Python não é o "ou" do restaurante</strong>
+<p>Quando o garçom pergunta "batata ou salada?", ele quer dizer "um <strong>ou</strong> outro, não os dois". O <code>or</code> do Python é mais generoso: com as duas partes verdadeiras, a resposta também é <code>True</code>. Quem é aniversariante <strong>e</strong> amigo do dono também ganha a pulseira.</p>
+</div>
+
+<hr>
+
+<h2>2. Juntando comparações</h2>
+<p>O uso mais comum é ligar duas ou mais comparações numa pergunta só:</p>
+
+<pre class="file" data-file="festa.py">idade = 20
+tem_convite = True
+pode_entrar = idade &gt;= 18 and tem_convite
+print("Pode entrar:", pode_entrar)
+</pre>
+
+<pre class="term">$ python3 festa.py
+Pode entrar: True
+</pre>
+
+<pre class="file" data-file="desconto.py">aniversario = False
+cliente_vip = True
+tem_desconto = aniversario or cliente_vip
+print("Tem desconto:", tem_desconto)
+</pre>
+
+<pre class="term">$ python3 desconto.py
+Tem desconto: True
+</pre>
+
+<p>Repare na primeira: <code>idade &gt;= 18 and tem_convite</code>. O Python resolve a comparação <code>idade &gt;= 18</code> primeiro (<code>True</code>) e só depois o <code>and</code>. As comparações sempre vêm antes de <code>and</code>, <code>or</code> e <code>not</code>, então você não precisa de parênteses em volta delas.</p>
+
+<div class="trypy" data-goal="out:Pode entrar: False;;src:\band\b">
+<p class="try-task"><strong>Missão:</strong> a regra da festa é "maior de idade <strong>e</strong> com convite". O Caio tem 20 anos, mas esqueceu o convite, e o programa deixou ele entrar. Conserte o operador.</p>
+<pre class="script" data-file="main.py">idade = 20
+tem_convite = False
+pode_entrar = idade &gt;= 18 or tem_convite
+print("Pode entrar:", pode_entrar)
+</pre>
+<pre class="solucao" data-file="main.py">idade = 20
+tem_convite = False
+pode_entrar = idade &gt;= 18 and tem_convite
+print("Pode entrar:", pode_entrar)
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Quem vem primeiro: <code>not</code>, <code>and</code>, <code>or</code></h2>
+<p>Como na conta em que a multiplicação vem antes da soma, aqui também existe uma ordem: primeiro o <code>not</code>, depois o <code>and</code>, por último o <code>or</code>.</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; True or False and False
+True
+&gt;&gt;&gt; (True or False) and False
+False
+&gt;&gt;&gt; not 5 == 5
+False
+</pre>
+
+<dl class="anatomy">
+  <dt>True or False and False → True</dt><dd>O <code>and</code> vem antes: <code>False and False</code> é <code>False</code>; depois, <code>True or False</code> é <code>True</code>.</dd>
+  <dt>(True or False) and False → False</dt><dd>Os parênteses mudam a ordem: primeiro <code>True or False</code> (<code>True</code>); depois, <code>True and False</code> é <code>False</code>.</dd>
+  <dt>not 5 == 5 → False</dt><dd>A comparação vem antes do <code>not</code>: é <code>not (5 == 5)</code>, ou seja, <code>not True</code>.</dd>
+</dl>
+
+<p>Quando uma pergunta mistura <code>and</code> e <code>or</code>, <strong>use parênteses</strong>, mesmo que não sejam necessários. "Desconto para quem é VIP, ou para quem compra mais de 10 itens num dia de promoção" fica assim: <code>vip or (itens &gt; 10 and promocao)</code>. Os parênteses mostram a regra para quem lê. A tabela completa da ordem está na aula <a href="precedencia.html">Precedência dos Operadores</a>.</p>
+
+<hr>
+
+<h2>4. O curto-circuito: o Python para assim que sabe</h2>
+<p>Pense no <code>and</code>: se a primeira parte for falsa, a resposta já é <code>False</code>, não importa a segunda. E no <code>or</code>: se a primeira parte for verdadeira, a resposta já é <code>True</code>. O Python sabe disso e, nesses casos, <strong>nem olha a segunda parte</strong>. É o que se chama de <strong>curto-circuito</strong>.</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; True or 1 / 0
+True
+&gt;&gt;&gt; False and 1 / 0
+False
+</pre>
+
+<p><code>1 / 0</code> deveria dar <code>ZeroDivisionError</code> (aula <a href="operadores-aritmeticos.html">Operadores Aritméticos</a>). Não deu, porque o Python nunca chegou a fazer essa conta: a primeira parte já decidiu a resposta.</p>
+
+<h3>Para que serve: proteger a segunda pergunta</h3>
+<p>A Ana quer saber se a conta da festa, dividida entre as pessoas, passa de R$ 10 por cabeça. Mas pode não ter ninguém confirmado ainda:</p>
+
+<pre class="file" data-file="divisao_segura.py">total = 120
+pessoas = 0
+print(pessoas != 0 and total / pessoas &gt; 10)
+pessoas = 4
+print(pessoas != 0 and total / pessoas &gt; 10)
+</pre>
+
+<pre class="term">$ python3 divisao_segura.py
+False
+True
+</pre>
+
+<p>Com 0 pessoas, <code>pessoas != 0</code> é <code>False</code>, e o <code>and</code> para ali: a divisão nem acontece. Com 4 pessoas, a primeira parte é verdadeira, e o Python faz a divisão (120 ÷ 4 = 30, que é maior que 10). A <strong>ordem</strong> das partes importa. Trocando, o erro aparece:</p>
+
+<pre class="file" data-file="divisao_trocada.py">total = 120
+pessoas = 0
+print(total / pessoas &gt; 10 and pessoas != 0)
+</pre>
+
+<pre class="term">$ python3 divisao_trocada.py
+Traceback (most recent call last):
+  File "/home/ana/divisao_trocada.py", line 3, in &lt;module&gt;
+    print(total / pessoas &gt; 10 and pessoas != 0)
+          ~~~~~~^~~~~~~~~
+ZeroDivisionError: division by zero
+</pre>
+
+<p>Agora a divisão é a primeira parte, e ela é feita antes de qualquer verificação. Regra prática: <strong>no <code>and</code>, ponha primeiro a pergunta que protege, depois a que poderia dar erro</strong>.</p>
+
+<hr>
+
+<h2>5. O segredo: <code>and</code> e <code>or</code> devolvem um dos valores</h2>
+<p>Até aqui, todos os exemplos usaram <code>True</code> e <code>False</code>. Mas <code>and</code> e <code>or</code> aceitam qualquer valor, porque todo valor é <em>truthy</em> ou <em>falsy</em> (aula <a href="booleanos.html">Booleanos</a>). E aí aparece o segredo: eles <strong>não</strong> devolvem <code>True</code> ou <code>False</code>. Devolvem <strong>um dos dois valores</strong> que receberam: o que decidiu a resposta.</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; "Ana" or "visitante"
+'Ana'
+&gt;&gt;&gt; "" or "visitante"
+'visitante'
+&gt;&gt;&gt; None or 10
+10
+&gt;&gt;&gt; 0 or ""
+''
+&gt;&gt;&gt; 3 and 5
+5
+&gt;&gt;&gt; 0 and 5
+0
+&gt;&gt;&gt; "Ana" and "Bia"
+'Bia'
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Operador</th><th>Se o primeiro valor for…</th><th>Devolve</th><th>Exemplo</th></tr>
+<tr><td rowspan="2"><code>a or b</code></td><td><em>truthy</em></td><td>o <strong>primeiro</strong> (nem olha o segundo)</td><td><code>"Ana" or "visitante"</code> → <code>'Ana'</code></td></tr>
+<tr><td><em>falsy</em></td><td>o <strong>segundo</strong>, seja ele qual for</td><td><code>"" or "visitante"</code> → <code>'visitante'</code>; <code>0 or ""</code> → <code>''</code></td></tr>
+<tr><td rowspan="2"><code>a and b</code></td><td><em>falsy</em></td><td>o <strong>primeiro</strong> (nem olha o segundo)</td><td><code>0 and 5</code> → <code>0</code></td></tr>
+<tr><td><em>truthy</em></td><td>o <strong>segundo</strong>, seja ele qual for</td><td><code>3 and 5</code> → <code>5</code></td></tr>
+</table>
+</div>
+
+<p>É o curto-circuito de novo: o operador devolve o valor em que parou. Já o <code>not</code> é diferente: ele <strong>sempre</strong> devolve <code>True</code> ou <code>False</code> (<code>not "texto"</code> é <code>False</code>; <code>not ""</code> é <code>True</code>).</p>
+
+<h3>Para que serve: o valor padrão</h3>
+<p>O uso mais famoso é dar um valor "reserva" para quando o primeiro está vazio. Se a pessoa não digitar o nome, o programa a chama de visitante:</p>
+
+<pre class="file" data-file="visitante.py">nome = input("Seu nome: ") or "visitante"
+print("Olá,", nome)
+</pre>
+
+<pre class="term">$ python3 visitante.py
+Seu nome: Ana
+Olá, Ana
+$ python3 visitante.py
+Seu nome:
+Olá, visitante
+</pre>
+
+<p>Na segunda vez, a Ana só apertou Enter. O <code>input()</code> devolveu <code>""</code>, que é <em>falsy</em>, e o <code>or</code> devolveu o segundo valor, <code>"visitante"</code>. Cuidado só com um detalhe: o <code>or</code> troca <strong>qualquer</strong> valor <em>falsy</em>, incluindo o <code>0</code>. Para uma quantidade, em que 0 é uma resposta válida, não use esse truque.</p>
+
+<div class="trypy" data-goal="out:Olá, visitante!;;src:\bor\b">
+<p class="try-task"><strong>Missão:</strong> o nome está vazio, e o programa mostra <code>Olá, !</code>. Use o <code>or</code> para que, quando o nome estiver vazio, apareça <code>visitante</code> no lugar.</p>
+<pre class="script" data-file="main.py">nome = ""
+print("Olá, " + nome + "!")
+</pre>
+<pre class="solucao" data-file="main.py">nome = ""
+print("Olá, " + (nome or "visitante") + "!")
+</pre>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma pergunta</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Pergunta</th><th>Forma</th><th>Quando usar</th></tr>
+<tr><td>Nota entre 0 e 10?</td><td><code>0 &lt;= nota &lt;= 10</code></td><td>O jeito mais curto e claro para uma faixa (aula <a href="operadores-comparacao.html">Comparações</a>)</td></tr>
+<tr><td></td><td><code>nota &gt;= 0 and nota &lt;= 10</code></td><td>Funciona igual; é como se escreve em outras linguagens</td></tr>
+<tr><td>Fechada?</td><td><code>not aberta</code></td><td>Para inverter uma variável booleana</td></tr>
+<tr><td></td><td><code>aberta == False</code></td><td>Funciona, mas não é o costume. Prefira <code>not</code></td></tr>
+<tr><td>Respondeu "s" ou "S"?</td><td><code>resposta == "s" or resposta == "S"</code></td><td>Correto, repetindo a comparação inteira</td></tr>
+<tr><td></td><td><code>resposta.lower() == "s"</code></td><td>Mais curto: passa para minúscula antes (aula <a href="strings-metodos.html">Métodos de Texto</a>)</td></tr>
+<tr><td></td><td><code>resposta in ("s", "S")</code></td><td>Para várias respostas aceitas (aula <a href="operadores-is-in.html">is e in</a>)</td></tr>
+<tr><td>Valor padrão</td><td><code>nome = texto or "visitante"</code></td><td>Quando qualquer valor vazio deve ser trocado</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong><code>resposta == "s" or "S"</code>: sempre "verdadeiro"</strong>
+<p>Em português, "a resposta é s ou S" soa perfeito. Em Python, não:</p>
+<pre class="file" data-file="sacola.py">resposta = input("Quer sacola? (s/n) ")
+quer_sacola = resposta == "s" or "S"
+print("Quer sacola:", quer_sacola)
+</pre>
+<pre class="term">$ python3 sacola.py
+Quer sacola? (s/n) n
+Quer sacola: S
+</pre>
+<p>A Ana disse "n", e o resultado nem é <code>True</code> ou <code>False</code>: é <code>S</code>. O Python leu a linha como <code>(resposta == "s") or "S"</code>: a comparação vem primeiro e deu <code>False</code>; o <code>or</code>, então, devolveu o segundo valor, o texto <code>"S"</code>, que é <em>truthy</em>. Num <code>if</code>, isso conta como "sim" <strong>sempre</strong>, qualquer que seja a resposta. Sem mensagem de erro nenhuma.</p>
+<p><strong>Como consertar:</strong> repita a comparação inteira dos dois lados do <code>or</code>:</p>
+<pre class="file" data-file="sacola_certa.py">resposta = input("Quer sacola? (s/n) ")
+quer_sacola = resposta == "s" or resposta == "S"
+print("Quer sacola:", quer_sacola)
+</pre>
+<pre class="term">$ python3 sacola_certa.py
+Quer sacola? (s/n) n
+Quer sacola: False
+$ python3 sacola_certa.py
+Quer sacola? (s/n) S
+Quer sacola: True
+</pre>
+</div>
+
+<div class="cenario">
+<strong><code>&amp;&amp;</code>, <code>||</code> e <code>!</code> de outras linguagens: <code>SyntaxError</code></strong>
+<p>Em C, Java e JavaScript, "e", "ou" e "não" se escrevem <code>&amp;&amp;</code>, <code>||</code> e <code>!</code>. No Python, são palavras:</p>
+<pre class="file" data-file="e_comercial.py">idade = 20
+tem_convite = True
+print(idade &gt;= 18 &amp;&amp; tem_convite)
+</pre>
+<pre class="term">$ python3 e_comercial.py
+  File "/home/ana/e_comercial.py", line 3
+    print(idade &gt;= 18 &amp;&amp; tem_convite)
+                       ^
+SyntaxError: invalid syntax
+</pre>
+<pre class="file" data-file="barras.py">aniversario = False
+cliente_vip = True
+print(aniversario || cliente_vip)
+</pre>
+<pre class="term">$ python3 barras.py
+  File "/home/ana/barras.py", line 3
+    print(aniversario || cliente_vip)
+                       ^
+SyntaxError: invalid syntax
+</pre>
+<pre class="file" data-file="exclamacao.py">aberta = True
+print(!aberta)
+</pre>
+<pre class="term">$ python3 exclamacao.py
+  File "/home/ana/exclamacao.py", line 2
+    print(!aberta)
+          ^
+SyntaxError: invalid syntax
+</pre>
+<p>Nos três casos, o chapeuzinho aponta o sinal que o Python não entendeu, e a mensagem é só <code>invalid syntax</code>, sem dica. <strong>Como consertar:</strong> <code>and</code>, <code>or</code> e <code>not</code>, por extenso e em minúsculas. (O <code>!</code> só existe no Python dentro do <code>!=</code>, o "diferente".)</p>
+</div>
+
+<div class="cenario">
+<strong>Cortar a segunda comparação: <code>nota &gt;= 0 and &lt;= 10</code></strong>
+<pre class="file" data-file="faixa_errada.py">nota = 8
+print(nota &gt;= 0 and &lt;= 10)
+</pre>
+<pre class="term">$ python3 faixa_errada.py
+  File "/home/ana/faixa_errada.py", line 2
+    print(nota &gt;= 0 and &lt;= 10)
+                        ^^
+SyntaxError: invalid syntax
+</pre>
+<p>Em português, "nota maior ou igual a 0 e menor ou igual a 10" se entende. Para o Python, cada lado do <code>and</code> precisa ser uma pergunta <strong>completa</strong>, e <code>&lt;= 10</code> sozinho não diz quem é menor ou igual a 10. <strong>Como consertar:</strong> <code>nota &gt;= 0 and nota &lt;= 10</code>, ou, melhor ainda, <code>0 &lt;= nota &lt;= 10</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>A ordem errada no curto-circuito: <code>ZeroDivisionError</code></strong>
+<p><code>total / pessoas &gt; 10 and pessoas != 0</code> dá <code>ZeroDivisionError</code> quando não há pessoas, como na seção 4: a divisão é feita antes da proteção. <strong>Como consertar:</strong> a pergunta que protege vem primeiro: <code>pessoas != 0 and total / pessoas &gt; 10</code>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Resultado</th><th>Observação</th></tr>
+<tr><td><code>a and b</code></td><td>Verdadeiro se os dois forem</td><td>Se <code>a</code> é <em>falsy</em>, devolve <code>a</code> sem olhar <code>b</code>; senão, devolve <code>b</code></td></tr>
+<tr><td><code>a or b</code></td><td>Verdadeiro se pelo menos um for</td><td>Se <code>a</code> é <em>truthy</em>, devolve <code>a</code> sem olhar <code>b</code>; senão, devolve <code>b</code></td></tr>
+<tr><td><code>not a</code></td><td>O contrário de <code>a</code></td><td>Sempre <code>True</code> ou <code>False</code></td></tr>
+<tr><td><code>not</code> → <code>and</code> → <code>or</code></td><td></td><td>A ordem; as comparações vêm antes dos três</td></tr>
+<tr><td><code>pessoas != 0 and total / pessoas &gt; 10</code></td><td></td><td>Curto-circuito: a divisão só acontece se houver pessoas</td></tr>
+<tr><td><code>texto or "padrão"</code></td><td></td><td>Valor padrão quando <code>texto</code> está vazio</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td>Uma pergunta com <code>or</code> é sempre "sim", ou devolve um texto</td><td><code>x == "s" or "S"</code>: repita a comparação, <code>x == "s" or x == "S"</code></td></tr>
+<tr><td><code>SyntaxError: invalid syntax</code> apontando <code>&amp;&amp;</code>, <code>||</code> ou <code>!</code></td><td>Use <code>and</code>, <code>or</code> e <code>not</code></td></tr>
+<tr><td><code>SyntaxError: invalid syntax</code> logo depois de um <code>and</code></td><td>A segunda comparação está incompleta: <code>and nota &lt;= 10</code></td></tr>
+<tr><td><code>ZeroDivisionError</code> numa pergunta com <code>and</code></td><td>A proteção (<code>pessoas != 0</code>) tem de vir antes da divisão</td></tr>
+<tr><td>Um <code>0</code> foi trocado pelo valor padrão</td><td><code>x or padrao</code> troca qualquer <em>falsy</em>, até o zero</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. True ou False?</h3>
+<div class="ex-code">True and False → <input data-answer="False" aria-label="True and False">
+False or True → <input data-answer="True" aria-label="False or True">
+not (3 &gt; 5) → <input data-answer="True" aria-label="not 3 maior que 5">
+True or True and False → <input data-answer="True" aria-label="ordem"></div>
+</div>
+
+<div class="exercise">
+<h3>2. O que o <code>or</code> devolve?</h3>
+<p>Escreva o resultado como o modo interativo mostraria:</p>
+<div class="ex-code">"" or "sem nome" → <input data-answer="'sem nome'|&quot;sem nome&quot;" aria-label="resultado 1">
+0 or 7 → <input data-answer="7" aria-label="resultado 2"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. A padaria dá brinde a quem compra mais de 10 pães <strong>e</strong> é cliente cadastrado. Qual expressão está certa?</p>
+<label><input type="radio" name="q3"> <code>paes &gt; 10 or cadastrado</code></label>
+<label><input type="radio" name="q3"> <code>paes &gt; 10 and cadastrado</code></label>
+<label><input type="radio" name="q3"> <code>paes &gt; 10 &amp;&amp; cadastrado</code></label>
+<label><input type="radio" name="q3"> <code>not paes &gt; 10 and cadastrado</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">4. Por que <code>False and 1 / 0</code> não dá <code>ZeroDivisionError</code>?</p>
+<label><input type="radio" name="q4"> Porque o <code>and</code> transforma o erro em <code>False</code></label>
+<label><input type="radio" name="q4"> Porque <code>1 / 0</code> é <code>0</code> no Python</label>
+<label><input type="radio" name="q4"> Porque o Python faz a divisão por último</label>
+<label><input type="radio" name="q4"> Porque a primeira parte já é falsa, e o Python nem calcula a segunda (curto-circuito)</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. A pessoa digitou <code>n</code>. Quanto vale <code>resposta == "s" or "S"</code>?</p>
+<label><input type="radio" name="q5"> <code>False</code></label>
+<label><input type="radio" name="q5"> <code>True</code></label>
+<label><input type="radio" name="q5"> <code>'S'</code></label>
+<label><input type="radio" name="q5"> Dá erro</label>
+</div>
+
+<h3>Missão final: a sacola</h3>
+
+<div class="trypy" data-stdin="n" data-goal="out:Quer sacola: False;;semerro">
+<p class="try-task"><strong>Missão:</strong> o editor vai responder <code>n</code>, mas o programa mostra <code>Quer sacola: S</code>. Conserte a pergunta para ela aceitar <code>"s"</code> ou <code>"S"</code> e responder <code>False</code> para qualquer outra coisa.</p>
+<pre class="script" data-file="main.py">resposta = input("Quer sacola? (s/n) ")
+quer_sacola = resposta == "s" or "S"
+print("Quer sacola:", quer_sacola)
+</pre>
+<pre class="solucao" data-file="main.py">resposta = input("Quer sacola? (s/n) ")
+quer_sacola = resposta == "s" or resposta == "S"
+print("Quer sacola:", quer_sacola)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>and</code> ("e"): verdadeiro só se as <strong>duas</strong> partes forem. <code>or</code> ("ou"): verdadeiro se <strong>pelo menos uma</strong> for. <code>not</code> ("não"): inverte.</li>
+  <li>As comparações são resolvidas antes; depois vem <code>not</code>, depois <code>and</code>, por fim <code>or</code>. Misturou <code>and</code> com <code>or</code>? Use parênteses.</li>
+  <li>Curto-circuito: o Python para assim que sabe a resposta. No <code>and</code>, ponha primeiro a pergunta que protege: <code>pessoas != 0 and total / pessoas &gt; 10</code>.</li>
+  <li><code>and</code> e <code>or</code> devolvem <strong>um dos valores</strong>, o que decidiu a resposta: <code>"" or "visitante"</code> é <code>'visitante'</code>. O <code>not</code> sempre devolve <code>True</code> ou <code>False</code>.</li>
+  <li><code>nome = input(…) or "visitante"</code> dá um valor padrão (cuidado: troca também o <code>0</code>).</li>
+  <li><code>resposta == "s" or "S"</code> está errado: repita a comparação, <code>resposta == "s" or resposta == "S"</code>.</li>
+  <li>No Python não existem <code>&amp;&amp;</code>, <code>||</code> e <code>!</code>: dão <code>SyntaxError</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
