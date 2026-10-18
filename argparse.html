@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python argparse — programas de linha de comando | Guia Python</title>
+<meta name="description" content="Programas de linha de comando para quem está começando: o que são argumentos, sys.argv e o IndexError, o módulo argparse com argumentos posicionais e opcionais, type=int, default, choices, store_true, nargs, o --help que ele gera sozinho e as mensagens de erro reais do terminal.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">argparse</span></h1>
+
+<p class="intro">Até aqui, quando um programa precisava de uma informação, ele perguntava com <code>input()</code> e esperava a pessoa digitar. Os programas do terminal costumam funcionar de outro jeito: você já diz tudo <strong>na hora de chamar</strong>, na mesma linha. <code>ls -a</code>, <code>pip install requests</code>, <code>python3 -m venv .venv</code>: as palavras depois do nome do programa são os <strong>argumentos</strong>. Nesta aula você vai fazer os seus programas receberem argumentos, primeiro do jeito mais cru (<code>sys.argv</code>) e depois do jeito certo, com o módulo <code>argparse</code> ("analisador de argumentos"), que ainda escreve a ajuda e as mensagens de erro para você.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que são argumentos de linha de comando, e como o Python os entrega em <code>sys.argv</code>.</li>
+  <li>Por que <code>sys.argv</code> sozinho dá trabalho (o <code>IndexError</code>, tudo vem como texto).</li>
+  <li>A montar um programa com <code>argparse</code>: <code>ArgumentParser</code>, <code>add_argument</code>, <code>parse_args</code>.</li>
+  <li>A diferença entre argumentos <strong>posicionais</strong> (obrigatórios) e <strong>opcionais</strong> (<code>-q</code>, <code>--quantidade</code>).</li>
+  <li>As opções mais usadas: <code>help</code>, <code>type=int</code>, <code>default</code>, <code>choices</code>, <code>action="store_true"</code>, <code>nargs="+"</code>.</li>
+  <li>A ler o <code>--help</code> que o <code>argparse</code> gera e as mensagens de erro reais dele.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: o pedido já vem completo</h2>
+<p>Na padaria da Ana, tem cliente que chega e espera ela perguntar: "Qual bolo? Quantos? É para entregar?". Isso é o <code>input()</code>: o programa pergunta, a pessoa responde, uma coisa de cada vez. E tem cliente que já chega com o bilhete pronto: "Bia, cenoura, 3, entregar". A Ana lê o bilhete e pronto, sem conversa.</p>
+
+<p>Os argumentos de linha de comando são esse bilhete. Quem chama o programa escreve tudo junto:</p>
+
+<pre class="file" data-file="comando">python3 encomenda.py Bia cenoura --quantidade 3 --entrega
+</pre>
+
+<p>Isso tem uma grande vantagem: o programa pode ser chamado por outros programas, por um agendador, por um script, sem ninguém sentado na frente para responder perguntas. E o comando inteiro pode ser repetido com a seta para cima do terminal.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Peça</th><th>Exemplo</th><th>O que é</th></tr>
+<tr><td>O programa</td><td><code>python3 encomenda.py</code></td><td>O Python e o arquivo que ele vai rodar</td></tr>
+<tr><td>Argumento <strong>posicional</strong></td><td><code>Bia</code>, <code>cenoura</code></td><td>Vale pela <strong>posição</strong>: o primeiro é o cliente, o segundo é o sabor</td></tr>
+<tr><td>Opção com valor</td><td><code>--quantidade 3</code></td><td>Um nome que começa com <code>--</code> (ou <code>-</code>), seguido do valor</td></tr>
+<tr><td>Opção liga/desliga</td><td><code>--entrega</code></td><td>Só o nome: estar ali já quer dizer "sim"</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. Antes do <code>argparse</code>: <code>sys.argv</code></h2>
+<p>O Python guarda os argumentos numa lista chamada <code>argv</code> (de <em>argument vector</em>, "lista de argumentos"), dentro do módulo <code>sys</code>. Para ver o que chega, um programa que só mostra a lista:</p>
+
+<pre class="file" data-file="argumentos.py">import sys
+
+print("sys.argv =", sys.argv)
+print("Quantos:", len(sys.argv))
+</pre>
+
+<pre class="term">$ python3 argumentos.py
+sys.argv = ['argumentos.py']
+Quantos: 1
+$ python3 argumentos.py bolo 3
+sys.argv = ['argumentos.py', 'bolo', '3']
+Quantos: 3
+$ python3 argumentos.py "bolo de cenoura" 3
+sys.argv = ['argumentos.py', 'bolo de cenoura', '3']
+Quantos: 3
+</pre>
+
+<dl class="anatomy">
+  <dt>sys.argv[0]</dt><dd>Sempre o nome do programa: <code>'argumentos.py'</code>. Os argumentos de verdade começam no índice 1.</dd>
+  <dt>'bolo', '3'</dt><dd>Cada palavra separada por espaço vira um item. Repare nas aspas: o <code>3</code> chegou como o <strong>texto</strong> <code>'3'</code>, não como número.</dd>
+  <dt>"bolo de cenoura"</dt><dd>Entre aspas, no terminal, várias palavras viram um argumento só. As aspas são do terminal: não chegam ao Python.</dd>
+</dl>
+
+<p>Com isso já dá para fazer um programa que cumprimenta quem você disser:</p>
+
+<pre class="file" data-file="ola.py">import sys
+
+nome = sys.argv[1]
+print(f"Olá, {nome}!")
+</pre>
+
+<pre class="term">$ python3 ola.py Bia
+Olá, Bia!
+$ python3 ola.py
+Traceback (most recent call last):
+  File "/home/ana/ola.py", line 3, in &lt;module&gt;
+    nome = sys.argv[1]
+           ~~~~~~~~^^^
+IndexError: list index out of range
+</pre>
+
+<p>Com o nome, funciona. Sem ele, o programa quebra: a lista só tinha o item 0, e o programa pediu o item 1. <code>IndexError: list index out of range</code> é "índice fora do intervalo da lista" (o mesmo erro da aula <a href="listas-acessar.html">Acessando Itens</a>). As marcas <code>~~~~~~~~^^^</code> apontam o pedaço culpado: o <code>[1]</code>. Para quem só queria usar o programa, essa mensagem não explica nada.</p>
+
+<p>E o problema do texto:</p>
+
+<pre class="file" data-file="dobro.py">import sys
+
+numero = sys.argv[1]
+print(numero * 2)
+print(int(numero) * 2)
+</pre>
+
+<pre class="term">$ python3 dobro.py 21
+2121
+42
+</pre>
+
+<p><code>'21' * 2</code> é o texto repetido duas vezes: <code>2121</code>. Só depois do <code>int()</code> (aula <a href="conversao.html">Conversão de Tipos</a>) é que vira a conta <code>42</code>. Com <code>sys.argv</code>, toda conversão e toda conferência ficam por sua conta.</p>
+
+<p>O editor do guia também passa argumentos para o programa: nesta caixa, é como se você tivesse digitado <code>python3 main.py Bia 3</code>.</p>
+
+<div class="trypy" data-args="Bia 3" data-goal="out:Bia pediu 6 pães;;semerro">
+<p class="try-task"><strong>Missão:</strong> a Bia pediu 3 pacotes de pão, e cada pacote tem 2 pães. O programa mostra <code>Bia pediu 33 pães</code>, porque o <code>3</code> chegou como texto. Conserte para mostrar <code>Bia pediu 6 pães</code>.</p>
+<pre class="script" data-file="main.py">import sys
+
+cliente = sys.argv[1]
+pacotes = sys.argv[2]
+print(f"{cliente} pediu {pacotes * 2} pães")
+</pre>
+<pre class="solucao" data-file="main.py">import sys
+
+cliente = sys.argv[1]
+pacotes = int(sys.argv[2])
+print(f"{cliente} pediu {pacotes * 2} pães")
+</pre>
+</div>
+
+<hr>
+
+<h2>2. O primeiro programa com <code>argparse</code></h2>
+<p>O <code>argparse</code> faz o trabalho chato: confere se veio tudo, converte os tipos, explica o erro e ainda escreve a ajuda. Ele vem com o Python (biblioteca padrão), não precisa instalar. O mesmo cumprimento:</p>
+
+<pre class="file" data-file="saudacao.py">import argparse
+
+parser = argparse.ArgumentParser(description="Cumprimenta uma pessoa.")
+parser.add_argument("nome")
+args = parser.parse_args()
+
+print(f"Olá, {args.nome}!")
+</pre>
+
+<dl class="anatomy">
+  <dt>import argparse</dt><dd>Traz o módulo.</dd>
+  <dt>argparse.ArgumentParser(…)</dt><dd>Cria o <strong>analisador</strong> (em inglês, <em>parser</em>): o "leitor do bilhete". Fica na variável <code>parser</code>, o nome de costume.</dd>
+  <dt>description="…"</dt><dd>Uma frase que explica o programa. Aparece na ajuda.</dd>
+  <dt>parser.add_argument("nome")</dt><dd>"Acrescente um argumento chamado <code>nome</code>". Sem tracinho na frente, ele é <strong>posicional</strong>, e obrigatório.</dd>
+  <dt>args = parser.parse_args()</dt><dd>"Analise os argumentos": lê o <code>sys.argv</code>, confere tudo e devolve um objeto com um campo para cada argumento. Se algo estiver errado, o programa para aqui, com uma mensagem clara.</dd>
+  <dt>args.nome</dt><dd>O valor que veio, pelo nome que você deu no <code>add_argument</code>, com um ponto no meio.</dd>
+</dl>
+
+<pre class="term">$ python3 saudacao.py Bia
+Olá, Bia!
+$ python3 saudacao.py
+usage: saudacao.py [-h] nome
+saudacao.py: error: the following arguments are required: nome
+$ echo $?
+2
+</pre>
+
+<p>Compare com o <code>IndexError</code> da seção anterior. Agora, sem o nome, o programa responde em duas linhas:</p>
+<dl class="anatomy">
+  <dt>usage: saudacao.py [-h] nome</dt><dd>"Uso": como chamar o programa. Entre colchetes, o que é opcional (<code>-h</code>); sem colchetes, o que é obrigatório (<code>nome</code>).</dd>
+  <dt>error: the following arguments are required: nome</dt><dd>"Erro: os seguintes argumentos são obrigatórios: <code>nome</code>". Diz exatamente o que faltou.</dd>
+  <dt>echo $?</dt><dd>Mostra o <strong>código de saída</strong> do último programa. 0 é "deu certo"; o <code>argparse</code> sai com <strong>2</strong>, o costume do terminal para "você chamou errado".</dd>
+</dl>
+
+<h3>O <code>--help</code> veio de graça</h3>
+<p>Você não escreveu nenhuma ajuda, mas o <code>argparse</code> criou a opção <code>-h</code> (ou <code>--help</code>, "ajuda") sozinho:</p>
+
+<pre class="term">$ python3 saudacao.py --help
+usage: saudacao.py [-h] nome
+
+Cumprimenta uma pessoa.
+
+positional arguments:
+  nome
+
+options:
+  -h, --help  show this help message and exit
+</pre>
+
+<dl class="anatomy">
+  <dt>usage: …</dt><dd>A mesma linha de uso do erro.</dd>
+  <dt>Cumprimenta uma pessoa.</dt><dd>A sua <code>description</code>.</dd>
+  <dt>positional arguments:</dt><dd>"Argumentos posicionais": a lista dos obrigatórios.</dd>
+  <dt>options:</dt><dd>"Opções": as que começam com tracinho.</dd>
+  <dt>-h, --help  show this help message and exit</dt><dd>"Mostra esta mensagem de ajuda e sai". Os textos fixos do <code>argparse</code> são em inglês; os seus (a descrição, as ajudas de cada argumento) saem como você escrever.</dd>
+</dl>
+
+<div class="note">
+<strong>Ajuda colorida <span class="versao">3.14</span></strong>
+<p>Num terminal de verdade, o Python 3.14 pinta a ajuda e os erros do <code>argparse</code>: "usage" em azul, o nome do programa em roxo, as opções em verde. Quando a saída vai para um arquivo ou para outro programa, as cores somem sozinhas. Num Python mais antigo (como o 3.13 do Debian 13), o texto é o mesmo, sem cor.</p>
+</div>
+
+<hr>
+
+<h2>3. Um programa de verdade: as encomendas da padaria</h2>
+<p>Agora o bilhete completo: o cliente e o sabor (obrigatórios), a quantidade (se não disser, é 1) e se é para entregar. Cada <code>add_argument</code> é uma linha do bilhete:</p>
+
+<pre class="file" data-file="encomenda.py">import argparse
+
+parser = argparse.ArgumentParser(
+    description="Anota uma encomenda da padaria da Ana.",
+)
+parser.add_argument("cliente", help="nome de quem encomendou")
+parser.add_argument("sabor", choices=["chocolate", "cenoura", "milho"], help="sabor do bolo")
+parser.add_argument("-q", "--quantidade", type=int, default=1, help="quantos bolos (padrão: 1)")
+parser.add_argument("-e", "--entrega", action="store_true", help="levar na casa do cliente")
+args = parser.parse_args()
+
+print(f"Cliente: {args.cliente}")
+print(f"Bolo de {args.sabor} x {args.quantidade}")
+if args.entrega:
+    print("Entregar em casa.")
+else:
+    print("Retirar na padaria.")
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Parte</th><th>O que faz</th></tr>
+<tr><td><code>"cliente"</code></td><td>Posicional: o primeiro argumento sem tracinho</td></tr>
+<tr><td><code>help="…"</code></td><td>A explicação que aparece no <code>--help</code></td></tr>
+<tr><td><code>choices=[…]</code></td><td>"Escolhas": só aceita um destes valores</td></tr>
+<tr><td><code>"-q", "--quantidade"</code></td><td>Opcional, com dois nomes: o curto (um tracinho, uma letra) e o longo (dois tracinhos, a palavra). O campo se chama pelo nome longo: <code>args.quantidade</code></td></tr>
+<tr><td><code>type=int</code></td><td>Converte o texto para número inteiro (e reclama se não der)</td></tr>
+<tr><td><code>default=1</code></td><td>O valor "padrão", quando a opção não aparece</td></tr>
+<tr><td><code>action="store_true"</code></td><td>"Guarde verdadeiro": a opção não recebe valor; se aparecer, <code>args.entrega</code> é <code>True</code>, se não, <code>False</code></td></tr>
+</table>
+</div>
+
+<p>A ajuda agora explica tudo isso sozinha:</p>
+
+<pre class="term">$ python3 encomenda.py --help
+usage: encomenda.py [-h] [-q QUANTIDADE] [-e]
+                    cliente {chocolate,cenoura,milho}
+
+Anota uma encomenda da padaria da Ana.
+
+positional arguments:
+  cliente               nome de quem encomendou
+  {chocolate,cenoura,milho}
+                        sabor do bolo
+
+options:
+  -h, --help            show this help message and exit
+  -q, --quantidade QUANTIDADE
+                        quantos bolos (padrão: 1)
+  -e, --entrega         levar na casa do cliente
+</pre>
+
+<dl class="anatomy">
+  <dt>[-q QUANTIDADE]</dt><dd>Entre colchetes: opcional. <code>QUANTIDADE</code> em maiúsculas marca o lugar do valor que você deve escrever depois do <code>-q</code>.</dd>
+  <dt>[-e]</dt><dd>Opcional e sem valor: é uma opção liga/desliga.</dd>
+  <dt>{chocolate,cenoura,milho}</dt><dd>Entre chaves: as escolhas permitidas para o sabor.</dd>
+</dl>
+
+<p>Agora, vários jeitos de chamar:</p>
+
+<pre class="term">$ python3 encomenda.py Bia cenoura
+Cliente: Bia
+Bolo de cenoura x 1
+Retirar na padaria.
+$ python3 encomenda.py Bia cenoura --quantidade 3 --entrega
+Cliente: Bia
+Bolo de cenoura x 3
+Entregar em casa.
+$ python3 encomenda.py Bia cenoura -q 3 -e
+Cliente: Bia
+Bolo de cenoura x 3
+Entregar em casa.
+$ python3 encomenda.py -e Bia -q 2 milho
+Cliente: Bia
+Bolo de milho x 2
+Entregar em casa.
+$ python3 encomenda.py Bia cenoura --quantidade=4
+Cliente: Bia
+Bolo de cenoura x 4
+Retirar na padaria.
+$ python3 encomenda.py "Dona Rosa" chocolate
+Cliente: Dona Rosa
+Bolo de chocolate x 1
+Retirar na padaria.
+</pre>
+
+<ul>
+  <li>Sem <code>-q</code>, a quantidade é o <code>default</code>, 1. Sem <code>-e</code>, <code>args.entrega</code> é <code>False</code>.</li>
+  <li><code>-q 3</code> e <code>--quantidade 3</code> são a mesma coisa; <code>--quantidade=4</code>, com <code>=</code>, também vale.</li>
+  <li>As opções podem vir em <strong>qualquer ordem</strong>, até no meio dos posicionais (<code>-e Bia -q 2 milho</code>). Os posicionais é que precisam manter a ordem entre eles: primeiro o cliente, depois o sabor.</li>
+  <li>Nome com espaço vai entre aspas: <code>"Dona Rosa"</code>.</li>
+</ul>
+
+<h3>O que tem dentro de <code>args</code></h3>
+<p>O <code>parse_args()</code> devolve um objeto do tipo <code>Namespace</code> ("espaço de nomes"), que é só um saco de valores com nome. Dá para imprimi-lo inteiro, e repare que o <code>type=int</code> funcionou:</p>
+
+<pre class="file" data-file="ver.py">import argparse
+
+parser = argparse.ArgumentParser(suggest_on_error=True)
+parser.add_argument("sabor", choices=["chocolate", "cenoura", "milho"])
+parser.add_argument("-q", "--quantidade", type=int, default=1)
+args = parser.parse_args()
+print(args)
+print(type(args.quantidade))
+</pre>
+
+<pre class="term">$ python3 ver.py cenoura -q 2
+Namespace(sabor='cenoura', quantidade=2)
+&lt;class 'int'&gt;
+</pre>
+
+<p><code>quantidade=2</code>, sem aspas: é número, pronto para fazer conta. (O <code>suggest_on_error=True</code> você vai entender em <a href="#errado">Quando dá errado</a>.)</p>
+
+<div class="trypy" data-args="Bia cenoura -q 3" data-goal="out:Total: R$ 105;;src:type\s*=\s*int;;exit:0">
+<p class="try-task"><strong>Missão:</strong> nesta caixa o programa é chamado como <code>python3 main.py Bia cenoura -q 3</code>. Cada bolo custa R$ 35, mas o total sai como um monte de 3 seguidos. Acrescente <code>type=int</code> na opção <code>--quantidade</code> para o total sair <code>Total: R$ 105</code>.</p>
+<pre class="script" data-file="main.py">import argparse
+
+parser = argparse.ArgumentParser(description="Calcula o preço da encomenda.")
+parser.add_argument("cliente")
+parser.add_argument("sabor")
+parser.add_argument("-q", "--quantidade", default=1)
+args = parser.parse_args()
+
+print(f"Cliente: {args.cliente}")
+print(f"Total: R$ {args.quantidade * 35}")
+</pre>
+<pre class="solucao" data-file="main.py">import argparse
+
+parser = argparse.ArgumentParser(description="Calcula o preço da encomenda.")
+parser.add_argument("cliente")
+parser.add_argument("sabor")
+parser.add_argument("-q", "--quantidade", type=int, default=1)
+args = parser.parse_args()
+
+print(f"Cliente: {args.cliente}")
+print(f"Total: R$ {args.quantidade * 35}")
+</pre>
+</div>
+
+<hr>
+
+<h2>4. Vários valores: <code>nargs="+"</code></h2>
+<p>E se o número de argumentos variar? A lista de compras pode ter dois itens ou vinte. <code>nargs</code> (de "número de argumentos") com <code>"+"</code> quer dizer "um ou mais", e o valor vira uma <strong>lista</strong>:</p>
+
+<pre class="file" data-file="compras.py">import argparse
+
+parser = argparse.ArgumentParser(description="Monta a lista de compras.")
+parser.add_argument("itens", nargs="+", help="o que comprar")
+args = parser.parse_args()
+
+print("Itens:", args.itens)
+for numero, item in enumerate(args.itens, start=1):
+    print(f"{numero}. {item}")
+</pre>
+
+<pre class="term">$ python3 compras.py farinha ovos "leite condensado"
+Itens: ['farinha', 'ovos', 'leite condensado']
+1. farinha
+2. ovos
+3. leite condensado
+$ python3 compras.py
+usage: compras.py [-h] itens [itens ...]
+compras.py: error: the following arguments are required: itens
+</pre>
+
+<p>O <code>enumerate</code> numera os itens (aula <a href="enumerate-zip.html">enumerate() e zip()</a>). Na linha de uso, <code>itens [itens ...]</code> quer dizer "um item, e mais quantos quiser". Com <code>nargs="*"</code> seria "zero ou mais": aí a lista pode vir vazia, sem erro.</p>
+
+<hr>
+
+<h2>Formas diferentes de receber informação</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Jeito</th><th>Quando usar</th></tr>
+<tr><td><code>input()</code></td><td>Programas que conversam com a pessoa, uma pergunta de cada vez (um jogo, um questionário)</td></tr>
+<tr><td><code>sys.argv</code></td><td>Um script rapidinho, só para você, com um ou dois argumentos e sem conferência</td></tr>
+<tr><td><code>argparse</code></td><td>Qualquer programa de terminal que outras pessoas (ou você daqui a um mês) vão usar: confere, converte, explica os erros e tem <code>--help</code></td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Argumento</th><th>Como declarar</th><th>Como chamar</th><th>O que chega</th></tr>
+<tr><td>Posicional</td><td><code>add_argument("cliente")</code></td><td><code>Bia</code></td><td><code>args.cliente == "Bia"</code></td></tr>
+<tr><td>Opcional com valor</td><td><code>add_argument("-q", "--quantidade", type=int, default=1)</code></td><td><code>-q 3</code>, <code>--quantidade 3</code>, <code>--quantidade=3</code></td><td><code>args.quantidade == 3</code> (ou 1, se não vier)</td></tr>
+<tr><td>Liga/desliga</td><td><code>add_argument("-e", "--entrega", action="store_true")</code></td><td><code>-e</code> ou <code>--entrega</code></td><td><code>True</code> (ou <code>False</code>, se não vier)</td></tr>
+<tr><td>Vários valores</td><td><code>add_argument("itens", nargs="+")</code></td><td><code>farinha ovos</code></td><td><code>args.itens == ["farinha", "ovos"]</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+<p>Todos os erros do <code>argparse</code> têm a mesma forma: a linha <code>usage:</code> (para você lembrar como se chama) e uma linha <code>error:</code> dizendo o que houve. E todos saem com o código 2.</p>
+
+<div class="cenario">
+<strong>Faltou um argumento obrigatório</strong>
+<pre class="term">$ python3 encomenda.py Bia
+usage: encomenda.py [-h] [-q QUANTIDADE] [-e]
+                    cliente {chocolate,cenoura,milho}
+encomenda.py: error: the following arguments are required: sabor
+</pre>
+<p>"Os seguintes argumentos são obrigatórios: <code>sabor</code>". A <code>Bia</code> virou o cliente, e o sabor não veio. <strong>Como consertar:</strong> <code>python3 encomenda.py Bia cenoura</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Um valor fora das escolhas</strong>
+<pre class="term">$ python3 encomenda.py Bia morango
+usage: encomenda.py [-h] [-q QUANTIDADE] [-e]
+                    cliente {chocolate,cenoura,milho}
+encomenda.py: error: argument sabor: invalid choice: 'morango' (choose from chocolate, cenoura, milho)
+</pre>
+<p>"Argumento <code>sabor</code>: escolha inválida: <code>'morango'</code> (escolha entre chocolate, cenoura, milho)". O <code>choices</code> barrou um sabor que a padaria não faz. E se o erro for de digitação? No Python <span class="versao">3.14</span>, a opção <code>suggest_on_error=True</code> do <code>ArgumentParser</code> (do <code>ver.py</code>, lá em cima) faz o <code>argparse</code> sugerir o nome certo:</p>
+<pre class="term">$ python3 ver.py cenora
+usage: ver.py [-h] [-q QUANTIDADE] {chocolate,cenoura,milho}
+ver.py: error: argument sabor: invalid choice: 'cenora', maybe you meant 'cenoura'? (choose from chocolate, cenoura, milho)
+</pre>
+<p>"Talvez você quisesse dizer <code>'cenoura'</code>?". Num Python mais antigo, o <code>suggest_on_error</code> não existe e dá erro: deixe-o de fora se o programa tiver de rodar no 3.13.</p>
+</div>
+
+<div class="cenario">
+<strong>Texto onde devia ser número</strong>
+<pre class="term">$ python3 encomenda.py Bia cenoura -q três
+usage: encomenda.py [-h] [-q QUANTIDADE] [-e]
+                    cliente {chocolate,cenoura,milho}
+encomenda.py: error: argument -q/--quantidade: invalid int value: 'três'
+</pre>
+<p>"Valor inteiro inválido: <code>'três'</code>". O <code>type=int</code> tentou converter e não deu. Repare que o programa nem começou: o erro aparece antes de qualquer <code>print</code>. <strong>Como consertar:</strong> <code>-q 3</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>A opção sem o valor</strong>
+<pre class="term">$ python3 encomenda.py Bia cenoura -q
+usage: encomenda.py [-h] [-q QUANTIDADE] [-e]
+                    cliente {chocolate,cenoura,milho}
+encomenda.py: error: argument -q/--quantidade: expected one argument
+$ echo $?
+2
+</pre>
+<p>"Esperava um argumento": o <code>-q</code> precisa de um número depois dele.</p>
+</div>
+
+<div class="cenario">
+<strong>Uma opção que não existe (e o argumento a mais)</strong>
+<pre class="term">$ python3 encomenda.py Bia cenoura --qtd 2
+usage: encomenda.py [-h] [-q QUANTIDADE] [-e]
+                    cliente {chocolate,cenoura,milho}
+encomenda.py: error: unrecognized arguments: --qtd 2
+$ python3 saudacao.py Bia Carla
+usage: saudacao.py [-h] nome
+saudacao.py: error: unrecognized arguments: Carla
+</pre>
+<p>"Argumentos não reconhecidos". No primeiro, <code>--qtd</code> não foi declarada. No segundo, o programa espera um nome só e sobrou a <code>Carla</code>. <strong>Como consertar:</strong> confira os nomes com <code>--help</code>; para dois nomes, use <code>nargs="+"</code>, ou aspas se for um nome com espaço.</p>
+</div>
+
+<div class="cenario">
+<strong>A abreviação que passa calada</strong>
+<pre class="term">$ python3 encomenda.py Bia cenoura --quantidad 2
+Cliente: Bia
+Bolo de cenoura x 2
+Retirar na padaria.
+</pre>
+<p>Faltou o <strong>e</strong> do fim, e funcionou! O <code>argparse</code> aceita o começo de uma opção longa, desde que só uma opção comece assim. É cômodo, mas pode esconder erros de digitação, e um script que usa <code>--quantidad</code> quebra no dia em que alguém criar outra opção começando com essas letras. <strong>Como evitar:</strong> escreva sempre o nome inteiro; quem quiser proibir pode criar o parser com <code>argparse.ArgumentParser(allow_abbrev=False)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Sem <code>argparse</code>: o <code>IndexError</code></strong>
+<p>Você já viu na seção 1: <code>nome = sys.argv[1]</code> sem argumento dá <code>IndexError: list index out of range</code>, com um traceback que não diz nada a quem só queria usar o programa. É o principal motivo para trocar o <code>sys.argv</code> pelo <code>argparse</code>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Código</th><th>O que faz</th></tr>
+<tr><td><code>sys.argv</code></td><td>A lista crua: <code>[programa, arg1, arg2, …]</code>, tudo texto</td></tr>
+<tr><td><code>parser = argparse.ArgumentParser(description="…")</code></td><td>Cria o analisador</td></tr>
+<tr><td><code>parser.add_argument("nome")</code></td><td>Argumento posicional (obrigatório)</td></tr>
+<tr><td><code>parser.add_argument("-q", "--quantidade")</code></td><td>Opção com valor (opcional; sem <code>default</code>, vale <code>None</code>)</td></tr>
+<tr><td><code>help="…"</code></td><td>Texto da ajuda</td></tr>
+<tr><td><code>type=int</code> (ou <code>float</code>)</td><td>Converte o valor</td></tr>
+<tr><td><code>default=1</code></td><td>Valor quando a opção não vem</td></tr>
+<tr><td><code>choices=[…]</code></td><td>Só aceita esses valores</td></tr>
+<tr><td><code>action="store_true"</code></td><td>Liga/desliga: <code>True</code> se aparecer</td></tr>
+<tr><td><code>nargs="+"</code> / <code>nargs="*"</code></td><td>Um ou mais / zero ou mais valores, numa lista</td></tr>
+<tr><td><code>args = parser.parse_args()</code></td><td>Lê o <code>sys.argv</code>, confere e devolve os valores (<code>args.nome</code>…)</td></tr>
+<tr><td><code>ArgumentParser(suggest_on_error=True)</code></td><td><span class="versao">3.14</span> Sugere o nome certo em erros de digitação</td></tr>
+<tr><td><code>ArgumentParser(allow_abbrev=False)</code></td><td>Não aceita opções abreviadas</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Quer dizer</th></tr>
+<tr><td><code>the following arguments are required: X</code></td><td>Faltou o argumento obrigatório X</td></tr>
+<tr><td><code>unrecognized arguments: …</code></td><td>Opção que não existe, ou argumento sobrando</td></tr>
+<tr><td><code>invalid choice: '…' (choose from …)</code></td><td>Valor fora do <code>choices</code></td></tr>
+<tr><td><code>invalid int value: '…'</code></td><td>O <code>type=int</code> não conseguiu converter</td></tr>
+<tr><td><code>expected one argument</code></td><td>A opção veio sem o valor</td></tr>
+<tr><td><code>IndexError: list index out of range</code> (com <code>sys.argv</code>)</td><td>Pediu um argumento que não veio</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O primeiro argumento</h3>
+<p>Em <code>python3 ola.py Bia</code>, qual índice de <code>sys.argv</code> guarda o <code>'Bia'</code>?</p>
+<div class="ex-code">sys.argv[<input data-answer="1" aria-label="índice">]</div>
+</div>
+
+<div class="exercise">
+<h3>2. Ler os argumentos</h3>
+<p>Complete a linha que analisa os argumentos e guarda o resultado:</p>
+<div class="ex-code">args = parser.<input data-answer="parse_args" aria-label="método">()</div>
+</div>
+
+<div class="exercise">
+<h3>3. Uma opção liga/desliga</h3>
+<p>Complete para que <code>--urgente</code> não receba valor e valha <code>True</code> quando aparecer:</p>
+<div class="ex-code">parser.add_argument("--urgente", action="<input data-answer="store_true" aria-label="ação">")</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Com <code>parser.add_argument("-q", "--quantidade", type=int, default=1)</code>, o que vale <code>args.quantidade</code> se a pessoa não escrever <code>-q</code>?</p>
+<label><input type="radio" name="q4"> <code>None</code></label>
+<label><input type="radio" name="q4"> <code>1</code></label>
+<label><input type="radio" name="q4"> <code>"1"</code></label>
+<label><input type="radio" name="q4"> O programa para com erro</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. <code>python3 dobro.py 21</code>, com <code>print(sys.argv[1] * 2)</code>, mostra <code>2121</code>. Por quê?</p>
+<label><input type="radio" name="q5"> Erro do Python</label>
+<label><input type="radio" name="q5"> O terminal duplicou o número</label>
+<label><input type="radio" name="q5"> Os argumentos chegam como texto, e texto vezes 2 repete o texto</label>
+<label><input type="radio" name="q5"> Faltou o <code>argparse</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Qual chamada está certa para <code>encomenda.py</code> (cliente, sabor, <code>-q</code>, <code>-e</code>)?</p>
+<label><input type="radio" name="q6"> <code>python3 encomenda.py -q 2 Bia milho</code></label>
+<label><input type="radio" name="q6"> <code>python3 encomenda.py Bia milho -q</code></label>
+<label><input type="radio" name="q6"> <code>python3 encomenda.py milho</code></label>
+<label><input type="radio" name="q6"> <code>python3 encomenda.py Bia milho -e sim</code></label>
+</div>
+
+<h3>Missão final: o desconto de quem retira</h3>
+
+<div class="trypy" data-args="Bia milho -q 2" data-goal="out:Total: R$ 63.00;;src:store_true;;exit:0">
+<p class="try-task"><strong>Missão:</strong> o programa é chamado como <code>python3 main.py Bia milho -q 2</code>. Cada bolo custa R$ 35,00, e quem <strong>não</strong> pede entrega ganha 10% de desconto. Acrescente a opção <code>-e</code>/<code>--entrega</code> com <code>action="store_true"</code> e calcule: sem entrega, o total é <code>quantidade * 35 * 0.9</code>. Aqui, sem <code>-e</code>, tem de sair <code>Total: R$ 63.00</code>.</p>
+<pre class="script" data-file="main.py">import argparse
+
+parser = argparse.ArgumentParser(description="Calcula o preço da encomenda.")
+parser.add_argument("cliente")
+parser.add_argument("sabor")
+parser.add_argument("-q", "--quantidade", type=int, default=1)
+# acrescente aqui a opção --entrega
+args = parser.parse_args()
+
+total = args.quantidade * 35
+print(f"Total: R$ {total:.2f}")
+</pre>
+<pre class="solucao" data-file="main.py">import argparse
+
+parser = argparse.ArgumentParser(description="Calcula o preço da encomenda.")
+parser.add_argument("cliente")
+parser.add_argument("sabor")
+parser.add_argument("-q", "--quantidade", type=int, default=1)
+parser.add_argument("-e", "--entrega", action="store_true")
+args = parser.parse_args()
+
+total = args.quantidade * 35
+if not args.entrega:
+    total = total * 0.9
+print(f"Total: R$ {total:.2f}")
+</pre>
+</div>
+
+<p>Se o comando tivesse <code>-e</code> no fim (<code>python3 main.py Bia milho -q 2 -e</code>), o total seria <code>R$ 70.00</code>, sem desconto.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Argumentos de linha de comando são o que vem depois do nome do programa: <code>python3 encomenda.py Bia cenoura -q 3</code>.</li>
+  <li><code>sys.argv</code> é a lista crua: o item 0 é o programa, e tudo chega como <strong>texto</strong>. Faltou um? <code>IndexError</code>.</li>
+  <li><code>argparse</code>: crie o <code>ArgumentParser</code>, declare cada argumento com <code>add_argument</code> e leia com <code>args = parser.parse_args()</code>.</li>
+  <li>Sem tracinho: <strong>posicional</strong> e obrigatório. Com <code>-q</code>/<code>--quantidade</code>: <strong>opcional</strong>, em qualquer ordem.</li>
+  <li><code>type=int</code> converte, <code>default</code> dá o valor padrão, <code>choices</code> limita, <code>action="store_true"</code> faz um liga/desliga, <code>nargs="+"</code> aceita vários.</li>
+  <li>O <code>--help</code> sai pronto, e os erros vêm com <code>usage:</code> e <code>error:</code>, saindo com o código 2.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
