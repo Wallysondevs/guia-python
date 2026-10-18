@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Geradores (yield) — funções que entregam um item por vez | Guia Python</title>
+<meta name="description" content="Geradores em Python para quem está começando: a palavra yield, como a função pausa e continua, expressões geradoras entre parênteses, a economia de memória medida com sys.getsizeof, geradores infinitos com islice, yield from, linha de montagem com arquivos e os erros reais do Python 3.14.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Geradores (yield)</span></h1>
+
+<p class="intro">Na aula <a href="iteradores.html">Iteradores</a>, a contagem regressiva precisou de uma classe inteira: <code>__init__</code>, <code>__iter__</code>, <code>__next__</code>, <code>raise StopIteration</code>. Funciona, mas é muita cerimônia para "entregar 3, depois 2, depois 1". O Python tem um atalho: a <strong>função geradora</strong>. É uma função comum com uma palavra nova, <code>yield</code> (em inglês, "entregar, render"), e o Python escreve o iterador para você.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A escrever um gerador com <code>yield</code> e a diferença entre <code>yield</code> e <code>return</code>.</li>
+  <li>Como o gerador <strong>pausa</strong> no <code>yield</code> e continua de onde parou.</li>
+  <li>As <strong>expressões geradoras</strong>: <code>(x for x in …)</code>, entre parênteses.</li>
+  <li>Por que um gerador gasta tão pouca memória, medido com <code>sys.getsizeof</code>.</li>
+  <li>A fazer um gerador <strong>infinito</strong> e a tirar só alguns itens dele com <code>islice</code>.</li>
+  <li>A encadear geradores numa "linha de montagem" e a usar <code>yield from</code>.</li>
+  <li>Os erros reais: <code>'generator' object is not subscriptable</code>, <code>has no len()</code>, <code>'function' object is not iterable</code> e o gerador que se gasta em silêncio.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a cozinha que frita um pastel por vez</h2>
+<p>A padaria do bairro recebe uma encomenda de 100 pastéis. Há dois jeitos de trabalhar:</p>
+<ul>
+  <li><strong>Jeito da lista:</strong> fritar os 100, empilhar todos na bancada e só então entregar a pilha. Precisa de uma bancada enorme, e o cliente espera até o último ficar pronto.</li>
+  <li><strong>Jeito do gerador:</strong> fritar um, entregar, e <strong>esperar</strong> o cliente pedir o próximo. A bancada só precisa caber um pastel, e a cozinheira lembra onde parou ("já fiz 37").</li>
+</ul>
+<p>Uma função comum com <code>return</code> trabalha do primeiro jeito: calcula tudo e devolve de uma vez. Uma função com <code>yield</code> trabalha do segundo: entrega um item, pausa ali mesmo, e só continua quando alguém pede o próximo com <code>next()</code> (ou um <code>for</code>).</p>
+
+<hr>
+
+<h2>1. O primeiro gerador</h2>
+<p>A mesma contagem regressiva da aula anterior, agora como função geradora:</p>
+
+<pre class="file" data-file="contagem.py">def contagem_regressiva(inicio):
+    while inicio &gt; 0:
+        yield inicio
+        inicio -= 1
+
+
+for numero in contagem_regressiva(3):
+    print(numero)
+print("Já!")
+</pre>
+
+<pre class="term">$ python3 contagem.py
+3
+2
+1
+Já!</pre>
+
+<dl class="anatomy">
+  <dt>def contagem_regressiva(inicio):</dt><dd>Parece uma função comum (aula <a href="funcoes.html">Funções</a>). O que a torna geradora é ter um <code>yield</code> em algum lugar do corpo.</dd>
+  <dt>while inicio &gt; 0:</dt><dd>Repete enquanto houver número para entregar.</dd>
+  <dt>yield inicio</dt><dd>Entrega o número da vez para quem pediu e <strong>pausa</strong> a função nesta linha. As variáveis (<code>inicio</code>) ficam guardadas.</dd>
+  <dt>inicio -= 1</dt><dd>Só roda quando alguém pede o próximo: a função acorda logo depois do <code>yield</code>.</dd>
+  <dt>o fim da função</dt><dd>Quando o <code>while</code> acaba e a função chega ao fim, o Python lança o <code>StopIteration</code> sozinho. Você não escreve o <code>raise</code>.</dd>
+</dl>
+
+<p>São 4 linhas no lugar das 13 da classe. Compare:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Na classe (aula anterior)</th><th>No gerador</th></tr>
+<tr><td><code>self.atual = inicio</code> no <code>__init__</code></td><td>O próprio parâmetro <code>inicio</code>: as variáveis ficam guardadas entre uma pausa e outra</td></tr>
+<tr><td><code>def __iter__(self): return self</code></td><td>Feito pelo Python</td></tr>
+<tr><td><code>def __next__(self): … return valor</code></td><td><code>yield inicio</code></td></tr>
+<tr><td><code>raise StopIteration</code></td><td>Feito pelo Python quando a função termina</td></tr>
+</table>
+</div>
+
+<h3>Chamar a função não roda a função</h3>
+<p>Isto é o que mais surpreende no começo. Chamar <code>contagem_regressiva(2)</code> <strong>não executa</strong> nenhuma linha do corpo: só cria um objeto <strong>gerador</strong>, parado antes da primeira linha. Ele é um iterador como os da aula anterior, então funciona com <code>next()</code>:</p>
+
+<pre class="file" data-file="na_mao.py">def contagem_regressiva(inicio):
+    while inicio &gt; 0:
+        yield inicio
+        inicio -= 1
+
+
+g = contagem_regressiva(2)
+print(type(g))
+print(iter(g) is g)
+print(next(g))
+print(next(g))
+print(next(g))
+</pre>
+
+<pre class="term">$ python3 na_mao.py
+&lt;class 'generator'&gt;
+True
+2
+1
+Traceback (most recent call last):
+  File "/home/ana/na_mao.py", line 12, in &lt;module&gt;
+    print(next(g))
+          ~~~~^^^
+StopIteration</pre>
+
+<ul>
+  <li><code>&lt;class 'generator'&gt;</code>: o que a chamada devolveu foi um gerador, e não um número.</li>
+  <li><code>iter(g) is g</code> é <code>True</code>: como todo iterador, o gerador é o próprio marcador de página.</li>
+  <li>O terceiro <code>next(g)</code>, na linha 12, encontrou a função terminada: <code>StopIteration</code>, igualzinho ao da classe. O <code>~~~~^^^</code> aponta a chamada.</li>
+</ul>
+
+<hr>
+
+<h2>2. Vendo a pausa acontecer</h2>
+<p>Para enxergar quando cada pedaço do corpo roda, ponha <code>print</code>s dentro do gerador. O painel de senhas da padaria:</p>
+
+<pre class="file" data-file="pausa.py">def painel():
+    print("  [painel: ligando]")
+    yield 101
+    print("  [painel: chamando a próxima]")
+    yield 102
+    print("  [painel: desligando]")
+
+
+senhas = painel()
+print("Criei o gerador; nada rodou ainda.")
+print("Recebi", next(senhas))
+print("Recebi", next(senhas))
+for resto in senhas:
+    print("Recebi", resto)
+print("Fim.")
+</pre>
+
+<pre class="term">$ python3 pausa.py
+Criei o gerador; nada rodou ainda.
+  [painel: ligando]
+Recebi 101
+  [painel: chamando a próxima]
+Recebi 102
+  [painel: desligando]
+Fim.</pre>
+
+<ol class="passo">
+  <li><code>senhas = painel()</code>: cria o gerador. O <code>"[painel: ligando]"</code> <strong>não</strong> aparece aqui.</li>
+  <li>Primeiro <code>next()</code>: a função roda do começo até o primeiro <code>yield</code>. Aparece <code>[painel: ligando]</code> e o 101 é entregue.</li>
+  <li>Segundo <code>next()</code>: a função acorda depois do <code>yield 101</code>, mostra <code>[painel: chamando a próxima]</code> e para no <code>yield 102</code>.</li>
+  <li>O <code>for</code> pede o próximo: a função acorda, mostra <code>[painel: desligando]</code> e chega ao fim sem outro <code>yield</code>. O <code>StopIteration</code> automático encerra o <code>for</code> sem nenhuma volta.</li>
+</ol>
+
+<div class="trypy" data-goal="out:[0, 2, 4, 6, 8, 10];;src:\byield\b;;semerro">
+<p class="try-task"><strong>Missão:</strong> na aula anterior, a classe <code>Pares</code> precisou de três métodos. Faça o mesmo com um gerador: dentro do <code>while</code>, troque o <code>print(numero)</code> por <code>yield numero</code>. A última linha vai mostrar a lista dos pares.</p>
+<pre class="script" data-file="main.py">def pares(limite):
+    numero = 0
+    while numero &lt;= limite:
+        print(numero)
+        numero += 2
+
+
+print(list(pares(10)))
+</pre>
+<pre class="solucao" data-file="main.py">def pares(limite):
+    numero = 0
+    while numero &lt;= limite:
+        yield numero
+        numero += 2
+
+
+print(list(pares(10)))
+</pre>
+</div>
+
+<p>No código inicial, a função não tem <code>yield</code>: é uma função comum, que mostra os números e devolve <code>None</code>. O <code>list(None)</code> dá <code>TypeError: 'NoneType' object is not iterable</code>. Com o <code>yield</code>, ela vira geradora e o <code>list()</code> recolhe <code>[0, 2, 4, 6, 8, 10]</code>.</p>
+
+<hr>
+
+<h2>3. <code>yield</code> × <code>return</code></h2>
+<p>As duas funções abaixo calculam os quadrados de 0 a 4. A primeira monta uma lista e devolve com <code>return</code>; a segunda entrega um por um com <code>yield</code>:</p>
+
+<pre class="file" data-file="lista_vs_gerador.py">def quadrados_lista(n):
+    resultado = []
+    for i in range(n):
+        resultado.append(i * i)
+    return resultado
+
+
+def quadrados_gerador(n):
+    for i in range(n):
+        yield i * i
+
+
+print(quadrados_lista(5))
+print(quadrados_gerador(5))
+print(list(quadrados_gerador(5)))
+print(sum(quadrados_gerador(5)))
+</pre>
+
+<pre class="term">$ python3 lista_vs_gerador.py
+[0, 1, 4, 9, 16]
+&lt;generator object quadrados_gerador at 0x7f6928110ee0&gt;      « o endereço muda a cada execução
+[0, 1, 4, 9, 16]
+30</pre>
+
+<p>O <code>print</code> do gerador não mostra os números, porque eles ainda não foram calculados: só existe a "cozinha" pronta para fritar. Para ver tudo, peça com <code>list()</code>; para somar, o <code>sum()</code> pede um por um, sem montar lista nenhuma.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th><code>return</code></th><th><code>yield</code></th></tr>
+<tr><td>O que a chamada devolve</td><td>O valor (aqui, a lista pronta)</td><td>Um gerador, parado antes da primeira linha</td></tr>
+<tr><td>Quando o corpo roda</td><td>Inteiro, na hora da chamada</td><td>Aos pedaços, a cada <code>next()</code></td></tr>
+<tr><td>Quantas vezes entrega</td><td>Uma, e a função termina</td><td>Quantas vezes passar por um <code>yield</code></td></tr>
+<tr><td>Memória</td><td>Todos os itens ao mesmo tempo</td><td>Um item por vez</td></tr>
+<tr><td>Dá para usar de novo</td><td>A lista, quantas vezes quiser</td><td>Uma passada só: depois, chame a função de novo</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>4. Expressões geradoras: <code>( … for … )</code></h2>
+<p>Você já conhece a <a href="list-comprehension.html">list comprehension</a>, entre colchetes. Troque os colchetes por <strong>parênteses</strong> e ela vira uma <strong>expressão geradora</strong>: o mesmo cálculo, mas entregue um por vez, sem montar a lista.</p>
+
+<pre class="file" data-file="expressao.py">precos = [4.50, 12.00, 7.25, 30.00]
+
+em_lista = [p * 2 for p in precos]
+em_gerador = (p * 2 for p in precos)
+
+print(em_lista)
+print(em_gerador)
+print(list(em_gerador))
+
+total = sum(p for p in precos)
+caros = sum(1 for p in precos if p &gt; 10)
+print("Total:", total)
+print("Produtos acima de R$ 10:", caros)
+</pre>
+
+<pre class="term">$ python3 expressao.py
+[9.0, 24.0, 14.5, 60.0]
+&lt;generator object &lt;genexpr&gt; at 0x7ff4c1f10ee0&gt;
+[9.0, 24.0, 14.5, 60.0]
+Total: 53.75
+Produtos acima de R$ 10: 2</pre>
+
+<dl class="anatomy">
+  <dt>[p * 2 for p in precos]</dt><dd>Colchetes: lista pronta, com os quatro valores na memória.</dd>
+  <dt>(p * 2 for p in precos)</dt><dd>Parênteses: um gerador. O nome que o Python dá a ele é <code>&lt;genexpr&gt;</code> ("expressão geradora").</dd>
+  <dt>sum(p for p in precos)</dt><dd>Quando a expressão geradora é o <strong>único</strong> argumento de uma função, os parênteses da função bastam: não precisa escrever <code>sum((p for p in precos))</code>.</dd>
+  <dt>sum(1 for p in precos if p &gt; 10)</dt><dd>Um truque comum para <strong>contar</strong>: entrega um 1 para cada preço que passa no <code>if</code>, e o <code>sum</code> soma os uns.</dd>
+</dl>
+
+<div class="warning">
+<strong>Parênteses não fazem tupla aqui</strong>
+<p>Quem lê <code>(p * 2 for p in precos)</code> pela primeira vez espera uma <a href="tuplas.html">tupla</a>. Não é: com um <code>for</code> dentro, os parênteses fazem um gerador. Se você quer mesmo uma tupla, escreva <code>tuple(p * 2 for p in precos)</code>.</p>
+</div>
+
+<div class="trypy" data-goal="out:Total da feira: 35.55;;src:sum\(\s*\w[^\[\]]*\bfor\b;;semerro">
+<p class="try-task"><strong>Missão:</strong> a Ana quer o total da feira (preço × quantidade de cada item) sem montar uma lista no meio do caminho. Troque a list comprehension, entre colchetes, por uma expressão geradora direto dentro do <code>sum()</code>.</p>
+<pre class="script" data-file="main.py">feira = [("banana", 6.90, 2), ("tomate", 8.50, 1.5), ("alface", 3.00, 3)]
+
+subtotais = [preco * qtd for nome, preco, qtd in feira]
+print(subtotais)
+</pre>
+<pre class="solucao" data-file="main.py">feira = [("banana", 6.90, 2), ("tomate", 8.50, 1.5), ("alface", 3.00, 3)]
+
+total = sum(preco * qtd for nome, preco, qtd in feira)
+print(f"Total da feira: {total:.2f}")
+</pre>
+</div>
+
+<hr>
+
+<h2>5. Quanta memória cada um gasta</h2>
+<p>A diferença entre lista e gerador aparece de verdade com muitos itens. A função <code>sys.getsizeof()</code>, do módulo <code>sys</code>, diz quantos <strong>bytes</strong> um objeto ocupa na memória:</p>
+
+<pre class="file" data-file="memoria.py">import sys
+
+em_lista = [n * n for n in range(1_000_000)]
+em_gerador = (n * n for n in range(1_000_000))
+
+print("Lista:   ", sys.getsizeof(em_lista), "bytes")
+print("Gerador: ", sys.getsizeof(em_gerador), "bytes")
+print(sum(em_lista) == sum(em_gerador))
+</pre>
+
+<pre class="term">$ python3 memoria.py
+Lista:    8448728 bytes
+Gerador:  208 bytes
+True</pre>
+
+<ul>
+  <li>A lista de um milhão de quadrados ocupa uns <strong>8,4 milhões de bytes</strong> (8 MB), e isso é só a "estante" com o lugar de cada item; os números em si ocupam mais um tanto.</li>
+  <li>O gerador ocupa <strong>208 bytes</strong>, e ocuparia o mesmo com um bilhão de itens: ele guarda só a receita e o ponto onde parou.</li>
+  <li>A última linha confirma que os dois dão a mesma soma. (O <code>1_000_000</code> é só um milhão escrito com sublinhados para ficar fácil de ler; veja a aula <a href="numeros.html">Números</a>.)</li>
+</ul>
+
+<div class="note">
+<strong>No editor do guia, os números saem outros</strong>
+<p>O tamanho exato dos objetos depende do computador e de como o Python foi compilado. O editor do guia roda o Python dentro do navegador, em WebAssembly, e lá o <code>getsizeof</code> mostra valores diferentes dos do terminal da Ana. A conclusão é a mesma em qualquer lugar: a lista cresce com a quantidade de itens; o gerador, não.</p>
+</div>
+
+<p>Quando usar cada um? Se você vai percorrer os itens <strong>uma vez</strong> (somar, procurar o maior, gravar num arquivo), o gerador basta e economiza memória. Se vai precisar deles várias vezes, acessar pela posição (<code>itens[3]</code>) ou saber quantos são (<code>len</code>), use uma lista.</p>
+
+<hr>
+
+<h2>6. Geradores infinitos</h2>
+<p>Como o gerador só calcula quando alguém pede, ele pode até não ter fim. O número do próximo pedido da lanchonete, por exemplo, nunca acaba:</p>
+
+<pre class="file" data-file="infinito.py">from itertools import islice
+
+
+def numeros_de_pedido():
+    numero = 1
+    while True:
+        yield numero
+        numero += 1
+
+
+pedidos = numeros_de_pedido()
+print(next(pedidos))
+print(next(pedidos))
+print(list(islice(pedidos, 5)))
+print(next(pedidos))
+</pre>
+
+<pre class="term">$ python3 infinito.py
+1
+2
+[3, 4, 5, 6, 7]
+8</pre>
+
+<dl class="anatomy">
+  <dt>while True: yield numero</dt><dd>Um laço sem fim. Numa função comum, ele travaria o programa. Aqui, cada volta pausa no <code>yield</code> e só continua quando alguém pede.</dd>
+  <dt>from itertools import islice</dt><dd>Traz a função <code>islice</code> ("fatia de iterador") do módulo <code>itertools</code>, assunto da aula <a href="itertools.html">O Módulo itertools</a>.</dd>
+  <dt>islice(pedidos, 5)</dt><dd>"Só os próximos 5". É o jeito de fatiar um gerador, que não aceita <code>pedidos[:5]</code>. O <code>list()</code> recolhe os 5 numa lista.</dd>
+  <dt>o último next(pedidos)</dt><dd>Deu 8: o gerador lembra onde parou, mesmo depois do <code>islice</code>.</dd>
+</dl>
+
+<p>Outro jeito de parar é um <code>for</code> com <code>break</code> (aula <a href="break-continue.html">break e continue</a>):</p>
+
+<pre class="file" data-file="infinito_for.py">def numeros_de_pedido():
+    numero = 1
+    while True:
+        yield numero
+        numero += 1
+
+
+for pedido in numeros_de_pedido():
+    if pedido &gt; 3:
+        break
+    print("Pedido", pedido)
+</pre>
+
+<pre class="term">$ python3 infinito_for.py
+Pedido 1
+Pedido 2
+Pedido 3</pre>
+
+<div class="warning">
+<strong>Nunca peça "tudo" de um gerador infinito</strong>
+<p><code>list(numeros_de_pedido())</code>, <code>sum(…)</code>, <code>max(…)</code> e um <code>for</code> sem <code>break</code> tentam chegar ao fim, e esse fim não existe. O programa fica rodando e enchendo a memória até você apertar Ctrl+C. Com gerador infinito, sempre limite: <code>islice</code>, <code>next</code> ou <code>break</code>.</p>
+</div>
+
+<hr>
+
+<h2>7. Linha de montagem: um gerador alimentando outro</h2>
+<p>Geradores se encaixam como as estações de uma linha de montagem: cada um pega o que o anterior entrega, faz a sua parte e passa adiante. A padaria anotou as vendas do dia num arquivo, uma por linha (produto; preço; quantidade):</p>
+
+<pre class="file" data-file="vendas.txt">pão;0.75;12
+leite;5.49;3
+café;18.90;1
+manteiga;12.50;2
+</pre>
+
+<pre class="file" data-file="linha_de_montagem.py">def ler_linhas(nome):
+    with open(nome, encoding="utf-8") as arquivo:
+        for linha in arquivo:
+            yield linha.strip()
+
+
+def valores(linhas):
+    for linha in linhas:
+        produto, preco, quantidade = linha.split(";")
+        yield float(preco) * int(quantidade)
+
+
+linhas = ler_linhas("vendas.txt")
+totais = valores(linhas)
+print(f"Vendas do dia: R$ {sum(totais):.2f}")
+</pre>
+
+<pre class="term">$ python3 linha_de_montagem.py
+Vendas do dia: R$ 69.37</pre>
+
+<ol class="passo">
+  <li><code>ler_linhas</code> abre o arquivo e entrega uma linha por vez, já sem o <code>\n</code>.</li>
+  <li><code>valores</code> recebe esse gerador, separa cada linha no <code>;</code> (o <code>split</code> da aula <a href="strings-metodos.html">Métodos de Texto</a>) e entrega preço × quantidade.</li>
+  <li><code>sum(totais)</code> puxa a corrente: pede um valor a <code>valores</code>, que pede uma linha a <code>ler_linhas</code>, que lê uma linha do arquivo. Em nenhum momento o arquivo inteiro fica na memória.</li>
+</ol>
+<p>Com 4 linhas tanto faz; com um arquivo de vendas do ano inteiro, de muitos megabytes, o programa gasta a mesma memória pequena.</p>
+
+<h3><code>yield from</code>: repassar outro gerador</h3>
+<p>Quando um gerador quer entregar tudo o que outro entrega, em vez de escrever <code>for item in outro(): yield item</code>, use <code>yield from</code> ("entregar a partir de"):</p>
+
+<pre class="file" data-file="yield_from.py">def frutas():
+    yield "banana"
+    yield "maçã"
+
+
+def legumes():
+    yield "cenoura"
+
+
+def feira():
+    yield from frutas()
+    yield from legumes()
+    yield "ovos"
+
+
+print(list(feira()))
+</pre>
+
+<pre class="term">$ python3 yield_from.py
+['banana', 'maçã', 'cenoura', 'ovos']</pre>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma sequência</h2>
+<p>Os quadrados de 0 a 4, de quatro jeitos:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Exemplo</th><th>Quando usar</th></tr>
+<tr><td>Lista</td><td><code>[i * i for i in range(5)]</code></td><td>Vai usar os itens várias vezes, pela posição, ou precisa do <code>len</code></td></tr>
+<tr><td>Expressão geradora</td><td><code>(i * i for i in range(5))</code></td><td>Uma passada só, e a regra cabe numa linha (<code>sum</code>, <code>max</code>, <code>any</code>)</td></tr>
+<tr><td>Função geradora</td><td><code>def quadrados(n): … yield i * i</code></td><td>A regra precisa de várias linhas, <code>if</code>s, arquivos, ou a sequência é infinita</td></tr>
+<tr><td>Classe com <code>__iter__</code>/<code>__next__</code></td><td>aula <a href="iteradores.html">Iteradores</a></td><td>Raramente: quando o objeto precisa de outros métodos além de ser percorrido</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Pegar um item pela posição</strong>
+<pre class="file" data-file="erro_indice.py">def contagem_regressiva(inicio):
+    while inicio &gt; 0:
+        yield inicio
+        inicio -= 1
+
+
+numeros = contagem_regressiva(3)
+print(numeros[0])
+</pre>
+<pre class="term">$ python3 erro_indice.py
+Traceback (most recent call last):
+  File "/home/ana/erro_indice.py", line 8, in &lt;module&gt;
+    print(numeros[0])
+          ~~~~~~~^^^
+TypeError: 'generator' object is not subscriptable</pre>
+<p>"O objeto gerador não aceita índice" (<em>subscript</em> é o <code>[0]</code>). O gerador não guarda os itens: não existe "o primeiro" guardado em lugar nenhum para ser buscado. <strong>Como consertar:</strong> <code>next(numeros)</code> para o próximo; <code>list(numeros)[0]</code> se você precisa mesmo da posição (e aí, melhor já usar uma lista).</p>
+</div>
+
+<div class="cenario">
+<strong>Perguntar o tamanho</strong>
+<pre class="term">$ python3 erro_len.py
+Traceback (most recent call last):
+  File "/home/ana/erro_len.py", line 8, in &lt;module&gt;
+    print(len(numeros))
+          ~~~^^^^^^^^^
+TypeError: object of type 'generator' has no len()</pre>
+<p>Mesmo programa, com <code>print(len(numeros))</code> na linha 8. "Um objeto do tipo gerador não tem <code>len()</code>": para saber quantos itens um gerador vai entregar, só percorrendo tudo, e ele pode nem ter fim. <strong>Como consertar:</strong> <code>sum(1 for _ in numeros)</code> conta (e gasta o gerador); ou use uma lista.</p>
+</div>
+
+<div class="cenario">
+<strong>Esquecer os parênteses da chamada</strong>
+<pre class="file" data-file="erro_sem_chamar.py">def contagem_regressiva(inicio):
+    while inicio &gt; 0:
+        yield inicio
+        inicio -= 1
+
+
+for numero in contagem_regressiva:
+    print(numero)
+</pre>
+<pre class="term">$ python3 erro_sem_chamar.py
+Traceback (most recent call last):
+  File "/home/ana/erro_sem_chamar.py", line 7, in &lt;module&gt;
+    for numero in contagem_regressiva:
+                  ^^^^^^^^^^^^^^^^^^^
+TypeError: 'function' object is not iterable</pre>
+<p>"O objeto função não é iterável". Sem os parênteses, o <code>for</code> recebeu a <strong>função</strong>, e não o gerador que ela cria. <strong>Como consertar:</strong> chame a função: <code>for numero in contagem_regressiva(3):</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O gerador se gastou (sem erro nenhum)</strong>
+<pre class="file" data-file="gasto.py">def contagem_regressiva(inicio):
+    while inicio &gt; 0:
+        yield inicio
+        inicio -= 1
+
+
+numeros = contagem_regressiva(3)
+print("Maior:", max(numeros))
+print("Soma:", sum(numeros))
+</pre>
+<pre class="term">$ python3 gasto.py
+Maior: 3
+Soma: 0</pre>
+<p>A soma de 3, 2 e 1 não é 0! O <code>max()</code> percorreu o gerador inteiro para achar o maior, e o <code>sum()</code> recebeu um gerador já no fim: soma de nada, 0. É um erro de lógica, sem traceback, e por isso é traiçoeiro. <strong>Como consertar:</strong> chame a função de novo para cada passada (<code>sum(contagem_regressiva(3))</code>), ou guarde numa lista (<code>numeros = list(contagem_regressiva(3))</code>).</p>
+</div>
+
+<div class="cenario">
+<strong>Esperar que o corpo rode na chamada</strong>
+<p>No <code>pausa.py</code>, a linha <code>senhas = painel()</code> não mostrou <code>[painel: ligando]</code>. Se o seu gerador deveria gravar um arquivo ou mostrar uma mensagem e "não fez nada", confira se alguém chegou a pedir algum item dele (<code>next</code>, <code>for</code>, <code>list</code>). Sem pedido, o corpo de uma função geradora nunca roda.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>def f(): … yield x</code></td><td>Função geradora: chamar <code>f()</code> devolve um gerador</td></tr>
+<tr><td><code>yield valor</code></td><td>Entrega <code>valor</code> e pausa até o próximo pedido</td></tr>
+<tr><td><code>yield from outro</code></td><td>Entrega, um por um, tudo o que <code>outro</code> entrega</td></tr>
+<tr><td><code>(expr for x in itens)</code></td><td>Expressão geradora</td></tr>
+<tr><td><code>sum(x for x in itens)</code></td><td>Expressão geradora como único argumento: um par de parênteses só</td></tr>
+<tr><td><code>next(g)</code> / <code>next(g, padrao)</code></td><td>O próximo item / sem <code>StopIteration</code> no fim</td></tr>
+<tr><td><code>islice(g, n)</code></td><td>Os próximos <code>n</code> itens (de <code>itertools</code>); serve para geradores infinitos</td></tr>
+<tr><td><code>list(g)</code></td><td>Recolhe tudo numa lista (nunca num gerador infinito)</td></tr>
+<tr><td><code>sys.getsizeof(obj)</code></td><td>Bytes que o objeto ocupa (o valor muda de computador para computador)</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>&lt;generator object … at 0x…&gt;</code> no <code>print</code></td><td>Você mostrou o gerador, não os itens: use <code>list(g)</code> ou um <code>for</code></td></tr>
+<tr><td><code>TypeError: 'generator' object is not subscriptable</code></td><td><code>g[0]</code>: gerador não tem posições</td></tr>
+<tr><td><code>TypeError: object of type 'generator' has no len()</code></td><td><code>len(g)</code>: gerador não sabe o tamanho</td></tr>
+<tr><td><code>TypeError: 'function' object is not iterable</code></td><td>Faltaram os parênteses da chamada: <code>f</code> no lugar de <code>f()</code></td></tr>
+<tr><td>Segunda passada vazia, soma 0</td><td>O gerador já foi gasto</td></tr>
+<tr><td>O programa não termina</td><td><code>list</code>, <code>sum</code> ou <code>for</code> sem <code>break</code> num gerador infinito</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A palavra que faz o gerador</h3>
+<p>Complete para a função entregar os números de 1 a 3, um por vez:</p>
+<div class="ex-code">def tres():<br>&nbsp;&nbsp;&nbsp;&nbsp;for n in range(1, 4):<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input data-answer="yield" aria-label="palavra-chave"> n</div>
+</div>
+
+<div class="exercise">
+<h3>2. De lista para gerador</h3>
+<p>Troque os colchetes de <code>[x * 2 for x in itens]</code> para fazer uma expressão geradora. Escreva a expressão inteira:</p>
+<div class="ex-code"><input data-answer="(x * 2 for x in itens)|(x*2 for x in itens)" aria-label="expressão geradora"></div>
+</div>
+
+<div class="exercise">
+<h3>3. Só os cinco primeiros</h3>
+<p>Complete para pegar os 5 primeiros itens do gerador infinito <code>g</code>:</p>
+<div class="ex-code">from itertools import islice<br>print(list(<input data-answer="islice(g, 5)|islice(g,5)" aria-label="chamada">))</div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. O que acontece na linha <code>g = painel()</code>, se <code>painel</code> é uma função geradora?</p>
+<label><input type="radio" name="q4"> O corpo inteiro roda e o último <code>yield</code> é devolvido</label>
+<label><input type="radio" name="q4"> O corpo roda até o primeiro <code>yield</code></label>
+<label><input type="radio" name="q4"> Nenhuma linha do corpo roda: só é criado o gerador</label>
+<label><input type="radio" name="q4"> Dá erro, porque falta o <code>return</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. <code>g = (n for n in range(3))</code>, depois <code>print(max(g))</code> e <code>print(sum(g))</code>. O que aparece?</p>
+<label><input type="radio" name="q5"> <code>2</code> e <code>3</code></label>
+<label><input type="radio" name="q5"> <code>2</code> e <code>0</code></label>
+<label><input type="radio" name="q5"> <code>2</code> e um <code>StopIteration</code></label>
+<label><input type="radio" name="q5"> Um <code>TypeError</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Em qual caso uma <strong>lista</strong> é melhor que um gerador?</p>
+<label><input type="radio" name="q6"> Quando você precisa de <code>itens[3]</code> e de <code>len(itens)</code></label>
+<label><input type="radio" name="q6"> Quando você só vai somar os itens uma vez</label>
+<label><input type="radio" name="q6"> Quando a sequência não tem fim</label>
+<label><input type="radio" name="q6"> Quando o arquivo é grande demais para caber na memória</label>
+</div>
+
+<h3>Missão final: as senhas do atendimento</h3>
+
+<div class="trypy" data-goal="out:['A001', 'A002', 'A003'];;src:\byield\b;;src:while\s+True;;semerro">
+<p class="try-task"><strong>Missão:</strong> o posto de atendimento chama as senhas <code>A001</code>, <code>A002</code>, <code>A003</code>… sem fim. Transforme a função num gerador infinito: um <code>while True:</code> com <code>yield f"A{numero:03d}"</code> e <code>numero += 1</code>. O <code>islice</code> já está pronto para pegar só as 3 primeiras. (Rode antes o código inicial: por que ele mostra <code>['A', '0', '0']</code>?)</p>
+<pre class="script" data-file="main.py">from itertools import islice
+
+
+def senhas():
+    numero = 1
+    # transforme isto num gerador infinito: while True, yield e numero += 1
+    return f"A{numero:03d}"
+
+
+print(list(islice(senhas(), 3)))
+</pre>
+<pre class="solucao" data-file="main.py">from itertools import islice
+
+
+def senhas():
+    numero = 1
+    while True:
+        yield f"A{numero:03d}"
+        numero += 1
+
+
+print(list(islice(senhas(), 3)))
+</pre>
+</div>
+
+<p>O código inicial devolve o <strong>texto</strong> <code>"A001"</code>, e um texto também é iterável: o <code>islice</code> pegou as 3 primeiras <strong>letras</strong>. Com o gerador, ele pega as 3 primeiras <strong>senhas</strong>. O <code>{numero:03d}</code> é a formatação com três dígitos e zeros à esquerda (aula <a href="f-strings.html">f-strings</a>).</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Uma função com <code>yield</code> é uma <strong>função geradora</strong>: chamá-la não roda o corpo, só cria um gerador, que é um iterador.</li>
+  <li>Cada <code>next()</code> roda o corpo até o próximo <code>yield</code>, entrega o valor e <strong>pausa</strong>, guardando as variáveis. No fim da função, o <code>StopIteration</code> vem sozinho.</li>
+  <li><code>(x for x in itens)</code>, entre parênteses, é uma expressão geradora; como único argumento, dispensa os parênteses extras: <code>sum(x for x in itens)</code>.</li>
+  <li>Um gerador ocupa quase nada de memória, não importa quantos itens entregue; mas não tem <code>[i]</code>, não tem <code>len</code> e se gasta numa passada.</li>
+  <li>Geradores podem ser infinitos (<code>while True</code>): limite com <code>islice</code>, <code>next</code> ou <code>break</code>, nunca com <code>list</code>.</li>
+  <li>Geradores se encadeiam numa linha de montagem; <code>yield from</code> repassa tudo de outro gerador.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
