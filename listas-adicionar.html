@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Adicionando Itens — append, insert, extend e + nas listas | Guia Python</title>
+<meta name="description" content="Como pôr itens numa lista em Python: append() no fim, insert() numa posição, extend() e + para juntar listas, montar uma lista a partir do teclado, e os erros reais do Python 3.14: o append que devolve None (lista = lista.append(x)), o AttributeError de NoneType, o texto que vira letras soltas no extend e o + com texto.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Adicionando Itens</span></h1>
+
+<p class="intro">A lista de compras nunca fica pronta de uma vez. A Ana abre o armário, vê que o café acabou e escreve "café" no fim da folha; a vizinha pede para ela trazer sal e óleo, e mais dois itens entram. Na aula <a href="listas-alterar.html">Alterando Itens</a>, você viu que <code>compras[4] = "sabão"</code> dá erro numa lista de 4 itens: a atribuição só troca o que já existe. Para <strong>acrescentar</strong> itens, a lista tem métodos próprios. É o assunto desta aula.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A pôr um item no fim com <code>append()</code>.</li>
+  <li>A montar uma lista do zero, começando de <code>[]</code>, inclusive com o que a pessoa digita.</li>
+  <li>A pôr um item numa posição escolhida com <code>insert()</code>.</li>
+  <li>A juntar uma lista inteira à outra com <code>extend()</code>, <code>+</code> e <code>+=</code>, e a diferença entre elas.</li>
+  <li>Os erros reais: o <code>append</code> que devolve <code>None</code> (<code>lista = lista.append(x)</code>), o <code>AttributeError</code> de <code>NoneType</code>, o texto que vira letras soltas e o <code>+</code> com um texto.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: escrever no fim da folha</h2>
+<p>Quando a Ana lembra de um item novo, o jeito mais natural é escrevê-lo <strong>no fim</strong> da lista, embaixo do último. Às vezes, porém, ela quer encaixar um item <strong>no meio</strong> ("o pão tem de ser o primeiro, para eu não esquecer"). E às vezes recebe uma <strong>listinha inteira</strong> de outra pessoa para juntar à dela. São três situações, e cada uma tem o seu método:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Situação</th><th>Método</th><th>Tradução</th></tr>
+<tr><td>Um item no fim</td><td><code>append(item)</code></td><td>"anexar", "acrescentar no fim"</td></tr>
+<tr><td>Um item numa posição</td><td><code>insert(posição, item)</code></td><td>"inserir"</td></tr>
+<tr><td>Vários itens (outra lista) no fim</td><td><code>extend(outra_lista)</code></td><td>"estender"</td></tr>
+</table>
+</div>
+
+<p>Os três <strong>alteram a própria lista</strong> (ela é mutável, como você viu em <a href="listas-alterar.html">Alterando Itens</a>). Guarde essa frase: ela é a chave do erro mais famoso desta aula.</p>
+
+<hr>
+
+<h2>1. <code>append()</code>: um item no fim</h2>
+
+<pre class="file" data-file="append.py">compras = ["arroz", "feijão"]
+print(compras)
+compras.append("café")
+print(compras)
+compras.append("leite")
+print(compras)
+print(f"Agora são {len(compras)} itens.")
+</pre>
+
+<dl class="anatomy">
+  <dt>compras</dt><dd>A lista que vai receber o item.</dd>
+  <dt>.</dt><dd>O ponto: "da lista <code>compras</code>, use o método…". Métodos são funções que pertencem a um valor.</dd>
+  <dt>append</dt><dd>O método que acrescenta <strong>um</strong> item no fim.</dd>
+  <dt>("café")</dt><dd>Entre parênteses, o item novo. Exatamente <strong>um</strong>.</dd>
+</dl>
+
+<pre class="term">$ python3 append.py
+['arroz', 'feijão']
+['arroz', 'feijão', 'café']
+['arroz', 'feijão', 'café', 'leite']
+Agora são 4 itens.
+</pre>
+
+<p>A cada <code>append</code>, a lista ganhou um item no fim e o <code>len</code> aumentou 1. Repare que a linha <code>compras.append("café")</code> não tem <code>=</code>: ela não cria uma lista nova para guardar em algum lugar. Ela <strong>muda</strong> a lista <code>compras</code> que já existe.</p>
+
+<div class="trypy" data-goal="out:['arroz', 'feijão', 'leite', 'pão'];;src:\.append\(">
+<p class="try-task"><strong>Missão:</strong> use <code>append</code> duas vezes para acrescentar <code>"leite"</code> e depois <code>"pão"</code> à lista, antes do <code>print</code>.</p>
+<pre class="script" data-file="main.py">compras = ["arroz", "feijão"]
+
+print(compras)
+</pre>
+<pre class="solucao" data-file="main.py">compras = ["arroz", "feijão"]
+compras.append("leite")
+compras.append("pão")
+print(compras)
+</pre>
+</div>
+
+<hr>
+
+<h2>2. Montando uma lista do zero</h2>
+<p>O uso mais comum do <code>append</code> é <strong>encher uma lista vazia</strong>, um item de cada vez. A Ana quer que o programa pergunte os itens e monte a lista para ela:</p>
+
+<pre class="file" data-file="montar.py">compras = []
+for i in range(3):
+    item = input("Item: ")
+    compras.append(item)
+print(compras)
+</pre>
+
+<pre class="term">$ python3 montar.py
+Item: ovos
+Item: pão
+Item: leite
+['ovos', 'pão', 'leite']
+</pre>
+
+<ol class="passo">
+  <li><code>compras = []</code>: a lista começa vazia. Ela precisa existir <strong>antes</strong> do laço, senão não há onde fazer o <code>append</code>.</li>
+  <li>O <code>for i in range(3)</code> (aula <a href="range.html">range()</a>) repete o bloco 3 vezes.</li>
+  <li>A cada volta, o <code>input()</code> lê um item e o <code>append</code> o põe no fim.</li>
+  <li>Depois do laço, a lista tem os 3 itens, na ordem em que foram digitados.</li>
+</ol>
+
+<p>E se a Ana não souber quantos itens vão ser? Um <code>while</code> com uma palavra para parar (aulas <a href="while.html">while</a> e <a href="break-continue.html">break e continue</a>):</p>
+
+<pre class="file" data-file="montar2.py">compras = []
+while True:
+    item = input("Item (ou fim): ")
+    if item == "fim":
+        break
+    compras.append(item)
+print(f"Sua lista tem {len(compras)} itens: {compras}")
+</pre>
+
+<pre class="term">$ python3 montar2.py
+Item (ou fim): café
+Item (ou fim): leite
+Item (ou fim): fim
+Sua lista tem 2 itens: ['café', 'leite']
+$ python3 montar2.py
+Item (ou fim): fim
+Sua lista tem 0 itens: []
+</pre>
+
+<p>Na segunda vez, a Ana digitou <code>fim</code> logo de cara, e a lista ficou vazia, sem erro nenhum. Repare que o <code>"fim"</code> não entrou na lista: o <code>break</code> vem <strong>antes</strong> do <code>append</code>.</p>
+
+<hr>
+
+<h2>3. <code>insert()</code>: um item numa posição</h2>
+<p>Na fila da cantina, a Ana chegou primeiro e precisa entrar no começo; depois o Beto vai entrar no meio. O <code>insert</code> recebe <strong>dois</strong> valores: primeiro o <strong>índice</strong> onde o item vai ficar, depois o <strong>item</strong>.</p>
+
+<pre class="file" data-file="insert.py">fila = ["Bruno", "Carla", "Davi"]
+fila.insert(0, "Ana")
+print(fila)
+fila.insert(2, "Beto")
+print(fila)
+fila.insert(100, "Zeca")
+print(fila)
+</pre>
+
+<pre class="term">$ python3 insert.py
+['Ana', 'Bruno', 'Carla', 'Davi']
+['Ana', 'Bruno', 'Beto', 'Carla', 'Davi']
+['Ana', 'Bruno', 'Beto', 'Carla', 'Davi', 'Zeca']
+</pre>
+
+<dl class="anatomy">
+  <dt>fila.insert(0, "Ana")</dt><dd>Põe a Ana no índice 0, o começo. Todos os outros andam uma casa para a direita: o Bruno, que era o 0, passa a ser o 1.</dd>
+  <dt>fila.insert(2, "Beto")</dt><dd>O Beto fica <strong>no</strong> índice 2, ou seja, <strong>antes</strong> de quem estava no 2 (a Carla).</dd>
+  <dt>fila.insert(100, "Zeca")</dt><dd>Um índice maior que a lista <strong>não dá erro</strong>: o item simplesmente vai para o fim, como num <code>append</code>.</dd>
+</dl>
+
+<p>Com um índice negativo, cuidado: <code>insert(-1, item)</code> <strong>não</strong> põe no fim. Ele põe <strong>antes do último</strong>, porque o item novo ocupa o índice -1 e empurra quem estava lá:</p>
+
+<pre class="term">&gt;&gt;&gt; compras = ["arroz", "feijão"]
+&gt;&gt;&gt; compras.append("café")
+&gt;&gt;&gt; print(compras.append("leite"))
+None
+&gt;&gt;&gt; compras
+['arroz', 'feijão', 'café', 'leite']
+&gt;&gt;&gt; compras.insert(-1, "sal")
+&gt;&gt;&gt; compras
+['arroz', 'feijão', 'café', 'sal', 'leite']
+</pre>
+
+<p>O sal ficou entre o café e o leite. Para pôr no fim, use <code>append</code>. (E repare na terceira linha: <code>print(compras.append("leite"))</code> mostrou <code>None</code>, mas o leite entrou na lista. Guarde isso para o <a href="#errado">Quando dá errado</a>.)</p>
+
+<div class="note">
+<strong>O <code>insert(0, …)</code> dá mais trabalho ao computador</strong>
+<p>Para pôr um item no começo, o Python precisa empurrar <strong>todos</strong> os outros uma casa para a direita. Numa lista de compras, isso não faz diferença nenhuma. Numa lista de um milhão de itens, fazer isso muitas vezes começa a pesar; o <code>append</code>, no fim, é sempre rápido. Quando precisar pôr e tirar coisas do começo o tempo todo, existe uma estrutura feita para isso, o <code>deque</code> (aula <a href="collections.html">O Módulo collections</a>).</p>
+</div>
+
+<hr>
+
+<h2>4. Juntando listas: <code>extend()</code>, <code>+</code> e <code>+=</code></h2>
+<p>A vizinha mandou a listinha dela: sal e óleo. A Ana quer juntar <strong>os itens</strong> dela à lista de compras.</p>
+
+<pre class="file" data-file="extend.py">compras = ["arroz", "feijão"]
+da_vizinha = ["sal", "óleo"]
+compras.extend(da_vizinha)
+print(compras)
+print(da_vizinha)
+</pre>
+
+<pre class="term">$ python3 extend.py
+['arroz', 'feijão', 'sal', 'óleo']
+['sal', 'óleo']
+</pre>
+
+<p>O <code>extend</code> acrescentou, no fim de <code>compras</code>, cada um dos itens de <code>da_vizinha</code>. A lista da vizinha ficou como estava.</p>
+
+<h3><code>append</code> de uma lista: a lista dentro da lista</h3>
+<p>E se a Ana usar <code>append</code> com a lista da vizinha?</p>
+
+<pre class="file" data-file="append_lista.py">compras = ["arroz", "feijão"]
+compras.append(["sal", "óleo"])
+print(compras)
+print(len(compras))
+</pre>
+
+<pre class="term">$ python3 append_lista.py
+['arroz', 'feijão', ['sal', 'óleo']]
+3
+</pre>
+
+<p>Repare nos colchetes de dentro: o <code>append</code> põe <strong>um</strong> item no fim, e esse item foi <strong>a lista inteira</strong> da vizinha. A lista ficou com 3 itens, e o terceiro é uma lista (você viu listas dentro de listas em <a href="listas-acessar.html">Acessando Itens</a>). Às vezes é isso mesmo que você quer; quase sempre, quem escreve isso queria o <code>extend</code>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Com <code>compras = ["arroz", "feijão"]</code></th><th>Resultado</th><th>Itens</th></tr>
+<tr><td><code>compras.append(["sal", "óleo"])</code></td><td><code>['arroz', 'feijão', ['sal', 'óleo']]</code></td><td>3</td></tr>
+<tr><td><code>compras.extend(["sal", "óleo"])</code></td><td><code>['arroz', 'feijão', 'sal', 'óleo']</code></td><td>4</td></tr>
+</table>
+</div>
+
+<h3>O <code>+</code> e o <code>+=</code></h3>
+<p>Como nos textos (aula <a href="strings-juntar.html">Juntar e Repetir Textos</a>), o <code>+</code> junta duas listas. Mas há uma diferença importante: o <code>+</code> <strong>cria uma lista nova</strong> e deixa as duas originais em paz. Já o <code>+=</code> muda a lista da esquerda, como o <code>extend</code>.</p>
+
+<pre class="term">&gt;&gt;&gt; compras = ["arroz", "feijão"]
+&gt;&gt;&gt; nova = compras + ["sal", "óleo"]
+&gt;&gt;&gt; nova
+['arroz', 'feijão', 'sal', 'óleo']
+&gt;&gt;&gt; compras
+['arroz', 'feijão']
+&gt;&gt;&gt; compras += ["pão"]
+&gt;&gt;&gt; compras
+['arroz', 'feijão', 'pão']
+</pre>
+
+<ul>
+  <li><code>nova = compras + ["sal", "óleo"]</code>: a lista <code>nova</code> tem os 4 itens; <code>compras</code> continua com 2. O <code>+</code> não mexeu em ninguém.</li>
+  <li><code>compras += ["pão"]</code>: agora sim <code>compras</code> mudou. O <code>+=</code> em listas funciona como o <code>extend</code>. Do lado direito, uma <strong>lista</strong> (por isso <code>["pão"]</code>, com colchetes).</li>
+</ul>
+
+<h3>Repetindo: <code>*</code></h3>
+<p>Outro operador que vem dos textos: <code>[0] * 3</code> é uma lista com o 0 repetido 3 vezes. É um jeito rápido de criar o placar de um jogo com três jogadores, todos começando do zero:</p>
+
+<pre class="term">&gt;&gt;&gt; placar = [0] * 3
+&gt;&gt;&gt; placar
+[0, 0, 0]
+</pre>
+
+<hr>
+
+<h2>Formas diferentes de adicionar</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Você quer</th><th>Escreva</th><th>Muda a lista?</th></tr>
+<tr><td>Um item no fim</td><td><code>lista.append(item)</code></td><td>Sim. É o jeito mais usado</td></tr>
+<tr><td>Um item numa posição</td><td><code>lista.insert(i, item)</code></td><td>Sim. Os outros andam para a direita</td></tr>
+<tr><td>Os itens de outra lista, no fim</td><td><code>lista.extend(outra)</code></td><td>Sim</td></tr>
+<tr><td>O mesmo, mais curto</td><td><code>lista += outra</code></td><td>Sim. Igual ao <code>extend</code></td></tr>
+<tr><td>Uma lista nova com as duas juntas</td><td><code>nova = lista + outra</code></td><td><strong>Não</strong>: as duas continuam como estavam</td></tr>
+<tr><td>Um item no fim, criando uma lista nova</td><td><code>nova = lista + [item]</code></td><td>Não</td></tr>
+<tr><td>Uma lista com um valor repetido</td><td><code>[0] * n</code></td><td>Cria uma lista nova</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong><code>lista = lista.append(x)</code>: a lista vira <code>None</code></strong>
+<p>Este é, de longe, o erro mais comum com listas. A Ana se acostumou a escrever <code>nome = nome.upper()</code> com textos e fez o mesmo com o <code>append</code>:</p>
+<pre class="file" data-file="none.py">compras = ["arroz", "feijão"]
+compras = compras.append("café")
+print(compras)
+compras.append("leite")
+</pre>
+<pre class="term">$ python3 none.py
+None
+Traceback (most recent call last):
+  File "/home/ana/none.py", line 4, in &lt;module&gt;
+    compras.append("leite")
+    ^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'append'
+</pre>
+<p>Vamos por partes:</p>
+<ul>
+  <li><strong>Linha 2:</strong> o <code>append</code> acrescentou o café na lista e <strong>devolveu</strong> <code>None</code>, o valor que quer dizer "nada" (aula <a href="none.html">O Valor None</a>). Métodos que <strong>alteram</strong> a lista não devolvem a lista: eles fazem o trabalho e devolvem <code>None</code>. Você viu isso lá em cima, no <code>print(compras.append("leite"))</code>. O <code>compras = …</code> guardou esse <code>None</code> na variável, e a lista (que tinha arroz, feijão e café) ficou sem nome nenhum, perdida.</li>
+  <li><strong>Linha 3:</strong> o <code>print</code> mostrou <code>None</code>. Nenhum erro ainda, mas a lista já se foi.</li>
+  <li><strong>Linha 4:</strong> <code>compras</code> agora vale <code>None</code>, e <code>None</code> não tem o método <code>append</code>. A mensagem <code>AttributeError: 'NoneType' object has no attribute 'append'</code> quer dizer "erro de atributo: um objeto do tipo <code>NoneType</code> (o tipo do <code>None</code>) não tem o atributo <code>append</code>". Os <code>^^^^</code> marcam <code>compras.append</code>.</li>
+</ul>
+<p>Repare que o erro aparece numa linha <strong>depois</strong> da linha culpada. Quando você vir <code>'NoneType' object has no attribute …</code>, a pergunta é: "onde essa variável recebeu <code>None</code>?". Quase sempre, foi um <code>x = x.append(…)</code>, <code>x = x.sort()</code> ou parecido.</p>
+<p><strong>Como consertar:</strong> chame o método sozinho, sem <code>=</code>: <code>compras.append("café")</code>.</p>
+</div>
+
+<div class="note">
+<strong>Por que com textos é diferente?</strong>
+<p>Textos são imutáveis: <code>nome.upper()</code> não pode mudar o texto que está em <code>nome</code>, então ele <strong>devolve um texto novo</strong>, e você precisa guardá-lo (<code>nome = nome.upper()</code>). Listas são mutáveis: <code>compras.append(x)</code> muda a própria lista e não tem nada novo para devolver. Regra prática: método de lista que <strong>altera</strong> (<code>append</code>, <code>insert</code>, <code>extend</code>, <code>sort</code>, <code>reverse</code>, <code>remove</code>, <code>clear</code>) devolve <code>None</code>; nunca guarde o resultado deles na própria lista.</p>
+</div>
+
+<div class="cenario">
+<strong>O mesmo erro dentro de um laço</strong>
+<p>No laço, o erro aparece na <strong>segunda</strong> volta, o que deixa tudo mais confuso:</p>
+<pre class="file" data-file="none2.py">compras = []
+for i in range(3):
+    item = input("Item: ")
+    compras = compras.append(item)
+print(compras)
+</pre>
+<pre class="term">$ python3 none2.py
+Item: ovos
+Item: pão
+Traceback (most recent call last):
+  File "/home/ana/none2.py", line 4, in &lt;module&gt;
+    compras = compras.append(item)
+              ^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'append'
+</pre>
+<p>Na primeira volta, o <code>append</code> funcionou (a lista vazia recebeu os ovos) e devolveu <code>None</code>, que foi guardado em <code>compras</code>. Na segunda volta, <code>compras</code> já era <code>None</code>, e o <code>append</code> do pão quebrou. Você vai consertar isso na missão final.</p>
+</div>
+
+<div class="cenario">
+<strong>Um texto no <code>extend</code> ou no <code>+=</code>: letras soltas</strong>
+<pre class="term">&gt;&gt;&gt; compras.extend("óleo")
+&gt;&gt;&gt; compras
+['arroz', 'feijão', 'café', 'sal', 'leite', 'ó', 'l', 'e', 'o']
+</pre>
+<p>Nenhum erro, e o óleo virou quatro itens: <code>'ó'</code>, <code>'l'</code>, <code>'e'</code>, <code>'o'</code>. O <code>extend</code> acrescenta <strong>cada item</strong> do que recebe, e os itens de um texto são as letras. O <code>+=</code> faz o mesmo:</p>
+<pre class="term">&gt;&gt;&gt; compras = ["arroz", "feijão", "pão"]
+&gt;&gt;&gt; compras += "sal"
+&gt;&gt;&gt; compras
+['arroz', 'feijão', 'pão', 's', 'a', 'l']
+</pre>
+<p><strong>Como consertar:</strong> para um item, <code>append("óleo")</code>. Para usar <code>extend</code> ou <code>+=</code>, ponha o texto dentro de uma lista: <code>compras += ["sal"]</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>+</code> com um texto</strong>
+<p>Curiosamente, o <code>+</code> (sem o <code>=</code>) não aceita o texto e avisa:</p>
+<pre class="term">&gt;&gt;&gt; compras = ["arroz", "feijão", "pão"]
+&gt;&gt;&gt; compras + "sal"
+Traceback (most recent call last):
+  File "&lt;python-input-1&gt;", line 1, in &lt;module&gt;
+    compras + "sal"
+    ~~~~~~~~^~~~~~~
+TypeError: can only concatenate list (not "str") to list
+</pre>
+<p>"Erro de tipo: só dá para concatenar (juntar) uma lista a outra lista, e não um <code>str</code>". O <code>^</code> embaixo do <code>+</code> mostra a operação que falhou, e os <code>~</code> os dois lados dela. <strong>Como consertar:</strong> <code>compras + ["sal"]</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Dois itens num <code>append</code> só, ou um método que não existe</strong>
+<pre class="term">&gt;&gt;&gt; compras.append("ovos", "farinha")
+Traceback (most recent call last):
+  File "&lt;python-input-2&gt;", line 1, in &lt;module&gt;
+    compras.append("ovos", "farinha")
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+TypeError: list.append() takes exactly one argument (2 given)
+&gt;&gt;&gt; compras.push("ovos")
+Traceback (most recent call last):
+  File "&lt;python-input-3&gt;", line 1, in &lt;module&gt;
+    compras.push("ovos")
+    ^^^^^^^^^^^^
+AttributeError: 'list' object has no attribute 'push'
+</pre>
+<ul>
+  <li><code>list.append() takes exactly one argument (2 given)</code>: "o <code>append</code> recebe exatamente um argumento (foram dados 2)". Para dois itens, dois <code>append</code>, ou <code>compras.extend(["ovos", "farinha"])</code>.</li>
+  <li><code>'list' object has no attribute 'push'</code>: em outras linguagens (como o JavaScript), acrescentar no fim se chama <code>push</code>. No Python, é <code>append</code>. O mesmo vale para <code>add</code>, que é dos conjuntos (aula <a href="conjuntos.html">Conjuntos</a>), não das listas.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Devolve</th></tr>
+<tr><td><code>lista.append(x)</code></td><td>Põe <code>x</code> no fim</td><td><code>None</code></td></tr>
+<tr><td><code>lista.insert(i, x)</code></td><td>Põe <code>x</code> no índice <code>i</code>; quem estava lá anda para a direita. Índice grande demais = no fim</td><td><code>None</code></td></tr>
+<tr><td><code>lista.extend(outra)</code></td><td>Põe cada item de <code>outra</code> no fim (um texto vira letras)</td><td><code>None</code></td></tr>
+<tr><td><code>lista += outra</code></td><td>O mesmo que <code>extend</code></td><td>—</td></tr>
+<tr><td><code>lista + outra</code></td><td>Cria uma lista nova com as duas; não muda nenhuma</td><td>A lista nova</td></tr>
+<tr><td><code>[x] * n</code></td><td>Uma lista nova com <code>x</code> repetido <code>n</code> vezes</td><td>A lista nova</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td>A lista virou <code>None</code></td><td><code>lista = lista.append(x)</code> (ou <code>insert</code>, <code>extend</code>…): chame sem <code>=</code></td></tr>
+<tr><td><code>AttributeError: 'NoneType' object has no attribute 'append'</code></td><td>A variável recebeu <code>None</code> numa linha anterior, quase sempre pelo motivo acima</td></tr>
+<tr><td>Letras soltas como itens</td><td>Texto no <code>extend</code> ou no <code>+=</code>; use <code>append</code> ou ponha o texto numa lista</td></tr>
+<tr><td>Uma lista dentro da lista</td><td><code>append</code> de uma lista; para juntar os itens, <code>extend</code></td></tr>
+<tr><td><code>TypeError: can only concatenate list (not "str") to list</code></td><td><code>lista + "texto"</code>; use <code>lista + ["texto"]</code></td></tr>
+<tr><td><code>TypeError: list.append() takes exactly one argument (2 given)</code></td><td>Dois itens num <code>append</code></td></tr>
+<tr><td><code>AttributeError: 'list' object has no attribute 'push'</code> (ou <code>'add'</code>)</td><td>O nome certo é <code>append</code></td></tr>
+<tr><td>O item entrou antes do último</td><td><code>insert(-1, x)</code>; para o fim, <code>append(x)</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. No fim da lista</h3>
+<p>Complete o método que põe o açúcar no fim da lista:</p>
+<div class="ex-code">compras.<input data-answer="append" aria-label="método" size="8">("açúcar")</div>
+</div>
+
+<div class="exercise">
+<h3>2. Primeiro da fila</h3>
+<p>Complete para pôr a Eva no começo da fila:</p>
+<div class="ex-code">fila.insert(<input data-answer="0" aria-label="índice" size="3">, "Eva")</div>
+</div>
+
+<div class="exercise">
+<h3>3. Quantos itens?</h3>
+<p>Com <code>a = [1, 2]</code>, depois de <code>a.append([3, 4])</code>, quanto vale <code>len(a)</code>?</p>
+<div class="ex-code"><input data-answer="3" aria-label="quantidade" size="3"></div>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">4. Depois de <code>compras = ["arroz"]</code> e <code>compras = compras.append("feijão")</code>, quanto vale <code>compras</code>?</p>
+<label><input type="radio" name="q4"> <code>['arroz', 'feijão']</code></label>
+<label><input type="radio" name="q4"> <code>['feijão']</code></label>
+<label><input type="radio" name="q4"> <code>['arroz']</code></label>
+<label><input type="radio" name="q4"> <code>None</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. Qual destas linhas deixa <code>a = [1, 2]</code> como <code>[1, 2]</code> e cria uma lista nova <code>[1, 2, 3]</code>?</p>
+<label><input type="radio" name="q5"> <code>b = a.append(3)</code></label>
+<label><input type="radio" name="q5"> <code>b = a + [3]</code></label>
+<label><input type="radio" name="q5"> <code>a += [3]</code></label>
+<label><input type="radio" name="q5"> <code>a.extend([3])</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">6. O que <code>letras = ["a"]</code> seguido de <code>letras.extend("bc")</code> deixa em <code>letras</code>?</p>
+<label><input type="radio" name="q6"> <code>['a', 'bc']</code></label>
+<label><input type="radio" name="q6"> Dá <code>TypeError</code></label>
+<label><input type="radio" name="q6"> <code>['a', 'b', 'c']</code></label>
+<label><input type="radio" name="q6"> <code>['abc']</code></label>
+</div>
+
+<h3>Missão final: a lista pelo teclado</h3>
+
+<div class="trypy" data-stdin="ovos\npão\nleite" data-goal="out:['ovos', 'pão', 'leite'];;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa deveria perguntar 3 itens e mostrar a lista, mas quebra com <code>AttributeError</code> na segunda pergunta. Conserte a linha do <code>append</code>. (O editor vai digitar <code>ovos</code>, <code>pão</code> e <code>leite</code> por você.)</p>
+<pre class="script" data-file="main.py">compras = []
+for i in range(3):
+    item = input("Item: ")
+    compras = compras.append(item)
+print(compras)
+</pre>
+<pre class="solucao" data-file="main.py">compras = []
+for i in range(3):
+    item = input("Item: ")
+    compras.append(item)
+print(compras)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>append(x)</code> põe um item no fim; é o jeito mais usado de encher uma lista que começou com <code>[]</code>.</li>
+  <li><code>insert(i, x)</code> põe o item no índice <code>i</code>; os outros andam para a direita. <code>insert(-1, x)</code> põe antes do último.</li>
+  <li><code>extend(outra)</code> e <code>+=</code> põem os itens de outra lista no fim; <code>append</code> de uma lista põe a lista inteira como um item só.</li>
+  <li><code>lista + outra</code> cria uma lista nova e não muda nenhuma das duas.</li>
+  <li>Os métodos que alteram a lista devolvem <code>None</code>: <strong>nunca</strong> escreva <code>lista = lista.append(x)</code>.</li>
+  <li><code>'NoneType' object has no attribute 'append'</code> quer dizer que a variável recebeu <code>None</code> antes; procure o <code>=</code> com um método de lista.</li>
+  <li>Texto no <code>extend</code> ou no <code>+=</code> vira letras soltas.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
