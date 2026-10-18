@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Operadores — referência de todos os operadores e da precedência | Guia Python</title>
+<meta name="description" content="Referência rápida de todos os operadores do Python 3.14: aritméticos, comparação, lógicos, identidade (is), pertinência (in), bit a bit, atribuição (+= e os outros), o operador morsa :=, o @ e a tabela de precedência oficial, cada um com exemplo, resultado real e o link para a aula.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Operadores</span></h1>
+
+<p class="intro">Esta é a página de consulta rápida dos <strong>operadores</strong> do Python 3.14: os símbolos e palavras que fazem contas, comparam, combinam condições e guardam valores (<code>+</code>, <code>==</code>, <code>and</code>, <code>in</code>, <code>+=</code>…). No fim está a <strong>tabela de precedência</strong> oficial, que diz quem é feito primeiro numa expressão com vários operadores. A explicação passo a passo de cada grupo está nas aulas, a partir de <a href="operadores-aritmeticos.html">Operadores Aritméticos</a>.</p>
+
+<div class="note">
+<strong>Como ler as tabelas</strong>
+<ul>
+  <li><strong>Exemplo</strong> é o que você digitaria depois do <code>&gt;&gt;&gt;</code> do <a href="repl.html">modo interativo</a>; <strong>Resultado</strong> é o que o Python 3.14.4 respondeu no computador da Ana.</li>
+  <li>Quando o exemplo dá erro, o resultado mostra a última linha da mensagem do Python (em inglês).</li>
+  <li>Alguns exemplos usam variáveis: elas aparecem logo acima da tabela.</li>
+  <li>O mesmo símbolo pode fazer coisas diferentes conforme o <strong>tipo</strong> dos valores: <code>+</code> soma números e junta textos; <code>|</code> faz contas com bits nos inteiros e une conjuntos.</li>
+</ul>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Grupo</th><th>Operadores</th><th>Aula</th></tr>
+<tr><td><a href="#aritmeticos">Aritméticos</a></td><td><code>+ - * / // % **</code> e o sinal <code>-x</code></td><td><a href="operadores-aritmeticos.html">Operadores Aritméticos</a></td></tr>
+<tr><td><a href="#comparacao">Comparação</a></td><td><code>== != &lt; &lt;= &gt; &gt;=</code></td><td><a href="operadores-comparacao.html">Comparações</a></td></tr>
+<tr><td><a href="#logicos">Lógicos</a></td><td><code>and or not</code></td><td><a href="operadores-logicos.html">and, or e not</a></td></tr>
+<tr><td><a href="#identidade">Identidade e pertinência</a></td><td><code>is</code>, <code>is not</code>, <code>in</code>, <code>not in</code></td><td><a href="operadores-is-in.html">is e in</a></td></tr>
+<tr><td><a href="#bits">Bit a bit</a></td><td><code>&amp; | ^ ~ &lt;&lt; &gt;&gt;</code></td><td>(sem aula própria; nesta página)</td></tr>
+<tr><td><a href="#atribuicao">Atribuição</a></td><td><code>=</code>, <code>+=</code>, <code>-=</code>… e o morsa <code>:=</code></td><td><a href="operadores-atribuicao.html">Operadores de Atribuição</a></td></tr>
+<tr><td><a href="#arroba">Matriz</a></td><td><code>@</code></td><td>(nesta página)</td></tr>
+<tr><td><a href="#precedencia">Precedência</a></td><td>quem é feito primeiro</td><td><a href="precedencia.html">Precedência dos Operadores</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="aritmeticos">Aritméticos</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Operador</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>+</code></td><td>Soma</td><td><code>7 + 2</code></td><td><code>9</code></td><td><a href="operadores-aritmeticos.html">Operadores Aritméticos</a></td></tr>
+<tr><td><code>-</code></td><td>Subtração</td><td><code>7 - 2</code></td><td><code>5</code></td><td></td></tr>
+<tr><td><code>*</code></td><td>Multiplicação</td><td><code>7 * 2</code></td><td><code>14</code></td><td></td></tr>
+<tr><td><code>/</code></td><td>Divisão: o resultado é sempre <code>float</code>, mesmo quando é exata</td><td><code>7 / 2</code><br><code>8 / 2</code></td><td><code>3.5</code><br><code>4.0</code></td><td></td></tr>
+<tr><td><code>//</code></td><td>Divisão inteira: arredonda <strong>para baixo</strong> (para o menor inteiro)</td><td><code>7 // 2</code><br><code>-7 // 2</code><br><code>5.0 // 2</code></td><td><code>3</code><br><code>-4</code><br><code>2.0</code></td><td></td></tr>
+<tr><td><code>%</code></td><td>Resto da divisão (o sinal segue o número da direita)</td><td><code>7 % 2</code><br><code>-7 % 3</code><br><code>7 % -3</code></td><td><code>1</code><br><code>2</code><br><code>-2</code></td><td></td></tr>
+<tr><td><code>**</code></td><td>Potência</td><td><code>7 ** 2</code><br><code>2 ** -1</code><br><code>2 ** 0.5</code></td><td><code>49</code><br><code>0.5</code><br><code>1.4142135623730951</code></td><td></td></tr>
+<tr><td><code>-x</code>, <code>+x</code></td><td>Sinal na frente de um valor (troca o sinal / deixa como está)</td><td><code>-(-5)</code><br><code>+5</code></td><td><code>5</code><br><code>5</code></td><td></td></tr>
+<tr><td><code>/</code>, <code>//</code>, <code>%</code> por zero</td><td>Dividir por zero é erro</td><td><code>10 / 0</code><br><code>10 % 0</code></td><td><code>ZeroDivisionError: division by zero</code><br>(o mesmo)</td><td></td></tr>
+</table>
+</div>
+
+<h3>Com textos e listas</h3>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Operador</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>+</code></td><td>Junta (concatena) dois textos, duas listas, duas tuplas</td><td><code>"pão" + "zinho"</code><br><code>[1, 2] + [3]</code></td><td><code>'pãozinho'</code><br><code>[1, 2, 3]</code></td><td><a href="strings-juntar.html">Juntar e Repetir Textos</a></td></tr>
+<tr><td><code>*</code></td><td>Repete (com um inteiro)</td><td><code>"ab" * 3</code><br><code>[0] * 3</code></td><td><code>'ababab'</code><br><code>[0, 0, 0]</code></td><td></td></tr>
+<tr><td><code>+</code> texto com número</td><td>Não junta tipos diferentes</td><td><code>"pão" + 5</code></td><td><code>TypeError: can only concatenate str (not "int") to str</code></td><td><a href="conversao.html">Conversão de Tipos</a></td></tr>
+<tr><td><code>%</code> com texto</td><td>Formatação no estilo antigo (hoje se usa f-string)</td><td><code>"Total: %d itens" % 3</code></td><td><code>'Total: 3 itens'</code></td><td><a href="f-strings.html">f-strings</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="comparacao">Comparação</h2>
+<p>Toda comparação responde <code>True</code> ou <code>False</code>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Operador</th><th>Pergunta</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>==</code></td><td>É igual? (dois sinais de igual)</td><td><code>2 == 2.0</code><br><code>"a" == "A"</code></td><td><code>True</code><br><code>False</code></td><td><a href="operadores-comparacao.html">Comparações</a></td></tr>
+<tr><td><code>!=</code></td><td>É diferente?</td><td><code>2 != 3</code></td><td><code>True</code></td><td></td></tr>
+<tr><td><code>&lt;</code>, <code>&gt;</code></td><td>Menor? Maior?</td><td><code>3 &lt; 5</code></td><td><code>True</code></td><td></td></tr>
+<tr><td><code>&lt;=</code>, <code>&gt;=</code></td><td>Menor ou igual? Maior ou igual?</td><td><code>5 &lt;= 5</code></td><td><code>True</code></td><td></td></tr>
+<tr><td>textos</td><td>Comparam letra por letra, pela ordem dos caracteres: maiúsculas vêm antes das minúsculas</td><td><code>"abacaxi" &lt; "banana"</code><br><code>"Zebra" &lt; "abacaxi"</code></td><td><code>True</code><br><code>True</code></td><td></td></tr>
+<tr><td>listas</td><td>Comparam item por item</td><td><code>[1, 2] &lt; [1, 3]</code></td><td><code>True</code></td><td></td></tr>
+<tr><td>em cadeia</td><td><code>a &lt; b &lt; c</code> é o mesmo que <code>a &lt; b and b &lt; c</code></td><td><code>1 &lt; 3 &lt; 5</code><br><code>1 == 1.0 == True</code></td><td><code>True</code><br><code>True</code></td><td></td></tr>
+<tr><td>tipos que não se comparam</td><td>Número com texto, só com <code>==</code>/<code>!=</code></td><td><code>3 &lt; "5"</code></td><td><code>TypeError: '&lt;' not supported between instances of 'int' and 'str'</code></td><td></td></tr>
+<tr><td><code>float</code> com <code>==</code></td><td>Contas com decimais podem ter um erro minúsculo</td><td><code>0.1 + 0.2 == 0.3</code></td><td><code>False</code></td><td><a href="numeros.html">Números</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="logicos">Lógicos</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Operador</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>and</code></td><td>"E": verdadeiro só se os dois forem</td><td><code>True and False</code><br><code>5 &gt; 3 and 2 &gt; 1</code></td><td><code>False</code><br><code>True</code></td><td><a href="operadores-logicos.html">and, or e not</a></td></tr>
+<tr><td><code>or</code></td><td>"Ou": verdadeiro se pelo menos um for</td><td><code>True or False</code></td><td><code>True</code></td><td></td></tr>
+<tr><td><code>not</code></td><td>"Não": inverte</td><td><code>not True</code><br><code>not 0</code><br><code>not ""</code></td><td><code>False</code><br><code>True</code><br><code>True</code></td><td></td></tr>
+<tr><td><code>or</code> com valores</td><td>Devolve o primeiro valor "verdadeiro" (ou o último, se nenhum for). Bom para valor padrão</td><td><code>"" or "anônimo"</code><br><code>"Ana" or "anônimo"</code><br><code>None or 0 or "fim"</code></td><td><code>'anônimo'</code><br><code>'Ana'</code><br><code>'fim'</code></td><td></td></tr>
+<tr><td><code>and</code> com valores</td><td>Devolve o primeiro valor "falso" (ou o último, se todos forem verdadeiros)</td><td><code>0 and 10</code><br><code>3 and 10</code></td><td><code>0</code><br><code>10</code></td><td></td></tr>
+</table>
+</div>
+
+<p>"Falsos" são <code>False</code>, <code>None</code>, o zero (<code>0</code>, <code>0.0</code>) e o que está vazio (<code>""</code>, <code>[]</code>, <code>{}</code>, <code>set()</code>); todo o resto conta como verdadeiro (aula <a href="booleanos.html">Booleanos</a>). <code>and</code> e <code>or</code> param assim que sabem a resposta: em <code>False and …</code>, o lado direito nem é calculado.</p>
+
+<hr>
+
+<h2 id="identidade">Identidade (<code>is</code>) e pertinência (<code>in</code>)</h2>
+<p>Variáveis usadas abaixo: <code>x = None</code>, <code>a = [1, 2]</code>, <code>b = a</code> (o mesmo objeto) e <code>c = [1, 2]</code> (outra lista, igual).</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Operador</th><th>Pergunta</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>is</code></td><td>É <strong>o mesmo objeto</strong>? (não só igual)</td><td><code>a is b</code><br><code>a is c</code><br><code>a == c</code></td><td><code>True</code><br><code>False</code><br><code>True</code></td><td><a href="operadores-is-in.html">is e in</a></td></tr>
+<tr><td><code>is</code> com <code>None</code></td><td>O uso mais comum do <code>is</code></td><td><code>x is None</code></td><td><code>True</code></td><td><a href="none.html">O Valor None</a></td></tr>
+<tr><td><code>is not</code></td><td>Não é o mesmo objeto?</td><td><code>x is not None</code></td><td><code>False</code></td><td></td></tr>
+<tr><td>duas listas novas</td><td>Iguais, mas cada uma é um objeto</td><td><code>[1, 2] == [1, 2]</code><br><code>[1, 2] is [1, 2]</code></td><td><code>True</code><br><code>False</code></td><td><a href="mutabilidade.html">Mutável × Imutável</a></td></tr>
+<tr><td><code>in</code></td><td>Está dentro? Num texto, procura um pedaço</td><td><code>"an" in "banana"</code><br><code>3 in [1, 2, 3]</code></td><td><code>True</code><br><code>True</code></td><td><a href="operadores-is-in.html">is e in</a></td></tr>
+<tr><td><code>not in</code></td><td>Não está dentro?</td><td><code>4 not in [1, 2, 3]</code></td><td><code>True</code></td><td></td></tr>
+<tr><td><code>in</code> num dicionário</td><td>Procura só nas <strong>chaves</strong></td><td><code>"pão" in {"pão": 0.5}</code><br><code>0.5 in {"pão": 0.5}</code></td><td><code>True</code><br><code>False</code></td><td><a href="dicionarios.html">Dicionários</a></td></tr>
+</table>
+</div>
+
+<div class="warning">
+<strong><code>is</code> com um número ou texto escrito no código</strong>
+<p>Para comparar valores, use <code>==</code>. O Python avisa quando vê <code>is</code> com um valor escrito direto:</p>
+<pre class="file" data-file="ro_is5.py">idade = 5
+print(idade is 5)
+</pre>
+<pre class="term">$ python3 ro_is5.py
+/home/ana/ro_is5.py:2: SyntaxWarning: "is" with 'int' literal. Did you mean "=="?
+  print(idade is 5)
+True
+</pre>
+<p>Não é erro: é um <strong>aviso</strong> (<em>warning</em>), e o programa roda. "<code>is</code> com um literal <code>int</code>. Você quis dizer <code>==</code>?" Aqui deu <code>True</code> por acaso: o Python reaproveita o objeto dos números pequenos, mas não garante isso para todo valor. <strong>Como consertar:</strong> <code>idade == 5</code>. Guarde o <code>is</code> para <code>None</code> (<code>x is None</code>).</p>
+</div>
+
+<hr>
+
+<h2 id="bits">Bit a bit</h2>
+<p>Com números inteiros, estes operadores trabalham com os <strong>bits</strong>: os zeros e uns com que o computador escreve o número. <code>bin(n)</code> mostra os bits (<code>bin(6)</code> é <code>'0b110'</code>: 4 + 2), e <code>0b110</code> escreve um número direto em binário. Para quem está começando, o importante é não confundi-los com outras coisas: <code>^</code> <strong>não</strong> é potência, e <code>&amp;</code>/<code>|</code> não são <code>and</code>/<code>or</code>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Operador</th><th>O que faz com os bits</th><th>Exemplo</th><th>Resultado</th></tr>
+<tr><td><code>&amp;</code></td><td>"E": bit 1 só onde os dois têm 1</td><td><code>6 &amp; 3</code><br><code>bin(10 &amp; 12)</code></td><td><code>2</code><br><code>'0b1000'</code></td></tr>
+<tr><td><code>|</code></td><td>"Ou": bit 1 onde pelo menos um tem 1</td><td><code>6 | 3</code><br><code>bin(10 | 12)</code></td><td><code>7</code><br><code>'0b1110'</code></td></tr>
+<tr><td><code>^</code></td><td>"Ou exclusivo": bit 1 onde só um dos dois tem 1</td><td><code>6 ^ 3</code><br><code>2 ^ 3</code></td><td><code>5</code><br><code>1</code> (não é 8!)</td></tr>
+<tr><td><code>~</code></td><td>Inverte todos os bits (dá <code>-x - 1</code>)</td><td><code>~6</code><br><code>~0</code></td><td><code>-7</code><br><code>-1</code></td></tr>
+<tr><td><code>&lt;&lt;</code></td><td>Empurra os bits para a esquerda (multiplica por 2 a cada casa)</td><td><code>1 &lt;&lt; 3</code><br><code>5 &lt;&lt; 1</code></td><td><code>8</code><br><code>10</code></td></tr>
+<tr><td><code>&gt;&gt;</code></td><td>Empurra para a direita (divide por 2 a cada casa, arredondando para baixo)</td><td><code>40 &gt;&gt; 2</code><br><code>5 &gt;&gt; 1</code></td><td><code>10</code><br><code>2</code></td></tr>
+<tr><td>com <code>True</code>/<code>False</code></td><td>Funciona (eles valem 1 e 0), mas prefira <code>and</code>/<code>or</code></td><td><code>True &amp; False</code></td><td><code>False</code></td></tr>
+</table>
+</div>
+
+<h3>Os mesmos símbolos com conjuntos e dicionários</h3>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Operador</th><th>Com conjuntos</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>|</code></td><td>União</td><td><code>{1, 2, 3} | {2, 3, 4}</code></td><td><code>{1, 2, 3, 4}</code></td><td><a href="conjuntos-operacoes.html">União, Interseção e Diferença</a></td></tr>
+<tr><td><code>&amp;</code></td><td>Interseção</td><td><code>{1, 2, 3} &amp; {2, 3, 4}</code></td><td><code>{2, 3}</code></td><td></td></tr>
+<tr><td><code>-</code></td><td>Diferença</td><td><code>{1, 2, 3} - {2, 3, 4}</code></td><td><code>{1}</code></td><td></td></tr>
+<tr><td><code>^</code></td><td>Diferença simétrica</td><td><code>{1, 2, 3} ^ {2, 3, 4}</code></td><td><code>{1, 4}</code></td><td></td></tr>
+<tr><td><code>|</code> com dicionários</td><td>Junta os pares num dicionário novo</td><td><code>{"a": 1} | {"b": 2}</code></td><td><code>{'a': 1, 'b': 2}</code></td><td><a href="dicionarios-alterar.html">Adicionando e Removendo Chaves</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="atribuicao">Atribuição</h2>
+<p>O <code>=</code> guarda um valor numa variável. As formas com um operador na frente (<code>+=</code>, <code>-=</code>…) fazem a conta com o valor que já está lá e guardam o resultado: <code>x += 3</code> é o mesmo que <code>x = x + 3</code>. Em cada linha abaixo, <code>x</code> começa valendo 10:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Operador</th><th>É o mesmo que</th><th>Exemplo</th><th><code>x</code> fica</th><th>Aula</th></tr>
+<tr><td><code>=</code></td><td>guarda o valor</td><td><code>x = 10</code></td><td><code>10</code></td><td><a href="variaveis.html">Variáveis</a></td></tr>
+<tr><td><code>+=</code></td><td><code>x = x + 3</code></td><td><code>x += 3</code></td><td><code>13</code></td><td><a href="operadores-atribuicao.html">Operadores de Atribuição</a></td></tr>
+<tr><td><code>-=</code></td><td><code>x = x - 3</code></td><td><code>x -= 3</code></td><td><code>7</code></td><td></td></tr>
+<tr><td><code>*=</code></td><td><code>x = x * 3</code></td><td><code>x *= 3</code></td><td><code>30</code></td><td></td></tr>
+<tr><td><code>/=</code></td><td><code>x = x / 4</code></td><td><code>x /= 4</code></td><td><code>2.5</code></td><td></td></tr>
+<tr><td><code>//=</code></td><td><code>x = x // 3</code></td><td><code>x //= 3</code></td><td><code>3</code></td><td></td></tr>
+<tr><td><code>%=</code></td><td><code>x = x % 3</code></td><td><code>x %= 3</code></td><td><code>1</code></td><td></td></tr>
+<tr><td><code>**=</code></td><td><code>x = x ** 2</code></td><td><code>x **= 2</code></td><td><code>100</code></td><td></td></tr>
+</table>
+</div>
+
+<p>Há uma forma com <code>=</code> para cada operador de bits também. Com outros tipos, a conta é a do tipo:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Antes</th><th>Linha</th><th>Depois</th></tr>
+<tr><td><code>y = 6</code></td><td><code>y &amp;= 3</code> / <code>y |= 3</code> / <code>y ^= 3</code></td><td><code>2</code> / <code>7</code> / <code>5</code></td></tr>
+<tr><td><code>y = 1</code> / <code>y = 40</code></td><td><code>y &lt;&lt;= 3</code> / <code>y &gt;&gt;= 2</code></td><td><code>8</code> / <code>10</code></td></tr>
+<tr><td><code>s = "pão"</code></td><td><code>s += "zinho"</code></td><td><code>'pãozinho'</code></td></tr>
+<tr><td><code>lista = [1]</code></td><td><code>lista += [2, 3]</code>, depois <code>lista *= 2</code></td><td><code>[1, 2, 3]</code>, depois <code>[1, 2, 3, 1, 2, 3]</code></td></tr>
+<tr><td><code>c = {1, 2}</code></td><td><code>c |= {3}</code></td><td><code>{1, 2, 3}</code></td></tr>
+<tr><td><code>d = {"a": 1}</code></td><td><code>d |= {"b": 2}</code></td><td><code>{'a': 1, 'b': 2}</code></td></tr>
+</table>
+</div>
+
+<p>O <code>@=</code> também existe, para o <code>@</code> (mais abaixo). Formas como <code>a, b = b, a</code> e <code>a = b = 0</code> estão nas aulas <a href="atribuicao-multipla.html">Atribuição Múltipla</a> e <a href="desempacotamento.html">Desempacotamento</a>.</p>
+
+<h3 id="morsa">O operador morsa <code>:=</code></h3>
+<p>O <code>:=</code> ("expressão de atribuição", apelidada de <strong>operador morsa</strong>, porque o sinal lembra os olhos e as presas de uma morsa) guarda um valor numa variável <strong>e</strong> devolve esse valor, no meio de uma expressão. Serve para não calcular a mesma coisa duas vezes:</p>
+
+<pre class="file" data-file="ro_morsa.py">nome = "Ana Beatriz"
+if (tamanho := len(nome)) &gt; 5:
+    print(f"Nome comprido: {tamanho} letras")
+</pre>
+
+<pre class="term">$ python3 ro_morsa.py
+Nome comprido: 11 letras
+</pre>
+
+<p>O <code>len(nome)</code> foi calculado uma vez, guardado em <code>tamanho</code>, comparado com 5 e usado de novo no <code>print</code>. Os parênteses em volta são necessários: sem eles, o <code>:=</code>, que é o operador mais fraco de todos, pegaria <code>len(nome) &gt; 5</code> inteiro, e <code>tamanho</code> valeria <code>True</code>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Resultado</th><th>Por quê</th></tr>
+<tr><td><code>(n := 3 * 2)</code></td><td><code>6</code> (e <code>n</code> fica valendo 6)</td><td>Guarda e devolve o valor</td></tr>
+<tr><td><code>n := 10</code> sozinho numa linha</td><td><code>SyntaxError: invalid syntax</code></td><td>Como comando sozinho, use <code>n = 10</code>; o <code>:=</code> é para dentro de expressões</td></tr>
+</table>
+</div>
+
+<pre class="term">$ python3 ro_morsa_erro.py
+  File "/home/ana/ro_morsa_erro.py", line 1
+    n := 10
+      ^^
+SyntaxError: invalid syntax
+</pre>
+
+<div class="note">
+<strong>Versões</strong>
+<p>O <code>:=</code> existe desde o Python 3.8. No Ubuntu 26.04 (3.14) e no Debian 13 (3.13), funciona.</p>
+</div>
+
+<hr>
+
+<h2 id="arroba">O <code>@</code>: multiplicação de matrizes</h2>
+<p>O <code>@</code> existe na linguagem desde o Python 3.5, mas <strong>nenhum tipo que vem com o Python</strong> o usa. Ele foi criado para as bibliotecas de cálculo, como a NumPy, em que <code>a @ b</code> multiplica duas matrizes (tabelas de números). Com números comuns, dá erro:</p>
+
+<pre class="file" data-file="ro_matmul.py">print(2 @ 3)
+</pre>
+
+<pre class="term">$ python3 ro_matmul.py
+Traceback (most recent call last):
+  File "/home/ana/ro_matmul.py", line 1, in &lt;module&gt;
+    print(2 @ 3)
+          ~~^~~
+TypeError: unsupported operand type(s) for @: 'int' and 'int'
+</pre>
+
+<p>"Tipos não suportados para <code>@</code>: <code>int</code> e <code>int</code>". Um tipo passa a aceitar o <code>@</code> quando define o método especial <code>__matmul__</code> (aula <a href="metodos-especiais.html">Métodos Especiais</a>). Um exemplo pequeno, só para ver funcionando:</p>
+
+<pre class="file" data-file="ro_matriz.py">class Matriz:
+    def __init__(self, linhas):
+        self.linhas = linhas
+    def __matmul__(self, outra):
+        a, b = self.linhas, outra.linhas
+        return Matriz([[sum(a[i][k] * b[k][j] for k in range(len(b)))
+                        for j in range(len(b[0]))] for i in range(len(a))])
+m = Matriz([[1, 2], [3, 4]])
+id2 = Matriz([[1, 0], [0, 1]])
+print((m @ id2).linhas)
+print((m @ m).linhas)
+</pre>
+
+<pre class="term">$ python3 ro_matriz.py
+[[1, 2], [3, 4]]
+[[7, 10], [15, 22]]
+</pre>
+
+<p>Não se preocupe em entender a classe agora. Na prática, você só vai escrever <code>@</code> se um dia trabalhar com matrizes numa biblioteca.</p>
+
+<hr>
+
+<h2 id="outros">Outros que aparecem na tabela de precedência</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que é</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>a if condição else b</code></td><td>Expressão condicional: escolhe um de dois valores</td><td><code>"par" if 7 % 2 == 0 else "ímpar"</code></td><td><code>'ímpar'</code></td><td><a href="if-ternario.html">if em uma Linha</a></td></tr>
+<tr><td><code>lambda</code></td><td>Função pequena, sem nome</td><td><code>(lambda x: x + 1)(4)</code></td><td><code>5</code></td><td><a href="lambda.html">lambda</a></td></tr>
+<tr><td><code>x[i]</code>, <code>x(…)</code>, <code>x.nome</code></td><td>Índice ou chave, chamada de função, atributo/método</td><td><code>[10, 20, 30][1] * 2</code><br><code>"pão".upper() + "!"</code></td><td><code>40</code><br><code>'PÃO!'</code></td><td><a href="listas-acessar.html">Acessando Itens</a></td></tr>
+<tr><td><code>await x</code></td><td>Espera uma tarefa assíncrona (só dentro de <code>async def</code>)</td><td>—</td><td>—</td><td><a href="asyncio.html">asyncio</a></td></tr>
+<tr><td><code>*lista</code>, <code>**dicionario</code></td><td>Não são operadores de conta: espalham os itens numa chamada ou numa lista</td><td><code>print(*dias)</code></td><td>(veja a aula)</td><td><a href="desempacotamento.html">Desempacotamento</a>, <a href="args-kwargs.html">*args e **kwargs</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="precedencia">Precedência: quem é feito primeiro</h2>
+<p>Quando uma expressão tem vários operadores, o Python faz primeiro os mais <strong>fortes</strong>. A tabela abaixo é a da documentação oficial (<a href="https://docs.python.org/3.14/reference/expressions.html#operator-precedence">docs.python.org, seção 6.17</a>), do <strong>mais forte</strong> (feito primeiro) para o <strong>mais fraco</strong> (feito por último). Operadores da mesma linha têm a mesma força e são feitos da esquerda para a direita, menos a potência <code>**</code> e o <code>if</code>/<code>else</code>, que vão da direita para a esquerda. A explicação com calma está na aula <a href="precedencia.html">Precedência dos Operadores</a>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Força</th><th>Operadores</th><th>Nome</th><th>Exemplo</th><th>Resultado</th></tr>
+<tr><td>1 (mais forte)</td><td><code>(…)</code>, <code>[…]</code>, <code>{chave: valor…}</code>, <code>{…}</code></td><td>Parênteses; criar lista, dicionário, conjunto</td><td><code>(2 + 3) * 4</code></td><td><code>20</code></td></tr>
+<tr><td>2</td><td><code>x[i]</code>, <code>x[i:j]</code>, <code>x(…)</code>, <code>x.atributo</code></td><td>Índice e fatia, chamada, atributo</td><td><code>len("pão") + 1</code></td><td><code>4</code></td></tr>
+<tr><td>3</td><td><code>await x</code></td><td>Espera assíncrona</td><td>—</td><td>—</td></tr>
+<tr><td>4</td><td><code>**</code></td><td>Potência (da direita para a esquerda)</td><td><code>2 ** 3 ** 2</code><br><code>(2 ** 3) ** 2</code></td><td><code>512</code><br><code>64</code></td></tr>
+<tr><td>5</td><td><code>+x</code>, <code>-x</code>, <code>~x</code></td><td>Sinal e inversão de bits</td><td><code>-2 ** 2</code><br><code>(-2) ** 2</code></td><td><code>-4</code><br><code>4</code></td></tr>
+<tr><td>6</td><td><code>*</code>, <code>@</code>, <code>/</code>, <code>//</code>, <code>%</code></td><td>Multiplicação, matriz, divisões, resto</td><td><code>100 / 10 * 2</code></td><td><code>20.0</code></td></tr>
+<tr><td>7</td><td><code>+</code>, <code>-</code></td><td>Soma e subtração</td><td><code>2 + 3 * 4</code></td><td><code>14</code></td></tr>
+<tr><td>8</td><td><code>&lt;&lt;</code>, <code>&gt;&gt;</code></td><td>Deslocamento de bits</td><td><code>1 + 2 &lt;&lt; 1</code></td><td><code>6</code></td></tr>
+<tr><td>9</td><td><code>&amp;</code></td><td>"E" de bits</td><td><code>1 | 6 &amp; 3</code></td><td><code>3</code></td></tr>
+<tr><td>10</td><td><code>^</code></td><td>"Ou exclusivo" de bits</td><td><code>6 | 3 ^ 1</code></td><td><code>6</code></td></tr>
+<tr><td>11</td><td><code>|</code></td><td>"Ou" de bits</td><td><code>6 ^ 3 | 1</code></td><td><code>5</code></td></tr>
+<tr><td>12</td><td><code>in</code>, <code>not in</code>, <code>is</code>, <code>is not</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>, <code>!=</code>, <code>==</code></td><td>Comparações, pertinência e identidade (todas na mesma força, em cadeia)</td><td><code>2 + 3 &gt; 4</code><br><code>6 &amp; 3 == 2</code></td><td><code>True</code><br><code>True</code></td></tr>
+<tr><td>13</td><td><code>not x</code></td><td>"Não"</td><td><code>not 1 == 2</code></td><td><code>True</code></td></tr>
+<tr><td>14</td><td><code>and</code></td><td>"E"</td><td><code>True or False and False</code></td><td><code>True</code></td></tr>
+<tr><td>15</td><td><code>or</code></td><td>"Ou"</td><td><code>(True or False) and False</code></td><td><code>False</code></td></tr>
+<tr><td>16</td><td><code>if</code> – <code>else</code></td><td>Expressão condicional</td><td><code>"a" if True else "b" + "!"</code><br><code>("a" if True else "b") + "!"</code></td><td><code>'a'</code><br><code>'a!'</code></td></tr>
+<tr><td>17</td><td><code>lambda</code></td><td>Função sem nome</td><td><code>(lambda x: x + 1)(4)</code></td><td><code>5</code></td></tr>
+<tr><td>18 (mais fraco)</td><td><code>:=</code></td><td>Operador morsa</td><td><code>(n := 3 * 2)</code></td><td><code>6</code></td></tr>
+</table>
+</div>
+
+<p>Detalhes da tabela oficial: a potência perde para um sinal <strong>à direita</strong> dela, por isso <code>2 ** -1</code> funciona e dá <code>0.5</code>; e o <code>%</code> com textos (formatação) tem a mesma força do <code>%</code> de resto.</p>
+
+<h3>As armadilhas de precedência</h3>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Resultado</th><th>Como o Python leu</th></tr>
+<tr><td><code>-2 ** 2</code></td><td><code>-4</code></td><td><code>-(2 ** 2)</code>: a potência vem antes do sinal</td></tr>
+<tr><td><code>2 ** 3 ** 2</code></td><td><code>512</code></td><td><code>2 ** (3 ** 2)</code>: a potência vai da direita para a esquerda</td></tr>
+<tr><td><code>nota1 + nota2 / 2</code></td><td>com 8 e 6: <code>11.0</code></td><td><code>nota1 + (nota2 / 2)</code>: para a média, <code>(nota1 + nota2) / 2</code></td></tr>
+<tr><td><code>not True == False</code></td><td><code>True</code></td><td><code>not (True == False)</code>: o <code>not</code> é mais fraco que a comparação</td></tr>
+<tr><td><code>True or False and False</code></td><td><code>True</code></td><td><code>True or (False and False)</code>: <code>and</code> antes de <code>or</code></td></tr>
+<tr><td><code>"ab" in "abc" == True</code></td><td><code>False</code></td><td><code>in</code> e <code>==</code> na mesma força, em cadeia: <code>("ab" in "abc") and ("abc" == True)</code>. Escreva só <code>"ab" in "abc"</code> (que dá <code>True</code>)</td></tr>
+<tr><td><code>6 &amp; 3 == 2</code></td><td><code>True</code></td><td><code>(6 &amp; 3) == 2</code>: em Python o <code>&amp;</code> é mais forte que a comparação (no C e no JavaScript é o contrário)</td></tr>
+<tr><td><code>1 + 2 &lt;&lt; 1</code></td><td><code>6</code></td><td><code>(1 + 2) &lt;&lt; 1</code>: a soma vem antes do deslocamento</td></tr>
+</table>
+</div>
+
+<div class="tip">
+<strong>Na dúvida, parênteses</strong>
+<p>Ninguém precisa decorar as 18 linhas. Quando a ordem não for óbvia para quem lê, ponha parênteses: <code>(nota1 + nota2) / 2</code> e <code>(-2) ** 2</code> deixam a intenção clara e não custam nada.</p>
+</div>
+
+<hr>
+
+<h2>Experimente</h2>
+
+<div class="trypy" data-goal="out:Média: 7.0;;src:\(\s*nota1\s*\+\s*nota2\s*\)">
+<p class="try-task"><strong>Missão:</strong> a média de 8 e 6 deveria ser 7.0, mas o programa mostra <code>Média: 11.0</code>, porque a divisão foi feita antes da soma. Ponha os parênteses no lugar certo.</p>
+<pre class="script" data-file="main.py">nota1 = 8
+nota2 = 6
+media = nota1 + nota2 / 2
+print("Média:", media)
+</pre>
+<pre class="solucao" data-file="main.py">nota1 = 8
+nota2 = 6
+media = (nota1 + nota2) / 2
+print("Média:", media)
+</pre>
+</div>
+
+<div class="trypy" data-stdin="0.50\n4.75\n\n">
+<p class="try-task"><strong>Livre:</strong> o caixa da padaria com o operador morsa. O <code>while</code> lê um preço, guarda em <code>texto</code> e já compara com o vazio, tudo na mesma linha. A caixa digita sozinha <code>0.50</code>, <code>4.75</code> e uma linha vazia. Rode e depois mude o programa à vontade: por exemplo, conte quantos produtos passaram.</p>
+<pre class="script" data-file="main.py">total = 0
+while (texto := input("Preço (vazio para parar): ")) != "":
+    total += float(texto)
+print(f"Total: R$ {total:.2f}")
+</pre>
+</div>
+
+<p>No terminal da Ana, o mesmo programa (<code>caixa.py</code>), digitando <code>0.50</code>, <code>4.75</code> e depois só Enter:</p>
+
+<pre class="term">$ python3 caixa.py
+Preço (vazio para parar): 0.50
+Preço (vazio para parar): 4.75
+Preço (vazio para parar):
+Total: R$ 5.25
+</pre>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Aritméticos: <code>+ - * / // % **</code>. <code>/</code> sempre dá <code>float</code>; <code>//</code> arredonda para baixo; <code>**</code> é potência (não <code>^</code>).</li>
+  <li>Comparação: <code>== != &lt; &lt;= &gt; &gt;=</code>, que podem ser encadeadas (<code>1 &lt; x &lt; 5</code>).</li>
+  <li>Lógicos: <code>and</code>, <code>or</code>, <code>not</code>; <code>and</code>/<code>or</code> devolvem um dos valores (<code>nome or "anônimo"</code>).</li>
+  <li><code>is</code> pergunta se é o mesmo objeto (use com <code>None</code>); <code>in</code> pergunta se está dentro (no dicionário, só nas chaves).</li>
+  <li>Bit a bit: <code>&amp; | ^ ~ &lt;&lt; &gt;&gt;</code>; com conjuntos, <code>| &amp; - ^</code> são união, interseção e diferenças.</li>
+  <li>Atribuição: <code>=</code> e as formas <code>+=</code>, <code>-=</code>…; o morsa <code>:=</code> guarda e devolve um valor dentro de uma expressão.</li>
+  <li><code>@</code> é para matrizes em bibliotecas; nos tipos do Python dá <code>TypeError</code>.</li>
+  <li>Precedência: parênteses, <code>**</code>, sinal, <code>* / // %</code>, <code>+ -</code>, bits, comparações, <code>not</code>, <code>and</code>, <code>or</code>, <code>if</code>/<code>else</code>, <code>lambda</code>, <code>:=</code>. Na dúvida, parênteses.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
