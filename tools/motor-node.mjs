@@ -112,7 +112,7 @@ export async function abrirMotor(opc = {}) {
         else if (m.ev === "espera") {
           if (o.aoEspera) o.aoEspera();
           esperaDesde = Date.now();
-          if (o.digitar && digitar.length) { const l = digitar.shift(); eco.push(l + "\n"); if (o.aoEco) o.aoEco(l + "\n"); w.postMessage({ op: "entrada", texto: l + "\n" }); }
+          if (o.digitar && digitar.length) { const l = digitar.shift(); const e = (m.senha ? "" : l) + "\n"; eco.push(e); if (o.aoEco) o.aoEco(e); w.postMessage({ op: "entrada", texto: l + "\n" }); }
           else w.postMessage({ op: "eof" });
           esperaMs += Date.now() - esperaDesde;
         } else if (m.ev === "limite") terminar({ interrompido: true, motivo: "limite" });

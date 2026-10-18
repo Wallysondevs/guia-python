@@ -39,7 +39,7 @@ class _Pare(BaseException):
     """O editor parou o programa: ele pediu uma linha que o leitor ainda não digitou."""
 
 class _E:
-    modo = "texto"; parado = False
+    modo = "texto"; parado = False; senha = False
     linhas = []; pos = 0; eof = True
     pedir = None; avisar = None; eco = None; dorme = None
 
@@ -99,12 +99,12 @@ def _proxima_linha():
             l = _E.linhas[_E.pos - 1]
             if _E.eco is not None:
                 _descarregar()
-                _E.eco(l)
+                _E.eco("\n" if _E.senha else l)
             return l
         return None
     if _E.modo == "jspi":
         _descarregar()
-        r = _esperar_js(_E.pedir())
+        r = _esperar_js(_E.pedir(_E.senha))
         r = "" if r is None else str(r)
         return r or None  # "" = fim da entrada (Ctrl+D)
     # repetição: as linhas já digitadas; acabou -> para e pede a próxima
@@ -114,7 +114,7 @@ def _proxima_linha():
     if _E.eof:
         return None
     _descarregar()
-    _E.avisar()
+    _E.avisar(_E.senha)
     _parar()
     raise _Pare()
 
@@ -254,6 +254,10 @@ def preparar(ambiente, em_node=False):
     os.makedirs(HOME, exist_ok=True)
     import random, json, re, math, string, collections, functools, itertools, dataclasses, enum, datetime, pathlib, csv
     _arrumar_asyncio()
+    import pdb
+    _arrumar_pdb()
+    import getpass
+    getpass.getpass = _getpass
     _BASE["modulos"] = set(sys.modules)
     _BASE["builtins"] = dict(builtins.__dict__)
     _BASE["path"] = [p for p in sys.path if p not in ("", HOME)]
@@ -298,7 +302,7 @@ def _reiniciar():
     try: sys.set_int_max_str_digits(4300)
     except Exception: pass
     sys.excepthook = sys.__excepthook__; sys.displayhook = sys.__displayhook__
-    sys.breakpointhook = sys.__breakpointhook__; sys.unraisablehook = sys.__unraisablehook__
+    sys.breakpointhook = _breakpointhook; sys.unraisablehook = sys.__unraisablehook__
     sys.stdout = sys.__stdout__; sys.stderr = sys.__stderr__
     sys.executable = _BASE["executable"]
     sys.getrecursionlimit = getrecursionlimit; sys.setrecursionlimit = setrecursionlimit
@@ -331,6 +335,43 @@ def setrecursionlimit(limit, /):
     _set_rec(limit + _DESLOCAMENTO[0])
 getrecursionlimit.__doc__ = _get_rec.__doc__; setrecursionlimit.__doc__ = _set_rec.__doc__
 sys.getrecursionlimit = getrecursionlimit; sys.setrecursionlimit = setrecursionlimit
+
+# ---------- getpass: o navegador não tem /dev/tty ----------
+def _getpass(prompt="Password: ", stream=None, *, echo_char=None):
+    """Como o getpass do Linux: o prompt vai para o terminal (aqui, stderr) e o que se digita não aparece."""
+    _descarregar()
+    f = stream or sys.stderr
+    f.write(prompt); f.flush()
+    _E.senha = True
+    try:
+        l = sys.stdin.readline()
+    finally:
+        _E.senha = False
+    if not l:
+        raise EOFError
+    return l[:-1] if l.endswith("\n") else l
+
+# ---------- breakpoint()/pdb: o depurador não entra no código do editor ----------
+_PULAR = ["_guia_editor", "asyncio", "asyncio.*", "pyodide", "pyodide.*", "_pyodide", "_pyodide.*"]
+def _breakpointhook(*args, **kws):
+    import os as _os
+    h = _os.environ.get("PYTHONBREAKPOINT")
+    if h is not None and h.strip() == "0":
+        return None
+    import pdb
+    p = pdb.Pdb(skip=_PULAR)
+    p.set_trace(sys._getframe(1), *args, **kws) if args or kws else p.set_trace(sys._getframe(1))
+
+def _arrumar_pdb():
+    """pdb.set_trace()/pdb.Pdb() também pulam o código do editor."""
+    import pdb
+    if getattr(pdb.Pdb.__init__, "_guia", False): return
+    ini = pdb.Pdb.__init__
+    def __init__(self, completekey="tab", stdin=None, stdout=None, skip=None, *a, **k):
+        skip = list(skip or []) + _PULAR
+        ini(self, completekey, stdin, stdout, skip, *a, **k)
+    __init__._guia = True
+    pdb.Pdb.__init__ = __init__
 
 def _sem_quadros_do_editor(tb):
     while tb is not None and tb.tb_frame.f_code.co_filename == _ESTE:
@@ -512,9 +553,9 @@ export async function servirMotor(opts) {
   const temJspi = opts.jspi !== false && typeof WebAssembly.Suspending === "function" && typeof executarPy.callPromising === "function";
   let tzdata = false;
 
-  function pedirLinha() {
+  function pedirLinha(senha) {
     despejar();
-    enviar({ ev: "espera", id: atual.id });
+    enviar({ ev: "espera", id: atual.id, senha: !!senha });
     if (filaEntrada.length) { const v = filaEntrada.shift(); return Promise.resolve(v === null ? "" : v); }
     return new Promise((ok) => { esperando = (v) => ok(v === null ? "" : v); });
   }
@@ -558,7 +599,7 @@ export async function servirMotor(opts) {
     } else {
       // "por repetição": roda até pedir uma linha nova; o leitor digita; roda de novo do
       // começo com as linhas já digitadas, mostrando só o que ainda não apareceu.
-      const linhas = []; let eof = false, mostrado = 0;
+      const linhas = []; let eof = false, mostrado = 0, senha = false;
       for (;;) {
         let pos = 0, parou = false;
         atual = {
@@ -574,9 +615,9 @@ export async function servirMotor(opts) {
         };
         dec.out = new TextDecoder(); dec.err = new TextDecoder();
         const pedido = Object.assign({}, req, { modo: "repeticao", stdin: null, linhas: linhas.slice(), eof: eof, semente: semente });
-        res = await umaVez(pedido, { avisar: () => { parou = true; } });
+        res = await umaVez(pedido, { avisar: (s) => { parou = true; senha = !!s; } });
         if (!res.precisa) break;
-        const l = await pedirLinha();
+        const l = await pedirLinha(senha);
         if (!l) eof = true; else linhas.push(l);
         repeticoes++;
       }

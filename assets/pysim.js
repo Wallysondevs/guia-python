@@ -151,6 +151,33 @@
   function linhaComando(arquivo, args) { return "python3 " + citarArg(arquivo) + (args && args.length ? " " + args.map(citarArg).join(" ") : ""); }
   PySim.linhaComando = linhaComando;
 
+  // Texto com cores ANSI ("\033[31m", o pdb e o traceback colorido) → HTML
+  var CORES_ANSI = { 30: "c-k", 31: "c-r", 32: "c-g", 33: "c-y", 34: "c-b", 35: "c-m", 36: "c-c", 37: "c-w", 90: "c-k", 91: "c-r", 92: "c-g", 93: "c-y", 94: "c-b", 95: "c-m", 96: "c-c", 97: "c-w" };
+  function ansiParaHtml(s, estado) {
+    estado = estado || { negrito: false, cor: null };
+    var r = "", re = /\x1b\[([0-9;]*)m/g, ult = 0, m;
+    function trecho(t) {
+      if (!t) return;
+      var cls = (estado.negrito ? "c-n " : "") + (estado.cor || "");
+      r += cls.trim() ? '<span class="' + cls.trim() + '">' + escHtml(t) + "</span>" : escHtml(t);
+    }
+    while ((m = re.exec(s))) {
+      trecho(s.slice(ult, m.index));
+      ult = re.lastIndex;
+      (m[1] === "" ? ["0"] : m[1].split(";")).forEach(function (p) {
+        var n = +p;
+        if (n === 0) { estado.negrito = false; estado.cor = null; }
+        else if (n === 1) estado.negrito = true;
+        else if (n === 22) estado.negrito = false;
+        else if (n === 39) estado.cor = null;
+        else if (CORES_ANSI[n]) estado.cor = CORES_ANSI[n];
+      });
+    }
+    trecho(s.slice(ult).replace(/\x1b\[[0-9;]*$/, "").replace(/\x1b\[[0-9;?]*[A-Za-z]/g, ""));
+    return r;
+  }
+  PySim.ansiParaHtml = ansiParaHtml;
+
   // conteúdo de uma aba: o <pre> perde o último Enter; arquivos de texto terminam com Enter
   function comEnter(codigo) { return codigo !== "" && codigo.slice(-1) !== "\n" ? codigo + "\n" : codigo; }
   PySim.comEnter = comEnter;
@@ -375,7 +402,7 @@
     function rolar() { tela.scrollTop = tela.scrollHeight; }
 
     // Texto chega em pedaços; segmentos {t: "out"|"err"|"eco", s}
-    function Terminal() { this.linha = null; this.segs = []; this.n = 0; this.omitidas = 0; this.cauda = []; }
+    function Terminal() { this.linha = null; this.segs = []; this.n = 0; this.omitidas = 0; this.cauda = []; this.ansi = { negrito: false, cor: null }; }
     Terminal.prototype.escrever = function (t, s) {
       var partes = s.split("\n");
       for (var i = 0; i < partes.length; i++) {
@@ -389,9 +416,11 @@
       this.desenhar();
     };
     Terminal.prototype.html = function (segs) {
+      var est = { negrito: this.ansi.negrito, cor: this.ansi.cor };
       return segs.map(function (x) {
         if (x.t === "eco") return '<span class="sim-digitado">' + escHtml(x.s) + "</span>";
-        return x.t === "err" ? '<span class="sim-err">' + escHtml(x.s) + "</span>" : escHtml(x.s);
+        var h = x.s.indexOf("\x1b") >= 0 ? ansiParaHtml(x.s, est) : escHtml(x.s);
+        return x.t === "err" ? '<span class="sim-err">' + h + "</span>" : h;
       }).join("");
     };
     Terminal.prototype.desenhar = function () {
@@ -404,6 +433,7 @@
     Terminal.prototype.fechar = function () {
       if (this.n < MAX_LINHAS) { this.desenhar(); if (this.linha && !this.linha.innerHTML) this.linha.innerHTML = "<br>"; }
       else { this.omitidas++; this.cauda.push(this.segs); if (this.cauda.length > 40) this.cauda.shift(); }
+      var self = this; this.segs.forEach(function (x) { if (x.t !== "eco" && x.s.indexOf("\x1b") >= 0) ansiParaHtml(x.s, self.ansi); });
       this.n++; this.linha = null; this.segs = [];
     };
     Terminal.prototype.terminar = function () {
@@ -458,9 +488,9 @@
       fs.forEach(function (f) { try { f(r); } catch (e) {} });
     }
 
-    function pedirEntrada(s) {
+    function pedirEntrada(s, senha) {
       if (s.campo || !worker) return;
-      var campo = el("input", { "class": "ts-campo", type: "text", spellcheck: "false", autocomplete: "off", autocapitalize: "off", "aria-label": "Digite a resposta para o programa e tecle Enter (Ctrl+D encerra a entrada)" });
+      var campo = el("input", { "class": "ts-campo", type: senha ? "password" : "text", spellcheck: "false", autocomplete: "off", autocapitalize: "off", "aria-label": "Digite a resposta para o programa e tecle Enter (Ctrl+D encerra a entrada)" });
       s.term.linhaAtual().appendChild(campo);
       s.campo = campo; s.esperando = true;
       campo.focus({ preventScroll: true });
@@ -471,7 +501,7 @@
           e.preventDefault();
           var v = campo.value;
           sair();
-          s.term.escrever("eco", v + "\n");
+          s.term.escrever("eco", (senha ? "" : v) + "\n");
           if (worker) worker.postMessage({ op: "entrada", texto: v + "\n" });
           rolar();
         } else if (e.ctrlKey && (e.key === "d" || e.key === "D")) {
@@ -510,7 +540,7 @@
             m.partes.forEach(function (p) { s.texto += p.s; var u = s.fila[s.fila.length - 1]; if (u && u.t === p.t) u.s += p.s; else s.fila.push({ t: p.t, s: p.s }); });
             if (!s.desenho) s.desenho = setTimeout(function () { desenharFila(s); }, 30);
           } else if (m.ev === "eco") { desenharFila(s); s.term.escrever("eco", m.texto); rolar(); }
-          else if (m.ev === "espera") { desenharFila(s); s.gasto += Date.now() - s.desde; s.desde = Date.now(); pedirEntrada(s); }
+          else if (m.ev === "espera") { desenharFila(s); s.gasto += Date.now() - s.desde; s.desde = Date.now(); pedirEntrada(s, m.senha); }
           else if (m.ev === "dorme") { s.folga = Math.min(FOLGA_SONO, s.folga + m.ms); }
           else if (m.ev === "limite") { s.motivo = "(o programa escreveu demais: mais de 2 milhões de caracteres; o editor o parou)"; encerrarWorker(); }
           else if (m.ev === "fim") finalizar(s, m.res, null);
