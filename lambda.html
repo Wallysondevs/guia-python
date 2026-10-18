@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python lambda — a função de uma linha só | Guia Python</title>
+<meta name="description" content="lambda em Python para quem está começando: a função pequena e sem nome, a comparação com def, o uso principal em sorted(key=…), max e list.sort, ordenar por preço, por nota e sem ligar para maiúsculas, quando não usar lambda, e os erros reais: return dentro da lambda, key=len(), sorted sem key=.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">lambda</span></h1>
+
+<p class="intro">Às vezes você precisa de uma função tão pequena que escrever um <code>def</code> inteiro, com nome, dois-pontos, corpo e <code>return</code>, parece exagero. É o caso mais comum de todos: dizer ao <code>sorted</code> <strong>por qual critério</strong> ordenar uma lista ("pelo preço", "pela nota"). Para isso o Python tem a <code>lambda</code>: uma função escrita numa linha só, no lugar onde ela é usada, e sem nome.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A escrever uma <code>lambda</code> e a lê-la como um <code>def</code> encurtado.</li>
+  <li>Por que a <code>lambda</code> só aceita uma <strong>expressão</strong> (e nada de <code>return</code>, <code>if</code> de bloco ou atribuição).</li>
+  <li>O uso principal: <code>sorted(lista, key=…)</code>, para ordenar por preço, por nota, sem ligar para maiúsculas.</li>
+  <li>O mesmo <code>key=</code> no <code>max</code>, no <code>min</code> e no método <code>.sort()</code>.</li>
+  <li>Quando <strong>não</strong> usar <code>lambda</code>, e o que usar no lugar.</li>
+  <li>Os erros reais: <code>return</code> dentro da <code>lambda</code>, <code>key=len()</code>, o <code>key=</code> esquecido.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: o bilhete rápido</h2>
+<p>A receita do bolo de milho fica no caderno, com título, para ser usada muitas vezes: é o <code>def</code>. Mas quando a Ana pede ao sobrinho "arruma as caixas <strong>da mais leve para a mais pesada</strong>", ela não abre o caderno para escrever uma receita chamada "como comparar caixas". Ela dá a instrução na hora, de boca, e pronto. A <code>lambda</code> é esse bilhete rápido: uma instrução pequena, escrita no lugar onde é usada, que não precisa de nome porque não vai ser usada em outro lugar.</p>
+
+<hr>
+
+<h2>1. A primeira <code>lambda</code></h2>
+<p>As duas funções abaixo fazem a mesma coisa:</p>
+
+<pre class="file" data-file="dobro.py">def dobro(n):
+    return n * 2
+
+
+dobro_lambda = lambda n: n * 2
+
+print(dobro(5))
+print(dobro_lambda(5))
+</pre>
+
+<pre class="term">$ python3 dobro.py
+10
+10
+</pre>
+
+<dl class="anatomy">
+  <dt>lambda</dt><dd>A palavra-chave que cria a função. O nome vem da letra grega λ (lambda), usada por matemáticos para escrever funções.</dd>
+  <dt>n</dt><dd>O parâmetro, como no <code>def dobro(n)</code>. Sem parênteses em volta.</dd>
+  <dt>:</dt><dd>Separa os parâmetros do resultado.</dd>
+  <dt>n * 2</dt><dd>O <strong>resultado</strong>. É devolvido automaticamente: não se escreve <code>return</code>.</dd>
+</dl>
+
+<p>Leia <code>lambda n: n * 2</code> como "uma função que recebe <code>n</code> e devolve <code>n * 2</code>". Repare que a ordem é a mesma do <code>def</code>, só que tudo numa linha:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th><code>def</code></th><th><code>lambda</code></th></tr>
+<tr><td>Escrita</td><td><code>def dobro(n):</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;return n * 2</code></td><td><code>lambda n: n * 2</code></td></tr>
+<tr><td>Nome</td><td>Tem (<code>dobro</code>)</td><td>Não tem</td></tr>
+<tr><td>Corpo</td><td>Quantas linhas quiser</td><td>Uma <strong>expressão</strong> só</td></tr>
+<tr><td><code>return</code></td><td>Escrito</td><td>Implícito: o valor da expressão é devolvido</td></tr>
+</table>
+</div>
+
+<h3>Ela é uma função de verdade, só que sem nome</h3>
+<p>No modo interativo (aula <a href="repl.html">O Modo Interativo</a>):</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> lambda n: n * 2
+&lt;function &lt;lambda&gt; at 0x7f3a1ef0b530&gt;
+>>> (lambda n: n * 2)(5)
+10
+>>> dobro = lambda n: n * 2
+>>> dobro
+&lt;function &lt;lambda&gt; at 0x7f3a1ef0b530&gt;
+>>> dobro(7)
+14
+>>> exit()
+</pre>
+
+<ul>
+  <li>A <code>lambda</code> sozinha é uma função, mostrada como <code>&lt;function &lt;lambda&gt; at 0x…&gt;</code> (o endereço muda a cada execução, como na aula <a href="funcoes.html">Funções</a>).</li>
+  <li>Dá para chamá-la na hora, com parênteses em volta e o argumento depois: <code>(lambda n: n * 2)(5)</code>. Ninguém escreve assim de verdade; é só para ver que funciona.</li>
+  <li>Mesmo guardada na variável <code>dobro</code>, ela continua se chamando <code>&lt;lambda&gt;</code>: o nome é da variável, não da função. É por isso que os tracebacks dizem <code>in &lt;lambda&gt;</code>.</li>
+</ul>
+
+<h3>Zero, um ou vários parâmetros</h3>
+
+<pre class="file" data-file="varios.py">somar = lambda a, b: a + b
+saudacao = lambda: "Bom dia!"
+situacao = lambda nota: "Aprovada" if nota &gt;= 7 else "Recuperação"
+
+print(somar(2, 3))
+print(saudacao())
+print(situacao(8))
+print(situacao(5.5))
+</pre>
+
+<pre class="term">$ python3 varios.py
+5
+Bom dia!
+Aprovada
+Recuperação
+</pre>
+
+<p>Vários parâmetros vão separados por vírgula (<code>lambda a, b:</code>); sem parâmetros, nada antes dos dois-pontos (<code>lambda:</code>). A terceira usa o <code>if</code> em uma linha (aula <a href="if-ternario.html">if em uma Linha</a>), que é uma expressão e por isso cabe na <code>lambda</code>. (Estes exemplos guardam a <code>lambda</code> numa variável só para você ver que funciona; a seção 4 explica por que, nos seus programas, isso deve ser um <code>def</code>.)</p>
+
+<hr>
+
+<h2>2. O uso principal: <code>sorted(key=…)</code></h2>
+<p>O <code>sorted</code> devolve uma lista nova, ordenada (aula <a href="listas-ordenar.html">Ordenando Listas</a>). Com o parâmetro <code>key</code> ("chave"), você diz <strong>o que comparar</strong> em cada item. O <code>key</code> recebe uma <strong>função</strong>: o <code>sorted</code> a chama uma vez para cada item e ordena pelos resultados.</p>
+
+<pre class="file" data-file="sorted_basico.py">nomes = ["Bruno", "Ana", "Carla", "Davi"]
+print(sorted(nomes))
+print(sorted(nomes, key=len))
+print(sorted(nomes, key=len, reverse=True))
+print(nomes)
+</pre>
+
+<pre class="term">$ python3 sorted_basico.py
+['Ana', 'Bruno', 'Carla', 'Davi']
+['Ana', 'Davi', 'Bruno', 'Carla']
+['Bruno', 'Carla', 'Davi', 'Ana']
+['Bruno', 'Ana', 'Carla', 'Davi']
+</pre>
+
+<ul>
+  <li>Sem <code>key</code>: ordem alfabética.</li>
+  <li><code>key=len</code>: o <code>sorted</code> calcula <code>len("Bruno")</code> = 5, <code>len("Ana")</code> = 3, <code>len("Carla")</code> = 5, <code>len("Davi")</code> = 4, e ordena por esses números: 3, 4, 5, 5. Bruno e Carla empataram e ficaram na ordem em que já estavam. Repare: <code>key=len</code>, <strong>sem parênteses</strong>. Você entrega a função para o <code>sorted</code> chamar; não a chama você mesmo.</li>
+  <li><code>reverse=True</code>: do maior para o menor.</li>
+  <li>A lista original não mudou: o <code>sorted</code> devolve uma nova.</li>
+</ul>
+
+<p>Aqui o <code>len</code> já existia. Quando o critério não existe pronto, é a hora da <code>lambda</code>.</p>
+
+<h3>Ordenando os produtos pelo preço</h3>
+<p>Cada produto é uma tupla (aula <a href="tuplas.html">Tuplas</a>) com o nome na posição 0 e o preço na posição 1. Para ordenar pelo preço, a chave de cada produto é <code>produto[1]</code>:</p>
+
+<pre class="file" data-file="produtos.py">produtos = [("Bolo de milho", 18.0), ("Pão francês", 0.8), ("Café", 4.0), ("Sonho", 6.5)]
+
+por_preco = sorted(produtos, key=lambda produto: produto[1])
+for nome, preco in por_preco:
+    print(f"{nome}: R$ {preco:.2f}")
+</pre>
+
+<pre class="term">$ python3 produtos.py
+Pão francês: R$ 0.80
+Café: R$ 4.00
+Sonho: R$ 6.50
+Bolo de milho: R$ 18.00
+</pre>
+
+<dl class="anatomy">
+  <dt>key=</dt><dd>O argumento nomeado (aula <a href="argumentos-padrao.html">Valores Padrão e Argumentos Nomeados</a>) que recebe a função-critério.</dd>
+  <dt>lambda produto: produto[1]</dt><dd>"Dado um produto, devolva o item 1 dele (o preço)". O <code>sorted</code> chama essa função para cada tupla: para <code>("Café", 4.0)</code> ela devolve <code>4.0</code>.</dd>
+</dl>
+
+<p>Sem o <code>key</code>, o <code>sorted</code> compararia as tuplas inteiras, começando pelo primeiro item, o nome, e a lista sairia em ordem alfabética. A <code>lambda</code> diz: "compare só os preços".</p>
+
+<div class="trypy" data-goal="src:\blambda\b;;outre:Pão francês: R\$ 0\.80\nCafé: R\$ 4\.00\nSonho: R\$ 6\.50\nBolo de milho: R\$ 18\.00;;semerro">
+<p class="try-task"><strong>Missão:</strong> do jeito que está, o cardápio sai em ordem alfabética. Acrescente ao <code>sorted</code> um <code>key</code> com uma <code>lambda</code> para que ele saia do <strong>mais barato para o mais caro</strong>.</p>
+<pre class="script" data-file="main.py">produtos = [("Bolo de milho", 18.0), ("Pão francês", 0.8), ("Café", 4.0), ("Sonho", 6.5)]
+
+por_preco = sorted(produtos)
+for nome, preco in por_preco:
+    print(f"{nome}: R$ {preco:.2f}")
+</pre>
+<pre class="solucao" data-file="main.py">produtos = [("Bolo de milho", 18.0), ("Pão francês", 0.8), ("Café", 4.0), ("Sonho", 6.5)]
+
+por_preco = sorted(produtos, key=lambda produto: produto[1])
+for nome, preco in por_preco:
+    print(f"{nome}: R$ {preco:.2f}")
+</pre>
+</div>
+
+<h3>Dicionários, e o <code>max</code> com <code>key</code></h3>
+<p>Com uma lista de dicionários (aula <a href="dicionarios.html">Dicionários</a>), a chave é o valor de um campo. E o <code>key</code> funciona igual no <code>max</code> e no <code>min</code>:</p>
+
+<pre class="file" data-file="dicionarios.py">alunos = [
+    {"nome": "Ana", "nota": 8.5},
+    {"nome": "Bruno", "nota": 6.0},
+    {"nome": "Carla", "nota": 9.5},
+]
+
+ranking = sorted(alunos, key=lambda aluno: aluno["nota"], reverse=True)
+for aluno in ranking:
+    print(aluno["nome"], aluno["nota"])
+
+melhor = max(alunos, key=lambda aluno: aluno["nota"])
+print("Maior nota:", melhor["nome"])
+</pre>
+
+<pre class="term">$ python3 dicionarios.py
+Carla 9.5
+Ana 8.5
+Bruno 6.0
+Maior nota: Carla
+</pre>
+
+<p>O <code>max</code> com <code>key</code> devolve o <strong>item inteiro</strong> (o dicionário da Carla), e não só a nota. Por isso dá para pegar o nome dele.</p>
+
+<h3>Sem ligar para maiúsculas</h3>
+<p>Na ordem do Python, as letras maiúsculas (sem acento) vêm todas antes das minúsculas. Uma lista com nomes digitados de qualquer jeito sai estranha:</p>
+
+<pre class="file" data-file="maiusculas.py">nomes = ["bruno", "Ana", "carla", "Davi"]
+print(sorted(nomes))
+print(sorted(nomes, key=lambda nome: nome.lower()))
+print(sorted(nomes, key=str.lower))
+</pre>
+
+<pre class="term">$ python3 maiusculas.py
+['Ana', 'Davi', 'bruno', 'carla']
+['Ana', 'bruno', 'carla', 'Davi']
+['Ana', 'bruno', 'carla', 'Davi']
+</pre>
+
+<p>A chave <code>nome.lower()</code> (aula <a href="strings-metodos.html">Métodos de Texto</a>) compara todos em minúsculas, mas a lista resultante mantém os nomes como eram. A última linha faz o mesmo sem <code>lambda</code>: <code>str.lower</code> já é uma função que recebe um texto e o devolve em minúsculas.</p>
+
+<div class="note">
+<strong>E os acentos?</strong>
+<p>O <code>lower</code> resolve as maiúsculas, mas não os acentos: para o Python, <code>"É"</code> vem depois do <code>"Z"</code>.</p>
+<pre class="file" data-file="acentos.py">nomes = ["Érica", "Bruno", "ana", "Zeca"]
+print(sorted(nomes))
+print(sorted(nomes, key=str.lower))
+</pre>
+<pre class="term">$ python3 acentos.py
+['Bruno', 'Zeca', 'ana', 'Érica']
+['ana', 'Bruno', 'Zeca', 'Érica']
+</pre>
+<p>Ordenar como no dicionário, com os acentos no lugar certo, pede ferramentas que ficam para mais adiante. Por enquanto, saiba que isso acontece.</p>
+</div>
+
+<h3>O método <code>.sort()</code></h3>
+<p>O método <code>.sort()</code> das listas aceita o mesmo <code>key</code>. A diferença é que ele ordena <strong>a própria lista</strong>, em vez de devolver uma nova:</p>
+
+<pre class="file" data-file="sort_metodo.py">produtos = [("Bolo de milho", 18.0), ("Pão francês", 0.8), ("Café", 4.0)]
+produtos.sort(key=lambda produto: produto[1])
+print(produtos)
+</pre>
+
+<pre class="term">$ python3 sort_metodo.py
+[('Pão francês', 0.8), ('Café', 4.0), ('Bolo de milho', 18.0)]
+</pre>
+
+<p>A <code>lambda</code> também aparece no <code>map</code> e no <code>filter</code>, que têm aula própria: <a href="map-filter.html">map() e filter()</a>.</p>
+
+<hr>
+
+<h2>3. O que cabe numa <code>lambda</code></h2>
+<p>O corpo da <code>lambda</code> é uma <strong>expressão</strong>: algo que produz um valor, como <code>n * 2</code>, <code>produto[1]</code>, <code>nome.lower()</code>, <code>"A" if x else "B"</code>. Não cabem <strong>comandos</strong>: <code>return</code>, atribuição (<code>x = …</code>), <code>if</code> com bloco, <code>for</code>, <code>while</code>. Se você precisa de um desses, precisa de um <code>def</code>. Os erros estão em <a href="#errado">Quando dá errado</a>.</p>
+
+<hr>
+
+<h2>4. Quando não usar <code>lambda</code></h2>
+
+<h3>Para dar um nome, use <code>def</code></h3>
+<p>Escrever <code>dobro = lambda n: n * 2</code> funciona, mas o guia de estilo do Python (PEP 8, aula <a href="estilo-pep8.html">Estilo de Código</a>) pede um <code>def</code> nesse caso. Se a função vai ter nome, o <code>def</code> é mais claro, aceita várias linhas e aparece com o nome certo nos tracebacks (<code>in dobro</code>, e não <code>in &lt;lambda&gt;</code>). A <code>lambda</code> é para quando a função é usada <strong>uma vez, ali mesmo</strong>, como no <code>key=</code>.</p>
+
+<h3>Para regra complicada, use <code>def</code></h3>
+<p>A padaria quer ordenar os produtos pelo preço, mas somando R$ 1 de embalagem aos que custam menos de R$ 5. Isso numa <code>lambda</code> ficaria difícil de ler. Com <code>def</code>, cada passo tem a sua linha, e a função tem um nome que explica o critério:</p>
+
+<pre class="file" data-file="grande.py">def preco_com_taxa(produto):
+    nome, preco = produto
+    if preco &lt; 5:
+        return preco + 1
+    return preco
+
+
+produtos = [("Bolo de milho", 18.0), ("Pão francês", 0.8), ("Café", 4.0)]
+print(sorted(produtos, key=preco_com_taxa))
+</pre>
+
+<pre class="term">$ python3 grande.py
+[('Pão francês', 0.8), ('Café', 4.0), ('Bolo de milho', 18.0)]
+</pre>
+
+<p>Repare: <code>key=preco_com_taxa</code>, sem parênteses, como com o <code>len</code>. O <code>key</code> aceita <strong>qualquer</strong> função, venha ela de um <code>def</code>, de uma <code>lambda</code> ou do próprio Python.</p>
+
+<hr>
+
+<h2>Formas diferentes de dar o critério ao <code>sorted</code></h2>
+
+<pre class="file" data-file="formas.py">def tamanho_do_nome(nome):
+    return len(nome)
+
+
+nomes = ["Bruno", "Ana", "Carla"]
+print(sorted(nomes, key=tamanho_do_nome))
+print(sorted(nomes, key=lambda nome: len(nome)))
+print(sorted(nomes, key=len))
+</pre>
+
+<pre class="term">$ python3 formas.py
+['Ana', 'Bruno', 'Carla']
+['Ana', 'Bruno', 'Carla']
+['Ana', 'Bruno', 'Carla']
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td>Uma função que já existe: <code>key=len</code>, <code>key=str.lower</code></td><td>Sempre que houver uma pronta que faça exatamente o que você quer. É a mais curta. (<code>lambda nome: len(nome)</code> só embrulha o <code>len</code>: não precisa)</td></tr>
+<tr><td>Uma <code>lambda</code>: <code>key=lambda p: p[1]</code></td><td>Critério curto, usado uma vez só: pegar um item da tupla, um campo do dicionário</td></tr>
+<tr><td>Um <code>def</code>: <code>key=preco_com_taxa</code></td><td>Critério com mais de um passo, com <code>if</code>, ou usado em vários lugares</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong><code>return</code> dentro da <code>lambda</code></strong>
+<pre class="file" data-file="lambda_return.py">dobro = lambda n: return n * 2
+</pre>
+<pre class="term">$ python3 lambda_return.py
+  File "/home/ana/lambda_return.py", line 1
+    dobro = lambda n: return n * 2
+                      ^^^^^^
+SyntaxError: invalid syntax
+</pre>
+<p>"Sintaxe inválida", com o <code>^^^^^^</code> embaixo do <code>return</code>. A <code>lambda</code> já devolve o valor sozinha; o <code>return</code> é um comando, e comandos não cabem nela. <strong>Como consertar:</strong> <code>lambda n: n * 2</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Atribuição dentro da <code>lambda</code></strong>
+<pre class="file" data-file="lambda_atrib.py">guardar = lambda n: total = n
+</pre>
+<pre class="term">$ python3 lambda_atrib.py
+  File "/home/ana/lambda_atrib.py", line 1
+    guardar = lambda n: total = n
+              ^^^^^^^^^^^^^^^
+SyntaxError: cannot assign to lambda
+</pre>
+<p>"Não dá para atribuir a uma <code>lambda</code>". O Python leu a linha como <code>guardar = (lambda n: total) = n</code>, uma atribuição dupla em que o segundo alvo seria a própria <code>lambda</code>. A mensagem confunde, mas a causa é simples: atribuição não cabe numa <code>lambda</code>. <strong>Como consertar:</strong> use um <code>def</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>key=len()</code>, com parênteses</strong>
+<pre class="file" data-file="key_parenteses.py">nomes = ["Bruno", "Ana", "Carla"]
+print(sorted(nomes, key=len()))
+</pre>
+<pre class="term">$ python3 key_parenteses.py
+Traceback (most recent call last):
+  File "/home/ana/key_parenteses.py", line 2, in &lt;module&gt;
+    print(sorted(nomes, key=len()))
+                            ~~~^^
+TypeError: len() takes exactly one argument (0 given)
+</pre>
+<p>"<code>len()</code> recebe exatamente um argumento (foram dados 0)". Com parênteses, o Python <strong>chamou</strong> o <code>len</code> ali mesmo, sem nada dentro, antes de chegar ao <code>sorted</code>. O <code>key</code> quer a função, não o resultado dela. <strong>Como consertar:</strong> <code>key=len</code>, sem parênteses.</p>
+</div>
+
+<div class="cenario">
+<strong>Esquecer o <code>key=</code></strong>
+<pre class="file" data-file="sem_key.py">nomes = ["Bruno", "Ana", "Carla"]
+print(sorted(nomes, len))
+</pre>
+<pre class="term">$ python3 sem_key.py
+Traceback (most recent call last):
+  File "/home/ana/sem_key.py", line 2, in &lt;module&gt;
+    print(sorted(nomes, len))
+          ~~~~~~^^^^^^^^^^^^
+TypeError: sorted expected 1 argument, got 2
+</pre>
+<p>"<code>sorted</code> esperava 1 argumento, recebeu 2". O <code>key</code> do <code>sorted</code> só pode ser passado <strong>com nome</strong> (é um parâmetro depois de <code>*</code>, como você viu na aula <a href="argumentos-padrao.html">Valores Padrão e Argumentos Nomeados</a>). <strong>Como consertar:</strong> <code>sorted(nomes, key=len)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>A chave pede uma posição que não existe</strong>
+<pre class="file" data-file="key_errada.py">produtos = [("Bolo de milho", 18.0), ("Pão francês", 0.8), ("Café", 4.0)]
+por_preco = sorted(produtos, key=lambda produto: produto[2])
+</pre>
+<pre class="term">$ python3 key_errada.py
+Traceback (most recent call last):
+  File "/home/ana/key_errada.py", line 2, in &lt;module&gt;
+    por_preco = sorted(produtos, key=lambda produto: produto[2])
+  File "/home/ana/key_errada.py", line 2, in &lt;lambda&gt;
+    por_preco = sorted(produtos, key=lambda produto: produto[2])
+                                                     ~~~~~~~^^^
+IndexError: tuple index out of range
+</pre>
+<p>Dois trechos <code>File</code> na <strong>mesma</strong> linha 2: o programa principal chamou o <code>sorted</code>, e o <code>sorted</code> chamou a <code>lambda</code> (<code>in &lt;lambda&gt;</code>, já que ela não tem nome). Dentro dela, <code>produto[2]</code> falhou: "índice da tupla fora do intervalo". Cada tupla só tem as posições 0 e 1, e a contagem começa no zero (aula <a href="listas-acessar.html">Acessando Itens</a>). <strong>Como consertar:</strong> o preço é <code>produto[1]</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Chamar a <code>lambda</code> com argumentos de menos</strong>
+<pre class="file" data-file="lambda_args.py">somar = lambda a, b: a + b
+print(somar(2))
+</pre>
+<pre class="term">$ python3 lambda_args.py
+Traceback (most recent call last):
+  File "/home/ana/lambda_args.py", line 2, in &lt;module&gt;
+    print(somar(2))
+          ~~~~~^^^
+TypeError: &lt;lambda&gt;() missing 1 required positional argument: 'b'
+</pre>
+<p>A mesma mensagem da aula <a href="parametros.html">Parâmetros e Argumentos</a>, só que a função aparece como <code>&lt;lambda&gt;()</code>: o nome <code>somar</code> é da variável, e a função não tem nome. Num programa grande, com várias <code>lambda</code>, fica difícil saber de qual delas o erro fala; é mais um motivo para usar <code>def</code> quando a função tem nome.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>lambda x: expressão</code></td><td>Função sem nome que recebe <code>x</code> e devolve a expressão</td></tr>
+<tr><td><code>lambda a, b: a + b</code></td><td>Dois parâmetros</td></tr>
+<tr><td><code>lambda: "oi"</code></td><td>Nenhum parâmetro</td></tr>
+<tr><td><code>sorted(lista, key=lambda item: item[1])</code></td><td>Lista nova, ordenada pelo item 1 de cada elemento</td></tr>
+<tr><td><code>sorted(lista, key=…, reverse=True)</code></td><td>Do maior para o menor</td></tr>
+<tr><td><code>max(lista, key=…)</code> / <code>min(lista, key=…)</code></td><td>O elemento inteiro com a maior / menor chave</td></tr>
+<tr><td><code>lista.sort(key=…)</code></td><td>Ordena a própria lista</td></tr>
+<tr><td><code>key=len</code>, <code>key=str.lower</code></td><td>Função pronta: sem <code>lambda</code> e sem parênteses</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>SyntaxError: invalid syntax</code> no <code>return</code></td><td><code>return</code> dentro da <code>lambda</code>: tire-o</td></tr>
+<tr><td><code>SyntaxError: cannot assign to lambda</code></td><td>Atribuição dentro da <code>lambda</code>: use <code>def</code></td></tr>
+<tr><td><code>len() takes exactly one argument (0 given)</code></td><td><code>key=len()</code>: tire os parênteses</td></tr>
+<tr><td><code>sorted expected 1 argument, got 2</code></td><td>Faltou o <code>key=</code></td></tr>
+<tr><td>Erro com <code>in &lt;lambda&gt;</code> no traceback</td><td>O problema está dentro da <code>lambda</code> do <code>key</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A palavra-chave</h3>
+<p>Complete para criar uma função que devolve o triplo:</p>
+<div class="ex-code">triplo = <input data-answer="lambda" aria-label="palavra-chave"> n: n * 3</div>
+</div>
+
+<div class="exercise">
+<h3>2. Pela idade</h3>
+<p>Cada pessoa é uma tupla <code>(nome, idade)</code>. Complete a posição para ordenar pela idade:</p>
+<div class="ex-code">sorted(pessoas, key=lambda p: p[<input data-answer="1" aria-label="posição">])</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. Qual destas é igual a <code>def metade(x): return x / 2</code>?</p>
+<label><input type="radio" name="q3"> <code>lambda x: return x / 2</code></label>
+<label><input type="radio" name="q3"> <code>lambda x: x / 2</code></label>
+<label><input type="radio" name="q3"> <code>lambda(x): x / 2</code></label>
+<label><input type="radio" name="q3"> <code>lambda x / 2</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">4. Qual chamada ordena os nomes pelo tamanho?</p>
+<label><input type="radio" name="q4"> <code>sorted(nomes, len)</code></label>
+<label><input type="radio" name="q4"> <code>sorted(nomes, key=len())</code></label>
+<label><input type="radio" name="q4"> <code>sorted(key=len)</code></label>
+<label><input type="radio" name="q4"> <code>sorted(nomes, key=len)</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. Em qual caso é melhor usar <code>def</code> do que <code>lambda</code>?</p>
+<label><input type="radio" name="q5"> Para ordenar uma lista de tuplas pelo segundo item</label>
+<label><input type="radio" name="q5"> Para achar o produto mais caro com <code>max(…, key=…)</code></label>
+<label><input type="radio" name="q5"> Para uma função com nome, usada em vários lugares, com um <code>if</code> de vários passos</label>
+<label><input type="radio" name="q5"> Nunca: <code>lambda</code> é sempre melhor</label>
+</div>
+
+<h3>Missão final: o ranking da turma</h3>
+
+<div class="trypy" data-goal="src:\blambda\b;;outre:Carla: 9\.5\nAna: 8\.5\nDavi: 7\.0\nBruno: 6\.0;;semerro">
+<p class="try-task"><strong>Missão:</strong> a professora quer a turma em ordem da <strong>maior nota para a menor</strong>. Troque o <code>ranking = alunos</code> por um <code>sorted</code> com <code>key</code> (uma <code>lambda</code> que pega a nota) e <code>reverse=True</code>.</p>
+<pre class="script" data-file="main.py">alunos = [("Ana", 8.5), ("Bruno", 6.0), ("Carla", 9.5), ("Davi", 7.0)]
+
+ranking = alunos
+for nome, nota in ranking:
+    print(f"{nome}: {nota}")
+</pre>
+<pre class="solucao" data-file="main.py">alunos = [("Ana", 8.5), ("Bruno", 6.0), ("Carla", 9.5), ("Davi", 7.0)]
+
+ranking = sorted(alunos, key=lambda aluno: aluno[1], reverse=True)
+for nome, nota in ranking:
+    print(f"{nome}: {nota}")
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>lambda x: expressão</code> é uma função pequena e sem nome; o valor da expressão é devolvido sem <code>return</code>.</li>
+  <li>Só cabe uma <strong>expressão</strong>: nada de <code>return</code>, atribuição, <code>for</code> ou <code>if</code> com bloco (o <code>if</code> de uma linha pode).</li>
+  <li>O uso principal é o <code>key=</code> do <code>sorted</code>, do <code>.sort()</code>, do <code>max</code> e do <code>min</code>: a função calcula, para cada item, o que comparar.</li>
+  <li>O <code>key</code> recebe a função <strong>sem parênteses</strong> e <strong>com o nome</strong> <code>key=</code>.</li>
+  <li>Se já existe uma função pronta (<code>len</code>, <code>str.lower</code>), use-a direto. Se o critério tem vários passos, ou se a função vai ter nome, use <code>def</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
