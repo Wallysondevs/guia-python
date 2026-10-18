@@ -385,16 +385,43 @@ def _sem_quadros_do_editor(tb):
         tb = tb.tb_next
     return tb
 
+def _filtrar_tb(tb):
+    """O traceback sem NENHUM quadro do editor (nem no meio: asyncio.run, time.sleep…)."""
+    quadros = []
+    while tb is not None:
+        if tb.tb_frame.f_code.co_filename != _ESTE:
+            quadros.append(tb)
+        tb = tb.tb_next
+    novo = None
+    for t in reversed(quadros):
+        novo = types.TracebackType(novo, t.tb_frame, t.tb_lasti, t.tb_lineno)
+    return novo
+
+def _limpar_cadeia(e, vistos=None):
+    vistos = vistos if vistos is not None else set()
+    if e is None or id(e) in vistos: return
+    vistos.add(id(e))
+    try: e.__traceback__ = _filtrar_tb(e.__traceback__)
+    except Exception: pass
+    _limpar_cadeia(e.__cause__, vistos); _limpar_cadeia(e.__context__, vistos)
+    for sub in getattr(e, "exceptions", None) or ():
+        _limpar_cadeia(sub, vistos)
+
 def _mostrar_excecao(e):
-    tb = _sem_quadros_do_editor(e.__traceback__)
-    e = e.with_traceback(tb)
+    _limpar_cadeia(e)
+    tb = e.__traceback__
     try:
         texto = "".join(traceback.format_exception(type(e), e, tb))
     except BaseException:
         texto = type(e).__name__ + "\n"
+    # a biblioteca padrão aparece no caminho do Ubuntu (o do lab), não no zip do Pyodide
+    texto = texto.replace('File "/lib/python314.zip/', 'File "/usr/lib/python3.14/')
     _descarregar()
     try:
-        sys.excepthook(type(e), e, tb)
+        if sys.excepthook is sys.__excepthook__:
+            sys.stderr.write(texto); sys.stderr.flush()
+        else:
+            sys.excepthook(type(e), e, tb)
     except BaseException:
         sys.__stderr__.write(texto)
     return texto

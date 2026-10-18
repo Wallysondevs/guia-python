@@ -153,7 +153,7 @@ No `.exercise`, `data-answer="a|b"` aceita respostas alternativas (a comparaçã
 | `sys.executable` | `/usr/bin/python3` (o editor imita o lab) | `/usr/bin/python3` |
 | `os.getcwd()`, `__file__`, `sys.argv`, `HOME`, `getpass.getuser()` | **iguais**: `/home/ana`, `/home/ana/main.py`, `['main.py', …]`, `ana` | iguais |
 | Traceback do programa | **igual** (`File "/home/ana/main.py", line 3, in <module>`, as setas `^^^^`, `Did you mean: 'nomes'?`) | igual |
-| Traceback que passa pela biblioteca padrão | `File "/lib/python314.zip/json/decoder.py", line 345, in decode` | `File "/usr/lib/python3.14/json/decoder.py", line 345, in decode` |
+| Traceback que passa pela biblioteca padrão (`json`, `asyncio.run`…) | **igual**: o editor mostra `File "/usr/lib/python3.14/json/decoder.py", line 345, in decode` e esconde os quadros internos dele. Só o `traceback.print_exc()`/`format_exc()` chamado pelo próprio programa mostra o caminho real do editor (`/lib/python314.zip/json/decoder.py`) | `File "/usr/lib/python3.14/json/decoder.py", line 345, in decode` |
 | `print("oi", end="")` e depois um erro | `oiTraceback (most recent call last):` (igual ao lab) | igual |
 | Hora e fuso (`datetime.now()`, `time.tzname`) | o **relógio e o fuso do leitor** (do navegador) | `America/Sao_Paulo` (`-03`) |
 | `os.cpu_count()` | `1` | o número de núcleos |
