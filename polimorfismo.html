@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Polimorfismo — o mesmo pedido, cada um do seu jeito | Guia Python</title>
+<meta name="description" content="Polimorfismo em Python para quem está começando: o mesmo método com respostas diferentes em cada classe, um laço sem if que funciona com qualquer animal, o duck typing (se fala como pato…), o polimorfismo que você já usa em len() e no +, formas de pagamento da lojinha, NotImplementedError e classes abstratas, e os erros reais (AttributeError de quem não tem o método, assinaturas diferentes).">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Polimorfismo</span></h1>
+
+<p class="intro">A professora entra na sala e diz: "Apresentem-se". Ela não dá uma ordem diferente para cada aluno; dá <strong>a mesma</strong>, e cada um responde do seu jeito: a Bia diz o nome e a cidade, o Caio fala do time, a Duda conta do cachorro. Em Python, isso tem um nome comprido: <strong>polimorfismo</strong> (do grego, "muitas formas"). É chamar <strong>o mesmo método</strong> em objetos diferentes e deixar cada um responder à sua maneira, sem o programa precisar saber de que tipo cada objeto é. Na aula <a href="heranca.html">Herança</a> você já viu isso acontecer, quando o cachorro latiu e o gato miou no mesmo <code>for</code>. Agora vamos entender por que isso é tão útil, e descobrir que, em Python, nem é preciso herança para ele funcionar.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é polimorfismo: o mesmo pedido, respostas diferentes.</li>
+  <li>A escrever uma função que funciona com qualquer animal, sem nenhum <code>if</code> de tipo.</li>
+  <li>O <strong>duck typing</strong>: para o Python, o que importa é o objeto ter o método, não a classe dele.</li>
+  <li>Que você já usa polimorfismo desde o começo: <code>len()</code>, <code>+</code>, <code>print()</code>.</li>
+  <li>A organizar as formas de pagamento da lojinha com polimorfismo.</li>
+  <li>A marcar um método que toda filha precisa escrever (<code>NotImplementedError</code> e classes abstratas).</li>
+  <li>Os erros reais: o objeto que não tem o método e os métodos com parâmetros diferentes.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: o botão "tocar"</h2>
+<p>Na casa da Ana há um rádio, uma TV e um celular. Os três têm um botão "tocar". Ela aperta o botão do mesmo jeito nos três, e cada aparelho faz a sua coisa: o rádio toca a estação, a TV o filme, o celular a música. A Ana não precisa saber <strong>como</strong> cada um toca; basta saber que todos <strong>sabem</strong> tocar.</p>
+
+<p>Em Python, o "botão" é um método com o <strong>mesmo nome</strong> em várias classes. Quem usa o objeto só chama <code>objeto.tocar()</code>, e cada classe decide o que fazer.</p>
+
+<hr>
+
+<h2>1. O mesmo método, muitas respostas</h2>
+
+<pre class="file" data-file="muitas_formas.py">class Animal:
+    def __init__(self, nome):
+        self.nome = nome
+
+    def falar(self):
+        return "..."
+
+
+class Cachorro(Animal):
+    def falar(self):
+        return "Au au!"
+
+
+class Gato(Animal):
+    def falar(self):
+        return "Miau!"
+
+
+class Vaca(Animal):
+    def falar(self):
+        return "Muuu!"
+
+
+def apresentar(animal):
+    print(f"{animal.nome} diz: {animal.falar()}")
+
+
+bichos = [Cachorro("Rex"), Gato("Mimi"), Vaca("Mimosa")]
+for bicho in bichos:
+    apresentar(bicho)
+</pre>
+
+<dl class="anatomy">
+  <dt>def falar(self): return "…"</dt><dd>Cada classe tem o seu <code>falar</code>, com o <strong>mesmo nome</strong> e os <strong>mesmos parâmetros</strong>, e cada um devolve uma coisa diferente.</dd>
+  <dt>def apresentar(animal):</dt><dd>Uma função comum, fora das classes. Ela não sabe se vai receber um cachorro, um gato ou uma vaca. Nem precisa saber.</dd>
+  <dt>animal.falar()</dt><dd>O ponto de polimorfismo: a mesma linha chama o <code>falar</code> do cachorro numa volta do laço, o do gato na outra e o da vaca na terceira. Quem escolhe qual método roda é a <strong>classe do objeto</strong>, na hora da chamada.</dd>
+  <dt>bichos = [Cachorro("Rex"), …]</dt><dd>Uma lista com objetos de classes diferentes. O <code>for</code> trata todos do mesmo jeito.</dd>
+</dl>
+
+<pre class="term">$ python3 muitas_formas.py
+Rex diz: Au au!
+Mimi diz: Miau!
+Mimosa diz: Muuu!
+</pre>
+
+<p>O melhor vem agora: se o petshop começar a atender cavalos, basta escrever a classe <code>Cavalo</code> com o seu <code>falar</code>. A função <code>apresentar</code> e o <code>for</code> <strong>não mudam uma letra</strong>.</p>
+
+<hr>
+
+<h2>2. Sem polimorfismo: o jeito dos <code>if</code></h2>
+<p>Para ver a vantagem, compare com o jeito de quem ainda não usa polimorfismo: uma função só, que pergunta o tipo de cada objeto e decide o que fazer.</p>
+
+<pre class="file" data-file="com_if.py">class Cachorro:
+    def __init__(self, nome):
+        self.nome = nome
+
+
+class Gato:
+    def __init__(self, nome):
+        self.nome = nome
+
+
+def apresentar(animal):
+    if isinstance(animal, Cachorro):
+        print(f"{animal.nome} diz: Au au!")
+    elif isinstance(animal, Gato):
+        print(f"{animal.nome} diz: Miau!")
+    else:
+        print(f"{animal.nome} diz: ...")
+
+
+for bicho in [Cachorro("Rex"), Gato("Mimi")]:
+    apresentar(bicho)
+</pre>
+
+<pre class="term">$ python3 com_if.py
+Rex diz: Au au!
+Mimi diz: Miau!
+</pre>
+
+<p>Funciona. Mas cada animal novo exige mais um <code>elif</code> <strong>nesta função</strong>, e em todas as outras funções que fazem coisas parecidas (alimentar, vacinar, dar banho). Com o tempo, o programa vira uma pilha de <code>if isinstance</code>, e esquecer um deles é fácil.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Onde fica o "como cada um fala"</th><th>Para acrescentar um animal</th></tr>
+<tr><td>Polimorfismo: <code>animal.falar()</code></td><td>Dentro de cada classe</td><td>Escreve uma classe nova. Nada mais muda</td></tr>
+<tr><td><code>if isinstance(…)</code> numa função</td><td>Espalhado nas funções que usam os animais</td><td>Procura e muda todos os <code>if</code> do programa</td></tr>
+</table>
+</div>
+
+<p>Uma regra prática: quando você se pegar escrevendo uma fila de <code>if isinstance(x, A): … elif isinstance(x, B): …</code>, desconfie. Quase sempre aquilo pode virar um método com o mesmo nome em <code>A</code> e em <code>B</code>.</p>
+
+<hr>
+
+<h2>3. Duck typing: se fala como pato…</h2>
+<p>Até aqui, todos os animais eram filhos de <code>Animal</code>. Mas o Python <strong>não exige</strong> isso. Quando ele executa <code>coisa.falar()</code>, ele não pergunta "de que classe é a coisa?". Ele só procura um método chamado <code>falar</code> nela. Se achar, chama.</p>
+
+<p>Os programadores chamam isso de <strong>duck typing</strong> ("tipagem do pato"), por causa de um ditado: "se anda como um pato e grasna como um pato, então é um pato". Não importa o que o objeto <strong>é</strong>; importa o que ele <strong>sabe fazer</strong>.</p>
+
+<pre class="file" data-file="pato.py">class Pato:
+    def falar(self):
+        return "Quack!"
+
+
+class Robo:
+    def falar(self):
+        return "Bip bip!"
+
+
+class Pessoa:
+    def falar(self):
+        return "Olá!"
+
+
+def fazer_falar(coisa):
+    print(coisa.falar())
+
+
+for coisa in [Pato(), Robo(), Pessoa()]:
+    fazer_falar(coisa)
+
+print(isinstance(Robo(), Pato))
+</pre>
+
+<pre class="term">$ python3 pato.py
+Quack!
+Bip bip!
+Olá!
+False                              « o robô não é um pato, e mesmo assim funcionou
+</pre>
+
+<p>Três classes sem parentesco nenhum: nenhuma herda da outra, e o robô não é um pato (o <code>isinstance</code> confirma). Mesmo assim, a função <code>fazer_falar</code> funciona com as três, porque as três têm um <code>falar()</code>. É o jeito mais "pythônico" de pensar: escreva funções que pedem uma <strong>habilidade</strong> ("algo que sabe falar"), e não uma <strong>classe</strong> ("um Pato").</p>
+
+<div class="trypy" data-goal="out:R2 diz: Bip bip!;;semerro">
+<p class="try-task"><strong>Missão:</strong> o petshop ganhou um robô de brinquedo, e a festa de apresentação quebra quando chega a vez dele. Sem herdar de <code>Animal</code> (o robô não é um animal!), escreva na classe <code>Robo</code> o que falta para ele se apresentar: <code>R2 diz: Bip bip!</code>.</p>
+<pre class="script" data-file="main.py">class Animal:
+    def __init__(self, nome):
+        self.nome = nome
+
+    def falar(self):
+        return "..."
+
+
+class Gato(Animal):
+    def falar(self):
+        return "Miau!"
+
+
+class Robo:
+    def __init__(self, nome):
+        self.nome = nome
+
+
+def apresentar(coisa):
+    print(f"{coisa.nome} diz: {coisa.falar()}")
+
+
+for coisa in [Gato("Mimi"), Robo("R2")]:
+    apresentar(coisa)
+</pre>
+<pre class="solucao" data-file="main.py">class Animal:
+    def __init__(self, nome):
+        self.nome = nome
+
+    def falar(self):
+        return "..."
+
+
+class Gato(Animal):
+    def falar(self):
+        return "Miau!"
+
+
+class Robo:
+    def __init__(self, nome):
+        self.nome = nome
+
+    def falar(self):
+        return "Bip bip!"
+
+
+def apresentar(coisa):
+    print(f"{coisa.nome} diz: {coisa.falar()}")
+
+
+for coisa in [Gato("Mimi"), Robo("R2")]:
+    apresentar(coisa)
+</pre>
+</div>
+
+<hr>
+
+<h2>4. Você já usa polimorfismo</h2>
+<p>Desde as primeiras aulas, várias coisas do Python funcionam com tipos diferentes, cada tipo do seu jeito:</p>
+
+<pre class="file" data-file="ja_usa.py">print(len("Ana"))
+print(len(["pão", "leite"]))
+print(len({"café": 18.9}))
+print(2 + 3)
+print("Ana" + " Souza")
+print([1, 2] + [3])
+</pre>
+
+<pre class="term">$ python3 ja_usa.py
+3                                  « letras do texto
+2                                  « itens da lista
+1                                  « chaves do dicionário
+5                                  « + de números: soma
+Ana Souza                          « + de textos: junta
+[1, 2, 3]                          « + de listas: emenda
+</pre>
+
+<p>O <code>len()</code> é um "botão" só: o texto conta letras, a lista conta itens, o dicionário conta chaves. O <code>+</code> soma números, junta textos e emenda listas. Por baixo, é exatamente o que você fez com o <code>falar</code>: cada classe (<code>str</code>, <code>list</code>, <code>int</code>) tem um método com o mesmo nome especial, e o Python chama o de cada uma. Na aula <a href="metodos-especiais.html">Métodos Especiais</a>, você vai ensinar as suas classes a funcionar com <code>len()</code>, <code>+</code> e <code>print()</code>.</p>
+
+<hr>
+
+<h2>5. Na lojinha: as formas de pagamento</h2>
+<p>Um caso de verdade. A lojinha da Ana aceita Pix (preço normal), cartão (5% a mais, a taxa da maquininha) e dinheiro (10% de desconto). Cada forma de pagamento é uma classe com o método <code>total(valor)</code>:</p>
+
+<pre class="file" data-file="pagamento.py">class Pix:
+    nome = "Pix"
+
+    def total(self, valor):
+        return valor
+
+
+class Cartao:
+    nome = "Cartão"
+
+    def total(self, valor):
+        return valor * 1.05
+
+
+class Dinheiro:
+    nome = "Dinheiro"
+
+    def total(self, valor):
+        return valor * 0.90
+
+
+compra = 80.00
+for forma in [Pix(), Cartao(), Dinheiro()]:
+    print(f"{forma.nome}: R$ {forma.total(compra):.2f}")
+</pre>
+
+<pre class="term">$ python3 pagamento.py
+Pix: R$ 80.00
+Cartão: R$ 84.00
+Dinheiro: R$ 72.00
+</pre>
+
+<p>O <code>nome</code> é um atributo de classe (aula <a href="atributos-metodos.html">Atributos e Métodos</a>): todo Pix se chama "Pix". O caixa da loja só precisa saber que <strong>toda forma de pagamento tem <code>nome</code> e <code>total()</code></strong>. Se amanhã a loja aceitar vale-refeição, é uma classe nova, e o caixa não muda.</p>
+
+<hr>
+
+<h2>6. Obrigando as filhas a escrever o método</h2>
+<p>Às vezes a classe mãe existe só para dizer "todas as filhas precisam ter tal método", mas ela mesma não sabe como fazê-lo. Toda forma geométrica tem área, mas não existe uma fórmula de "área de forma". O costume é a mãe <strong>levantar um erro</strong> no método, com <code>raise</code> (aula <a href="raise.html">raise</a>):</p>
+
+<pre class="file" data-file="notimpl.py">class Forma:
+    def area(self):
+        raise NotImplementedError("cada forma calcula a sua área")
+
+
+class Quadrado(Forma):
+    def __init__(self, lado):
+        self.lado = lado
+
+    def area(self):
+        return self.lado * self.lado
+
+
+class Circulo(Forma):
+    def __init__(self, raio):
+        self.raio = raio
+
+
+for forma in [Quadrado(3), Circulo(2)]:
+    print(forma.area())
+</pre>
+
+<pre class="term">$ python3 notimpl.py
+9
+Traceback (most recent call last):
+  File "/home/ana/notimpl.py", line 20, in &lt;module&gt;
+    print(forma.area())
+          ~~~~~~~~~~^^
+  File "/home/ana/notimpl.py", line 3, in area
+    raise NotImplementedError("cada forma calcula a sua área")
+NotImplementedError: cada forma calcula a sua área
+</pre>
+
+<p>O quadrado escreveu o seu <code>area</code> e respondeu 9. O círculo esqueceu, herdou o da mãe e caiu no <code>NotImplementedError</code> ("erro de não implementado"). O rastro mostra o caminho: a chamada na linha 20 levou à linha 3, <code>in area</code>, da classe <code>Forma</code>. A mensagem que a mãe escreveu explica o que faltou. É bem melhor do que um resultado errado e silencioso.</p>
+
+<div class="note">
+<strong>Para ir além: classes abstratas</strong>
+<p>O módulo <code>abc</code> (de <em>abstract base classes</em>, "classes base abstratas") faz uma checagem mais cedo: a filha que esqueceu o método nem consegue criar objetos.</p>
+<pre class="file" data-file="abc_.py">from abc import ABC, abstractmethod
+
+
+class Forma(ABC):
+    @abstractmethod
+    def area(self):
+        pass
+
+
+class Circulo(Forma):
+    def __init__(self, raio):
+        self.raio = raio
+
+
+c = Circulo(2)
+</pre>
+<pre class="term">$ python3 abc_.py
+Traceback (most recent call last):
+  File "/home/ana/abc_.py", line 15, in &lt;module&gt;
+    c = Circulo(2)
+TypeError: Can't instantiate abstract class Circulo without an implementation for abstract method 'area'
+</pre>
+<p>"Não dá para criar um objeto da classe abstrata <code>Circulo</code> sem uma implementação do método abstrato <code>area</code>". O <code>@abstractmethod</code> é um <strong>decorador</strong> (aula <a href="decoradores.html">Decoradores</a>), que marca o método como obrigatório. Para começar, o <code>NotImplementedError</code> já resolve; o <code>abc</code> aparece em programas maiores.</p>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>O objeto não tem o método: <code>AttributeError</code></strong>
+<p>O duck typing tem um preço: o Python só descobre que a "coisa" não sabe falar <strong>na hora</strong> de chamar.</p>
+<pre class="file" data-file="pato_erro.py">class Pato:
+    def falar(self):
+        return "Quack!"
+
+
+class Pedra:
+    pass
+
+
+def fazer_falar(coisa):
+    print(coisa.falar())
+
+
+for coisa in [Pato(), Pedra()]:
+    fazer_falar(coisa)
+</pre>
+<pre class="term">$ python3 pato_erro.py
+Quack!
+Traceback (most recent call last):
+  File "/home/ana/pato_erro.py", line 15, in &lt;module&gt;
+    fazer_falar(coisa)
+    ~~~~~~~~~~~^^^^^^^
+  File "/home/ana/pato_erro.py", line 11, in fazer_falar
+    print(coisa.falar())
+          ^^^^^^^^^^^
+AttributeError: 'Pedra' object has no attribute 'falar'
+</pre>
+<p>O pato falou; a pedra, não. O rastro diz: a linha 15 chamou o <code>fazer_falar</code>, e lá dentro, na linha 11, o <code>coisa.falar</code> falhou. "O objeto <code>Pedra</code> não tem o atributo <code>falar</code>" (para o Python, métodos também são atributos). <strong>Como consertar:</strong> escreva o <code>falar</code> na classe <code>Pedra</code>, ou não ponha pedras na lista das coisas que falam.</p>
+</div>
+
+<div class="cenario">
+<strong>Os métodos têm parâmetros diferentes</strong>
+<p>Para o polimorfismo funcionar, não basta o mesmo nome: os métodos precisam receber <strong>os mesmos dados</strong>.</p>
+<pre class="file" data-file="assinatura.py">class Pix:
+    def total(self, valor):
+        return valor
+
+
+class Cartao:
+    def total(self, valor, parcelas):
+        return valor * 1.05
+
+
+for forma in [Pix(), Cartao()]:
+    print(forma.total(80))
+</pre>
+<pre class="term">$ python3 assinatura.py
+80
+Traceback (most recent call last):
+  File "/home/ana/assinatura.py", line 12, in &lt;module&gt;
+    print(forma.total(80))
+          ~~~~~~~~~~~^^^^
+TypeError: Cartao.total() missing 1 required positional argument: 'parcelas'
+</pre>
+<p>O Pix funcionou, o cartão quebrou: o <code>total</code> dele pede as <code>parcelas</code>, e o caixa (que trata todo mundo igual) só passou o valor. <strong>Como consertar:</strong> mantenha os parâmetros iguais em todas as classes. Se o cartão precisa de algo a mais, dê um valor padrão (<code>parcelas=1</code>) ou guarde a informação no <code>__init__</code>: <code>Cartao(parcelas=3)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>A filha esqueceu de escrever o método obrigatório</strong>
+<p>Você viu acima: o <code>Circulo</code> sem <code>area</code> deu <code>NotImplementedError: cada forma calcula a sua área</code>. Quando essa mensagem aparecer, procure na linha do rastro <strong>qual objeto</strong> estava sendo usado; a classe dele é a que precisa do método. <strong>Como consertar:</strong> escreva o método na filha, com o mesmo nome e os mesmos parâmetros da mãe.</p>
+</div>
+
+<h3>Perguntar antes ou pedir desculpas depois?</h3>
+<p>Se a lista pode ter coisas que não falam, há dois jeitos de evitar o <code>AttributeError</code>:</p>
+
+<pre class="file" data-file="eafp.py">class Pato:
+    def falar(self):
+        return "Quack!"
+
+
+class Pedra:
+    pass
+
+
+for coisa in [Pato(), Pedra()]:
+    if hasattr(coisa, "falar"):
+        print(coisa.falar())
+    else:
+        print("(não fala)")
+
+for coisa in [Pato(), Pedra()]:
+    try:
+        print(coisa.falar())
+    except AttributeError:
+        print("(não fala)")
+</pre>
+
+<pre class="term">$ python3 eafp.py
+Quack!
+(não fala)
+Quack!
+(não fala)
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td>Chamar direto: <code>coisa.falar()</code></td><td>O normal. Se a coisa não sabe falar, é um erro de verdade, e o <code>AttributeError</code> avisa</td></tr>
+<tr><td>Perguntar antes: <code>if hasattr(coisa, "falar"):</code></td><td>Quando é esperado que algumas coisas não tenham o método</td></tr>
+<tr><td>Tentar e tratar: <code>try: … except AttributeError:</code></td><td>O mesmo caso, no estilo que muitos programadores Python preferem ("é mais fácil pedir desculpas do que permissão"). Aula <a href="try-except.html">try e except</a></td></tr>
+<tr><td>Testar o tipo: <code>if isinstance(coisa, Pato):</code></td><td>Evite: recusa o robô que também sabe falar</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Conceito</th><th>Em uma frase</th><th>Exemplo</th></tr>
+<tr><td>Polimorfismo</td><td>O mesmo método, uma resposta para cada classe</td><td><code>animal.falar()</code></td></tr>
+<tr><td>Com herança</td><td>As filhas sobrescrevem o método da mãe</td><td><code>class Gato(Animal): def falar(self): …</code></td></tr>
+<tr><td>Duck typing</td><td>Basta o objeto ter o método; a classe não importa</td><td><code>Robo</code> com <code>falar()</code>, sem herdar de nada</td></tr>
+<tr><td>Polimorfismo embutido</td><td>Funções e operadores que servem para vários tipos</td><td><code>len()</code>, <code>+</code>, <code>print()</code></td></tr>
+<tr><td><code>raise NotImplementedError(…)</code></td><td>Na mãe: "toda filha precisa escrever este método"</td><td><code>Forma.area</code></td></tr>
+<tr><td><code>ABC</code> + <code>@abstractmethod</code></td><td>A filha sem o método nem cria objetos</td><td><code>class Forma(ABC):</code></td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>AttributeError: 'Pedra' object has no attribute 'falar'</code></td><td>Um objeto da lista não tem o método</td></tr>
+<tr><td><code>missing 1 required positional argument</code> só numa das classes</td><td>Os métodos de mesmo nome pedem parâmetros diferentes</td></tr>
+<tr><td><code>NotImplementedError</code></td><td>A filha não escreveu o método que a mãe exige</td></tr>
+<tr><td><code>Can't instantiate abstract class … without an implementation</code></td><td>O mesmo, com classe abstrata (<code>abc</code>)</td></tr>
+<tr><td>Uma fila de <code>if isinstance</code></td><td>Não é erro, mas é sinal de que um método polimórfico resolveria</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A mesma chamada</h3>
+<p>Complete o laço que pede para cada animal falar (o método devolve o texto):</p>
+<div class="ex-code">for bicho in bichos:<br>&nbsp;&nbsp;&nbsp;&nbsp;print(bicho.<input data-answer="falar()" aria-label="chamada">)</div>
+</div>
+
+<div class="exercise">
+<h3>2. O nome do erro</h3>
+<p>Qual exceção a classe mãe costuma levantar num método que toda filha precisa escrever?</p>
+<div class="ex-code">raise <input data-answer="NotImplementedError" aria-label="exceção">("cada forma calcula a sua área")</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. O que quer dizer polimorfismo?</p>
+<label><input type="radio" name="q3"> Uma classe com muitos atributos</label>
+<label><input type="radio" name="q3"> O mesmo método chamado em objetos diferentes, cada um respondendo do seu jeito</label>
+<label><input type="radio" name="q3"> Criar muitos objetos da mesma classe</label>
+<label><input type="radio" name="q3"> Uma classe com várias mães</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. A classe <code>Robo</code> não herda de <code>Animal</code>, mas tem um método <code>falar()</code>. O que acontece com <code>apresentar(Robo())</code>, se <code>apresentar</code> só chama <code>animal.falar()</code>?</p>
+<label><input type="radio" name="q4"> <code>TypeError</code>, porque o robô não é um animal</label>
+<label><input type="radio" name="q4"> O Python converte o robô em animal</label>
+<label><input type="radio" name="q4"> Funciona: o Python só precisa que o objeto tenha o <code>falar()</code> (duck typing)</label>
+<label><input type="radio" name="q4"> Funciona só se o robô tiver <code>nome</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. A lojinha vai aceitar vale-refeição. Com as formas de pagamento escritas com polimorfismo, o que a Ana precisa mudar?</p>
+<label><input type="radio" name="q5"> Só escrever a classe <code>ValeRefeicao</code>, com <code>nome</code> e <code>total()</code></label>
+<label><input type="radio" name="q5"> Acrescentar um <code>elif</code> no caixa</label>
+<label><input type="radio" name="q5"> Reescrever as classes <code>Pix</code> e <code>Cartao</code></label>
+<label><input type="radio" name="q5"> Fazer o <code>ValeRefeicao</code> herdar de <code>Dinheiro</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. <code>len("Ana")</code> dá 3 e <code>len([1, 2])</code> dá 2. Isso é um exemplo de quê?</p>
+<label><input type="radio" name="q6"> Herança múltipla</label>
+<label><input type="radio" name="q6"> Um erro do Python</label>
+<label><input type="radio" name="q6"> Encapsulamento</label>
+<label><input type="radio" name="q6"> Polimorfismo: a mesma função, cada tipo respondendo do seu jeito</label>
+</div>
+
+<h3>Missão final: pagamento em dinheiro</h3>
+
+<div class="trypy" data-goal="out:Dinheiro: R$ 90.00;;out:Pix: R$ 100.00;;out:Cartão: R$ 105.00;;src:class Dinheiro;;semerro">
+<p class="try-task"><strong>Missão:</strong> o caixa já sabe cobrar no Pix e no cartão. Escreva a classe <code>Dinheiro</code>, com o atributo de classe <code>nome = "Dinheiro"</code> e o método <code>total(self, valor)</code>, que dá 10% de desconto (o valor vezes <code>0.90</code>). Numa compra de 100 reais, o caixa deve mostrar <code>Dinheiro: R$ 90.00</code>, sem você mexer no <code>for</code>.</p>
+<pre class="script" data-file="main.py">class Pix:
+    nome = "Pix"
+
+    def total(self, valor):
+        return valor
+
+
+class Cartao:
+    nome = "Cartão"
+
+    def total(self, valor):
+        return valor * 1.05
+
+
+# escreva aqui a classe Dinheiro
+
+
+compra = 100.00
+for forma in [Pix(), Cartao(), Dinheiro()]:
+    print(f"{forma.nome}: R$ {forma.total(compra):.2f}")
+</pre>
+<pre class="solucao" data-file="main.py">class Pix:
+    nome = "Pix"
+
+    def total(self, valor):
+        return valor
+
+
+class Cartao:
+    nome = "Cartão"
+
+    def total(self, valor):
+        return valor * 1.05
+
+
+class Dinheiro:
+    nome = "Dinheiro"
+
+    def total(self, valor):
+        return valor * 0.90
+
+
+compra = 100.00
+for forma in [Pix(), Cartao(), Dinheiro()]:
+    print(f"{forma.nome}: R$ {forma.total(compra):.2f}")
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><strong>Polimorfismo</strong> ("muitas formas"): o mesmo método, chamado em objetos de classes diferentes, e cada classe responde do seu jeito.</li>
+  <li>Com ele, uma função como <code>apresentar(animal)</code> funciona com qualquer animal, sem <code>if</code> de tipo. Classe nova não muda o código que usa os objetos.</li>
+  <li><strong>Duck typing</strong>: o Python não confere a classe, só se o método existe. Classes sem parentesco funcionam juntas se tiverem os mesmos métodos.</li>
+  <li>Para funcionar, os métodos precisam ter o mesmo nome <strong>e</strong> os mesmos parâmetros.</li>
+  <li><code>len()</code>, <code>+</code> e <code>print()</code> são polimorfismo que você usa desde a primeira aula.</li>
+  <li>Uma mãe pode exigir um método das filhas com <code>raise NotImplementedError</code> (ou, em programas maiores, com <code>abc</code>).</li>
+  <li>Fila de <code>if isinstance</code> é sinal de que um método polimórfico resolveria melhor.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
