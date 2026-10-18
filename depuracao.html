@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Depuração — pdb e breakpoint() | Guia Python</title>
+<meta name="description" content="Como achar o erro de um programa que roda mas dá a resposta errada: depurar com print e f-strings com =, pausar o programa com breakpoint(), os comandos do pdb (l, n, s, p, c, q, w, b) numa sessão real do Python 3.14, python3 -m pdb, a depuração depois do erro (post mortem) e os enganos comuns.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Depuração</span></h1>
+
+<p class="intro">Há erros que o Python mostra na hora, com traceback e tudo. E há os piores: o programa roda até o fim, sem reclamar, e dá a <strong>resposta errada</strong>. O carrinho da lojinha da Ana cobra R$ 19,99 por uma compra de quase cem reais, e nenhuma mensagem diz por quê. Achar a causa de um defeito assim se chama <strong>depurar</strong> (em inglês, <em>debugging</em>: "tirar os insetos", porque defeito de programa tem o apelido de <em>bug</em>, "inseto"). Nesta aula você vai depurar de dois jeitos: com <code>print</code> e com o depurador do Python, o <code>pdb</code>.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A ideia da depuração: comparar o que o programa <strong>faz</strong> com o que você <strong>acha</strong> que ele faz.</li>
+  <li>A depurar com <code>print</code>, e o atalho <code>f"{variavel=}"</code>.</li>
+  <li>A pausar o programa no meio com <code>breakpoint()</code> e olhar as variáveis.</li>
+  <li>Os comandos do <code>pdb</code>: <code>l</code>, <code>n</code>, <code>s</code>, <code>p</code>, <code>c</code>, <code>q</code>, e também <code>w</code>, <code>b</code>, <code>ll</code> e <code>h</code>.</li>
+  <li>A rodar um programa inteiro dentro do depurador com <code>python3 -m pdb</code>, e a examinar o programa logo depois de um erro.</li>
+  <li>Os enganos comuns: variável que ainda não existe, variável com nome de comando, <code>breakpoint()</code> esquecido no código.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: assistir ao programa em câmera lenta</h2>
+<p>Pense numa receita de bolo que deu errado: o bolo saiu salgado. Ler a receita de novo não ajuda, porque você acha que seguiu tudo certinho. O que ajuda é <strong>refazer a receita olhando cada passo</strong>: "pus o açúcar… espera, esse pote é o do sal!". O defeito está no ponto em que o que <strong>aconteceu</strong> deixa de bater com o que você <strong>esperava</strong>.</p>
+<p>Depurar é isso. Você escolhe um ponto do programa, olha o valor das variáveis ali, e compara com o que esperava. Se bate, o defeito está mais adiante; se não bate, está antes. Há duas lupas para olhar:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Lupa</th><th>Como funciona</th><th>Parece com…</th></tr>
+<tr><td><code>print</code></td><td>Você põe <code>print</code>s no código e roda de novo. Eles mostram os valores enquanto o programa passa</td><td>Deixar bilhetes pelo caminho</td></tr>
+<tr><td><code>pdb</code> / <code>breakpoint()</code></td><td>O programa <strong>para</strong> num ponto, e você pergunta o que quiser, avança uma linha por vez, segue</td><td>Pausar o filme e andar quadro a quadro</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. O programa com defeito</h2>
+<p>A função soma o carrinho e cobra R$ 15 de frete, que fica de graça acima de R$ 100:</p>
+
+<pre class="file" data-file="carrinho.py">def total_com_frete(itens, frete):
+    total = 0
+    for preco, quantidade in itens:
+        subtotal = preco * quantidade
+        total = subtotal
+    if total &gt; 100:
+        frete = 0
+    return total + frete
+
+
+carrinho = [(27.90, 2), (8.49, 3), (4.99, 1)]
+print(f"Total: R$ {total_com_frete(carrinho, 15):.2f}")
+</pre>
+
+<pre class="term">$ python3 carrinho.py
+Total: R$ 19.99
+</pre>
+
+<p>Faça a conta de cabeça: 2 arroz a 27,90 dão 55,80; 3 feijão a 8,49 dão 25,47; 1 açúcar, 4,99. Os produtos somam 86,26; com o frete, 101,26. O programa disse 19,99. Nenhum erro, nenhum traceback. Onde está o problema? (Se você já viu, ótimo; finja que não, e acompanhe o método, que vale para os defeitos que não se veem a olho.)</p>
+
+<hr>
+
+<h2>2. Depurando com <code>print</code></h2>
+<p>A primeira lupa: um <code>print</code> dentro do laço, mostrando tudo o que muda a cada volta. Costuma-se começar a linha com algo como <code>DEBUG:</code>, para distinguir da saída normal (e lembrar de apagar depois):</p>
+
+<pre class="file" data-file="carrinho_print.py">def total_com_frete(itens, frete):
+    total = 0
+    for preco, quantidade in itens:
+        subtotal = preco * quantidade
+        total = subtotal
+        print("DEBUG:", preco, quantidade, subtotal, total)
+    if total &gt; 100:
+        frete = 0
+    return total + frete
+
+
+carrinho = [(27.90, 2), (8.49, 3), (4.99, 1)]
+print(f"Total: R$ {total_com_frete(carrinho, 15):.2f}")
+</pre>
+
+<pre class="term">$ python3 carrinho_print.py
+DEBUG: 27.9 2 55.8 55.8
+DEBUG: 8.49 3 25.47 25.47
+DEBUG: 4.99 1 4.99 4.99
+Total: R$ 19.99
+</pre>
+
+<p>Leia as três linhas comparando com o esperado. Na primeira volta, <code>total</code> é 55,8: certo. Na segunda, devia ser 55,8 + 25,47 = 81,27, mas é 25,47, igual ao <code>subtotal</code>. Achou: o <code>total</code> não está <strong>acumulando</strong>, está sendo <strong>trocado</strong> a cada volta. No fim ele vale só o último item (4,99), e 4,99 + 15 = 19,99.</p>
+
+<h3>O atalho <code>=</code> das f-strings</h3>
+<p>Com quatro números soltos, é fácil esquecer qual é qual. Nas <a href="f-strings.html">f-strings</a>, um <code>=</code> depois do nome da variável mostra o nome <strong>e</strong> o valor:</p>
+
+<pre class="file" data-file="carrinho_igual.py">        print(f"{subtotal=} {total=}")
+</pre>
+
+<pre class="term">$ python3 carrinho_igual.py
+subtotal=55.8 total=55.8
+subtotal=25.47 total=25.47
+subtotal=4.99 total=4.99
+Total: R$ 19.99
+</pre>
+
+<p><code>f"{total=}"</code> vira <code>total=55.8</code>. Funciona com qualquer expressão: <code>f"{preco * quantidade=}"</code> mostra <code>preco * quantidade=55.8</code>.</p>
+
+<div class="trypy" data-goal="out:Total: R$ 101.26;;semerro">
+<p class="try-task"><strong>Missão:</strong> conserte o carrinho. Se quiser, ponha antes um <code>print(f"{total=}")</code> dentro do laço para ver o defeito acontecer; depois corrija a linha do <code>total</code> para que ele <strong>acumule</strong> os subtotais (e apague o <code>print</code> de depuração). O total certo é R$ 101.26.</p>
+<pre class="script" data-file="main.py">def total_com_frete(itens, frete):
+    total = 0
+    for preco, quantidade in itens:
+        subtotal = preco * quantidade
+        total = subtotal
+    if total &gt; 100:
+        frete = 0
+    return total + frete
+
+
+carrinho = [(27.90, 2), (8.49, 3), (4.99, 1)]
+print(f"Total: R$ {total_com_frete(carrinho, 15):.2f}")
+</pre>
+<pre class="solucao" data-file="main.py">def total_com_frete(itens, frete):
+    total = 0
+    for preco, quantidade in itens:
+        subtotal = preco * quantidade
+        total += subtotal
+    if total &gt; 100:
+        frete = 0
+    return total + frete
+
+
+carrinho = [(27.90, 2), (8.49, 3), (4.99, 1)]
+print(f"Total: R$ {total_com_frete(carrinho, 15):.2f}")
+</pre>
+</div>
+
+<div class="tip">
+<strong>Quando o <code>print</code> é a melhor lupa</strong>
+<p>O <code>print</code> é rápido, funciona em qualquer lugar e mostra a história inteira de uma vez (todas as voltas do laço). O ponto fraco: a cada pergunta nova ("e o <code>preco</code>?"), você edita e roda de novo, e no fim precisa apagar todos os <code>print</code>s. Em programas que vão continuar rodando por muito tempo, o lugar dos bilhetes é o <a href="logging.html"><code>logging</code></a>, que pode ser ligado e desligado sem apagar nada.</p>
+</div>
+
+<hr>
+
+<h2>3. Pausando o programa: <code>breakpoint()</code></h2>
+<p>A segunda lupa. A função embutida <code>breakpoint()</code> ("ponto de parada") faz o programa <strong>parar</strong> naquela linha e abrir o <code>pdb</code>, o depurador do Python (<em>Python debugger</em>). Ali você pode perguntar o valor de qualquer variável, executar uma linha por vez e, quando quiser, deixar o programa seguir.</p>
+
+<pre class="file" data-file="carrinho_bp.py">def total_com_frete(itens, frete):
+    total = 0
+    for preco, quantidade in itens:
+        breakpoint()
+        subtotal = preco * quantidade
+        total = subtotal
+    if total &gt; 100:
+        frete = 0
+    return total + frete
+
+
+carrinho = [(27.90, 2), (8.49, 3), (4.99, 1)]
+print(f"Total: R$ {total_com_frete(carrinho, 15):.2f}")
+</pre>
+
+<p>Abaixo, a sessão de verdade, no terminal da Ana. Depois de cada <code>(Pdb)</code>, o que ela digitou; o resto é a resposta do Python. Ela vai olhar a primeira volta do laço, deixar o programa seguir até a segunda e conferir o <code>total</code>:</p>
+
+<pre class="term">$ python3 carrinho_bp.py
+&gt; /home/ana/carrinho_bp.py(4)total_com_frete()
+-&gt; breakpoint()
+(Pdb) l
+  1  	def total_com_frete(itens, frete):
+  2  	    total = 0
+  3  	    for preco, quantidade in itens:
+  4  -&gt;	        breakpoint()
+  5  	        subtotal = preco * quantidade
+  6  	        total = subtotal
+  7  	    if total &gt; 100:
+  8  	        frete = 0
+  9  	    return total + frete
+ 10
+ 11
+(Pdb) p preco, quantidade
+(27.9, 2)
+(Pdb) n
+&gt; /home/ana/carrinho_bp.py(5)total_com_frete()
+-&gt; subtotal = preco * quantidade
+(Pdb) n
+&gt; /home/ana/carrinho_bp.py(6)total_com_frete()
+-&gt; total = subtotal
+(Pdb) p subtotal, total
+(55.8, 0)
+(Pdb) n
+&gt; /home/ana/carrinho_bp.py(3)total_com_frete()
+-&gt; for preco, quantidade in itens:
+(Pdb) p total
+55.8
+(Pdb) c
+&gt; /home/ana/carrinho_bp.py(4)total_com_frete()
+-&gt; breakpoint()
+(Pdb) p preco, quantidade, total
+(8.49, 3, 55.8)
+(Pdb) n
+&gt; /home/ana/carrinho_bp.py(5)total_com_frete()
+-&gt; subtotal = preco * quantidade
+(Pdb) n
+&gt; /home/ana/carrinho_bp.py(6)total_com_frete()
+-&gt; total = subtotal
+(Pdb) n
+&gt; /home/ana/carrinho_bp.py(3)total_com_frete()
+-&gt; for preco, quantidade in itens:
+(Pdb) p total
+25.47
+(Pdb) q
+Quitting pdb will kill the process. Quit anyway? [y/n] y
+</pre>
+
+<p>Vamos por partes:</p>
+
+<dl class="anatomy">
+  <dt>&gt; /home/ana/carrinho_bp.py(4)total_com_frete()</dt><dd>Onde o programa está parado: arquivo, linha <strong>4</strong>, dentro da função <code>total_com_frete</code>.</dd>
+  <dt>-&gt; breakpoint()</dt><dd>A próxima linha a ser executada (ela <strong>ainda não rodou</strong>).</dd>
+  <dt>(Pdb)</dt><dd>O "prompt" do depurador: ele espera um comando seu, como o <code>&gt;&gt;&gt;</code> do <a href="repl.html">modo interativo</a>.</dd>
+  <dt>l</dt><dd><em>list</em>, "listar": mostra o código em volta, com uma setinha <code>-&gt;</code> na linha atual.</dd>
+  <dt>p preco, quantidade</dt><dd><em>print</em>, "mostrar": calcula e mostra o valor. Primeira volta: 27,9 e 2.</dd>
+  <dt>n</dt><dd><em>next</em>, "próxima": executa a linha atual e para na seguinte. Dois <code>n</code> e a Ana está na linha 6, com o <code>subtotal</code> já calculado (55,8) e o <code>total</code> ainda 0.</dd>
+  <dt>c</dt><dd><em>continue</em>, "continuar": deixa o programa correr até a próxima parada. Como o <code>breakpoint()</code> está dentro do laço, ele para de novo na segunda volta.</dd>
+  <dt>p total → 25.47</dt><dd>O momento "achei!": no começo da segunda volta, o <code>total</code> era 55,8; depois da linha 6, virou 25,47 em vez de 81,27. A linha 6 troca o valor em vez de somar.</dd>
+  <dt>q</dt><dd><em>quit</em>, "sair": encerra o depurador <strong>e o programa</strong>. No Python 3.14, quando o <code>pdb</code> foi aberto por um <code>breakpoint()</code>, ele pede confirmação: <code>Quit anyway? [y/n]</code> ("Sair do pdb vai matar o processo. Sair mesmo assim?"). A Ana respondeu <code>y</code> (<em>yes</em>, "sim"; <code>n</code> é <em>no</em>, "não") <span class="versao">3.14</span>.</dd>
+</dl>
+
+<div class="note">
+<strong>Variáveis, não comandos</strong>
+<p>No <code>(Pdb)</code>, você pode digitar o nome de uma variável sozinho (<code>total</code>) e ele mostra o valor, ou até uma conta (<code>preco * quantidade</code>). O <code>p</code> é necessário quando o nome da variável é igual ao de um comando; veja em <a href="#errado">Quando dá errado</a>. E você pode <strong>mudar</strong> uma variável no meio (<code>total = 100</code>) para ver o que aconteceria.</p>
+</div>
+
+<h3>Os comandos principais</h3>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Comando</th><th>Vem de</th><th>O que faz</th></tr>
+<tr><td><code>l</code></td><td><em>list</em></td><td>Mostra o código perto da linha atual (de novo: continua a listagem)</td></tr>
+<tr><td><code>ll</code></td><td><em>longlist</em></td><td>Mostra a função inteira em que você está</td></tr>
+<tr><td><code>n</code></td><td><em>next</em></td><td>Executa a linha atual e para na próxima, <strong>sem entrar</strong> nas funções chamadas</td></tr>
+<tr><td><code>s</code></td><td><em>step</em></td><td>Executa a linha atual e, se ela chama uma função sua, <strong>entra</strong> nela</td></tr>
+<tr><td><code>c</code></td><td><em>continue</em></td><td>Segue até a próxima parada (ou até o fim)</td></tr>
+<tr><td><code>p expressão</code></td><td><em>print</em></td><td>Mostra o valor da expressão</td></tr>
+<tr><td><code>pp expressão</code></td><td><em>pretty print</em></td><td>Mostra arrumado (bom para listas e dicionários grandes)</td></tr>
+<tr><td><code>w</code></td><td><em>where</em></td><td>Mostra o caminho de chamadas até aqui (como um traceback)</td></tr>
+<tr><td><code>b 6</code></td><td><em>break</em></td><td>Marca uma parada na linha 6 (<code>b</code> sozinho lista as paradas)</td></tr>
+<tr><td><code>cl 1</code></td><td><em>clear</em></td><td>Apaga a parada de número 1</td></tr>
+<tr><td><code>q</code></td><td><em>quit</em></td><td>Sai do depurador e encerra o programa</td></tr>
+<tr><td><code>h</code> / <code>h n</code></td><td><em>help</em></td><td>Lista os comandos / explica um comando</td></tr>
+<tr><td>(Enter vazio)</td><td></td><td>Repete o último comando (útil para apertar <code>n</code> várias vezes)</td></tr>
+</table>
+</div>
+
+<p>Esqueceu o que um comando faz? Pergunte ao próprio <code>pdb</code>:</p>
+<pre class="term">(Pdb) h n
+      Usage: n(ext)
+
+      Continue execution until the next line in the current function
+      is reached or it returns.
+(Pdb) h p
+      Usage: p expression
+
+      Print the value of the expression.
+</pre>
+<p>"Uso: <code>n(ext)</code>. Continua a execução até chegar à próxima linha da função atual, ou até ela retornar." O <code>n(ext)</code> quer dizer que você pode digitar <code>n</code> ou <code>next</code>.</p>
+
+<div class="tip">
+<strong>No terminal do 3.14, com cores</strong>
+<p>No Python 3.14, o código que o <code>pdb</code> mostra (no <code>l</code>, no <code>ll</code>, na linha <code>-&gt;</code>) aparece colorido, como no modo interativo <span class="versao">3.14</span>. As sessões desta página estão sem cor para ficarem fáceis de ler.</p>
+</div>
+
+<hr>
+
+<h2>4. O programa inteiro no depurador: <code>python3 -m pdb</code></h2>
+<p>Você não precisa editar o programa para pôr um <code>breakpoint()</code>. Com <code>python3 -m pdb programa.py</code>, o depurador começa parado na <strong>primeira linha</strong>. Aqui a Ana usa o <code>s</code> para entrar na função, o <code>w</code> para ver o caminho, o <code>b</code> para marcar uma parada mais adiante e o <code>ll</code> para ver a função inteira:</p>
+
+<pre class="term">$ python3 -m pdb carrinho.py
+&gt; /home/ana/carrinho.py(1)&lt;module&gt;()
+-&gt; def total_com_frete(itens, frete):
+(Pdb) n
+&gt; /home/ana/carrinho.py(11)&lt;module&gt;()
+-&gt; carrinho = [(27.90, 2), (8.49, 3), (4.99, 1)]
+(Pdb) n
+&gt; /home/ana/carrinho.py(12)&lt;module&gt;()
+-&gt; print(f"Total: R$ {total_com_frete(carrinho, 15):.2f}")
+(Pdb) s
+--Call--
+&gt; /home/ana/carrinho.py(1)total_com_frete()
+-&gt; def total_com_frete(itens, frete):
+(Pdb) n
+&gt; /home/ana/carrinho.py(2)total_com_frete()
+-&gt; total = 0
+(Pdb) n
+&gt; /home/ana/carrinho.py(3)total_com_frete()
+-&gt; for preco, quantidade in itens:
+(Pdb) n
+&gt; /home/ana/carrinho.py(4)total_com_frete()
+-&gt; subtotal = preco * quantidade
+(Pdb) w
+  /usr/lib/python3.14/bdb.py(913)run()
+-&gt; exec(cmd, globals, locals)
+  &lt;string&gt;(1)&lt;module&gt;()
+  /home/ana/carrinho.py(12)&lt;module&gt;()
+-&gt; print(f"Total: R$ {total_com_frete(carrinho, 15):.2f}")
+&gt; /home/ana/carrinho.py(4)total_com_frete()
+-&gt; subtotal = preco * quantidade
+(Pdb) b 6
+Breakpoint 1 at /home/ana/carrinho.py:6
+(Pdb) c
+&gt; /home/ana/carrinho.py(6)total_com_frete()
+-&gt; if total &gt; 100:
+(Pdb) p total
+4.99
+(Pdb) ll
+  1  	def total_com_frete(itens, frete):
+  2  	    total = 0
+  3  	    for preco, quantidade in itens:
+  4  	        subtotal = preco * quantidade
+  5  	        total = subtotal
+  6 B-&gt;	    if total &gt; 100:
+  7  	        frete = 0
+  8  	    return total + frete
+(Pdb) q
+</pre>
+
+<ol class="passo">
+  <li><strong>Começo:</strong> parado na linha 1, no <code>&lt;module&gt;</code> (o "corpo" do arquivo, fora de qualquer função). O primeiro <code>n</code> pulou da linha 1 para a 11: o <code>def</code> só <strong>cria</strong> a função, sem rodar o que está dentro dela.</li>
+  <li><strong><code>s</code> na linha 12:</strong> em vez de executar a linha inteira (como o <code>n</code> faria), o <code>s</code> entrou na função <code>total_com_frete</code>. O <code>--Call--</code> avisa "entrei numa chamada".</li>
+  <li><strong><code>w</code>:</strong> o caminho até aqui, de cima para baixo. As duas primeiras linhas são do próprio <code>pdb</code> (pode ignorar); depois, a linha 12 do programa, que chamou a função; por último, com o <code>&gt;</code>, onde você está agora.</li>
+  <li><strong><code>b 6</code> e <code>c</code>:</strong> uma parada na linha 6 (logo depois do laço) e "siga até lá". O laço rodou inteiro sem parar, e na linha 6 o <code>total</code> é 4,99: o valor do último item só.</li>
+  <li><strong><code>ll</code>:</strong> a função inteira. O <code>B</code> marca a parada; o <code>-&gt;</code>, onde você está.</li>
+  <li><strong><code>q</code>:</strong> sai. Aberto com <code>python3 -m pdb</code>, o <code>pdb</code> não pede confirmação.</li>
+</ol>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th><code>n</code> (next)</th><th><code>s</code> (step)</th></tr>
+<tr><td>Numa linha que chama uma função sua</td><td>Executa a função inteira e para na linha seguinte</td><td>Entra na função e para na primeira linha dela</td></tr>
+<tr><td>Numa linha comum</td><td colspan="2">Os dois fazem o mesmo: executam a linha e param na próxima</td></tr>
+<tr><td>Quando usar</td><td>Você confia na função e quer passar por cima</td><td>Você desconfia da função e quer ver por dentro</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>5. Depois que o programa quebrou: o <em>post mortem</em></h2>
+<p>A média da turma dá erro:</p>
+
+<pre class="file" data-file="media.py">def media(notas):
+    return sum(notas) / len(notas)
+
+
+turma = {"Ana": [8, 9, 7], "Bia": [], "Caio": [6, 5, 8]}
+for aluno, notas in turma.items():
+    print(aluno, media(notas))
+</pre>
+
+<pre class="term">$ python3 media.py
+Ana 8.0
+Traceback (most recent call last):
+  File "/home/ana/media.py", line 7, in &lt;module&gt;
+    print(aluno, media(notas))
+                 ~~~~~^^^^^^^
+  File "/home/ana/media.py", line 2, in media
+    return sum(notas) / len(notas)
+           ~~~~~~~~~~~^~~~~~~~~~~~
+ZeroDivisionError: division by zero
+</pre>
+
+<p>"Divisão por zero." O traceback diz <strong>onde</strong>, mas não <strong>com quais valores</strong>. Rodando com <code>python3 -m pdb</code> e mandando seguir (<code>c</code>), o <code>pdb</code> para <strong>no momento do erro</strong>, com todas as variáveis daquele instante. Isso se chama depuração <em>post mortem</em> ("depois da morte"):</p>
+
+<pre class="term">$ python3 -m pdb media.py
+&gt; /home/ana/media.py(1)&lt;module&gt;()
+-&gt; def media(notas):
+(Pdb) c
+Ana 8.0
+Traceback (most recent call last):
+  File "/usr/lib/python3.14/pdb.py", line 3652, in main
+    pdb._run(target)
+    ~~~~~~~~^^^^^^^^
+  File "/usr/lib/python3.14/pdb.py", line 2566, in _run
+    self.run(target.code)
+    ~~~~~~~~^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/bdb.py", line 913, in run
+    exec(cmd, globals, locals)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "&lt;string&gt;", line 1, in &lt;module&gt;
+  File "/home/ana/media.py", line 7, in &lt;module&gt;
+    print(aluno, media(notas))
+                 ~~~~~^^^^^^^
+  File "/home/ana/media.py", line 2, in media
+    return sum(notas) / len(notas)
+           ~~~~~~~~~~~^~~~~~~~~~~~
+ZeroDivisionError: division by zero
+Uncaught exception. Entering post mortem debugging
+Running 'cont' or 'step' will restart the program
+&gt; /home/ana/media.py(2)media()
+-&gt; return sum(notas) / len(notas)
+(Pdb) p aluno, notas
+('Bia', [])
+(Pdb) q
+</pre>
+
+<p>O traceback ficou mais comprido (as primeiras linhas são do próprio <code>pdb</code>; o que interessa começa em <code>media.py</code>). Depois vem: "Exceção não tratada. Entrando na depuração post mortem. Rodar <code>cont</code> ou <code>step</code> vai recomeçar o programa." E o <code>(Pdb)</code> está parado exatamente na linha que quebrou. Um <code>p</code> mostra o culpado: a Bia ainda não tem notas, a lista está vazia, e <code>len([])</code> é 0.</p>
+
+<div class="trypy" data-goal="out:Bia: sem notas;;out:Caio: 6.3;;semerro">
+<p class="try-task"><strong>Missão:</strong> conserte a média da turma para não quebrar com a lista vazia da Bia: quando o aluno não tiver notas, mostre <code>Bia: sem notas</code>; para os outros, a média com uma casa decimal, como já está.</p>
+<pre class="script" data-file="main.py">def media(notas):
+    return sum(notas) / len(notas)
+
+
+turma = {"Ana": [8, 9, 7], "Bia": [], "Caio": [6, 5, 8]}
+for aluno, notas in turma.items():
+    print(f"{aluno}: {media(notas):.1f}")
+</pre>
+<pre class="solucao" data-file="main.py">def media(notas):
+    return sum(notas) / len(notas)
+
+
+turma = {"Ana": [8, 9, 7], "Bia": [], "Caio": [6, 5, 8]}
+for aluno, notas in turma.items():
+    if notas:
+        print(f"{aluno}: {media(notas):.1f}")
+    else:
+        print(f"{aluno}: sem notas")
+</pre>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de depurar</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Como</th><th>Quando usar</th></tr>
+<tr><td><code>print(...)</code></td><td>Bilhetes no código; roda de novo</td><td>Ver a história inteira (todas as voltas de um laço); defeitos simples</td></tr>
+<tr><td><code>print(f"{x=}")</code></td><td>O mesmo, com o nome junto</td><td>Sempre que for usar <code>print</code> para depurar</td></tr>
+<tr><td><code>breakpoint()</code></td><td>Pausa naquela linha e abre o <code>pdb</code></td><td>Você sabe <strong>onde</strong> olhar e quer perguntar várias coisas sem rodar de novo</td></tr>
+<tr><td><code>python3 -m pdb programa.py</code></td><td>Começa parado na primeira linha</td><td>Seguir o programa desde o começo, sem editar o arquivo</td></tr>
+<tr><td><code>python3 -m pdb</code> + <code>c</code></td><td>Para no momento do erro (post mortem)</td><td>O programa quebra e você quer os valores daquele instante</td></tr>
+<tr><td><a href="logging.html"><code>logging</code></a></td><td>Mensagens com nível (DEBUG, INFO…), ligadas ou desligadas</td><td>Programas que ficam rodando; você quer as pistas guardadas</td></tr>
+<tr><td>Depurador de um editor (VS Code, PyCharm)</td><td>O mesmo que o <code>pdb</code>, com botões e painéis</td><td>Quando você já usa um desses editores</td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>Onde praticar o <code>pdb</code></strong>
+<p>As sessões desta aula são de um terminal de verdade, onde você digita cada comando e vê a resposta. É lá que vale treinar o <code>pdb</code>: crie o <code>carrinho_bp.py</code> no seu computador e refaça a sessão da seção 3. As missões desta página usam a outra lupa, o <code>print</code>.</p>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>A variável que (ainda) não existe</strong>
+<pre class="term">$ python3 carrinho_bp.py
+&gt; /home/ana/carrinho_bp.py(4)total_com_frete()
+-&gt; breakpoint()
+(Pdb) p subtotl
+*** NameError: name 'subtotl' is not defined
+(Pdb) subtotal
+*** NameError: name 'subtotal' is not defined
+(Pdb) total
+0
+</pre>
+<p>As linhas com <code>***</code> são o jeito do <code>pdb</code> mostrar um erro sem derrubar a sessão: você continua no <code>(Pdb)</code>. A primeira é um erro de digitação (<code>subtotl</code>). A segunda é mais curiosa: <code>subtotal</code> está escrito certo, mas o programa está parado na linha 4, e o <code>subtotal</code> só é criado na linha 5, que <strong>ainda não rodou</strong>. Lembre: a linha da setinha <code>-&gt;</code> é a <strong>próxima</strong>, não a última. <strong>Como consertar:</strong> confira o nome, ou avance com <code>n</code> até a variável ser criada.</p>
+</div>
+
+<div class="cenario">
+<strong>Uma variável com nome de comando</strong>
+<pre class="file" data-file="soma_notas.py">notas = [8, 6, 9]
+soma = 0
+for n in notas:
+    breakpoint()
+    soma += n
+print(soma)
+</pre>
+<pre class="term">$ python3 soma_notas.py
+&gt; /home/ana/soma_notas.py(4)&lt;module&gt;()
+-&gt; breakpoint()
+(Pdb) n
+&gt; /home/ana/soma_notas.py(5)&lt;module&gt;()
+-&gt; soma += n
+(Pdb) p n
+8
+(Pdb) q
+Quitting pdb will kill the process. Quit anyway? [y/n] y
+</pre>
+<p>A Ana queria ver a variável <code>n</code>, mas <code>n</code> sozinho é o comando <em>next</em>: o programa andou uma linha. Quando o nome da variável é igual a um comando (<code>n</code>, <code>s</code>, <code>c</code>, <code>l</code>, <code>p</code>, <code>q</code>, <code>b</code>, <code>w</code>…), use <code>p</code> na frente: <code>p n</code>. Mais um motivo para dar <a href="nomes-variaveis.html">nomes claros</a> às variáveis: <code>for nota in notas:</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O <code>breakpoint()</code> esquecido no código</strong>
+<p>A Ana mandou o programa para uma colega sem tirar o <code>breakpoint()</code>. Para quem roda, o programa simplesmente "trava" num <code>(Pdb)</code> que ela não pediu. E se o programa roda sem ninguém no teclado (com a entrada vindo de um arquivo, por exemplo), o <code>pdb</code> lê o fim da entrada como "sair":</p>
+<pre class="term">$ python3 carrinho_bp.py &lt; /dev/null
+&gt; /home/ana/carrinho_bp.py(4)total_com_frete()
+-&gt; breakpoint()
+(Pdb)
+Quitting pdb will kill the process. Quit anyway? [y/n]
+$ echo $?
+1
+</pre>
+<p>O programa terminou no meio, sem mostrar o total, com o código de saída 1 (falha). <strong>Como consertar:</strong> apague os <code>breakpoint()</code> antes de entregar o programa (procure por eles: <code>grep -n breakpoint *.py</code>). E, para rodar sem as paradas sem editar nada, existe a variável de ambiente <code>PYTHONBREAKPOINT=0</code>, que desliga todos os <code>breakpoint()</code>:</p>
+<pre class="term">$ PYTHONBREAKPOINT=0 python3 carrinho_bp.py
+Total: R$ 19.99
+</pre>
+</div>
+
+<div class="cenario">
+<strong>Consertar o sintoma em vez da causa</strong>
+<p>Não é uma mensagem de erro, mas é o engano mais comum de quem depura. Com o carrinho dando 19,99, dá vontade de "ajustar" o resultado (somar a diferença no fim, mudar o frete) até sair o número certo para aquele carrinho. O próximo carrinho vai dar errado de novo. Depurar é achar a <strong>linha</strong> em que o valor deixa de ser o esperado (a linha 6, <code>total = subtotal</code>) e consertar ali.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>print(f"{variavel=}")</code></td><td>Mostra <code>variavel=valor</code></td></tr>
+<tr><td><code>breakpoint()</code></td><td>Para o programa ali e abre o <code>pdb</code></td></tr>
+<tr><td><code>python3 -m pdb programa.py</code></td><td>Roda o programa no depurador, parado na primeira linha; para também se der erro</td></tr>
+<tr><td><code>PYTHONBREAKPOINT=0 python3 programa.py</code></td><td>Roda ignorando os <code>breakpoint()</code></td></tr>
+<tr><td><code>import pdb; pdb.set_trace()</code></td><td>O jeito antigo de escrever <code>breakpoint()</code> (você vai ver em códigos mais velhos)</td></tr>
+<tr><td><code>l</code> / <code>ll</code></td><td>Código perto da linha atual / a função inteira</td></tr>
+<tr><td><code>n</code> / <code>s</code></td><td>Próxima linha, passando por cima / entrando nas funções</td></tr>
+<tr><td><code>c</code></td><td>Continua até a próxima parada</td></tr>
+<tr><td><code>p x</code> / <code>pp x</code></td><td>Mostra o valor / mostra arrumado</td></tr>
+<tr><td><code>w</code></td><td>Onde estou (caminho de chamadas)</td></tr>
+<tr><td><code>b 12</code> / <code>cl 1</code></td><td>Parada na linha 12 / apaga a parada 1</td></tr>
+<tr><td><code>q</code></td><td>Sai (no 3.14, depois de um <code>breakpoint()</code>, pede confirmação: <code>y</code>)</td></tr>
+<tr><td><code>h</code> / <code>h comando</code></td><td>Ajuda</td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>Novidades do <code>pdb</code></strong>
+<p>No Python 3.14, além das cores e da confirmação no <code>q</code>, o <code>pdb</code> ganhou a opção <code>-p PID</code>, que conecta o depurador a um programa Python que <strong>já está rodando</strong> (<code>python3 -m pdb -p 1234</code>, onde 1234 é o número do processo) <span class="versao">3.14</span>. No Python 3.15, o <code>(Pdb)</code> passou a usar o mesmo editor de linha do modo interativo novo. Veja as <a href="novidades.html">Novidades do Python 3.14 e 3.15</a>.</p>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O atalho da f-string</h3>
+<p>Complete o <code>print</code> para que ele mostre <code>preco=27.9</code>:</p>
+<div class="ex-code">print(f"{preco<input data-answer="=" aria-label="símbolo">}")</div>
+</div>
+
+<div class="exercise">
+<h3>2. A função que pausa</h3>
+<p>Qual função embutida, escrita numa linha do programa, faz ele parar ali e abrir o depurador?</p>
+<div class="ex-code"><input data-answer="breakpoint()|breakpoint" aria-label="função"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. O <code>pdb</code> está parado numa linha que chama <code>calcular_frete(total)</code>, e você quer ver o que acontece <strong>dentro</strong> dessa função. Qual comando?</p>
+<label><input type="radio" name="q3"> <code>n</code></label>
+<label><input type="radio" name="q3"> <code>s</code></label>
+<label><input type="radio" name="q3"> <code>c</code></label>
+<label><input type="radio" name="q3"> <code>q</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. O <code>pdb</code> mostra <code>-&gt; desconto = preco * 0.1</code>. Nesse momento, a variável <code>desconto</code>…</p>
+<label><input type="radio" name="q4"> Já tem o valor <code>preco * 0.1</code></label>
+<label><input type="radio" name="q4"> Vale <code>0.1</code></label>
+<label><input type="radio" name="q4"> Ainda não recebeu esse valor: a linha da setinha é a <strong>próxima</strong> a rodar</label>
+<label><input type="radio" name="q4"> Foi apagada</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. No <code>(Pdb)</code>, como ver o valor de uma variável chamada <code>c</code>?</p>
+<label><input type="radio" name="q5"> <code>p c</code></label>
+<label><input type="radio" name="q5"> <code>c</code></label>
+<label><input type="radio" name="q5"> <code>print c</code></label>
+<label><input type="radio" name="q5"> Não dá</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. Um programa quebra com <code>ZeroDivisionError</code> e você quer ver o valor das variáveis no momento do erro. O que fazer?</p>
+<label><input type="radio" name="q6"> Ler o traceback de novo</label>
+<label><input type="radio" name="q6"> Rodar com <code>PYTHONBREAKPOINT=0</code></label>
+<label><input type="radio" name="q6"> Apagar a linha que quebrou</label>
+<label><input type="radio" name="q6"> Rodar com <code>python3 -m pdb programa.py</code>, digitar <code>c</code> e, quando ele parar no erro, usar <code>p</code></label>
+</div>
+
+<h3>Missão final: as vogais da Ana</h3>
+
+<div class="trypy" data-goal="out:Vogais: 5;;semerro">
+<p class="try-task"><strong>Missão:</strong> a função devia contar as vogais de <code>"Ana Beatriz"</code> (A, a, e, a, i: são 5), mas diz 4. Ponha um <code>print</code> de depuração dentro do <code>for</code> (por exemplo, <code>print(f"{letra=} {total=}")</code>), descubra qual letra não está sendo contada e conserte a função. Depois, apague o <code>print</code> de depuração.</p>
+<pre class="script" data-file="main.py">def contar_vogais(texto):
+    total = 0
+    for letra in texto:
+        if letra in "aeiou":
+            total += 1
+    return total
+
+
+print("Vogais:", contar_vogais("Ana Beatriz"))
+</pre>
+<pre class="solucao" data-file="main.py">def contar_vogais(texto):
+    total = 0
+    for letra in texto:
+        if letra.lower() in "aeiou":
+            total += 1
+    return total
+
+
+print("Vogais:", contar_vogais("Ana Beatriz"))
+</pre>
+</div>
+
+<p>O <code>print</code> mostra a letra <code>'A'</code> passando sem o <code>total</code> mudar: <code>"A"</code> maiúsculo não está em <code>"aeiou"</code>. Há dois consertos: <code>letra.lower() in "aeiou"</code> ou <code>letra in "aeiouAEIOU"</code>. E se o texto fosse <code>"Érica"</code>? Pense no que o <code>print</code> mostraria.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Depurar é comparar, ponto a ponto, o que o programa <strong>faz</strong> com o que você <strong>espera</strong>, até achar a linha em que os dois se separam.</li>
+  <li><code>print</code> mostra a história inteira; <code>print(f"{x=}")</code> põe o nome junto. Apague os <code>print</code>s de depuração no fim.</li>
+  <li><code>breakpoint()</code> pausa o programa e abre o <code>pdb</code>. A linha da setinha <code>-&gt;</code> é a próxima a rodar.</li>
+  <li>Comandos: <code>l</code> lista, <code>n</code> próxima linha, <code>s</code> entra na função, <code>p</code> mostra um valor, <code>c</code> continua, <code>q</code> sai (no 3.14, confirme com <code>y</code>); e <code>w</code>, <code>b</code>, <code>ll</code>, <code>h</code>.</li>
+  <li><code>python3 -m pdb programa.py</code> roda tudo no depurador; se o programa quebrar, ele para no erro (post mortem).</li>
+  <li>Variável com nome de comando? Use <code>p</code>. Não esqueça <code>breakpoint()</code> no código; <code>PYTHONBREAKPOINT=0</code> desliga todos.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
