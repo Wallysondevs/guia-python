@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python *args e **kwargs — funções que aceitam quantos argumentos vierem | Guia Python</title>
+<meta name="description" content="*args e **kwargs em Python para quem está começando: a função que recebe quantos valores vierem (uma tupla), os argumentos nomeados extras (um dicionário), a ordem dos parâmetros, abrir uma lista na chamada com * e um dicionário com **, e os erros reais: lista inteira no *args, keyword-only argument, KeyError.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">*args e **kwargs</span></h1>
+
+<p class="intro">Você já reparou que o <code>print</code> aceita quantos valores você quiser? <code>print("a")</code>, <code>print("a", "b")</code>, <code>print("a", "b", "c", "d")</code>. As funções que você escreveu até aqui não fazem isso: cada uma tem um número fixo de parâmetros. Nesta aula você vai criar funções que recebem <strong>quantos argumentos vierem</strong>: uma soma de quantos números a Ana quiser, um pedido com quantos itens o cliente pedir, uma ficha com quantos campos forem precisos.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A receber qualquer quantidade de argumentos posicionais com <code>*args</code> (eles chegam numa <strong>tupla</strong>).</li>
+  <li>A receber qualquer quantidade de argumentos nomeados com <code>**kwargs</code> (eles chegam num <strong>dicionário</strong>).</li>
+  <li>A misturar parâmetros normais, <code>*args</code> e <code>**kwargs</code>, e em que ordem.</li>
+  <li>O caminho inverso: abrir uma lista na chamada com <code>*</code> e um dicionário com <code>**</code>.</li>
+  <li>Quando usar <code>*args</code> e quando é melhor passar uma lista.</li>
+  <li>Os erros reais: a lista inteira caindo no <code>*args</code>, o parâmetro "engolido", a chave que não veio.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a sacola e a ficha com campos extras</h2>
+<p>No caixa da padaria, a Ana não sabe quantas coisas cada cliente vai levar. Por isso ela não usa uma bandeja com três buracos (um pão, um leite, um café); ela usa uma <strong>sacola</strong>, onde cabe o que vier: nada, um item, vinte itens. O <code>*args</code> é a sacola: um parâmetro só que recolhe <strong>todos</strong> os argumentos posicionais que sobrarem.</p>
+<p>Já no cadastro de clientes, todo mundo tem nome, mas cada um tem informações a mais diferentes: um deu o telefone, outro o aniversário, outro a cidade. A ficha tem um espaço "outras informações", onde cada coisa vai com uma <strong>etiqueta</strong> ("telefone: …"). O <code>**kwargs</code> é esse espaço: recolhe todos os argumentos <strong>nomeados</strong> que sobrarem, cada um com o seu nome.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th><code>*args</code></th><th><code>**kwargs</code></th></tr>
+<tr><td>Recolhe</td><td>Argumentos <strong>posicionais</strong> extras: <code>f(1, 2, 3)</code></td><td>Argumentos <strong>nomeados</strong> extras: <code>f(a=1, b=2)</code></td></tr>
+<tr><td>Chegam como</td><td>Uma <strong>tupla</strong>: <code>(1, 2, 3)</code></td><td>Um <strong>dicionário</strong>: <code>{'a': 1, 'b': 2}</code></td></tr>
+<tr><td>Comparação</td><td>A sacola</td><td>As "outras informações" da ficha, com etiquetas</td></tr>
+<tr><td>Nome</td><td><em>arguments</em>, "argumentos"</td><td><em>keyword arguments</em>, "argumentos nomeados"</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. <code>*args</code>: quantos valores vierem</h2>
+<p>Primeiro, veja o que chega no parâmetro com <code>*</code>:</p>
+
+<pre class="file" data-file="ver_args.py">def mostrar(*numeros):
+    print(numeros)
+
+
+mostrar()
+mostrar(5)
+mostrar(5, 10, 20)
+</pre>
+
+<pre class="term">$ python3 ver_args.py
+()
+(5,)
+(5, 10, 20)
+</pre>
+
+<dl class="anatomy">
+  <dt>*</dt><dd>O asterisco antes do nome do parâmetro quer dizer: "junte aqui <strong>todos</strong> os argumentos posicionais que vierem".</dd>
+  <dt>numeros</dt><dd>O nome do parâmetro. Escolha um nome que diga o que vem dentro (<code>numeros</code>, <code>itens</code>, <code>notas</code>). Em exemplos genéricos, o costume é <code>*args</code>; o que importa é o <code>*</code>, e não a palavra "args".</dd>
+  <dt>()</dt><dd>Sem argumentos, chega uma tupla vazia (aula <a href="tuplas.html">Tuplas</a>). Não é erro.</dd>
+  <dt>(5,)</dt><dd>Uma tupla com um item só. A vírgula no fim é o jeito de o Python mostrar que é uma tupla, e não um 5 entre parênteses.</dd>
+  <dt>(5, 10, 20)</dt><dd>Os três argumentos, na ordem em que vieram.</dd>
+</dl>
+
+<p>Como é uma tupla, dá para percorrê-la com <code>for</code>. Uma soma de quantos números a Ana quiser:</p>
+
+<pre class="file" data-file="somar.py">def somar(*numeros):
+    total = 0
+    for n in numeros:
+        total = total + n
+    return total
+
+
+print(somar(5, 10))
+print(somar(5, 10, 20, 30))
+print(somar())
+</pre>
+
+<pre class="term">$ python3 somar.py
+15
+65
+0
+</pre>
+
+<h3>Parâmetros normais antes do <code>*args</code></h3>
+<p>O <code>*args</code> pode vir depois de parâmetros comuns. Os primeiros argumentos preenchem os parâmetros comuns, e o resto cai na sacola:</p>
+
+<pre class="file" data-file="pedido.py">def pedido(cliente, *itens):
+    print(f"Pedido de {cliente} (itens: {len(itens)})")
+    for item in itens:
+        print(f"  - {item}")
+
+
+pedido("Ana", "pão", "leite", "café")
+pedido("Bruno", "bolo")
+</pre>
+
+<pre class="term">$ python3 pedido.py
+Pedido de Ana (itens: 3)
+  - pão
+  - leite
+  - café
+Pedido de Bruno (itens: 1)
+  - bolo
+</pre>
+
+<p>Em <code>pedido("Ana", "pão", "leite", "café")</code>, o <code>"Ana"</code> foi para <code>cliente</code> e os outros três foram juntos para <code>itens</code>.</p>
+
+<div class="trypy" data-goal="src:def media\(\s*\*\w+\s*\):;;outre:8\.5\n8\.5;;semerro">
+<p class="try-task"><strong>Missão:</strong> a função <code>media</code> só aceita duas notas, e a segunda chamada dá erro. Troque os dois parâmetros por um <code>*notas</code>, para que ela calcule a média de quantas notas vierem. (Dica: <code>sum(notas)</code> soma tudo e <code>len(notas)</code> conta quantas são.)</p>
+<pre class="script" data-file="main.py">def media(nota1, nota2):
+    return (nota1 + nota2) / 2
+
+
+print(media(8, 9))
+print(media(7, 8, 9, 10))
+</pre>
+<pre class="solucao" data-file="main.py">def media(*notas):
+    return sum(notas) / len(notas)
+
+
+print(media(8, 9))
+print(media(7, 8, 9, 10))
+</pre>
+</div>
+
+<hr>
+
+<h2>2. <code>**kwargs</code>: quantos nomes vierem</h2>
+<p>Com <strong>dois</strong> asteriscos, o parâmetro recolhe os argumentos <strong>nomeados</strong> (aula <a href="argumentos-padrao.html">Valores Padrão e Argumentos Nomeados</a>):</p>
+
+<pre class="file" data-file="ver_kwargs.py">def ficha(**dados):
+    print(dados)
+
+
+ficha(nome="Ana", cidade="Teresina")
+ficha()
+</pre>
+
+<pre class="term">$ python3 ver_kwargs.py
+{'nome': 'Ana', 'cidade': 'Teresina'}
+{}
+</pre>
+
+<p>Chegou um <strong>dicionário</strong> (aula <a href="dicionarios.html">Dicionários</a>): cada nome virou uma chave (<code>'nome'</code>, <code>'cidade'</code>) e cada valor ficou ligado à sua chave. Sem argumentos, chega um dicionário vazio, <code>{}</code>. Os itens ficam na ordem em que foram escritos na chamada.</p>
+
+<p>Na ficha de clientes, o nome é obrigatório e o resto é livre:</p>
+
+<pre class="file" data-file="ficha.py">def ficha(nome, **dados):
+    print(f"Cliente: {nome}")
+    for campo, valor in dados.items():
+        print(f"  {campo}: {valor}")
+
+
+ficha("Ana", cidade="Teresina", telefone="(86) 99999-0000")
+ficha("Bruno", aniversario="12/03")
+</pre>
+
+<pre class="term">$ python3 ficha.py
+Cliente: Ana
+  cidade: Teresina
+  telefone: (86) 99999-0000
+Cliente: Bruno
+  aniversario: 12/03
+</pre>
+
+<dl class="anatomy">
+  <dt>**dados</dt><dd>Os dois asteriscos: "junte aqui todos os argumentos nomeados que sobrarem". Em exemplos genéricos, o costume é <code>**kwargs</code>.</dd>
+  <dt>dados.items()</dt><dd>Percorre o dicionário de par em par: a chave em <code>campo</code> e o valor em <code>valor</code> (aula <a href="dicionarios-percorrer.html">Percorrendo um Dicionário</a>).</dd>
+</dl>
+
+<hr>
+
+<h2>3. Tudo junto, e a ordem</h2>
+
+<pre class="file" data-file="tudo.py">def pedido(cliente, *itens, **opcoes):
+    print("cliente:", cliente)
+    print("itens:", itens)
+    print("opcoes:", opcoes)
+
+
+pedido("Ana", "pão", "café", entrega=True, troco=50)
+</pre>
+
+<pre class="term">$ python3 tudo.py
+cliente: Ana
+itens: ('pão', 'café')
+opcoes: {'entrega': True, 'troco': 50}
+</pre>
+
+<p>Cada argumento encontrou o seu lugar: o primeiro posicional foi para <code>cliente</code>, os outros posicionais para a tupla <code>itens</code>, e os nomeados para o dicionário <code>opcoes</code>. A ordem no <code>def</code> é sempre esta:</p>
+
+<ol class="passo">
+  <li>Parâmetros comuns (<code>cliente</code>), com ou sem valor padrão.</li>
+  <li><code>*args</code> (a sacola).</li>
+  <li>Parâmetros que só podem ser passados com nome (veja o cenário "parâmetro engolido" em <a href="#errado">Quando dá errado</a>).</li>
+  <li><code>**kwargs</code>, sempre por último.</li>
+</ol>
+
+<hr>
+
+<h2>4. O caminho inverso: abrindo a lista na chamada</h2>
+<p>O asterisco também funciona <strong>na chamada</strong>, ao contrário: ele <strong>abre</strong> uma lista (ou tupla) e entrega cada item como um argumento separado. Dois asteriscos abrem um dicionário em argumentos nomeados:</p>
+
+<pre class="file" data-file="desempacotar.py">def somar(*numeros):
+    total = 0
+    for n in numeros:
+        total = total + n
+    return total
+
+
+def ficha(nome, cidade):
+    print(f"{nome} mora em {cidade}.")
+
+
+notas = [8, 9, 7]
+print(somar(*notas))
+dados = {"nome": "Ana", "cidade": "Teresina"}
+ficha(**dados)
+compras = ["arroz", "feijão", "café"]
+print(compras)
+print(*compras)
+print(*compras, sep=", ")
+</pre>
+
+<pre class="term">$ python3 desempacotar.py
+24
+Ana mora em Teresina.
+['arroz', 'feijão', 'café']
+arroz feijão café
+arroz, feijão, café
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Chamada</th><th>É o mesmo que</th></tr>
+<tr><td><code>somar(*notas)</code></td><td><code>somar(8, 9, 7)</code></td></tr>
+<tr><td><code>ficha(**dados)</code></td><td><code>ficha(nome="Ana", cidade="Teresina")</code></td></tr>
+<tr><td><code>print(compras)</code></td><td>Mostra a <strong>lista</strong>, com colchetes e aspas</td></tr>
+<tr><td><code>print(*compras)</code></td><td><code>print("arroz", "feijão", "café")</code>: três valores, separados por espaço</td></tr>
+</table>
+</div>
+
+<p>Repare: o <code>*</code> no <code>def</code> <strong>junta</strong> (vários valores viram uma tupla); o <code>*</code> na chamada <strong>espalha</strong> (uma lista vira vários valores).</p>
+
+<hr>
+
+<h2>Formas diferentes de receber vários valores</h2>
+<p>Uma função pode receber vários números de dois jeitos: com <code>*args</code> ou com um parâmetro comum que recebe uma lista inteira.</p>
+
+<pre class="file" data-file="lista_param.py">def somar_lista(numeros):
+    total = 0
+    for n in numeros:
+        total = total + n
+    return total
+
+
+def somar(*numeros):
+    total = 0
+    for n in numeros:
+        total = total + n
+    return total
+
+
+notas = [8, 9, 7]
+print(somar_lista(notas))
+print(somar(8, 9, 7))
+print(somar(*notas))
+</pre>
+
+<pre class="term">$ python3 lista_param.py
+24
+24
+24
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td>Parâmetro que recebe uma lista: <code>somar_lista(notas)</code></td><td>Quando os valores <strong>já estão</strong> numa lista (vieram de um arquivo, de um laço). É o mais comum nos programas</td></tr>
+<tr><td><code>*args</code>: <code>somar(8, 9, 7)</code></td><td>Quando quem chama vai escrever os valores um por um, na hora, como no <code>print</code></td></tr>
+<tr><td><code>**kwargs</code></td><td>Quando a função aceita "informações extras" de nomes variados, que ela só repassa ou mostra</td></tr>
+<tr><td>Parâmetros fixos com nome</td><td>Quando você sabe exatamente o que a função precisa. Prefira sempre que puder: os nomes documentam a função, e erros de digitação viram <code>TypeError</code> na hora</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Mandar a lista inteira para o <code>*args</code></strong>
+<pre class="file" data-file="lista_inteira.py">def somar(*numeros):
+    total = 0
+    for n in numeros:
+        total = total + n
+    return total
+
+
+notas = [8, 9, 7]
+print(somar(notas))
+</pre>
+<pre class="term">$ python3 lista_inteira.py
+Traceback (most recent call last):
+  File "/home/ana/lista_inteira.py", line 9, in &lt;module&gt;
+    print(somar(notas))
+          ~~~~~^^^^^^^
+  File "/home/ana/lista_inteira.py", line 4, in somar
+    total = total + n
+            ~~~~~~^~~
+TypeError: unsupported operand type(s) for +: 'int' and 'list'
+</pre>
+<p>Leia o caminho: a linha 9 chamou <code>somar</code>, e dentro dela, na linha 4, a conta falhou. "Tipos não suportados para o <code>+</code>: <code>int</code> e <code>list</code>". Por quê? A lista foi <strong>um</strong> argumento só, então a sacola ficou com um item: <code>numeros</code> virou <code>([8, 9, 7],)</code>. Na primeira volta do laço, <code>n</code> era a lista inteira, e o Python tentou fazer <code>0 + [8, 9, 7]</code>. <strong>Como consertar:</strong> abra a lista na chamada, <code>somar(*notas)</code>, ou escreva uma função que recebe a lista num parâmetro comum.</p>
+</div>
+
+<div class="cenario">
+<strong>Valor sem nome para o <code>**kwargs</code></strong>
+<pre class="file" data-file="posicional_kwargs.py">def ficha(**dados):
+    print(dados)
+
+
+ficha("Ana")
+</pre>
+<pre class="term">$ python3 posicional_kwargs.py
+Traceback (most recent call last):
+  File "/home/ana/posicional_kwargs.py", line 5, in &lt;module&gt;
+    ficha("Ana")
+    ~~~~~^^^^^^^
+TypeError: ficha() takes 0 positional arguments but 1 was given
+</pre>
+<p>O <code>**dados</code> só recolhe argumentos <strong>com nome</strong>; ele não tem onde guardar um valor sem etiqueta. Para o Python, a função não aceita nenhum argumento posicional. <strong>Como consertar:</strong> <code>ficha(nome="Ana")</code>, ou acrescente um parâmetro comum: <code>def ficha(nome, **dados):</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O parâmetro engolido pela sacola</strong>
+<pre class="file" data-file="depois_args.py">def pedido(*itens, cliente):
+    print(f"{cliente} pediu {itens}")
+
+
+pedido("pão", "leite", "Ana")
+</pre>
+<pre class="term">$ python3 depois_args.py
+Traceback (most recent call last):
+  File "/home/ana/depois_args.py", line 5, in &lt;module&gt;
+    pedido("pão", "leite", "Ana")
+    ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: pedido() missing 1 required keyword-only argument: 'cliente'
+</pre>
+<p>"Falta 1 argumento obrigatório só-nomeado: <code>'cliente'</code>". A sacola <code>*itens</code> pegou <strong>todos</strong> os posicionais, inclusive o <code>"Ana"</code>, e não sobrou nada para o <code>cliente</code>. Todo parâmetro que vem depois do <code>*args</code> só pode ser preenchido <strong>com nome</strong> (por isso <em>keyword-only</em>, "só por nome"). <strong>Como consertar:</strong> passe com nome, ou coloque o parâmetro antes do <code>*itens</code>:</p>
+<pre class="file" data-file="depois_args_ok.py">def pedido(*itens, cliente):
+    print(f"{cliente} pediu {itens}")
+
+
+pedido("pão", "leite", cliente="Ana")
+</pre>
+<pre class="term">$ python3 depois_args_ok.py
+Ana pediu ('pão', 'leite')
+</pre>
+</div>
+
+<div class="cenario">
+<strong><code>**kwargs</code> antes do <code>*args</code></strong>
+<pre class="file" data-file="ordem_def.py">def pedido(**opcoes, *itens):
+    print(itens, opcoes)
+</pre>
+<pre class="term">$ python3 ordem_def.py
+  File "/home/ana/ordem_def.py", line 1
+    def pedido(**opcoes, *itens):
+                         ^
+SyntaxError: arguments cannot follow var-keyword argument
+</pre>
+<p>"Nada pode vir depois do argumento de nomes variáveis" (<em>var-keyword</em> é o nome técnico do <code>**kwargs</code>). <strong>Como consertar:</strong> o <code>**kwargs</code> é sempre o último: <code>def pedido(*itens, **opcoes):</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Nome que não pode ser nome</strong>
+<pre class="file" data-file="nome_invalido.py">def ficha(**dados):
+    print(dados)
+
+
+ficha(cor-favorita="azul")
+</pre>
+<pre class="term">$ python3 nome_invalido.py
+  File "/home/ana/nome_invalido.py", line 5
+    ficha(cor-favorita="azul")
+          ^^^^^^^^^^^^^
+SyntaxError: expression cannot contain assignment, perhaps you meant "=="?
+</pre>
+<p>Os nomes dos argumentos nomeados seguem as regras dos nomes de variáveis (aula <a href="nomes-variaveis.html">Nomes de Variáveis</a>). Com o hífen, o Python leu <code>cor - favorita</code>, uma subtração, e achou estranho um <code>=</code> depois de uma conta. A sugestão <code>"=="</code> não ajuda aqui. <strong>Como consertar:</strong> <code>cor_favorita="azul"</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Ler uma chave que não veio</strong>
+<pre class="file" data-file="chave_falta.py">def ficha(nome, **dados):
+    print(f"Cliente: {nome}")
+    print(f"Telefone: {dados['telefone']}")
+
+
+ficha("Bruno", cidade="Picos")
+</pre>
+<pre class="term">$ python3 chave_falta.py
+Cliente: Bruno
+Traceback (most recent call last):
+  File "/home/ana/chave_falta.py", line 6, in &lt;module&gt;
+    ficha("Bruno", cidade="Picos")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ana/chave_falta.py", line 3, in ficha
+    print(f"Telefone: {dados['telefone']}")
+                       ~~~~~^^^^^^^^^^^^
+KeyError: 'telefone'
+</pre>
+<p><code>KeyError: 'telefone'</code>: "erro de chave": o dicionário <code>dados</code> não tem a chave <code>'telefone'</code>, porque o Bruno não informou. Com <code>**kwargs</code>, nada garante que uma chave veio. <strong>Como consertar:</strong> use o <code>get</code>, que devolve um valor reserva quando a chave não existe:</p>
+<pre class="file" data-file="chave_get.py">def ficha(nome, **dados):
+    print(f"Cliente: {nome}")
+    print(f"Telefone: {dados.get('telefone', 'não informado')}")
+
+
+ficha("Bruno", cidade="Picos")
+</pre>
+<pre class="term">$ python3 chave_get.py
+Cliente: Bruno
+Telefone: não informado
+</pre>
+<p>Se a função <strong>precisa</strong> do telefone, o melhor é torná-lo um parâmetro comum: aí, se faltar, o Python avisa na hora com um <code>TypeError</code> claro.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>def f(*args):</code></td><td>Junta os argumentos posicionais numa tupla</td></tr>
+<tr><td><code>def f(**kwargs):</code></td><td>Junta os argumentos nomeados num dicionário</td></tr>
+<tr><td><code>def f(a, *args, b, **kwargs):</code></td><td>A ordem: comuns, <code>*args</code>, só-nomeados, <code>**kwargs</code></td></tr>
+<tr><td><code>f(*lista)</code></td><td>Abre a lista: cada item vira um argumento posicional</td></tr>
+<tr><td><code>f(**dicionario)</code></td><td>Abre o dicionário: cada chave vira um argumento nomeado</td></tr>
+<tr><td><code>print(*lista, sep=", ")</code></td><td>Mostra os itens da lista sem colchetes</td></tr>
+<tr><td><code>kwargs.get("chave", reserva)</code></td><td>Lê uma chave que talvez não tenha vindo</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>unsupported operand type(s) for +: 'int' and 'list'</code></td><td>A lista foi inteira para o <code>*args</code>: use <code>f(*lista)</code></td></tr>
+<tr><td><code>takes 0 positional arguments but 1 was given</code></td><td>Valor sem nome para uma função que só tem <code>**kwargs</code></td></tr>
+<tr><td><code>missing 1 required keyword-only argument</code></td><td>Parâmetro depois do <code>*args</code>, passado sem nome</td></tr>
+<tr><td><code>arguments cannot follow var-keyword argument</code></td><td>Algo depois do <code>**kwargs</code> no <code>def</code></td></tr>
+<tr><td><code>KeyError: 'x'</code></td><td>A chave não veio no <code>**kwargs</code>: use <code>.get</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A sacola</h3>
+<p>Complete o símbolo que faz o parâmetro recolher quantos itens vierem:</p>
+<div class="ex-code">def cesta(<input data-answer="*" aria-label="símbolo">frutas):<br>&nbsp;&nbsp;&nbsp;&nbsp;print(frutas)</div>
+</div>
+
+<div class="exercise">
+<h3>2. As etiquetas</h3>
+<p>Complete o símbolo que faz o parâmetro recolher os argumentos nomeados:</p>
+<div class="ex-code">def cadastro(<input data-answer="**" aria-label="símbolo">dados):<br>&nbsp;&nbsp;&nbsp;&nbsp;print(dados)</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. Com <code>def mostrar(*numeros): print(numeros)</code>, o que aparece em <code>mostrar(3, 4)</code>?</p>
+<label><input type="radio" name="q3"> <code>[3, 4]</code></label>
+<label><input type="radio" name="q3"> <code>(3, 4)</code></label>
+<label><input type="radio" name="q3"> <code>3 4</code></label>
+<label><input type="radio" name="q3"> <code>{3, 4}</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Que tipo de valor chega no parâmetro <code>**opcoes</code>?</p>
+<label><input type="radio" name="q4"> Uma lista</label>
+<label><input type="radio" name="q4"> Uma tupla</label>
+<label><input type="radio" name="q4"> Um dicionário</label>
+<label><input type="radio" name="q4"> Um texto</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. A lista <code>notas = [8, 9, 7]</code> precisa ir para a função <code>somar(*numeros)</code>. Qual chamada funciona?</p>
+<label><input type="radio" name="q5"> <code>somar(*notas)</code></label>
+<label><input type="radio" name="q5"> <code>somar(notas)</code></label>
+<label><input type="radio" name="q5"> <code>somar(**notas)</code></label>
+<label><input type="radio" name="q5"> <code>*somar(notas)</code></label>
+</div>
+
+<h3>Missão final: a etiqueta com detalhes</h3>
+
+<div class="trypy" data-goal="src:\*\*\w+;;out:== Bolo de milho ==;;out:preco: R$ 18,00;;out:peso: 800 g;;semerro">
+<p class="try-task"><strong>Missão:</strong> a função <code>etiqueta</code> não aceita os detalhes do produto, e a chamada dá erro. Acrescente um <code>**detalhes</code> e mostre, embaixo do nome, cada detalhe no formato <code>preco: R$ 18,00</code>.</p>
+<pre class="script" data-file="main.py">def etiqueta(produto):
+    print(f"== {produto} ==")
+
+
+etiqueta("Bolo de milho", preco="R$ 18,00", peso="800 g")
+</pre>
+<pre class="solucao" data-file="main.py">def etiqueta(produto, **detalhes):
+    print(f"== {produto} ==")
+    for nome, valor in detalhes.items():
+        print(f"{nome}: {valor}")
+
+
+etiqueta("Bolo de milho", preco="R$ 18,00", peso="800 g")
+</pre>
+</div>
+
+<p>Depois, acrescente <code>validade="5 dias"</code> na chamada e rode de novo: a etiqueta ganha uma linha, sem mudar nada na função.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>*args</code> no <code>def</code> junta os argumentos posicionais extras numa <strong>tupla</strong>; pode chegar vazia.</li>
+  <li><code>**kwargs</code> junta os argumentos nomeados extras num <strong>dicionário</strong>; leia as chaves com <code>.get</code> quando elas podem faltar.</li>
+  <li>O que importa são os asteriscos; os nomes <code>args</code> e <code>kwargs</code> são só costume. Prefira nomes que digam o conteúdo.</li>
+  <li>Ordem no <code>def</code>: comuns, <code>*args</code>, só-nomeados, <code>**kwargs</code>. Depois do <code>*args</code>, só com nome.</li>
+  <li>Na chamada, o efeito é o inverso: <code>f(*lista)</code> espalha a lista em argumentos, <code>f(**dicionario)</code> espalha o dicionário em argumentos nomeados.</li>
+  <li>Se você sabe exatamente o que a função precisa, parâmetros com nome são mais claros que <code>*args</code>/<code>**kwargs</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
