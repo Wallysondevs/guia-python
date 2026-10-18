@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Iteradores — iter(), next() e o for por dentro | Guia Python</title>
+<meta name="description" content="Iteradores em Python para quem está começando: a diferença entre iterável e iterador, iter() e next(), o StopIteration de verdade, o que o for faz por dentro, por que um iterador se gasta, como criar o seu com __iter__ e __next__, e os erros reais do Python 3.14.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Iteradores</span></h1>
+
+<p class="intro">Desde a aula <a href="for.html">for</a>, você percorre listas, textos, dicionários e até arquivos com o mesmo <code>for item in coisa:</code>. Nunca precisou dizer "comece do primeiro", "agora o próximo", "pare no último". Quem faz esse trabalho escondido é o <strong>iterador</strong> (do inglês <em>iterate</em>, "repetir, passar um por um"). Nesta aula você vai abrir o <code>for</code> e ver as peças lá dentro: <code>iter()</code>, <code>next()</code> e o <code>StopIteration</code>. Depois, vai construir o seu próprio iterador.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A diferença entre <strong>iterável</strong> (a coisa que dá para percorrer) e <strong>iterador</strong> (quem percorre).</li>
+  <li>A pedir um iterador com <code>iter()</code> e o próximo item com <code>next()</code>.</li>
+  <li>O que é o <code>StopIteration</code> e por que você quase nunca o vê.</li>
+  <li>O que o <code>for</code> faz por dentro, passo a passo.</li>
+  <li>Por que um iterador <strong>se gasta</strong> e uma lista não.</li>
+  <li>A criar o seu iterador com os métodos <code>__iter__</code> e <code>__next__</code>.</li>
+  <li>Os erros reais: <code>'list' object is not an iterator</code>, <code>object is not iterable</code>, <code>iter() returned non-iterator</code> e o laço que nunca acaba.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: o livro e o marcador de página</h2>
+<p>Pense num livro de receitas. O livro tem todas as páginas, do começo ao fim, mas não sabe em qual página você parou. Para isso existe o <strong>marcador de página</strong>: ele lembra onde você está, e cada vez que você pede "a próxima", ele avança uma página. Quando o livro acaba, o marcador avisa: "não tem mais".</p>
+
+<ul>
+  <li>O <strong>livro</strong> é o <strong>iterável</strong>: uma lista, um texto, um dicionário. Ele guarda os itens e sabe criar um marcador novo sempre que alguém pede.</li>
+  <li>O <strong>marcador</strong> é o <strong>iterador</strong>: ele só sabe uma coisa, entregar o próximo item, e lembra onde parou.</li>
+  <li>Um livro pode ter vários marcadores ao mesmo tempo (duas pessoas lendo o mesmo livro), e cada um está numa página.</li>
+</ul>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Peça</th><th>No livro</th><th>No Python</th></tr>
+<tr><td>Iterável</td><td>O livro</td><td>Lista, tupla, texto, dicionário, conjunto, arquivo, <code>range</code>…</td></tr>
+<tr><td><code>iter(coisa)</code></td><td>"Me dá um marcador para este livro"</td><td>Cria um iterador novo, parado antes do primeiro item</td></tr>
+<tr><td><code>next(iterador)</code></td><td>"Vira a página"</td><td>Entrega o próximo item e avança</td></tr>
+<tr><td><code>StopIteration</code></td><td>"O livro acabou"</td><td>A exceção que <code>next()</code> lança quando não há mais itens</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. <code>iter()</code> e <code>next()</code> no modo interativo</h2>
+<p>Abra o modo interativo (aula <a href="repl.html">O Modo Interativo</a>) e acompanhe. Primeiro a lista; depois, o iterador dela; depois, um <code>next()</code> de cada vez:</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; numeros = [10, 20, 30]
+&gt;&gt;&gt; it = iter(numeros)
+&gt;&gt;&gt; next(it)
+10
+&gt;&gt;&gt; next(it)
+20
+&gt;&gt;&gt; next(it)
+30
+&gt;&gt;&gt; next(it)
+Traceback (most recent call last):
+  File "&lt;python-input-5&gt;", line 1, in &lt;module&gt;
+    next(it)
+    ~~~~^^^^
+StopIteration
+&gt;&gt;&gt; exit()</pre>
+
+<dl class="anatomy">
+  <dt>numeros = [10, 20, 30]</dt><dd>O iterável: a lista com os três números.</dd>
+  <dt>it = iter(numeros)</dt><dd><code>iter()</code> pede à lista um iterador novo. O iterador fica parado <strong>antes</strong> do primeiro item. O nome <code>it</code> é só um costume curto para "iterador".</dd>
+  <dt>next(it)</dt><dd>"Próximo": entrega o item da vez e anda uma casa. Três <code>next()</code>, três números, na ordem.</dd>
+  <dt>o quarto next(it)</dt><dd>Não há mais itens. O iterador avisa lançando a exceção <code>StopIteration</code> ("parar a iteração").</dd>
+</dl>
+
+<h3>Lendo o traceback</h3>
+<p>É o primeiro traceback desta aula, então vamos linha por linha:</p>
+<ul>
+  <li><code>Traceback (most recent call last):</code> "rastro (a chamada mais recente por último)": o Python vai mostrar o caminho até o erro.</li>
+  <li><code>File "&lt;python-input-5&gt;", line 1, in &lt;module&gt;</code>: o erro aconteceu na entrada número 5 do modo interativo (ele conta a partir de 0), linha 1, no programa principal.</li>
+  <li><code>next(it)</code> com <code>~~~~^^^^</code> embaixo: o Python 3.14 sublinha a parte culpada; os <code>^</code> apontam o <code>(it)</code>, a chamada que falhou.</li>
+  <li><code>StopIteration</code>: o nome da exceção. Repare que ela não traz mensagem nenhuma depois do nome: não há nada para explicar, o iterador simplesmente acabou.</li>
+</ul>
+
+<div class="note">
+<strong><code>StopIteration</code> não é um defeito</strong>
+<p>Ao contrário de um <code>NameError</code> ou de um <code>TypeError</code>, o <code>StopIteration</code> é um <strong>aviso combinado</strong>: é o jeito que todo iterador do Python tem de dizer "acabou". Você só o vê assim, em vermelho, porque chamou <code>next()</code> na mão e ninguém estava esperando o aviso. O <code>for</code> espera por ele, e por isso você nunca o viu nos seus laços.</p>
+</div>
+
+<div class="trypy" data-goal="out:Chamando a senha 103;;semerro;;src:next\(fila\)[\s\S]*next\(fila\)[\s\S]*next\(fila\)">
+<p class="try-task"><strong>Missão:</strong> na padaria do bairro, o painel chama as senhas uma por vez. O programa já chama a primeira. Acrescente mais duas linhas com <code>next(fila)</code> para chamar a 102 e a 103.</p>
+<pre class="script" data-file="main.py">senhas = [101, 102, 103, 104]
+fila = iter(senhas)
+
+print("Chamando a senha", next(fila))
+</pre>
+<pre class="solucao" data-file="main.py">senhas = [101, 102, 103, 104]
+fila = iter(senhas)
+
+print("Chamando a senha", next(fila))
+print("Chamando a senha", next(fila))
+print("Chamando a senha", next(fila))
+print("Ainda na fila:", list(fila))
+</pre>
+</div>
+
+<p>Na solução, a última linha mostra <code>Ainda na fila: [104]</code>: o <code>list(fila)</code> pegou <strong>só o que sobrou</strong> no iterador. O marcador já estava na senha 104.</p>
+
+<hr>
+
+<h2>2. <code>next()</code> com um valor padrão</h2>
+<p>Se você não quer o <code>StopIteration</code>, passe um segundo argumento ao <code>next()</code>: o valor que ele deve devolver quando acabar. No lugar do erro, vem esse valor, quantas vezes você pedir:</p>
+
+<pre class="term">&gt;&gt;&gt; compras = ["pão", "leite"]
+&gt;&gt;&gt; it = iter(compras)
+&gt;&gt;&gt; type(compras)
+&lt;class 'list'&gt;
+&gt;&gt;&gt; type(it)
+&lt;class 'list_iterator'&gt;
+&gt;&gt;&gt; next(it, "acabou")
+'pão'
+&gt;&gt;&gt; next(it, "acabou")
+'leite'
+&gt;&gt;&gt; next(it, "acabou")
+'acabou'
+&gt;&gt;&gt; next(it, "acabou")
+'acabou'</pre>
+
+<p>Repare também no <code>type()</code>: a lista é uma <code>list</code>, e o iterador dela é outra coisa, um <code>list_iterator</code> ("iterador de lista"). São dois objetos diferentes: o livro e o marcador.</p>
+
+<h3>Todo iterável tem o seu iterador</h3>
+<p>Textos e dicionários funcionam igual. O iterador de um texto entrega uma letra por vez; o de um dicionário entrega as <strong>chaves</strong> (é por isso que <code>for chave in dicionario:</code> percorre as chaves, como na aula <a href="dicionarios-percorrer.html">Percorrendo um Dicionário</a>):</p>
+
+<pre class="term">&gt;&gt;&gt; letras = iter("café")
+&gt;&gt;&gt; next(letras)
+'c'
+&gt;&gt;&gt; next(letras)
+'a'
+&gt;&gt;&gt; precos = {"pão": 0.75, "leite": 5.49}
+&gt;&gt;&gt; chaves = iter(precos)
+&gt;&gt;&gt; next(chaves)
+'pão'
+&gt;&gt;&gt; next(chaves)
+'leite'</pre>
+
+<hr>
+
+<h2>3. O <code>for</code> por dentro</h2>
+<p>Agora dá para entender o <code>for</code>. Os dois laços abaixo fazem exatamente a mesma coisa; o segundo é o que o Python faz, escondido, quando você escreve o primeiro:</p>
+
+<pre class="file" data-file="por_dentro.py">compras = ["pão", "leite", "café"]
+
+# 1. O jeito de sempre: o for
+for item in compras:
+    print("Comprar:", item)
+
+print("---")
+
+# 2. O que o for faz por dentro
+it = iter(compras)
+while True:
+    try:
+        item = next(it)
+    except StopIteration:
+        break
+    print("Comprar:", item)
+</pre>
+
+<pre class="term">$ python3 por_dentro.py
+Comprar: pão
+Comprar: leite
+Comprar: café
+---
+Comprar: pão
+Comprar: leite
+Comprar: café</pre>
+
+<ol class="passo">
+  <li><code>it = iter(compras)</code>: antes da primeira volta, o <code>for</code> pede um iterador à lista.</li>
+  <li><code>while True:</code> repete "para sempre" (aula <a href="while.html">while</a>)…</li>
+  <li><code>item = next(it)</code>: …pedindo o próximo item e guardando na variável do laço.</li>
+  <li><code>except StopIteration: break</code>: quando o iterador avisa que acabou, o <code>try</code> (aula <a href="try-except.html">try e except</a>) captura o aviso e o <code>break</code> sai do laço. Sem traceback nenhum.</li>
+  <li><code>print("Comprar:", item)</code>: o corpo do <code>for</code>, uma vez por item.</li>
+</ol>
+
+<p>É por isso que o mesmo <code>for</code> serve para listas, textos, dicionários, arquivos e <code>range</code>: ele não conhece nenhum deles. Ele só sabe pedir <code>iter()</code> uma vez e <code>next()</code> até vir o <code>StopIteration</code>. Quem souber responder a essas duas perguntas pode ir num <code>for</code>.</p>
+
+<hr>
+
+<h2>4. O iterador se gasta</h2>
+<p>O marcador de página só anda para a frente. Quando chega ao fim, fica lá. Veja o que acontece ao percorrer o <strong>mesmo iterador</strong> duas vezes:</p>
+
+<pre class="file" data-file="gasta.py">senhas = iter([1, 2, 3])
+
+print("Primeira volta:")
+for s in senhas:
+    print("  senha", s)
+
+print("Segunda volta:")
+for s in senhas:
+    print("  senha", s)
+
+print("Fim.")
+</pre>
+
+<pre class="term">$ python3 gasta.py
+Primeira volta:
+  senha 1
+  senha 2
+  senha 3
+Segunda volta:
+Fim.</pre>
+
+<p>A segunda volta não mostrou nada, e também não deu erro. O segundo <code>for</code> pediu <code>iter(senhas)</code>, e o iterador de um iterador é <strong>ele mesmo</strong>, já no fim. O primeiro <code>next()</code> já veio com <code>StopIteration</code>, e o laço acabou sem nenhuma volta.</p>
+
+<p>Agora o mesmo programa com a <strong>lista</strong>, sem o <code>iter()</code> na primeira linha (<code>senhas = [1, 2, 3]</code>):</p>
+
+<pre class="term">$ python3 gasta_lista.py
+Primeira volta:
+  senha 1
+  senha 2
+  senha 3
+Segunda volta:
+  senha 1
+  senha 2
+  senha 3</pre>
+
+<p>Com a lista, cada <code>for</code> pede um iterador <strong>novo</strong>, que começa do zero: um marcador novo para o mesmo livro. O modo interativo confirma a diferença com o operador <code>is</code> (aula <a href="operadores-is-in.html">is e in</a>):</p>
+
+<pre class="term">&gt;&gt;&gt; it = iter([1, 2, 3])
+&gt;&gt;&gt; iter(it) is it
+True                       « o iterador de um iterador é ele mesmo
+&gt;&gt;&gt; lista = [1, 2, 3]
+&gt;&gt;&gt; iter(lista) is lista
+False                      « a lista entrega um objeto novo</pre>
+
+<div class="warning">
+<strong>Quem devolve iteradores (e se gasta)</strong>
+<p>Várias funções que você já usou devolvem <strong>iteradores</strong>, e não listas: <code>map()</code> e <code>filter()</code> (aula <a href="map-filter.html">map() e filter()</a>), <code>zip()</code> e <code>enumerate()</code> (aula <a href="enumerate-zip.html">enumerate() e zip()</a>), e o arquivo aberto com <code>open()</code>. Todos se gastam na primeira passada.</p>
+</div>
+
+<pre class="file" data-file="consumir.py">precos = [4.50, 12.00, 7.25]
+
+print(sum(iter(precos)))
+print(max(iter(precos)))
+print(list(iter(precos)))
+print(sorted(iter(precos)))
+
+com_desconto = map(lambda p: p * 0.9, precos)
+print(com_desconto)
+print(list(com_desconto))
+print(list(com_desconto))
+</pre>
+
+<pre class="term">$ python3 consumir.py
+23.75
+12.0
+[4.5, 12.0, 7.25]
+[4.5, 7.25, 12.0]
+&lt;map object at 0x7fa91a19b640&gt;      « o endereço muda a cada execução
+[4.05, 10.8, 6.525]
+[]</pre>
+
+<ul>
+  <li><code>sum()</code>, <code>max()</code>, <code>list()</code> e <code>sorted()</code> aceitam qualquer iterável, inclusive um iterador: eles fazem o próprio laço, com <code>next()</code> até o fim.</li>
+  <li><code>print(com_desconto)</code> não mostra os preços: mostra o objeto <code>map</code>, que ainda não calculou nada. Os valores só são calculados quando alguém pede, um por um.</li>
+  <li>O primeiro <code>list(com_desconto)</code> pede todos e gasta o iterador. O segundo recebe uma lista vazia, <code>[]</code>. (O <code>6.525</code> e o <code>10.8</code> são os preços com 10% de desconto; para mostrar com duas casas, use as <a href="f-strings.html">f-strings</a>.)</li>
+</ul>
+
+<p>Se você precisa dos valores mais de uma vez, guarde numa lista logo de cara: <code>com_desconto = list(map(…))</code>.</p>
+
+<h3>O arquivo também é um iterador</h3>
+<p>Um arquivo aberto (aula <a href="arquivos-ler.html">Lendo Arquivos</a>) entrega uma <strong>linha</strong> a cada <code>next()</code>. Dá para tirar a primeira linha na mão e deixar o resto para o <code>for</code>, um truque comum para pular o cabeçalho de um arquivo:</p>
+
+<pre class="file" data-file="compras.txt">pão
+leite
+café
+</pre>
+
+<pre class="file" data-file="ler_arquivo.py">with open("compras.txt", encoding="utf-8") as arquivo:
+    print(type(arquivo))
+    primeira = next(arquivo)
+    print("Primeira linha:", primeira.strip())
+    for linha in arquivo:
+        print("Resto:", linha.strip())
+</pre>
+
+<pre class="term">$ python3 ler_arquivo.py
+&lt;class '_io.TextIOWrapper'&gt;
+Primeira linha: pão
+Resto: leite
+Resto: café</pre>
+
+<p>O <code>for</code> continuou de onde o <code>next()</code> parou: o arquivo é o próprio marcador. O <code>.strip()</code> tira a quebra de linha (<code>\n</code>) que vem no fim de cada linha.</p>
+
+<div class="trypy" data-goal="out:Primeira linha: nome,nota;;out:Aluno: Ana,9.5;;semerro">
+<p class="try-task"><strong>Missão:</strong> o arquivo <code>notas.csv</code> tem um cabeçalho na primeira linha. Use <code>next(arquivo)</code> para ler o cabeçalho separado e mostrá-lo como <code>Primeira linha: …</code>; o <code>for</code> deve mostrar só os alunos.</p>
+<pre class="script" data-file="main.py">with open("notas.csv", encoding="utf-8") as arquivo:
+    for linha in arquivo:
+        print("Aluno:", linha.strip())
+</pre>
+<pre class="script" data-file="notas.csv">nome,nota
+Ana,9.5
+Bruno,7.0
+Carla,8.5
+</pre>
+<pre class="solucao" data-file="main.py">with open("notas.csv", encoding="utf-8") as arquivo:
+    cabecalho = next(arquivo)
+    print("Primeira linha:", cabecalho.strip())
+    for linha in arquivo:
+        print("Aluno:", linha.strip())
+</pre>
+</div>
+
+<hr>
+
+<h2>5. Criando o seu iterador: <code>__iter__</code> e <code>__next__</code></h2>
+<p>O <code>for</code> só faz duas perguntas: <code>iter()</code> e <code>next()</code>. Por baixo, elas chamam dois <strong>métodos especiais</strong> do objeto (aula <a href="metodos-especiais.html">Métodos Especiais</a>): <code>iter(x)</code> chama <code>x.__iter__()</code>, e <code>next(x)</code> chama <code>x.__next__()</code>. Escreva os dois numa classe (aula <a href="classes.html">Classes e Objetos</a>) e os objetos dela vão poder entrar num <code>for</code>.</p>
+
+<p>A Ana quer uma contagem regressiva para a virada do ano:</p>
+
+<pre class="file" data-file="contagem.py">class ContagemRegressiva:
+    def __init__(self, inicio):
+        self.atual = inicio
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.atual &lt;= 0:
+            raise StopIteration
+        valor = self.atual
+        self.atual -= 1
+        return valor
+
+
+for numero in ContagemRegressiva(3):
+    print(numero)
+print("Já!")
+</pre>
+
+<pre class="term">$ python3 contagem.py
+3
+2
+1
+Já!</pre>
+
+<dl class="anatomy">
+  <dt>def __init__(self, inicio):</dt><dd>Guarda em <code>self.atual</code> o número de onde a contagem parte. É a "memória" do marcador: onde ele está agora.</dd>
+  <dt>def __iter__(self): return self</dt><dd>A resposta para <code>iter()</code>. Este objeto <strong>já é</strong> o marcador, então devolve a si mesmo. Todo iterador faz assim.</dd>
+  <dt>def __next__(self):</dt><dd>A resposta para <code>next()</code>: entrega o próximo item.</dd>
+  <dt>if self.atual &lt;= 0: raise StopIteration</dt><dd>Chegou ao fim? Então lança o aviso combinado com <code>raise</code> (aula <a href="raise.html">raise</a>). Sem esta linha, a contagem nunca acaba (veja em <a href="#errado">Quando dá errado</a>).</dd>
+  <dt>valor = self.atual / self.atual -= 1 / return valor</dt><dd>Guarda o número da vez, anda uma casa e devolve o número guardado. A ordem importa: se você diminuísse antes de guardar, a contagem começaria do 2.</dd>
+</dl>
+
+<p>Chamando <code>next()</code> na mão, o <code>StopIteration</code> aparece com o caminho completo. Agora o traceback tem <strong>dois</strong> trechos: a linha do seu programa que chamou o <code>next()</code> e, embaixo, a linha do <code>__next__</code> que lançou a exceção:</p>
+
+<pre class="file" data-file="contagem_next.py">class ContagemRegressiva:
+    def __init__(self, inicio):
+        self.atual = inicio
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.atual &lt;= 0:
+            raise StopIteration
+        valor = self.atual
+        self.atual -= 1
+        return valor
+
+
+c = ContagemRegressiva(2)
+print(next(c))
+print(next(c))
+print(next(c))
+</pre>
+
+<pre class="term">$ python3 contagem_next.py
+2
+1
+Traceback (most recent call last):
+  File "/home/ana/contagem_next.py", line 19, in &lt;module&gt;
+    print(next(c))
+          ~~~~^^^
+  File "/home/ana/contagem_next.py", line 10, in __next__
+    raise StopIteration
+StopIteration</pre>
+
+<p>Leia de cima para baixo: na linha 19, o terceiro <code>print(next(c))</code> chamou o <code>next()</code>; ele foi parar no <code>__next__</code>, que, na linha 10, lançou o <code>StopIteration</code>. A chamada mais recente fica por último, como diz a primeira linha.</p>
+
+<hr>
+
+<h2>6. Iterável que pode ser percorrido várias vezes</h2>
+<p>A <code>ContagemRegressiva</code> é um iterador, e iteradores se gastam: um segundo <code>for</code> no mesmo objeto não mostraria nada. Uma lista não tem esse problema porque ela é um <strong>iterável</strong>, não um iterador: a cada <code>iter()</code>, ela fabrica um marcador novo. Dá para fazer o mesmo com duas classes, o livro e o marcador:</p>
+
+<pre class="file" data-file="playlist.py">class Playlist:
+    def __init__(self, musicas):
+        self.musicas = musicas
+
+    def __iter__(self):
+        return PlaylistIterador(self.musicas)
+
+
+class PlaylistIterador:
+    def __init__(self, musicas):
+        self.musicas = musicas
+        self.posicao = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.posicao &gt;= len(self.musicas):
+            raise StopIteration
+        musica = self.musicas[self.posicao]
+        self.posicao += 1
+        return musica
+
+
+festa = Playlist(["Asa Branca", "Garota de Ipanema", "Aquarela"])
+
+for musica in festa:
+    print("Tocando:", musica)
+
+print("De novo, desde o começo:")
+for musica in festa:
+    print("Tocando:", musica)
+</pre>
+
+<pre class="term">$ python3 playlist.py
+Tocando: Asa Branca
+Tocando: Garota de Ipanema
+Tocando: Aquarela
+De novo, desde o começo:
+Tocando: Asa Branca
+Tocando: Garota de Ipanema
+Tocando: Aquarela</pre>
+
+<dl class="anatomy">
+  <dt>class Playlist</dt><dd>O <strong>iterável</strong> (o livro). Não tem <code>__next__</code>: o <code>__iter__</code> dele fabrica um marcador novo a cada chamada.</dd>
+  <dt>class PlaylistIterador</dt><dd>O <strong>iterador</strong> (o marcador). Guarda a <code>posicao</code> e tem o <code>__next__</code>.</dd>
+  <dt>self.posicao &gt;= len(self.musicas)</dt><dd>Passou da última música? <code>StopIteration</code>.</dd>
+</dl>
+
+<p>Cada <code>for</code> chamou <code>festa.__iter__()</code>, ganhou um <code>PlaylistIterador</code> com <code>posicao = 0</code> e tocou tudo desde o começo.</p>
+
+<hr>
+
+<h2>Formas diferentes de fazer um objeto percorrível</h2>
+<p>Quando os itens já estão guardados numa lista, você não precisa escrever o marcador: o <code>__iter__</code> pode simplesmente devolver o iterador da própria lista.</p>
+
+<pre class="file" data-file="playlist_curta.py">class Playlist:
+    def __init__(self, musicas):
+        self.musicas = musicas
+
+    def __iter__(self):
+        return iter(self.musicas)
+
+
+festa = Playlist(["Asa Branca", "Garota de Ipanema", "Aquarela"])
+print(list(festa))
+print(list(festa))
+print("Aquarela" in festa)
+</pre>
+
+<pre class="term">$ python3 playlist_curta.py
+['Asa Branca', 'Garota de Ipanema', 'Aquarela']
+['Asa Branca', 'Garota de Ipanema', 'Aquarela']
+True</pre>
+
+<p>Funciona com <code>list()</code>, com <code>for</code> e até com <code>in</code>: o <code>in</code> também percorre o iterável, item por item, até achar. A terceira forma, a mais usada no dia a dia, é a <strong>função geradora</strong>, com <code>yield</code>, da próxima aula, <a href="geradores.html">Geradores</a>: ela escreve o <code>__iter__</code> e o <code>__next__</code> para você.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>__iter__</code> devolvendo <code>iter(self.lista)</code></td><td>Os itens já estão numa lista (ou tupla, dicionário) dentro do objeto. A mais curta</td></tr>
+<tr><td>Classe com <code>__iter__</code> e <code>__next__</code></td><td>Para entender como tudo funciona, ou quando o marcador precisa de uma lógica própria (uma contagem, uma leitura aos pedaços)</td></tr>
+<tr><td>Duas classes: iterável + iterador</td><td>Quando o objeto precisa ser percorrido várias vezes, ou por dois laços ao mesmo tempo</td></tr>
+<tr><td>Função geradora com <code>yield</code></td><td>Quase sempre, na prática: faz o mesmo que a classe com bem menos linhas (aula <a href="geradores.html">Geradores</a>)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong><code>next()</code> direto na lista</strong>
+<pre class="file" data-file="next_lista.py">compras = ["pão", "leite", "café"]
+print(next(compras))
+</pre>
+<pre class="term">$ python3 next_lista.py
+Traceback (most recent call last):
+  File "/home/ana/next_lista.py", line 2, in &lt;module&gt;
+    print(next(compras))
+          ~~~~^^^^^^^^^
+TypeError: 'list' object is not an iterator</pre>
+<p><code>TypeError: 'list' object is not an iterator</code>: "um objeto lista não é um iterador". A lista é o livro, não o marcador: ela não sabe qual é o "próximo". O <code>~~~~^^^^^^^^^</code> aponta a chamada <code>next(compras)</code> na linha 2. <strong>Como consertar:</strong> peça o iterador antes, <code>it = iter(compras)</code>, e chame <code>next(it)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Classe sem <code>__iter__</code> no <code>for</code></strong>
+<p>A <code>ContagemRegressiva</code> com o <code>__next__</code> certinho, mas sem o <code>__iter__</code>:</p>
+<pre class="term">$ python3 sem_iter.py
+Traceback (most recent call last):
+  File "/home/ana/sem_iter.py", line 13, in &lt;module&gt;
+    for numero in ContagemRegressiva(3):
+                  ~~~~~~~~~~~~~~~~~~^^^
+TypeError: 'ContagemRegressiva' object is not iterable</pre>
+<p>"O objeto <code>ContagemRegressiva</code> não é iterável". Antes da primeira volta, o <code>for</code> chama <code>iter()</code>, e o objeto não sabe responder: falta o <code>__iter__</code>. Ter o <code>__next__</code> não basta. <strong>Como consertar:</strong> acrescente <code>def __iter__(self): return self</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Classe sem <code>__next__</code></strong>
+<p>O contrário: o <code>__iter__</code> devolve <code>self</code>, mas a classe não tem <code>__next__</code>. É o código inicial da missão final:</p>
+<pre class="term">$ python3 pares_ini.py
+Traceback (most recent call last):
+  File "/home/ana/pares_ini.py", line 12, in &lt;module&gt;
+    print(list(Pares(10)))
+          ~~~~^^^^^^^^^^^
+TypeError: iter() returned non-iterator of type 'Pares'</pre>
+<p>"<code>iter()</code> devolveu um não-iterador, do tipo <code>Pares</code>". O <code>__iter__</code> prometeu um marcador e entregou um objeto que não sabe fazer <code>next()</code>. <strong>Como consertar:</strong> escreva o <code>__next__</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu o <code>StopIteration</code>: o laço que nunca acaba</strong>
+<p>Tire da <code>ContagemRegressiva</code> as duas linhas do <code>if self.atual &lt;= 0: raise StopIteration</code> e rode no terminal:</p>
+<pre class="term">$ python3 infinito.py
+3
+2
+1
+0
+-1
+-2
+«… mais de 266 mil linhas, em um segundo …»
+-266641
+-266642
+^C-266643
+Traceback (most recent call last):
+  File "/home/ana/infinito.py", line 15, in &lt;module&gt;
+    print(numero)
+    ~~~~~^^^^^^^^
+KeyboardInterrupt</pre>
+<p>Não há erro nenhum no código, do ponto de vista do Python: o <code>__next__</code> sempre tem um número para entregar, então o <code>for</code> nunca recebe o aviso de fim. A contagem passa do zero e segue pelos negativos até alguém apertar <strong>Ctrl+C</strong>. O terminal mostra o <code>^C</code> na hora em que a tecla é apertada, por isso ele aparece colado no último número, que o Python ainda terminou de escrever. O Ctrl+C interrompe o programa com <code>KeyboardInterrupt</code> ("interrupção pelo teclado"). A linha que aparece no traceback é a que estava rodando no instante do Ctrl+C, e pode ser outra no seu terminal. <strong>Como consertar:</strong> todo <code>__next__</code> precisa de um caminho que termine em <code>raise StopIteration</code>. (Por isso este exemplo fica só no terminal: não rode um laço sem fim no editor do guia.)</p>
+</div>
+
+<div class="cenario">
+<strong>O <code>in</code> gastou o iterador (sem erro nenhum)</strong>
+<pre class="file" data-file="in_gasta.py">compras = iter(["pão", "leite", "café", "açúcar"])
+
+if "leite" in compras:
+    print("Tem leite na lista!")
+
+print("A lista inteira:")
+for item in compras:
+    print(" ", item)
+</pre>
+<pre class="term">$ python3 in_gasta.py
+Tem leite na lista!
+A lista inteira:
+  café
+  açúcar</pre>
+<p>Sumiram o pão e o leite! Para responder ao <code>in</code>, o Python chamou <code>next()</code> até achar o <code>"leite"</code> e parou ali. O <code>for</code> continuou de onde o marcador ficou. É um erro de lógica: o programa roda, mas a resposta está errada. <strong>Como consertar:</strong> use a lista (sem o <code>iter()</code>), ou guarde uma lista com <code>list(…)</code> se o que você recebeu é um iterador.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>iter(x)</code></td><td>Pede um iterador para o iterável <code>x</code> (chama <code>x.__iter__()</code>)</td></tr>
+<tr><td><code>next(it)</code></td><td>O próximo item; <code>StopIteration</code> quando acabar (chama <code>it.__next__()</code>)</td></tr>
+<tr><td><code>next(it, padrao)</code></td><td>O próximo item; <code>padrao</code> quando acabar, sem exceção</td></tr>
+<tr><td><code>raise StopIteration</code></td><td>Dentro do <code>__next__</code>: avisa que não há mais itens</td></tr>
+<tr><td><code>def __iter__(self): return self</code></td><td>O que todo iterador escreve</td></tr>
+<tr><td><code>def __iter__(self): return iter(self.lista)</code></td><td>Objeto percorrível que repassa o iterador de uma lista</td></tr>
+<tr><td><code>list(it)</code>, <code>sum(it)</code>, <code>max(it)</code>, <code>sorted(it)</code></td><td>Percorrem até o fim (e gastam o iterador)</td></tr>
+<tr><td><code>map</code>, <code>filter</code>, <code>zip</code>, <code>enumerate</code>, arquivo aberto</td><td>Já são iteradores: servem para uma passada só</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>StopIteration</code> no seu programa</td><td><code>next()</code> chamado na mão depois do fim; use <code>next(it, padrao)</code> ou um <code>for</code></td></tr>
+<tr><td><code>TypeError: 'list' object is not an iterator</code></td><td><code>next()</code> numa lista: falta o <code>iter()</code></td></tr>
+<tr><td><code>TypeError: 'X' object is not iterable</code></td><td>A classe não tem <code>__iter__</code></td></tr>
+<tr><td><code>TypeError: iter() returned non-iterator of type 'X'</code></td><td>O <code>__iter__</code> devolve um objeto sem <code>__next__</code></td></tr>
+<tr><td>O laço nunca acaba</td><td>O <code>__next__</code> não tem um <code>raise StopIteration</code></td></tr>
+<tr><td>O segundo <code>for</code> não mostra nada; itens "somem"</td><td>O iterador já foi gasto (por outro <code>for</code>, um <code>list()</code>, um <code>in</code>)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Pedindo o marcador</h3>
+<p>Complete para mostrar <code>'pão'</code>:</p>
+<div class="ex-code">compras = ["pão", "leite"]<br>it = <input data-answer="iter(compras)" aria-label="primeira lacuna"><br>print(<input data-answer="next(it)" aria-label="segunda lacuna">)</div>
+</div>
+
+<div class="exercise">
+<h3>2. Sem exceção no fim</h3>
+<p>O iterador <code>it</code> já acabou. Complete para que a chamada devolva o texto <code>"fim"</code> em vez de lançar <code>StopIteration</code>:</p>
+<div class="ex-code">next(it, <input data-answer="&quot;fim&quot;|'fim'" aria-label="valor padrão">)</div>
+</div>
+
+<div class="exercise">
+<h3>3. O nome do método</h3>
+<p>Qual método especial o <code>next()</code> chama no objeto? Escreva só o nome, com os sublinhados.</p>
+<div class="ex-code"><input data-answer="__next__" aria-label="nome do método"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. <code>it = iter([1, 2])</code>, depois <code>print(list(it))</code> e <code>print(list(it))</code>. O que aparece?</p>
+<label><input type="radio" name="q4"> <code>[1, 2]</code> e <code>[1, 2]</code></label>
+<label><input type="radio" name="q4"> <code>[1, 2]</code> e <code>[]</code></label>
+<label><input type="radio" name="q4"> <code>[1, 2]</code> e um <code>StopIteration</code></label>
+<label><input type="radio" name="q4"> <code>[]</code> e <code>[]</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. Por que o <code>for</code> nunca mostra o <code>StopIteration</code>?</p>
+<label><input type="radio" name="q5"> Porque listas nunca acabam</label>
+<label><input type="radio" name="q5"> Porque o <code>for</code> não usa <code>next()</code></label>
+<label><input type="radio" name="q5"> Porque o <code>for</code> captura o <code>StopIteration</code> e usa como sinal para sair do laço</label>
+<label><input type="radio" name="q5"> Porque o <code>StopIteration</code> só existe no modo interativo</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Qual destes é um <strong>iterador</strong> (e não só um iterável)?</p>
+<label><input type="radio" name="q6"> <code>map(str, [1, 2, 3])</code></label>
+<label><input type="radio" name="q6"> <code>[1, 2, 3]</code></label>
+<label><input type="radio" name="q6"> <code>"abc"</code></label>
+<label><input type="radio" name="q6"> <code>{"a": 1}</code></label>
+</div>
+
+<h3>Missão final: os números pares</h3>
+
+<div class="trypy" data-goal="out:[0, 2, 4, 6, 8, 10];;src:def\s+__next__\s*\(;;semerro">
+<p class="try-task"><strong>Missão:</strong> a classe <code>Pares</code> deve entregar os números pares de 0 até o <code>limite</code> (incluindo o limite). Ela já tem o <code>__init__</code> e o <code>__iter__</code>; rode e veja o erro. Depois escreva o <code>__next__</code>: se <code>self.atual</code> passou do limite, <code>raise StopIteration</code>; senão, guarde o valor, some 2 ao <code>self.atual</code> e devolva o valor guardado.</p>
+<pre class="script" data-file="main.py">class Pares:
+    def __init__(self, limite):
+        self.limite = limite
+        self.atual = 0
+
+    def __iter__(self):
+        return self
+
+    # escreva aqui o __next__
+
+
+print(list(Pares(10)))
+</pre>
+<pre class="solucao" data-file="main.py">class Pares:
+    def __init__(self, limite):
+        self.limite = limite
+        self.atual = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.atual &gt; self.limite:
+            raise StopIteration
+        valor = self.atual
+        self.atual += 2
+        return valor
+
+
+print(list(Pares(10)))
+</pre>
+</div>
+
+<p>Com o <code>__next__</code> no lugar, sai <code>[0, 2, 4, 6, 8, 10]</code>. Experimente trocar o <code>list(Pares(10))</code> por um <code>for</code> e por <code>sum(Pares(10))</code>: o mesmo objeto serve para tudo que percorre.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><strong>Iterável</strong> é o que dá para percorrer (o livro); <strong>iterador</strong> é quem percorre e lembra onde parou (o marcador).</li>
+  <li><code>iter(x)</code> pede um iterador; <code>next(it)</code> entrega o próximo item; no fim, vem o <code>StopIteration</code>, ou o valor padrão de <code>next(it, padrao)</code>.</li>
+  <li>O <code>for</code> é um <code>iter()</code> seguido de <code>next()</code> até o <code>StopIteration</code>, que ele captura em silêncio.</li>
+  <li>Um iterador <strong>se gasta</strong>: só anda para a frente. Listas não se gastam porque cada <code>for</code> pede um iterador novo. <code>map</code>, <code>filter</code>, <code>zip</code>, <code>enumerate</code> e arquivos são iteradores.</li>
+  <li>Para criar o seu: <code>__iter__</code> devolve <code>self</code>; <code>__next__</code> entrega o próximo ou lança <code>StopIteration</code>. Sem o <code>raise</code>, o laço nunca acaba.</li>
+  <li>Na próxima aula, <a href="geradores.html">Geradores</a>, o <code>yield</code> faz tudo isso com muito menos código.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
