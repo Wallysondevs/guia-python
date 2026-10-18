@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Acessando Itens — índices, fatias e index() nas listas | Guia Python</title>
+<meta name="description" content="Como pegar um item de uma lista em Python: índices que começam em 0, índices negativos para o fim da lista, fatias, count() e index(), listas dentro de listas, e os erros reais do Python 3.14 (IndexError, ValueError do index, índice em texto vindo do input), com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Acessando Itens</span></h1>
+
+<p class="intro">Na aula <a href="listas.html">Listas</a>, a Ana guardou a lista de compras inteira numa variável e mostrou tudo de uma vez. Mas, no mercado, ela quer saber <strong>um</strong> item: "qual é o primeiro da lista?", "e o último?", "em que posição está o café?". Nesta aula você aprende a pegar um item (ou um pedaço da lista) pela sua <strong>posição</strong>, o <strong>índice</strong>.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é o índice de um item, e por que a contagem começa no <strong>0</strong>.</li>
+  <li>A pegar um item com <code>lista[posição]</code> e a guardá-lo numa variável.</li>
+  <li>A pegar os últimos itens com índices <strong>negativos</strong> (<code>lista[-1]</code>).</li>
+  <li>A pegar um pedaço da lista com uma <strong>fatia</strong> (<code>lista[1:3]</code>).</li>
+  <li>A descobrir a posição de um item com <code>index()</code> e a contar repetições com <code>count()</code>.</li>
+  <li>A chegar num item de uma lista que está dentro de outra lista.</li>
+  <li>Os erros reais: <code>IndexError</code>, o <code>ValueError</code> do <code>index()</code> e o índice que veio do <code>input()</code> como texto.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: os armários numerados</h2>
+<p>Pense nos armários de guardar bolsa na entrada do mercado. Ficam em fila, um do lado do outro, e cada um tem um número pintado na porta. Para pegar a sua bolsa, você não abre todos: vai direto no número certo.</p>
+
+<p>A lista é essa fileira de armários, e cada item mora num deles. O número da porta é o <strong>índice</strong> (em inglês, <em>index</em>). Só tem um detalhe, que confunde todo mundo no começo: em Python, <strong>o primeiro armário é o número 0</strong>, e não o 1.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Item</th><td><code>"arroz"</code></td><td><code>"feijão"</code></td><td><code>"café"</code></td><td><code>"leite"</code></td></tr>
+<tr><th>Índice</th><td><strong>0</strong></td><td><strong>1</strong></td><td><strong>2</strong></td><td><strong>3</strong></td></tr>
+<tr><th>Índice negativo</th><td>-4</td><td>-3</td><td>-2</td><td>-1</td></tr>
+</table>
+</div>
+
+<p>Por que começar no 0? Pense no índice como "quantos passos andar a partir do começo". Para chegar no primeiro item, você anda <strong>0</strong> passos; para o segundo, 1 passo; e assim por diante. É a mesma regra das letras de um texto, que você viu na aula <a href="strings-fatias.html">Índices e Fatias</a>. Uma consequência importante: numa lista de 4 itens, o último índice é <strong>3</strong>, e não 4.</p>
+
+<hr>
+
+<h2>1. Pegando um item pelo índice</h2>
+
+<pre class="file" data-file="posicoes.py">compras = ["arroz", "feijão", "café", "leite"]
+print(compras[0])
+print(compras[1])
+print(compras[3])
+primeiro = compras[0]
+print(f"Primeiro da lista: {primeiro}")
+</pre>
+
+<dl class="anatomy">
+  <dt>compras</dt><dd>A lista de onde você quer tirar o item.</dd>
+  <dt>[</dt><dd>Colado no nome da lista, sem espaço, o colchete agora quer dizer "o item da posição…". (Lembre: <code>[</code> sozinho, depois do <code>=</code>, <strong>cria</strong> uma lista; colado no nome de uma lista, <strong>pega</strong> um item dela.)</dd>
+  <dt>0</dt><dd>O índice, sempre um número <strong>inteiro</strong>. Pode ser um número escrito direto ou uma variável que guarde um inteiro.</dd>
+  <dt>]</dt><dd>Fecha o índice.</dd>
+  <dt>primeiro = compras[0]</dt><dd>O item é um valor como outro qualquer: dá para guardar numa variável, usar numa f-string, numa conta, num <code>if</code>.</dd>
+</dl>
+
+<pre class="term">$ python3 posicoes.py
+arroz
+feijão
+leite
+Primeiro da lista: arroz
+</pre>
+
+<p><code>compras[0]</code> é o arroz, o primeiro; <code>compras[1]</code> é o feijão, o segundo; <code>compras[3]</code> é o leite, o quarto e último. Repare que o <code>print</code> de um item sozinho mostra o texto sem aspas e sem colchetes: o que sai é o texto <code>arroz</code>, e não uma lista.</p>
+
+<div class="tip">
+<strong>"Posição" e "índice"</strong>
+<p>No dia a dia, a Ana diz "o café é o <strong>terceiro</strong> item". No Python, o café tem <strong>índice 2</strong>. As duas frases falam da mesma coisa, só que contam de jeitos diferentes. Para não se perder: <strong>índice = posição − 1</strong>.</p>
+</div>
+
+<hr>
+
+<h2>2. Do fim para o começo: índices negativos</h2>
+<p>Quase sempre você quer o último item, mas nem sempre sabe quantos itens a lista tem. O Python resolve isso com índices <strong>negativos</strong>, que contam a partir do fim: <code>-1</code> é o último, <code>-2</code> é o penúltimo.</p>
+
+<pre class="file" data-file="ultimo.py">compras = ["arroz", "feijão", "café", "leite"]
+print(compras[-1])
+print(compras[-2])
+print(compras[len(compras) - 1])
+</pre>
+
+<pre class="term">$ python3 ultimo.py
+leite
+café
+leite
+</pre>
+
+<p>A última linha mostra o jeito "longo" de pegar o último item: <code>len(compras)</code> é 4, menos 1 dá 3, o último índice. Funciona, mas <code>compras[-1]</code> diz a mesma coisa de um jeito muito mais curto e claro. Pense no <code>-1</code> como "um passo para trás a partir do fim". (Não existe <code>-0</code> para o último: <code>-0</code> é o mesmo que <code>0</code>, o primeiro.)</p>
+
+<div class="trypy" data-goal="out:sabão;;src:\[-1\]">
+<p class="try-task"><strong>Missão:</strong> o programa mostra o primeiro item. Troque o índice para mostrar o <strong>último</strong> item, usando um índice negativo.</p>
+<pre class="script" data-file="main.py">compras = ["arroz", "feijão", "café", "leite", "sabão"]
+print(compras[0])
+</pre>
+<pre class="solucao" data-file="main.py">compras = ["arroz", "feijão", "café", "leite", "sabão"]
+print(compras[-1])
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Um pedaço da lista: fatias</h2>
+<p>Às vezes a Ana quer mais de um item: "os dois primeiros", "do segundo ao terceiro". Para isso existe a <strong>fatia</strong> (em inglês, <em>slice</em>): <code>lista[início:fim]</code>. O resultado é uma <strong>nova lista</strong>, com os itens do índice <code>início</code> até o índice <code>fim</code>, <strong>sem incluir o fim</strong>.</p>
+
+<pre class="term">&gt;&gt;&gt; compras = ["arroz", "feijão", "café", "leite", "sabão"]
+&gt;&gt;&gt; compras[1:3]
+['feijão', 'café']
+&gt;&gt;&gt; compras[:2]
+['arroz', 'feijão']
+&gt;&gt;&gt; compras[2:]
+['café', 'leite', 'sabão']
+&gt;&gt;&gt; compras[-2:]
+['leite', 'sabão']
+&gt;&gt;&gt; compras[:]
+['arroz', 'feijão', 'café', 'leite', 'sabão']
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Fatia</th><th>Lê-se</th><th>Resultado</th></tr>
+<tr><td><code>compras[1:3]</code></td><td>Do índice 1 até antes do 3 (o 1 e o 2)</td><td><code>['feijão', 'café']</code></td></tr>
+<tr><td><code>compras[:2]</code></td><td>Do começo até antes do 2: os <strong>2 primeiros</strong></td><td><code>['arroz', 'feijão']</code></td></tr>
+<tr><td><code>compras[2:]</code></td><td>Do índice 2 até o fim</td><td><code>['café', 'leite', 'sabão']</code></td></tr>
+<tr><td><code>compras[-2:]</code></td><td>Do penúltimo até o fim: os <strong>2 últimos</strong></td><td><code>['leite', 'sabão']</code></td></tr>
+<tr><td><code>compras[:]</code></td><td>Do começo ao fim: a lista toda</td><td>Uma lista nova com todos os itens (veja a aula <a href="listas-copiar.html">Copiando Listas</a>)</td></tr>
+</table>
+</div>
+
+<p>Por que o fim fica de fora? Porque assim a conta fecha: <code>compras[1:3]</code> tem <code>3 - 1 = 2</code> itens, e <code>compras[:2]</code> tem exatamente 2. Os números das fatias funcionam igualzinho aos de um texto (aula <a href="strings-fatias.html">Índices e Fatias</a>).</p>
+
+<h3>Item × fatia</h3>
+<p>Compare com cuidado:</p>
+
+<pre class="term">&gt;&gt;&gt; compras[0]
+'arroz'
+&gt;&gt;&gt; compras[0:1]
+['arroz']
+</pre>
+
+<p><code>compras[0]</code> (com um número só) devolve o <strong>item</strong>: o texto <code>'arroz'</code>. <code>compras[0:1]</code> (com dois-pontos) devolve uma <strong>lista</strong> com um item só: <code>['arroz']</code>. Os colchetes na saída mostram a diferença.</p>
+
+<h3>Fatias não dão erro</h3>
+<p>Uma fatia que passa do fim da lista não reclama: pega o que existe. E uma fatia que começa depois do fim devolve uma lista vazia:</p>
+
+<pre class="term">&gt;&gt;&gt; compras[3:100]
+['leite', 'sabão']
+&gt;&gt;&gt; compras[10:20]
+[]
+</pre>
+
+<h3>Pulando itens: o passo</h3>
+<p>Um terceiro número, depois de mais um <code>:</code>, diz de quantos em quantos pegar. Com passo <code>-1</code>, a lista sai de trás para frente:</p>
+
+<pre class="term">&gt;&gt;&gt; compras[::2]
+['arroz', 'café', 'sabão']
+&gt;&gt;&gt; compras[::-1]
+['sabão', 'leite', 'café', 'feijão', 'arroz']
+</pre>
+
+<p><code>[::2]</code> pega um sim, um não (os índices 0, 2 e 4). <code>[::-1]</code> é um jeito curto de ter a lista ao contrário; a aula <a href="listas-ordenar.html">Ordenando Listas</a> mostra outros.</p>
+
+<hr>
+
+<h2>4. Onde está o café? <code>index()</code> e <code>count()</code></h2>
+<p>Até aqui você sabia o índice e queria o item. E quando é o contrário: você sabe o item e quer o índice? A lista tem um <strong>método</strong> para isso, o <code>index()</code>. Um método é uma função que pertence ao valor e se escreve depois de um ponto: <code>compras.index("café")</code> quer dizer "lista de compras, me diga o índice do café".</p>
+
+<pre class="file" data-file="procurar.py">compras = ["arroz", "feijão", "café", "leite"]
+posicao = compras.index("café")
+print(f"O café está na posição {posicao}.")
+print(compras.index("açúcar"))
+</pre>
+
+<pre class="term">$ python3 procurar.py
+O café está na posição 2.
+Traceback (most recent call last):
+  File "/home/ana/procurar.py", line 4, in &lt;module&gt;
+    print(compras.index("açúcar"))
+          ~~~~~~~~~~~~~^^^^^^^^^^
+ValueError: list.index(x): x not in list
+</pre>
+
+<p>O café está no índice 2, e o programa mostrou isso. Na linha 4, a Ana pediu o índice do açúcar, que não está na lista, e o programa parou com um erro. Você vai ver esse erro com calma em <a href="#errado">Quando dá errado</a>; o jeito seguro é <strong>perguntar antes</strong> com <code>in</code>:</p>
+
+<pre class="file" data-file="procurar2.py">compras = ["arroz", "feijão", "café", "leite"]
+procurado = "açúcar"
+if procurado in compras:
+    print(f"{procurado} está na posição {compras.index(procurado)}.")
+else:
+    print(f"{procurado} não está na lista.")
+</pre>
+
+<pre class="term">$ python3 procurar2.py
+açúcar não está na lista.
+</pre>
+
+<h3>Itens repetidos</h3>
+<p>Na cesta da padaria, o pão aparece três vezes. O <code>count()</code> ("contar") diz quantas vezes um item aparece, e o <code>index()</code> devolve só a <strong>primeira</strong> posição. Um segundo número no <code>index()</code> diz a partir de qual índice procurar:</p>
+
+<pre class="term">&gt;&gt;&gt; cesta = ["pão", "leite", "pão", "ovos", "pão"]
+&gt;&gt;&gt; cesta.count("pão")
+3
+&gt;&gt;&gt; cesta.count("café")
+0
+&gt;&gt;&gt; cesta.index("pão")
+0
+&gt;&gt;&gt; cesta.index("pão", 1)
+2
+</pre>
+
+<p>O <code>count()</code> nunca dá erro: se o item não está lá, a resposta é <code>0</code>. O <code>cesta.index("pão", 1)</code> começou a procurar no índice 1 e achou o próximo pão no índice 2.</p>
+
+<div class="trypy" data-goal="out:O café está na posição 2.;;src:\.index\(">
+<p class="try-task"><strong>Missão:</strong> o programa diz uma posição escrita à mão, e errada. Troque o <code>0</code> por <code>compras.index("café")</code> para o Python descobrir a posição sozinho.</p>
+<pre class="script" data-file="main.py">compras = ["arroz", "feijão", "café", "leite"]
+posicao = 0
+print(f"O café está na posição {posicao}.")
+</pre>
+<pre class="solucao" data-file="main.py">compras = ["arroz", "feijão", "café", "leite"]
+posicao = compras.index("café")
+print(f"O café está na posição {posicao}.")
+</pre>
+</div>
+
+<hr>
+
+<h2>5. O item de um item</h2>
+<p>O que você pega de uma lista é um valor comum, então dá para continuar "abrindo" esse valor. Um item que é texto tem letras; um item que é uma lista tem itens.</p>
+
+<pre class="term">&gt;&gt;&gt; compras[0][0]
+'a'
+&gt;&gt;&gt; compras[-1].upper()
+'SABÃO'
+</pre>
+
+<p><code>compras[0]</code> é <code>'arroz'</code>, e o <code>[0]</code> seguinte pega a primeira letra do arroz. <code>compras[-1]</code> é <code>'sabão'</code>, e o <code>.upper()</code> (aula <a href="strings-metodos.html">Métodos de Texto</a>) o põe em maiúsculas.</p>
+
+<h3>Listas dentro de listas</h3>
+<p>Uma lista pode guardar outras listas. A professora anotou cada aluno com a sua nota, num par <code>[nome, nota]</code>:</p>
+
+<pre class="term">&gt;&gt;&gt; turma = [["Ana", 9.5], ["Bruno", 7.0], ["Carla", 8.0]]
+&gt;&gt;&gt; turma[1]
+['Bruno', 7.0]
+&gt;&gt;&gt; turma[1][0]
+'Bruno'
+&gt;&gt;&gt; turma[1][1]
+7.0
+&gt;&gt;&gt; len(turma)
+3
+</pre>
+
+<dl class="anatomy">
+  <dt>turma[1]</dt><dd>O item de índice 1 da turma: o par do Bruno, que é uma lista.</dd>
+  <dt>turma[1][0]</dt><dd>Leia da esquerda para a direita: "na turma, o item 1; nele, o item 0". O nome do Bruno.</dd>
+  <dt>turma[1][1]</dt><dd>No par do Bruno, o item 1: a nota.</dd>
+  <dt>len(turma)</dt><dd>3: a turma tem 3 itens (os 3 pares). O <code>len</code> não conta o que está dentro de cada par.</dd>
+</dl>
+
+<p>Isso funciona, mas lembrar que "0 é o nome e 1 é a nota" cansa. Para fichas assim, as aulas <a href="tuplas.html">Tuplas</a> e <a href="dicionarios.html">Dicionários</a> mostram jeitos mais claros.</p>
+
+<hr>
+
+<h2>Formas diferentes de pegar itens</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Você quer</th><th>Escreva</th><th>Observação</th></tr>
+<tr><td>O primeiro item</td><td><code>lista[0]</code></td><td>Erro se a lista estiver vazia</td></tr>
+<tr><td>O último item</td><td><code>lista[-1]</code></td><td>Melhor que <code>lista[len(lista) - 1]</code>: mais curto, mesmo resultado</td></tr>
+<tr><td>O item da posição N, contando do 1 (como as pessoas contam)</td><td><code>lista[n - 1]</code></td><td>A chamada da escola, o "terceiro da fila"</td></tr>
+<tr><td>Os N primeiros</td><td><code>lista[:n]</code></td><td>Uma lista nova; nunca dá erro</td></tr>
+<tr><td>Os N últimos</td><td><code>lista[-n:]</code></td><td>Uma lista nova; nunca dá erro</td></tr>
+<tr><td>O índice de um item</td><td><code>lista.index(item)</code></td><td>Erro se o item não estiver lá: pergunte antes com <code>in</code></td></tr>
+<tr><td>Quantas vezes um item aparece</td><td><code>lista.count(item)</code></td><td>Devolve <code>0</code> se não aparecer</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>IndexError: pedir um armário que não existe</strong>
+<p>A Ana sabe que a lista tem 4 itens e, para pegar o último, escreveu <code>compras[len(compras)]</code>, isto é, <code>compras[4]</code>:</p>
+<pre class="file" data-file="fora.py">compras = ["arroz", "feijão", "café", "leite"]
+print(f"A lista tem {len(compras)} itens.")
+print(compras[len(compras)])
+</pre>
+<pre class="term">$ python3 fora.py
+A lista tem 4 itens.
+Traceback (most recent call last):
+  File "/home/ana/fora.py", line 3, in &lt;module&gt;
+    print(compras[len(compras)])
+          ~~~~~~~^^^^^^^^^^^^^^
+IndexError: list index out of range
+</pre>
+<p>Linha por linha:</p>
+<ul>
+  <li>A linha 2 rodou: <code>A lista tem 4 itens.</code> O erro aconteceu depois.</li>
+  <li><code>Traceback (most recent call last)</code>: "rastro do erro (a chamada mais recente por último)". É o começo de toda mensagem de erro de um programa que já estava rodando.</li>
+  <li><code>File "/home/ana/fora.py", line 3, in &lt;module&gt;</code>: no arquivo <code>fora.py</code>, linha 3, no corpo principal do programa (<code>&lt;module&gt;</code>).</li>
+  <li>A linha de código e, embaixo, as marcas: os <code>~~~~~~~</code> embaixo de <code>compras</code> e os <code>^^^^</code> embaixo do índice <code>[len(compras)]</code>. É o Python 3.14 mostrando <strong>qual parte</strong> da linha deu problema: o índice usado na lista.</li>
+  <li><code>IndexError: list index out of range</code>: "erro de índice: índice da lista fora do intervalo". Os índices que existem vão de 0 a 3; o 4 não existe.</li>
+</ul>
+<p>O mesmo erro acontece com um índice negativo grande demais (<code>compras[-6]</code> numa lista de 5) e com <code>lista[0]</code> numa lista vazia:</p>
+<pre class="term">&gt;&gt;&gt; compras = ["arroz", "feijão", "café", "leite", "sabão"]
+&gt;&gt;&gt; compras[-6]
+Traceback (most recent call last):
+  File "&lt;python-input-1&gt;", line 1, in &lt;module&gt;
+    compras[-6]
+    ~~~~~~~^^^^
+IndexError: list index out of range
+</pre>
+<p><strong>Como consertar:</strong> lembre que o último índice é <code>len(lista) - 1</code>, ou use <code>lista[-1]</code>. Se o índice vem de fora (do teclado, de uma conta), confira antes com <code>if 0 &lt;= indice &lt; len(lista):</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>ValueError: o <code>index()</code> de um item que não está lá</strong>
+<p>Você viu a mensagem lá em cima, no <code>procurar.py</code>:</p>
+<pre class="term">ValueError: list.index(x): x not in list
+</pre>
+<p>"Erro de valor: <code>list.index(x)</code>: x não está na lista". O <code>x</code> é só o nome que a mensagem dá para "o item que você procurou" (no caso, o açúcar); ela não repete o valor. Repare na diferença: o <code>IndexError</code> é um <strong>índice</strong> que não existe; o <code>ValueError</code> é um <strong>valor</strong> que não está na lista. E lembre que a comparação é exata: <code>compras.index("Café")</code>, com C maiúsculo, dá o mesmo erro. <strong>Como consertar:</strong> pergunte antes com <code>if item in lista:</code> (como no <code>procurar2.py</code>).</p>
+</div>
+
+<div class="note">
+<strong>A mensagem mudou de uma versão para outra</strong>
+<p>Até o Python 3.13 (o que vem no Debian 13, por exemplo), a mesma linha dizia <code>ValueError: 'açúcar' is not in list</code>, com o item na mensagem. No 3.14 ela ficou como você viu acima. Se você encontrar a forma antiga num livro ou num computador com um Python mais velho, é o mesmo erro.</p>
+</div>
+
+<div class="cenario">
+<strong>TypeError: o índice que veio do teclado</strong>
+<p>A professora quer digitar o número do aluno na chamada e ver o nome:</p>
+<pre class="file" data-file="chamada.py">alunos = ["Ana", "Bruno", "Carla", "Davi", "Eva"]
+numero = input("Número na chamada: ")
+print(alunos[numero])
+</pre>
+<pre class="term">$ python3 chamada.py
+Número na chamada: 4
+Traceback (most recent call last):
+  File "/home/ana/chamada.py", line 3, in &lt;module&gt;
+    print(alunos[numero])
+          ~~~~~~^^^^^^^^
+TypeError: list indices must be integers or slices, not str
+</pre>
+<p>"Erro de tipo: os índices de uma lista precisam ser inteiros ou fatias, e não <code>str</code>". O <code>input()</code> sempre devolve um <strong>texto</strong> (aula <a href="input.html">input()</a>): o que chegou foi <code>"4"</code>, e não o número 4. Com um decimal acontece o mesmo, e a mensagem termina em <code>not float</code>:</p>
+<pre class="term">&gt;&gt;&gt; compras[1.0]
+Traceback (most recent call last):
+  File "&lt;python-input-2&gt;", line 1, in &lt;module&gt;
+    compras[1.0]
+    ~~~~~~~^^^^^
+TypeError: list indices must be integers or slices, not float
+</pre>
+<p><strong>Como consertar:</strong> converta com <code>int()</code> (aula <a href="conversao.html">Conversão de Tipos</a>). E, como a chamada começa no 1 e os índices no 0, desconte 1:</p>
+<pre class="file" data-file="chamada2.py">alunos = ["Ana", "Bruno", "Carla", "Davi", "Eva"]
+numero = int(input("Número na chamada: "))
+posicao = numero - 1
+print(f"O número {numero} é {alunos[posicao]}.")
+</pre>
+<pre class="term">$ python3 chamada2.py
+Número na chamada: 4
+O número 4 é Davi.
+$ python3 chamada2.py
+Número na chamada: 9
+Traceback (most recent call last):
+  File "/home/ana/chamada2.py", line 4, in &lt;module&gt;
+    print(f"O número {numero} é {alunos[posicao]}.")
+                                 ~~~~~~^^^^^^^^^
+IndexError: list index out of range
+</pre>
+<p>Com o 4, saiu o Davi, o quarto da chamada. Com o 9, voltou o <code>IndexError</code>: a turma só tem 5 alunos. (E se alguém digitar <code>quatro</code>, por extenso, o erro é outro: <code>ValueError: invalid literal for int() with base 10: 'quatro'</code>, do <code>int()</code>. Tratar esses erros sem o programa parar é assunto da aula <a href="try-except.html">try e except</a>.)</p>
+</div>
+
+<div class="cenario">
+<strong>Parênteses no lugar dos colchetes</strong>
+<pre class="file" data-file="parenteses.py">compras = ["arroz", "feijão", "café", "leite"]
+print(compras(0))
+</pre>
+<pre class="term">$ python3 parenteses.py
+Traceback (most recent call last):
+  File "/home/ana/parenteses.py", line 2, in &lt;module&gt;
+    print(compras(0))
+          ~~~~~~~^^^
+TypeError: 'list' object is not callable
+</pre>
+<p>Parênteses depois de um nome querem dizer "chame (execute) isto", como em <code>print(…)</code> e <code>len(…)</code>. Uma lista não é uma função, então "o objeto lista não pode ser chamado". <strong>Como consertar:</strong> para pegar um item, colchetes: <code>compras[0]</code>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que devolve</th><th>Com <code>["arroz", "feijão", "café", "leite"]</code></th></tr>
+<tr><td><code>lista[i]</code></td><td>O item de índice <code>i</code> (o primeiro é o 0)</td><td><code>lista[1]</code> → <code>'feijão'</code></td></tr>
+<tr><td><code>lista[-i]</code></td><td>O <code>i</code>-ésimo item contando do fim</td><td><code>lista[-1]</code> → <code>'leite'</code></td></tr>
+<tr><td><code>lista[a:b]</code></td><td>Uma lista nova, do índice <code>a</code> até antes do <code>b</code></td><td><code>lista[1:3]</code> → <code>['feijão', 'café']</code></td></tr>
+<tr><td><code>lista[:n]</code> / <code>lista[-n:]</code></td><td>Os <code>n</code> primeiros / os <code>n</code> últimos</td><td><code>lista[:2]</code> → <code>['arroz', 'feijão']</code></td></tr>
+<tr><td><code>lista[::passo]</code></td><td>De <code>passo</code> em <code>passo</code>; <code>-1</code> inverte</td><td><code>lista[::-1]</code> → <code>['leite', 'café', 'feijão', 'arroz']</code></td></tr>
+<tr><td><code>lista.index(x)</code></td><td>O índice da primeira ocorrência de <code>x</code></td><td><code>lista.index("café")</code> → <code>2</code></td></tr>
+<tr><td><code>lista.index(x, i)</code></td><td>…procurando a partir do índice <code>i</code></td><td></td></tr>
+<tr><td><code>lista.count(x)</code></td><td>Quantas vezes <code>x</code> aparece</td><td><code>lista.count("pão")</code> → <code>0</code></td></tr>
+<tr><td><code>lista[i][j]</code></td><td>O item <code>j</code> de dentro do item <code>i</code></td><td><code>lista[0][0]</code> → <code>'a'</code></td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>IndexError: list index out of range</code></td><td>Índice maior que o último (<code>len - 1</code>), negativo demais, ou lista vazia</td></tr>
+<tr><td><code>ValueError: list.index(x): x not in list</code></td><td><code>index()</code> de um item que não está na lista (confira maiúsculas e acentos)</td></tr>
+<tr><td><code>TypeError: list indices must be integers or slices, not str</code></td><td>O índice é um texto, quase sempre vindo do <code>input()</code>: use <code>int()</code></td></tr>
+<tr><td><code>TypeError: 'list' object is not callable</code></td><td>Parênteses no lugar dos colchetes: <code>lista(0)</code></td></tr>
+<tr><td>Veio o item "do lado"</td><td>Contou a partir do 1: o índice é a posição menos 1</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O primeiro aluno</h3>
+<p>Com <code>alunos = ["Ana", "Bruno", "Carla"]</code>, complete para mostrar a Ana:</p>
+<div class="ex-code">print(alunos[<input data-answer="0|-3" aria-label="índice" size="3">])</div>
+</div>
+
+<div class="exercise">
+<h3>2. O último, sem saber o tamanho</h3>
+<p>Complete com o índice que sempre pega o último item, qualquer que seja o tamanho da lista:</p>
+<div class="ex-code">ultimo = notas[<input data-answer="-1" aria-label="índice" size="3">]</div>
+</div>
+
+<div class="exercise">
+<h3>3. Os três primeiros</h3>
+<p>Complete a fatia que pega os 3 primeiros itens:</p>
+<div class="ex-code">podio = classificacao[<input data-answer=":3|0:3" aria-label="fatia" size="5">]</div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. A lista <code>compras</code> tem 6 itens. Qual destes dá <code>IndexError</code>?</p>
+<label><input type="radio" name="q4"> <code>compras[0]</code></label>
+<label><input type="radio" name="q4"> <code>compras[-6]</code></label>
+<label><input type="radio" name="q4"> <code>compras[6]</code></label>
+<label><input type="radio" name="q4"> <code>compras[2:10]</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. O que mostra <code>print(["pão", "leite", "pão"].index("pão"))</code>?</p>
+<label><input type="radio" name="q5"> <code>[0, 2]</code></label>
+<label><input type="radio" name="q5"> <code>0</code></label>
+<label><input type="radio" name="q5"> <code>2</code></label>
+<label><input type="radio" name="q5"> <code>1</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. Qual a diferença entre <code>compras[0]</code> e <code>compras[0:1]</code>?</p>
+<label><input type="radio" name="q6"> Nenhuma</label>
+<label><input type="radio" name="q6"> <code>compras[0:1]</code> pega os dois primeiros itens</label>
+<label><input type="radio" name="q6"> <code>compras[0]</code> dá erro numa lista de um item</label>
+<label><input type="radio" name="q6"> <code>compras[0]</code> é o item; <code>compras[0:1]</code> é uma lista com esse item</label>
+</div>
+
+<h3>Missão final: a chamada da turma</h3>
+
+<div class="trypy" data-stdin="4" data-goal="out:Davi tirou 6.5;;semerro">
+<p class="try-task"><strong>Missão:</strong> a professora digita o número do aluno <strong>na chamada</strong> (que começa no 1) e o programa mostra o nome e a nota. Do jeito que está, dá <code>TypeError</code>. Converta o que foi digitado com <code>int()</code> e desconte 1 para achar o índice. (O editor vai digitar o <code>4</code> por você.)</p>
+<pre class="script" data-file="main.py">alunos = ["Ana", "Bruno", "Carla", "Davi", "Eva"]
+notas = [9.5, 7.0, 8.0, 6.5, 10.0]
+numero = input("Número na chamada: ")
+posicao = numero
+print(f"{alunos[posicao]} tirou {notas[posicao]}")
+</pre>
+<pre class="solucao" data-file="main.py">alunos = ["Ana", "Bruno", "Carla", "Davi", "Eva"]
+notas = [9.5, 7.0, 8.0, 6.5, 10.0]
+numero = int(input("Número na chamada: "))
+posicao = numero - 1
+print(f"{alunos[posicao]} tirou {notas[posicao]}")
+</pre>
+</div>
+
+<p>Repare que as duas listas usam o <strong>mesmo índice</strong>: o aluno do índice 3 tem a nota do índice 3. É um jeito simples de guardar dados que andam juntos; a aula <a href="enumerate-zip.html">enumerate() e zip()</a> mostra como percorrer as duas de uma vez.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Cada item tem um <strong>índice</strong>, e o primeiro é o <strong>0</strong>. O último é <code>len(lista) - 1</code>.</li>
+  <li><code>lista[i]</code> pega um item; o resultado é um valor comum, que dá para guardar e usar.</li>
+  <li>Índices negativos contam do fim: <code>lista[-1]</code> é o último, <code>lista[-2]</code> o penúltimo.</li>
+  <li><code>lista[a:b]</code> é uma <strong>fatia</strong>: uma lista nova do índice <code>a</code> até antes do <code>b</code>. Fatias nunca dão erro.</li>
+  <li><code>lista.index(x)</code> diz onde está o item (a primeira vez); <code>lista.count(x)</code> diz quantas vezes ele aparece.</li>
+  <li>Índice que não existe: <code>IndexError</code>. Item que não existe no <code>index()</code>: <code>ValueError</code> (pergunte antes com <code>in</code>).</li>
+  <li>O índice tem de ser inteiro: o que vem do <code>input()</code> precisa de <code>int()</code>.</li>
+  <li>Em listas dentro de listas, leia da esquerda para a direita: <code>turma[1][0]</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
