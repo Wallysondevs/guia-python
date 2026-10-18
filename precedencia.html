@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Precedência — quem o Python calcula primeiro | Guia Python</title>
+<meta name="description" content="Precedência dos operadores em Python para quem está começando: por que 2 + 3 * 4 dá 14, os parênteses, a potência que vem antes do sinal de menos (-2 ** 2 dá -4), a ordem da esquerda para a direita, comparações, not, and e or, o erro clássico da média e o TypeError real de texto + conta, com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Precedência</span> dos Operadores</h1>
+
+<p class="intro">Quanto é <code>2 + 3 * 4</code>? Se você fizer a conta da esquerda para a direita, dá 20. O Python responde 14. Ele não errou: ele segue a mesma regra que você aprendeu na escola, <strong>a multiplicação vem antes da soma</strong>. Essa regra de "quem vai primeiro" se chama <strong>precedência</strong> (do latim, "ir na frente"). Nesta aula você vai ver a ordem completa, do <code>**</code> até o <code>or</code>, e o que fazer quando quiser outra ordem: <strong>parênteses</strong>.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>Por que <code>2 + 3 * 4</code> dá 14, e como os parênteses mudam a conta.</li>
+  <li>A potência <code>**</code>, que vem antes de tudo, até do sinal de menos: <code>-2 ** 2</code> dá <code>-4</code>.</li>
+  <li>O que acontece quando dois operadores têm a mesma força: da esquerda para a direita (com uma exceção).</li>
+  <li>Onde entram as comparações (<code>&gt;</code>, <code>==</code>, <code>in</code>, <code>is</code>) e o <code>not</code>, o <code>and</code> e o <code>or</code>.</li>
+  <li>O erro mais comum de todos: a média calculada sem parênteses. E o <code>TypeError</code> real de um texto somado com uma conta.</li>
+  <li>A tabela completa, do mais forte para o mais fraco.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a ordem das tarefas</h2>
+<p>A Ana vai fazer um bolo. A receita diz: "misture a farinha com os ovos, leve ao forno". Ninguém leva a farinha ao forno antes de misturar: há uma ordem. Numa conta é igual. Quando a expressão tem vários operadores, o Python não sai fazendo na ordem em que eles aparecem; ele segue uma <strong>lista de prioridades</strong>, a mesma da matemática da escola:</p>
+
+<ol class="passo">
+  <li>Primeiro, o que está entre <strong>parênteses</strong>.</li>
+  <li>Depois, a <strong>potência</strong> (<code>**</code>).</li>
+  <li>Depois, <strong>multiplicação e divisão</strong> (<code>*</code>, <code>/</code>, <code>//</code>, <code>%</code>).</li>
+  <li>Por último, <strong>soma e subtração</strong> (<code>+</code>, <code>-</code>).</li>
+</ol>
+
+<p>Os operadores que você conheceu na aula <a href="operadores-aritmeticos.html">Operadores Aritméticos</a> estão todos nessa lista. As comparações e o <code>and</code>/<code>or</code> entram depois deles, como você vai ver na seção 5.</p>
+
+<hr>
+
+<h2>1. Multiplicação antes da soma</h2>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; 2 + 3 * 4
+14
+&gt;&gt;&gt; (2 + 3) * 4
+20
+&gt;&gt;&gt; exit()
+</pre>
+
+<dl class="anatomy">
+  <dt>2 + 3 * 4</dt><dd>O <code>*</code> tem mais força que o <code>+</code>. O Python faz primeiro <code>3 * 4</code>, que dá 12, e depois <code>2 + 12</code>: <strong>14</strong>.</dd>
+  <dt>(2 + 3) * 4</dt><dd>Os parênteses dizem "isto primeiro". O Python faz <code>2 + 3</code>, que dá 5, e depois <code>5 * 4</code>: <strong>20</strong>.</dd>
+</dl>
+
+<p>Um jeito de ver o que o Python enxerga é imaginar os parênteses que ele "põe sozinho": <code>2 + 3 * 4</code> é lido como <code>2 + (3 * 4)</code>.</p>
+
+<p>Um exemplo da vida da Ana: uma blusa de 50 reais com 10% de desconto.</p>
+
+<pre class="file" data-file="desconto.py">preco = 50
+desconto = 10
+
+preco_final = preco - preco * desconto / 100
+print("Preço final:", preco_final)
+</pre>
+
+<pre class="term">$ python3 desconto.py
+Preço final: 45.0
+</pre>
+
+<p>O Python fez <code>preco * desconto</code> (500), depois <code>/ 100</code> (5.0) e só no fim <code>preco - 5.0</code>: 45.0. Aqui a ordem natural era exatamente a que a Ana queria, e nenhum parêntese foi preciso. (O resultado tem <code>.0</code> porque a divisão <code>/</code> sempre dá um <code>float</code>, como você viu em <a href="numeros.html">Números</a>.)</p>
+
+<hr>
+
+<h2>2. A potência vem antes de tudo</h2>
+<p>A potência, <code>**</code>, é o operador de conta mais forte. Ela vem antes da multiplicação:</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; 2 * 3 ** 2
+18
+&gt;&gt;&gt; (2 * 3) ** 2
+36
+&gt;&gt;&gt; -2 ** 2
+-4
+&gt;&gt;&gt; (-2) ** 2
+4
+&gt;&gt;&gt; exit()
+</pre>
+
+<ul>
+  <li><code>2 * 3 ** 2</code>: primeiro <code>3 ** 2</code> (9), depois <code>2 * 9</code>: <strong>18</strong>.</li>
+  <li><code>(2 * 3) ** 2</code>: primeiro <code>2 * 3</code> (6), depois <code>6 ** 2</code>: <strong>36</strong>.</li>
+  <li><code>-2 ** 2</code> dá <strong>-4</strong>, e não 4! O sinal de menos na frente de um número é um operador também, e ele é <strong>mais fraco</strong> que a potência. O Python lê <code>-(2 ** 2)</code>: eleva 2 ao quadrado (4) e depois troca o sinal.</li>
+  <li>Para elevar o <strong>menos dois</strong> ao quadrado, ponha parênteses: <code>(-2) ** 2</code> dá <strong>4</strong>.</li>
+</ul>
+
+<div class="tip">
+<strong>É assim na matemática também</strong>
+<p>Na escola, −2² também vale −4: o expoente fica "grudado" no 2, e não no sinal. O Python segue a mesma convenção. Na dúvida, parênteses.</p>
+</div>
+
+<hr>
+
+<h2>3. Mesma força: da esquerda para a direita</h2>
+<p>E quando dois operadores têm a <strong>mesma</strong> força, como <code>-</code> e <code>-</code>, ou <code>/</code> e <code>*</code>? Aí o Python vai da <strong>esquerda para a direita</strong>, como você lê:</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; 10 - 4 - 3
+3
+&gt;&gt;&gt; 10 - (4 - 3)
+9
+&gt;&gt;&gt; 100 / 10 * 2
+20.0
+&gt;&gt;&gt; 100 / (10 * 2)
+5.0
+&gt;&gt;&gt; 17 // 5 * 2
+6
+&gt;&gt;&gt; exit()
+</pre>
+
+<ul>
+  <li><code>10 - 4 - 3</code> é <code>(10 - 4) - 3</code>: 6 menos 3, <strong>3</strong>. Com os parênteses no outro lugar, <code>10 - (4 - 3)</code> é 10 menos 1: <strong>9</strong>.</li>
+  <li><code>100 / 10 * 2</code> é <code>(100 / 10) * 2</code>: 10.0 vezes 2, <strong>20.0</strong>. Muita gente espera 5, achando que a multiplicação vem antes. Não vem: <code>*</code> e <code>/</code> têm a mesma força, e vale a ordem da leitura.</li>
+  <li><code>17 // 5 * 2</code>: a divisão inteira <code>//</code> também tem a força do <code>*</code>. <code>17 // 5</code> dá 3, vezes 2: <strong>6</strong>.</li>
+</ul>
+
+<h3>A exceção: a potência vai da direita para a esquerda</h3>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; 2 ** 3 ** 2
+512
+&gt;&gt;&gt; (2 ** 3) ** 2
+64
+&gt;&gt;&gt; exit()
+</pre>
+
+<p><code>2 ** 3 ** 2</code> é lido como <code>2 ** (3 ** 2)</code>: primeiro <code>3 ** 2</code> (9), depois <code>2 ** 9</code>: <strong>512</strong>. É a única exceção da tabela, e também segue a matemática (numa "torre" de expoentes, a conta começa por cima). Se você quer o outro jeito, <code>(2 ** 3) ** 2</code> dá 8 ao quadrado: 64.</p>
+
+<div class="trypy" data-goal="out:Média: 8.0;;semerro">
+<p class="try-task"><strong>Missão:</strong> a Ana tirou 7 e 9 nas provas. A média deveria ser 8, mas o programa mostra 11.5. Ponha parênteses no lugar certo.</p>
+<pre class="script" data-file="main.py">nota1 = 7
+nota2 = 9
+media = nota1 + nota2 / 2
+print("Média:", media)
+</pre>
+<pre class="solucao" data-file="main.py">nota1 = 7
+nota2 = 9
+media = (nota1 + nota2) / 2
+print("Média:", media)
+</pre>
+</div>
+
+<p>Por que 11.5? Sem parênteses, o Python fez primeiro <code>nota2 / 2</code> (4.5) e depois <code>7 + 4.5</code>. A seção <a href="#errado">Quando dá errado</a> volta a esse erro, que é o mais comum desta aula.</p>
+
+<hr>
+
+<h2>4. Contas antes das comparações</h2>
+<p>As comparações (<code>&gt;</code>, <code>&lt;</code>, <code>==</code>, <code>!=</code>, e também <code>in</code> e <code>is</code>, da aula <a href="operadores-is-in.html">is e in</a>) são mais fracas que todas as contas. Então o Python primeiro calcula os dois lados e só depois compara:</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; 2 + 3 &gt; 4
+True
+&gt;&gt;&gt; x = 5
+&gt;&gt;&gt; 1 &lt; x &lt; 10
+True
+&gt;&gt;&gt; exit()
+</pre>
+
+<p><code>2 + 3 &gt; 4</code> é <code>(2 + 3) &gt; 4</code>, isto é, <code>5 &gt; 4</code>: <code>True</code>. É o que você esperaria, e por isso quase nunca se põe parênteses em volta das contas de uma comparação.</p>
+
+<p>Todas as comparações têm <strong>a mesma força</strong> entre si, e o Python faz uma coisa especial quando elas aparecem em fila: <code>1 &lt; x &lt; 10</code> quer dizer "<code>1 &lt; x</code> <strong>e</strong> <code>x &lt; 10</code>", como na matemática. É a <strong>comparação encadeada</strong>, que a aula <a href="operadores-comparacao.html">Comparações</a> apresenta. Ela é ótima para faixas de valores, mas tem uma armadilha, que está em <a href="#errado">Quando dá errado</a>.</p>
+
+<hr>
+
+<h2>5. <code>not</code>, depois <code>and</code>, depois <code>or</code></h2>
+<p>Os operadores lógicos da aula <a href="operadores-logicos.html">and, or e not</a> são os mais fracos de todos, e também têm uma ordem entre eles: <strong><code>not</code> primeiro, depois <code>and</code>, por último <code>or</code></strong>. (Um jeito de lembrar: o <code>and</code> é como uma multiplicação, e o <code>or</code>, como uma soma.)</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; True or False and False
+True
+&gt;&gt;&gt; (True or False) and False
+False
+&gt;&gt;&gt; not True == False
+True
+&gt;&gt;&gt; not 5 &gt; 3 and 2 &gt; 1
+False
+&gt;&gt;&gt; exit()
+</pre>
+
+<ul>
+  <li><code>True or False and False</code>: o <code>and</code> vai primeiro. <code>False and False</code> dá <code>False</code>; depois, <code>True or False</code>: <strong><code>True</code></strong>.</li>
+  <li>Com parênteses, <code>(True or False) and False</code> é <code>True and False</code>: <strong><code>False</code></strong>. Os mesmos valores, outra resposta.</li>
+  <li><code>not True == False</code>: o <code>not</code> é mais fraco que o <code>==</code>! O Python lê <code>not (True == False)</code>, isto é, <code>not False</code>: <strong><code>True</code></strong>.</li>
+  <li><code>not 5 &gt; 3 and 2 &gt; 1</code> é <code>(not (5 &gt; 3)) and (2 &gt; 1)</code>: <code>False and True</code>, <strong><code>False</code></strong>.</li>
+</ul>
+
+<p>Agora um caso de verdade. No cinema do bairro, a meia-entrada vale para crianças (menos de 12 anos) e idosos (60 ou mais), mas <strong>sempre</strong> com a carteirinha. O sobrinho da Ana tem 8 anos e esqueceu a carteirinha:</p>
+
+<pre class="file" data-file="meia.py">idade = 8
+tem_carteirinha = False
+
+print(idade &lt; 12 or idade &gt;= 60 and tem_carteirinha)
+print((idade &lt; 12 or idade &gt;= 60) and tem_carteirinha)
+</pre>
+
+<pre class="term">$ python3 meia.py
+True
+False
+</pre>
+
+<p>A primeira linha deu <code>True</code>, e o menino entraria pagando meia sem carteirinha. Como o <code>and</code> vai antes do <code>or</code>, o Python leu <code>idade &lt; 12 or (idade &gt;= 60 and tem_carteirinha)</code>: a carteirinha ficou exigida só dos idosos. A segunda linha, com parênteses em volta do "criança ou idoso", diz o que a regra diz: <code>False</code>.</p>
+
+<div class="warning">
+<strong>Misturou <code>and</code> com <code>or</code>? Use parênteses</strong>
+<p>Mesmo quando a ordem natural já é a que você quer, os parênteses deixam claro para quem lê (inclusive você, daqui a um mês). Numa linha com <code>and</code> e <code>or</code> juntos, eles são quase obrigatórios.</p>
+</div>
+
+<hr>
+
+<h2>A tabela completa</h2>
+<p>Do <strong>mais forte</strong> (feito primeiro) para o <strong>mais fraco</strong> (feito por último). Os que estão na mesma linha têm a mesma força e vão da esquerda para a direita (menos a potência):</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Força</th><th>Operadores</th><th>Nome</th><th>Exemplo</th></tr>
+<tr><td>1 (mais forte)</td><td><code>( )</code></td><td>Parênteses</td><td><code>(2 + 3) * 4</code> → 20</td></tr>
+<tr><td>2</td><td><code>**</code></td><td>Potência (da direita para a esquerda)</td><td><code>2 ** 3 ** 2</code> → 512</td></tr>
+<tr><td>3</td><td><code>-x</code>, <code>+x</code></td><td>Sinal na frente de um valor</td><td><code>-2 ** 2</code> → -4</td></tr>
+<tr><td>4</td><td><code>*</code>, <code>/</code>, <code>//</code>, <code>%</code></td><td>Multiplicação e divisões</td><td><code>100 / 10 * 2</code> → 20.0</td></tr>
+<tr><td>5</td><td><code>+</code>, <code>-</code></td><td>Soma e subtração</td><td><code>2 + 3 * 4</code> → 14</td></tr>
+<tr><td>6</td><td><code>==</code>, <code>!=</code>, <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>, <code>in</code>, <code>not in</code>, <code>is</code>, <code>is not</code></td><td>Comparações</td><td><code>2 + 3 &gt; 4</code> → True</td></tr>
+<tr><td>7</td><td><code>not</code></td><td>"Não"</td><td><code>not True == False</code> → True</td></tr>
+<tr><td>8</td><td><code>and</code></td><td>"E"</td><td></td></tr>
+<tr><td>9 (mais fraco)</td><td><code>or</code></td><td>"Ou"</td><td><code>True or False and False</code> → True</td></tr>
+</table>
+</div>
+
+<p>A tabela oficial do Python tem mais alguns operadores, que você ainda não conhece (os que trabalham com os bits de um número, como <code>&amp;</code> e <code>|</code>, o <code>if</code>/<code>else</code> numa linha e o <code>lambda</code>). A tabela inteira está na página <a href="ref-operadores.html">Operadores</a> da Referência.</p>
+
+<hr>
+
+<h2>Formas diferentes de escrever a mesma conta</h2>
+<p>A Ana quer converter 25 graus Celsius para Fahrenheit: multiplica por 9, divide por 5, soma 32. Três jeitos de escrever:</p>
+
+<pre class="file" data-file="temp.py">celsius = 25
+fahrenheit = celsius * 9 / 5 + 32
+print(fahrenheit)
+print(((celsius * 9) / 5) + 32)
+print(celsius * (9 / 5) + 32)
+</pre>
+
+<pre class="term">$ python3 temp.py
+77.0
+77.0
+77.0
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>celsius * 9 / 5 + 32</code></td><td>Quando a ordem natural é óbvia (só <code>*</code>, <code>/</code> e <code>+</code>, como na escola). Limpa e correta</td></tr>
+<tr><td><code>((celsius * 9) / 5) + 32</code></td><td>Evite: parênteses demais, que não mudam nada, cansam quem lê</td></tr>
+<tr><td><code>celsius * (9 / 5) + 32</code></td><td>Boa quando o parêntese mostra uma ideia (aqui, "o fator 9/5")</td></tr>
+<tr><td><code>(nota1 + nota2) / 2</code></td><td>Obrigatório: sem ele, a conta muda</td></tr>
+<tr><td><code>(a or b) and c</code></td><td>Sempre que misturar <code>and</code> com <code>or</code></td></tr>
+</table>
+</div>
+
+<p>A regra prática: <strong>parênteses quando mudam a conta, ou quando ajudam a ler</strong>. Ninguém precisa decorar a tabela inteira; precisa saber os casos comuns e, na dúvida, pôr parênteses.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>A média sem parênteses: nenhuma mensagem, resposta errada</strong>
+<pre class="file" data-file="media.py">nota1 = 7
+nota2 = 9
+media = nota1 + nota2 / 2
+print("Média:", media)
+</pre>
+<pre class="term">$ python3 media.py
+Média: 11.5
+</pre>
+<p>O pior tipo de erro: o programa roda, não reclama de nada, e a resposta está errada. A média de 7 e 9 não pode ser 11.5 (a média nunca passa da maior nota). O Python fez o que está escrito: <code>nota1 + (nota2 / 2)</code>, isto é, 7 + 4.5. <strong>Como consertar:</strong> <code>media = (nota1 + nota2) / 2</code>.</p>
+<pre class="term">$ python3 media-certa.py
+Média: 8.0
+</pre>
+<p>Desconfie sempre de um resultado que "não faz sentido", e confira a conta com números fáceis, de cabeça.</p>
+</div>
+
+<div class="cenario">
+<strong>Um texto somado com uma conta: <code>TypeError</code></strong>
+<pre class="file" data-file="total.py">quantidade = 2
+preco = 3
+print("Total: " + quantidade * preco)
+</pre>
+<pre class="term">$ python3 total.py
+Traceback (most recent call last):
+  File "/home/ana/total.py", line 3, in &lt;module&gt;
+    print("Total: " + quantidade * preco)
+          ~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~
+TypeError: can only concatenate str (not "int") to str
+</pre>
+<dl class="anatomy">
+  <dt>File "/home/ana/total.py", line 3</dt><dd>O erro está na linha 3 do arquivo <code>total.py</code>.</dd>
+  <dt>~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~</dt><dd>As marcas embaixo da linha. O <code>^</code> aponta o operador que falhou: o <code>+</code>. Os <code>~</code> sublinham os dois lados dele: à esquerda, <code>"Total: "</code>; à direita, <strong><code>quantidade * preco</code> inteiro</strong>. É a precedência aparecendo na mensagem: a multiplicação já tinha sido feita (deu 6), e o <code>+</code> recebeu o texto e o número 6.</dd>
+  <dt>TypeError:</dt><dd>"Erro de tipo".</dd>
+  <dt>can only concatenate str (not "int") to str</dt><dd>"Só dá para concatenar (juntar) um <code>str</code> (texto) com outro <code>str</code>, e não com um <code>int</code> (número inteiro)." O <code>+</code> entre textos junta; entre números, soma; entre um texto e um número, o Python não sabe o que você quer.</dd>
+</dl>
+<p><strong>Como consertar:</strong> transforme o resultado em texto com <code>str()</code>, ou deixe o <code>print</code> separar as partes com vírgula:</p>
+<pre class="file" data-file="total-certo.py">quantidade = 2
+preco = 3
+print("Total: " + str(quantidade * preco))
+print("Total:", quantidade * preco)
+</pre>
+<pre class="term">$ python3 total-certo.py
+Total: 6
+Total: 6
+</pre>
+<p>Juntar textos com <code>+</code> é o assunto da aula <a href="strings-juntar.html">Juntar e Repetir Textos</a>; o jeito mais prático de misturar texto e números, as <a href="f-strings.html">f-strings</a>, tem aula própria.</p>
+</div>
+
+<div class="cenario">
+<strong><code>== True</code> no fim de uma comparação</strong>
+<p>A Ana quer saber se o primo dela, de 15 anos, tem mais de 12. Ela escreveu <code>== True</code> no fim, "para garantir":</p>
+<pre class="file" data-file="encadeada.py">idade = 15
+print(idade &gt; 12 == True)
+print((idade &gt; 12) == True)
+print(idade &gt; 12)
+</pre>
+<pre class="term">$ python3 encadeada.py
+False
+True
+True
+</pre>
+<p>A primeira linha deu <code>False</code>, sem erro nenhum. O <code>&gt;</code> e o <code>==</code> têm a mesma força, e comparações em fila viram uma <strong>comparação encadeada</strong>: <code>idade &gt; 12 == True</code> quer dizer <code>idade &gt; 12 <strong>and</strong> 12 == True</code>. E 12 não é igual a <code>True</code>. <strong>Como consertar:</strong> não escreva <code>== True</code>. A comparação <code>idade &gt; 12</code> já é <code>True</code> ou <code>False</code> sozinha (terceira linha).</p>
+</div>
+
+<div class="cenario">
+<strong>Uma conta do lado esquerdo do <code>=</code></strong>
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; x = 5
+&gt;&gt;&gt; 2 + 3 = x
+  File "&lt;python-input-1&gt;", line 1
+    2 + 3 = x
+    ^^^^^
+SyntaxError: cannot assign to expression here. Maybe you meant '==' instead of '='?
+&gt;&gt;&gt; exit()
+</pre>
+<p>O <code>=</code> não é um operador de conta: ele guarda o valor da direita no <strong>nome</strong> da esquerda (aula <a href="variaveis.html">Variáveis</a>), e por isso fica fora da tabela de precedência, por último de tudo. <code>cannot assign to expression here</code> quer dizer "não dá para guardar um valor numa expressão (<code>2 + 3</code>)". O Python ainda pergunta: "talvez você quisesse <code>==</code> em vez de <code>=</code>?". <strong>Como consertar:</strong> para guardar, o nome vem à esquerda (<code>x = 2 + 3</code>); para comparar, <code>2 + 3 == x</code>.</p>
+</div>
+
+<div class="trypy" data-goal="out:Cada um paga: 9.0;;semerro">
+<p class="try-task"><strong>Missão:</strong> a Ana e dois amigos pediram 2 lanches de 12 reais, com 3 reais de entrega, e vão dividir a conta por 3. Cada um deveria pagar 9 reais, mas o programa diz 25. Conserte a conta com parênteses.</p>
+<pre class="script" data-file="main.py">lanches = 2
+preco_lanche = 12
+entrega = 3
+pessoas = 3
+
+cada_um = lanches * preco_lanche + entrega / pessoas
+print("Cada um paga:", cada_um)
+</pre>
+<pre class="solucao" data-file="main.py">lanches = 2
+preco_lanche = 12
+entrega = 3
+pessoas = 3
+
+cada_um = (lanches * preco_lanche + entrega) / pessoas
+print("Cada um paga:", cada_um)
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Regra</th><th>Exemplo</th><th>O Python lê como</th><th>Resultado</th></tr>
+<tr><td><code>*</code> antes de <code>+</code></td><td><code>2 + 3 * 4</code></td><td><code>2 + (3 * 4)</code></td><td><code>14</code></td></tr>
+<tr><td><code>**</code> antes de <code>*</code></td><td><code>2 * 3 ** 2</code></td><td><code>2 * (3 ** 2)</code></td><td><code>18</code></td></tr>
+<tr><td><code>**</code> antes do sinal</td><td><code>-2 ** 2</code></td><td><code>-(2 ** 2)</code></td><td><code>-4</code></td></tr>
+<tr><td>Mesma força: esquerda → direita</td><td><code>100 / 10 * 2</code></td><td><code>(100 / 10) * 2</code></td><td><code>20.0</code></td></tr>
+<tr><td><code>**</code>: direita → esquerda</td><td><code>2 ** 3 ** 2</code></td><td><code>2 ** (3 ** 2)</code></td><td><code>512</code></td></tr>
+<tr><td>Contas antes de comparações</td><td><code>2 + 3 &gt; 4</code></td><td><code>(2 + 3) &gt; 4</code></td><td><code>True</code></td></tr>
+<tr><td>Comparações em fila</td><td><code>1 &lt; x &lt; 10</code></td><td><code>1 &lt; x and x &lt; 10</code></td><td><code>True</code> (com <code>x = 5</code>)</td></tr>
+<tr><td><code>and</code> antes de <code>or</code></td><td><code>True or False and False</code></td><td><code>True or (False and False)</code></td><td><code>True</code></td></tr>
+<tr><td><code>not</code> depois das comparações</td><td><code>not True == False</code></td><td><code>not (True == False)</code></td><td><code>True</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Faça de cabeça</h3>
+<p>Quanto o Python mostra para <code>print(10 + 2 * 5)</code>?</p>
+<div class="ex-code"><input data-answer="20" aria-label="resultado"></div>
+</div>
+
+<div class="exercise">
+<h3>2. Agora com parênteses</h3>
+<p>E para <code>print((10 + 2) * 5)</code>?</p>
+<div class="ex-code"><input data-answer="60" aria-label="resultado"></div>
+</div>
+
+<div class="exercise">
+<h3>3. Da esquerda para a direita</h3>
+<p>Quanto vale <code>20 - 10 - 5</code>?</p>
+<div class="ex-code"><input data-answer="5" aria-label="resultado"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Quanto vale <code>2 ** 2 * 3</code>?</p>
+<label><input type="radio" name="q4"> <code>64</code></label>
+<label><input type="radio" name="q4"> <code>81</code></label>
+<label><input type="radio" name="q4"> <code>12</code></label>
+<label><input type="radio" name="q4"> <code>7</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. Quanto vale <code>not False and False</code>?</p>
+<label><input type="radio" name="q5"> <code>True</code>, porque o <code>not</code> vale para tudo o que vem depois</label>
+<label><input type="radio" name="q5"> <code>False</code>: o <code>not</code> vai primeiro (<code>not False</code> é <code>True</code>), depois <code>True and False</code></label>
+<label><input type="radio" name="q5"> Dá erro</label>
+<label><input type="radio" name="q5"> <code>None</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Qual conta dá a média certa de <code>a</code>, <code>b</code> e <code>c</code>?</p>
+<label><input type="radio" name="q6"> <code>(a + b + c) / 3</code></label>
+<label><input type="radio" name="q6"> <code>a + b + c / 3</code></label>
+<label><input type="radio" name="q6"> <code>a + (b + c) / 3</code></label>
+<label><input type="radio" name="q6"> <code>a + b + (c / 3)</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">7. Quanto vale <code>3 + 4 * 2 &gt; 10</code>?</p>
+<label><input type="radio" name="q7"> <code>False</code>, porque <code>(3 + 4) * 2</code> é 14</label>
+<label><input type="radio" name="q7"> Dá <code>TypeError</code></label>
+<label><input type="radio" name="q7"> <code>11</code></label>
+<label><input type="radio" name="q7"> <code>True</code>, porque <code>3 + 8</code> é 11, que é maior que 10</label>
+</div>
+
+<h3>Missão final: o preço da potência</h3>
+
+<div class="trypy" data-goal="out:Área: 36;;semerro">
+<p class="try-task"><strong>Missão:</strong> a Ana quer a área de um quadrado de lado 4 + 2 (o lado é a soma de duas tábuas). A área é o lado ao quadrado, então deveria dar 36. O programa diz 8. Conserte.</p>
+<pre class="script" data-file="main.py">tabua1 = 4
+tabua2 = 2
+area = tabua1 + tabua2 ** 2
+print("Área:", area)
+</pre>
+<pre class="solucao" data-file="main.py">tabua1 = 4
+tabua2 = 2
+area = (tabua1 + tabua2) ** 2
+print("Área:", area)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><strong>Precedência</strong> é a ordem em que o Python faz as operações de uma expressão: parênteses, <code>**</code>, sinal, <code>* / // %</code>, <code>+ -</code>, comparações, <code>not</code>, <code>and</code>, <code>or</code>.</li>
+  <li>Operadores de mesma força vão da <strong>esquerda para a direita</strong> (<code>100 / 10 * 2</code> dá 20.0); a exceção é a potência, que vai da direita para a esquerda (<code>2 ** 3 ** 2</code> dá 512).</li>
+  <li><code>-2 ** 2</code> dá <code>-4</code>: a potência vem antes do sinal. Para o quadrado de −2, <code>(-2) ** 2</code>.</li>
+  <li>O erro mais comum é a média sem parênteses: <code>nota1 + nota2 / 2</code>. Ele não dá mensagem nenhuma; só a resposta errada.</li>
+  <li>Misturou <code>and</code> e <code>or</code>? Parênteses. E nunca termine uma comparação com <code>== True</code>.</li>
+  <li>Na dúvida, parênteses: eles nunca atrapalham a conta, e ajudam quem lê.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
