@@ -433,6 +433,7 @@ Traceback (most recent call last):
 OverflowError: (34, 'Numerical result out of range')
 </pre>
 <p>A linha 1 calcula <code>2 ** 10000</code> como <code>int</code> e confere que é maior que zero: <code>True</code>, sem problema. A linha 2 faz a mesma conta com <code>2.0</code>, um <code>float</code>, e o resultado passa do máximo do <code>float</code>. <code>OverflowError</code> quer dizer "erro de transbordamento", e <code>Numerical result out of range</code>, "resultado numérico fora do intervalo" (o 34 é o código desse erro no sistema). <strong>Como consertar:</strong> para números inteiros enormes, use <code>int</code>.</p>
+<p>Se você rodar este programa no editor do guia, o erro é o mesmo <code>OverflowError</code>, mas o que vem entre parênteses muda: <code>(68, 'Result not representable')</code>, "resultado não representável". O número e o texto vêm do sistema por baixo do Python, e no navegador esse sistema é outro.</p>
 </div>
 
 <div class="trypy" data-goal="out:51.8;;semerro">
