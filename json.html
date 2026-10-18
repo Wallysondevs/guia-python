@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python JSON — guardando dicionários e listas em texto | Guia Python</title>
+<meta name="description" content="JSON em Python para quem está começando: o que é JSON, json.dumps e json.loads, json.dump e json.load com arquivos, ensure_ascii=False para os acentos, indent para ficar legível, a tabela Python ↔ JSON (true, false, null), o que muda na ida e volta, e os erros reais: JSONDecodeError, set que não vira JSON e o dump sem arquivo.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">JSON</span></h1>
+
+<p class="intro">A agenda de contatos da Ana é uma lista de dicionários: cada contato tem nome, telefones, endereço. Enquanto o programa está rodando, tudo bem. Mas quando ele termina, as variáveis somem, e com elas a agenda. Para guardar essas estruturas num arquivo e recuperá-las depois, do jeitinho que estavam, o formato mais usado no mundo é o <strong>JSON</strong>. É também a língua em que os sites e aplicativos trocam dados pela internet. E o Python fala JSON com o módulo <code>json</code>, que já vem instalado.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é JSON e como ele se parece (e não se parece) com Python.</li>
+  <li>A transformar um dicionário em texto JSON com <code>json.dumps</code>, e o texto de volta em dicionário com <code>json.loads</code>.</li>
+  <li>A deixar os acentos legíveis com <code>ensure_ascii=False</code> e o texto arrumado com <code>indent</code>.</li>
+  <li>A gravar e ler arquivos <code>.json</code> com <code>json.dump</code> e <code>json.load</code>.</li>
+  <li>A tabela de tradução Python ↔ JSON, e o que muda na ida e na volta.</li>
+  <li>Os erros reais: <code>JSONDecodeError</code>, o <code>set</code> que não vira JSON e o <code>dump</code> sem arquivo.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: uma ficha que qualquer programa entende</h2>
+<p>Imagine que a Ana precisa passar a ficha de um produto para outra loja, que usa outro sistema. Se ela mandar "o dicionário do Python", o outro sistema (que pode nem ser em Python) não vai entender. Os dois precisam combinar um formato de <strong>texto</strong>, com regras fixas, que qualquer linguagem saiba escrever e ler. Esse formato é o JSON (<em>JavaScript Object Notation</em>, "notação de objetos do JavaScript"; o nome vem da linguagem em que ele nasceu, mas hoje é de todo mundo).</p>
+
+<p>Um arquivo JSON é assim:</p>
+
+<pre class="file" data-file="produto.json">{
+    "nome": "café",
+    "preco": 18.9,
+    "estoque": 12,
+    "promocao": true,
+    "fornecedor": null
+}
+</pre>
+
+<p>Parece um dicionário do Python, e quase é. As diferenças são poucas, mas são <strong>rígidas</strong>:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>No Python</th><th>No JSON</th></tr>
+<tr><td>Textos com aspas simples ou duplas: <code>'café'</code> ou <code>"café"</code></td><td>Só aspas <strong>duplas</strong>: <code>"café"</code></td></tr>
+<tr><td><code>True</code>, <code>False</code></td><td><code>true</code>, <code>false</code> (minúsculas)</td></tr>
+<tr><td><code>None</code></td><td><code>null</code></td></tr>
+<tr><td>Chaves de qualquer tipo imutável: <code>{1: "a"}</code></td><td>Chaves só de texto: <code>{"1": "a"}</code></td></tr>
+<tr><td>Vírgula sobrando no fim é permitida: <code>[1, 2, ]</code></td><td>Vírgula no fim é <strong>erro</strong></td></tr>
+<tr><td>Comentários com <code>#</code></td><td>Não existem comentários</td></tr>
+</table>
+</div>
+
+<p>O módulo <code>json</code> faz a tradução nos dois sentidos, e você quase nunca precisa escrever JSON à mão.</p>
+
+<hr>
+
+<h2>1. Do Python para o JSON: <code>json.dumps</code></h2>
+
+<pre class="file" data-file="dumps1.py">import json
+
+produto = {"nome": "café", "preco": 18.9, "estoque": 12, "promocao": True, "fornecedor": None}
+
+texto = json.dumps(produto)
+print(texto)
+print(type(texto))
+</pre>
+
+<pre class="term">$ python3 dumps1.py
+{"nome": "café", "preco": 18.9, "estoque": 12, "promocao": true, "fornecedor": null}
+&lt;class 'str'&gt;
+</pre>
+
+<dl class="anatomy">
+  <dt>import json</dt><dd>Traz o módulo <code>json</code>.</dd>
+  <dt>json.dumps(produto)</dt><dd>Transforma o dicionário num <strong>texto</strong> JSON. O nome vem de <em>dump string</em>: "despejar numa string". O <strong>s</strong> do fim é de <em>string</em>, e vai ajudar a lembrar a diferença para o <code>dump</code> da seção 4.</dd>
+  <dt>type(texto)</dt><dd><code>str</code>: o resultado é um texto comum, que dá para gravar, mandar pela internet, mostrar.</dd>
+</dl>
+
+<p>Olhe a tradução: <code>True</code> virou <code>true</code>, <code>None</code> virou <code>null</code>, e todas as aspas são duplas. Mas o que aconteceu com o "café"? Virou <code>café</code>.</p>
+
+<h3>Os acentos: <code>ensure_ascii=False</code></h3>
+<p>O <code>é</code> é o código da letra <code>é</code>, escrito só com letras e números simples. Por padrão, o <code>dumps</code> faz isso com toda letra que não é do alfabeto inglês básico (o ASCII), por garantia (<em>ensure ASCII</em>, "garantir ASCII"). Não está errado: qualquer programa que ler esse JSON vai entender "café". Mas, para um ser humano, fica ilegível. A opção <code>ensure_ascii=False</code> desliga isso:</p>
+
+<pre class="file" data-file="dumps2.py">import json
+
+produto = {"nome": "café", "preco": 18.9, "estoque": 12, "promocao": True, "fornecedor": None}
+
+print(json.dumps(produto, ensure_ascii=False))
+</pre>
+
+<pre class="term">$ python3 dumps2.py
+{"nome": "café", "preco": 18.9, "estoque": 12, "promocao": true, "fornecedor": null}
+</pre>
+
+<p>Agora sim, <code>"café"</code>. Em português, com tanto acento, use sempre <code>ensure_ascii=False</code> (e, ao gravar num arquivo, <code>encoding="utf-8"</code>).</p>
+
+<div class="trypy" data-goal="out:&quot;pão de queijo&quot;;;out:&quot;açúcar&quot;;;src:ensure_ascii\s*=\s*False">
+<p class="try-task"><strong>Missão:</strong> rode e veja os códigos <code>ã</code>, <code>ç</code>… no lugar dos acentos. Acrescente a opção que faz o JSON mostrar <code>"pão de queijo"</code> e <code>"açúcar"</code> do jeito que se escreve.</p>
+<pre class="script" data-file="main.py">import json
+
+lista = {"padaria": ["pão de queijo", "açúcar", "café"]}
+print(json.dumps(lista))
+</pre>
+<pre class="solucao" data-file="main.py">import json
+
+lista = {"padaria": ["pão de queijo", "açúcar", "café"]}
+print(json.dumps(lista, ensure_ascii=False))
+</pre>
+</div>
+
+<h3>Arrumado para ler: <code>indent</code></h3>
+<p>Numa linha só, um JSON grande vira uma sopa de letras. A opção <code>indent</code> ("recuo") quebra as linhas e recua cada nível com o número de espaços que você escolher:</p>
+
+<pre class="file" data-file="indent.py">import json
+
+contato = {
+    "nome": "Bia Costa",
+    "telefones": ["86 99999-0001", "86 3222-0002"],
+    "endereco": {"rua": "Rua das Flores", "numero": 12},
+    "aniversario": "12/03",
+}
+
+print(json.dumps(contato, ensure_ascii=False, indent=4))
+</pre>
+
+<pre class="term">$ python3 indent.py
+{
+    "nome": "Bia Costa",
+    "telefones": [
+        "86 99999-0001",
+        "86 3222-0002"
+    ],
+    "endereco": {
+        "rua": "Rua das Flores",
+        "numero": 12
+    },
+    "aniversario": "12/03"
+}
+</pre>
+
+<p>A lista de telefones e o dicionário do endereço ficaram cada um no seu nível, como as pastas no <code>tree</code>. Para guardar em arquivo que pessoas vão abrir, use <code>indent=2</code> ou <code>indent=4</code>. Para mandar pela internet, onde ninguém lê e cada byte conta, deixe sem.</p>
+
+<hr>
+
+<h2>2. Do JSON para o Python: <code>json.loads</code></h2>
+<p>O caminho de volta. Chegou um texto JSON (de um arquivo, de um site) e você quer um dicionário para trabalhar:</p>
+
+<pre class="file" data-file="loads1.py">import json
+
+texto = '{"nome": "Caio", "idade": 31, "cliente_vip": false, "apelido": null}'
+
+dados = json.loads(texto)
+print(dados)
+print(type(dados))
+print(dados["nome"], "tem", dados["idade"], "anos")
+</pre>
+
+<pre class="term">$ python3 loads1.py
+{'nome': 'Caio', 'idade': 31, 'cliente_vip': False, 'apelido': None}
+&lt;class 'dict'&gt;
+Caio tem 31 anos
+</pre>
+
+<dl class="anatomy">
+  <dt>texto = '{"nome": …}'</dt><dd>Um texto Python (entre aspas <strong>simples</strong>) que guarda um JSON (com aspas <strong>duplas</strong> por dentro). As aspas simples de fora são do Python; as duplas de dentro são do JSON.</dd>
+  <dt>json.loads(texto)</dt><dd><em>Load string</em>, "carregar de uma string": lê o texto JSON e monta o valor Python equivalente.</dd>
+  <dt>dados["nome"]</dt><dd>Agora é um dicionário de verdade: as chaves funcionam como em qualquer dicionário.</dd>
+</dl>
+
+<p>Repare na tradução ao contrário: <code>false</code> virou <code>False</code> e <code>null</code> virou <code>None</code>. E o <code>print</code> do dicionário mostra aspas simples, porque é assim que o Python <strong>mostra</strong> os seus textos.</p>
+
+<hr>
+
+<h2>3. A tabela de tradução</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Python</th><th>vira em JSON</th><th>e volta para o Python como</th></tr>
+<tr><td><code>dict</code></td><td>objeto <code>{…}</code></td><td><code>dict</code></td></tr>
+<tr><td><code>list</code></td><td>array (lista) <code>[…]</code></td><td><code>list</code></td></tr>
+<tr><td><code>tuple</code></td><td>array <code>[…]</code></td><td><code>list</code> (a tupla não volta!)</td></tr>
+<tr><td><code>str</code></td><td>texto <code>"…"</code></td><td><code>str</code></td></tr>
+<tr><td><code>int</code>, <code>float</code></td><td>número</td><td><code>int</code>, <code>float</code></td></tr>
+<tr><td><code>True</code> / <code>False</code></td><td><code>true</code> / <code>false</code></td><td><code>True</code> / <code>False</code></td></tr>
+<tr><td><code>None</code></td><td><code>null</code></td><td><code>None</code></td></tr>
+<tr><td>chave <code>int</code> (<code>{1: …}</code>)</td><td>chave texto <code>{"1": …}</code></td><td>chave <code>str</code> (<code>{'1': …}</code>)</td></tr>
+<tr><td><code>set</code>, datas, objetos seus</td><td colspan="2">Não têm tradução: dá <code>TypeError</code> (veja em <a href="#errado">Quando dá errado</a>)</td></tr>
+</table>
+</div>
+
+<p>A ida e volta nem sempre devolve exatamente o que foi:</p>
+
+<pre class="file" data-file="ida_volta.py">import json
+
+original = {"notas": (8.5, 7.0), 1: "primeiro", "ativo": True}
+texto = json.dumps(original)
+print(texto)
+
+de_volta = json.loads(texto)
+print(de_volta)
+print(original == de_volta)
+</pre>
+
+<pre class="term">$ python3 ida_volta.py
+{"notas": [8.5, 7.0], "1": "primeiro", "ativo": true}
+{'notas': [8.5, 7.0], '1': 'primeiro', 'ativo': True}
+False
+</pre>
+
+<p>A <a href="tuplas.html">tupla</a> <code>(8.5, 7.0)</code> voltou como lista <code>[8.5, 7.0]</code>, e a chave <code>1</code> (número) voltou como <code>'1'</code> (texto). Por isso o <code>==</code> deu <code>False</code>. O JSON não tem tupla nem chave numérica, então não tem como lembrar. Na prática: em dados que vão para JSON, use listas e chaves de texto desde o começo.</p>
+
+<hr>
+
+<h2>4. Com arquivos: <code>json.dump</code> e <code>json.load</code></h2>
+<p>Agora a agenda da Ana. Para gravar num arquivo, a dupla é a mesma, <strong>sem o s</strong>: <code>dump</code> grava direto no arquivo aberto, <code>load</code> lê direto do arquivo aberto.</p>
+
+<pre class="file" data-file="gravar.py">import json
+
+contatos = [
+    {"nome": "Bia", "telefone": "86 99999-0001"},
+    {"nome": "Caio", "telefone": "86 99999-0002"},
+]
+
+with open("contatos.json", "w", encoding="utf-8") as arquivo:
+    json.dump(contatos, arquivo, ensure_ascii=False, indent=2)
+
+print("Gravei", len(contatos), "contatos")
+</pre>
+
+<pre class="term">$ python3 gravar.py
+Gravei 2 contatos
+</pre>
+
+<dl class="anatomy">
+  <dt>open("contatos.json", "w", encoding="utf-8")</dt><dd>Abre (ou cria) o arquivo para escrita, com UTF-8 para os acentos. A extensão costumeira é <code>.json</code>.</dd>
+  <dt>json.dump(contatos, arquivo, …)</dt><dd>"Despeje <code>contatos</code> neste <code>arquivo</code>." Dois argumentos obrigatórios: <strong>o que</strong> gravar e <strong>onde</strong>. As opções são as mesmas do <code>dumps</code>.</dd>
+</dl>
+
+<p>O arquivo gravado, visto no terminal:</p>
+
+<pre class="term">$ cat contatos.json
+[
+  {
+    "nome": "Bia",
+    "telefone": "86 99999-0001"
+  },
+  {
+    "nome": "Caio",
+    "telefone": "86 99999-0002"
+  }
+]</pre>
+
+<p>(O <code>json.dump</code> não põe uma quebra de linha depois do <code>]</code> final. Não faz diferença para quem lê o arquivo; só que, no terminal, o próximo <code>$</code> aparece colado no <code>]</code>.)</p>
+
+<p>Outro dia, outro programa, e a agenda volta inteira:</p>
+
+<pre class="file" data-file="ler.py">import json
+
+with open("contatos.json", encoding="utf-8") as arquivo:
+    contatos = json.load(arquivo)
+
+for contato in contatos:
+    print(contato["nome"], "-", contato["telefone"])
+</pre>
+
+<pre class="term">$ python3 ler.py
+Bia - 86 99999-0001
+Caio - 86 99999-0002
+</pre>
+
+<p><code>json.load(arquivo)</code> leu o arquivo todo e devolveu a lista de dicionários, pronta para o <code>for</code>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Função</th><th>De</th><th>Para</th><th>Lembrete</th></tr>
+<tr><td><code>json.dumps(valor)</code></td><td>Python</td><td>texto JSON</td><td><strong>s</strong> de <em>string</em></td></tr>
+<tr><td><code>json.loads(texto)</code></td><td>texto JSON</td><td>Python</td><td><strong>s</strong> de <em>string</em></td></tr>
+<tr><td><code>json.dump(valor, arquivo)</code></td><td>Python</td><td>arquivo</td><td>sem <strong>s</strong>: precisa do arquivo aberto em <code>"w"</code></td></tr>
+<tr><td><code>json.load(arquivo)</code></td><td>arquivo</td><td>Python</td><td>sem <strong>s</strong>: precisa do arquivo aberto</td></tr>
+</table>
+</div>
+
+<div class="tip">
+<strong>Conferindo um JSON pelo terminal</strong>
+<p>O Python tem um verificador de JSON pronto, que você chama com <code>python3 -m json.tool</code>. Ele lê o arquivo, reclama se houver erro e, se estiver tudo certo, mostra arrumado (com 4 espaços):</p>
+<pre class="term">$ python3 -m json.tool contatos.json
+[
+    {
+        "nome": "Bia",
+        "telefone": "86 99999-0001"
+    },
+    {
+        "nome": "Caio",
+        "telefone": "86 99999-0002"
+    }
+]
+</pre>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de gravar e ler</h2>
+<p>Você já conhece o <code>pathlib</code> (aula <a href="pathlib.html">Pastas e Caminhos</a>), e ele combina bem com o <code>dumps</code>/<code>loads</code>:</p>
+
+<pre class="file" data-file="com_path.py">import json
+from pathlib import Path
+
+arquivo = Path("contatos.json")
+
+contatos = json.loads(arquivo.read_text(encoding="utf-8"))
+contatos.append({"nome": "Duda", "telefone": "86 99999-0003"})
+arquivo.write_text(json.dumps(contatos, ensure_ascii=False, indent=2), encoding="utf-8")
+
+print(len(contatos), "contatos na agenda")
+</pre>
+
+<pre class="term">$ python3 com_path.py
+3 contatos na agenda
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>with open(…) as f:</code> + <code>json.dump</code> / <code>json.load</code></td><td>O jeito clássico, o que você mais vai ver</td></tr>
+<tr><td><code>json.loads(p.read_text(…))</code> / <code>p.write_text(json.dumps(…), …)</code></td><td>Mais curto, quando você já usa <code>Path</code></td></tr>
+<tr><td><code>json.dumps</code> / <code>json.loads</code> sem arquivo</td><td>Quando o JSON não está em arquivo: veio da internet, vai para um banco, vai ser mostrado</td></tr>
+<tr><td><code>str(dicionario)</code></td><td><strong>Nunca</strong> como JSON: veja abaixo</td></tr>
+</table>
+</div>
+
+<h3><code>str()</code> não é JSON</h3>
+<p>Um erro clássico é achar que basta transformar o dicionário em texto:</p>
+
+<pre class="file" data-file="str_dict.py">import json
+
+produto = {"nome": "café", "promocao": True}
+print(str(produto))
+print(json.dumps(produto, ensure_ascii=False))
+</pre>
+
+<pre class="term">$ python3 str_dict.py
+{'nome': 'café', 'promocao': True}
+{"nome": "café", "promocao": true}
+</pre>
+
+<p>Parecem iguais, mas a primeira linha tem aspas simples e <code>True</code> com maiúscula: é o jeito do <strong>Python</strong> mostrar o dicionário, e não JSON. Gravar isso num arquivo e tentar ler com <code>json.load</code> dá o primeiro erro da próxima seção.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Aspas simples: <code>JSONDecodeError</code></strong>
+<pre class="file" data-file="aspas_simples.py">import json
+
+texto = "{'nome': 'café', 'promocao': True}"
+dados = json.loads(texto)
+</pre>
+<pre class="term">$ python3 aspas_simples.py
+Traceback (most recent call last):
+  File "/home/ana/aspas_simples.py", line 4, in &lt;module&gt;
+    dados = json.loads(texto)
+  File "/usr/lib/python3.14/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/usr/lib/python3.14/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/json/decoder.py", line 361, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ~~~~~~~~~~~~~~^^^^^^^^
+json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+</pre>
+<p>Vamos por partes:</p>
+<ul>
+  <li><code>File "/home/ana/aspas_simples.py", line 4</code>: o erro começou no seu <code>json.loads</code>, na linha 4.</li>
+  <li>As três partes seguintes (<code>json/__init__.py</code>, <code>json/decoder.py</code>) são o caminho por dentro do módulo <code>json</code>. Pode pular.</li>
+  <li><code>json.decoder.JSONDecodeError</code>: "erro de decodificação de JSON", o erro de "esse texto não é um JSON válido". O nome completo diz onde ele mora; no seu código, ele se chama <code>json.JSONDecodeError</code>.</li>
+  <li><code>Expecting property name enclosed in double quotes</code>: "esperava um nome de propriedade (uma chave) entre aspas duplas".</li>
+  <li><code>line 1 column 2 (char 1)</code>: <strong>onde</strong> o leitor se perdeu: linha 1, coluna 2 (o caractere de número 1, contando do zero). Logo depois do <code>{</code>, ele achou <code>'</code> em vez de <code>"</code>.</li>
+</ul>
+<p><strong>Como consertar:</strong> no JSON, só aspas duplas (e <code>true</code>/<code>false</code>/<code>null</code> em minúsculas). Se o texto veio de um <code>str(dicionario)</code>, troque por <code>json.dumps(dicionario)</code> na hora de gravar.</p>
+</div>
+
+<div class="cenario">
+<strong>Vírgula sobrando no fim</strong>
+<pre class="file" data-file="virgula.py">import json
+
+texto = '{"nome": "café", "estoque": 12,}'
+dados = json.loads(texto)
+</pre>
+<pre class="term">$ python3 virgula.py
+Traceback (most recent call last):
+  File "/home/ana/virgula.py", line 4, in &lt;module&gt;
+    dados = json.loads(texto)
+  File "/usr/lib/python3.14/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/usr/lib/python3.14/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/json/decoder.py", line 361, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ~~~~~~~~~~~~~~^^^^^^^^
+json.decoder.JSONDecodeError: Illegal trailing comma before end of object: line 1 column 31 (char 30)
+</pre>
+<p>"Vírgula no fim não permitida antes do fim do objeto", na coluna 31: a vírgula depois do <code>12</code>. No Python, <code>{"estoque": 12,}</code> é aceito; no JSON, não. Esse erro aparece muito em arquivos <code>.json</code> editados à mão. <strong>Como consertar:</strong> apague a vírgula antes do <code>}</code> (ou do <code>]</code>).</p>
+</div>
+
+<div class="cenario">
+<strong>Arquivo vazio: <code>Expecting value</code></strong>
+<pre class="file" data-file="vazio.py">import json
+from pathlib import Path
+
+Path("vazio.json").write_text("", encoding="utf-8")
+
+with open("vazio.json", encoding="utf-8") as arquivo:
+    dados = json.load(arquivo)
+</pre>
+<pre class="term">$ python3 vazio.py
+Traceback (most recent call last):
+  File "/home/ana/vazio.py", line 7, in &lt;module&gt;
+    dados = json.load(arquivo)
+  File "/usr/lib/python3.14/json/__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "/usr/lib/python3.14/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/usr/lib/python3.14/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/json/decoder.py", line 363, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+</pre>
+<p>"Esperava um valor", logo na linha 1, coluna 1: o arquivo não tem nada. Um arquivo vazio <strong>não</strong> é um JSON válido (uma lista vazia seria <code>[]</code>). Repare também que o <code>json.load</code> só lê o arquivo e passa o texto para o <code>loads</code>: é por isso que o traceback passa pelos dois. <strong>Como consertar:</strong> no primeiro uso, grave um JSON de verdade (<code>[]</code> ou <code>{}</code>); ou trate o erro, como no quadro abaixo.</p>
+</div>
+
+<div class="cenario">
+<strong>Um <code>set</code> no meio dos dados: <code>not JSON serializable</code></strong>
+<pre class="file" data-file="conjunto.py">import json
+
+turma = {"nome": "Turma A", "alunos": {"Bia", "Duda"}}
+print(json.dumps(turma))
+</pre>
+<pre class="term">$ python3 conjunto.py
+Traceback (most recent call last):
+  File "/home/ana/conjunto.py", line 4, in &lt;module&gt;
+    print(json.dumps(turma))
+          ~~~~~~~~~~^^^^^^^
+  File "/usr/lib/python3.14/json/__init__.py", line 235, in dumps
+    return _default_encoder.encode(obj)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/usr/lib/python3.14/json/encoder.py", line 202, in encode
+    chunks = self.iterencode(o, _one_shot=True)
+  File "/usr/lib/python3.14/json/encoder.py", line 263, in iterencode
+    return _iterencode(o, 0)
+  File "/usr/lib/python3.14/json/encoder.py", line 182, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+                    f'is not JSON serializable')
+TypeError: Object of type set is not JSON serializable
+when serializing dict item 'alunos'
+</pre>
+<p>"Objeto do tipo <code>set</code> não é serializável em JSON", ou seja, não tem como virar JSON (veja a tabela da seção 3). A última linha, <code>when serializing dict item 'alunos'</code> ("ao serializar o item <code>'alunos'</code> do dicionário"), aponta a chave culpada <span class="versao">3.14</span>; no Python 3.13, ela não aparece, e você tem de procurar sozinho. <strong>Como consertar:</strong> transforme em lista antes: <code>"alunos": sorted(alunos)</code> (ou <code>list(alunos)</code>). O mesmo erro aparece com datas (<code>Object of type datetime…</code>): grave a data como texto, como você vai ver em <a href="datetime.html">Datas e Horas</a>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>dump</code> sem o arquivo</strong>
+<pre class="file" data-file="dump_sem.py">import json
+
+contatos = [{"nome": "Bia"}]
+json.dump(contatos)
+</pre>
+<pre class="term">$ python3 dump_sem.py
+Traceback (most recent call last):
+  File "/home/ana/dump_sem.py", line 4, in &lt;module&gt;
+    json.dump(contatos)
+    ~~~~~~~~~^^^^^^^^^^
+TypeError: dump() missing 1 required positional argument: 'fp'
+</pre>
+<p>"<code>dump()</code> está sem 1 argumento obrigatório: <code>'fp'</code>." O <code>fp</code> (<em>file pointer</em>) é o arquivo. Confundir <code>dump</code> com <code>dumps</code> é muito comum. <strong>Como consertar:</strong> se você queria o texto, <code>json.dumps(contatos)</code>; se queria gravar, <code>json.dump(contatos, arquivo)</code> dentro de um <code>with open(…, "w")</code>.</p>
+</div>
+
+<div class="note">
+<strong>Tratando o JSON com defeito</strong>
+<p>Quando o JSON vem de fora (de um arquivo que alguém editou, de um site), o programa não deve morrer por causa dele. O <code>json.JSONDecodeError</code> pode ser capturado com <code>try</code>/<code>except</code> (aula <a href="try-except.html">try e except</a>), e ele traz a linha e a coluna do problema:</p>
+<pre class="file" data-file="tratar.py">import json
+
+texto = '{"nome": "café", "estoque": 12,}'
+try:
+    dados = json.loads(texto)
+except json.JSONDecodeError as erro:
+    print("JSON com defeito:", erro)
+    print("Linha", erro.lineno, "coluna", erro.colno)
+</pre>
+<pre class="term">$ python3 tratar.py
+JSON com defeito: Illegal trailing comma before end of object: line 1 column 31 (char 30)
+Linha 1 coluna 31
+</pre>
+</div>
+
+<div class="trypy" data-goal="out:Mouse sem fio custa 59.9;;semerro">
+<p class="try-task"><strong>Missão:</strong> o arquivo <code>produto.json</code> (na segunda aba) foi escrito à mão e tem <strong>dois</strong> defeitos. Rode, leia a mensagem (linha e coluna!) e conserte o arquivo, sem mexer no programa. Ele deve mostrar <code>Mouse sem fio custa 59.9</code>.</p>
+<pre class="script" data-file="main.py">import json
+
+with open("produto.json", encoding="utf-8") as arquivo:
+    produto = json.load(arquivo)
+
+print(produto["nome"], "custa", produto["preco"])
+</pre>
+<pre class="script" data-file="produto.json">{
+    'nome': "Mouse sem fio",
+    "preco": 59.9,
+    "ativo": True
+}
+</pre>
+<pre class="solucao" data-file="produto.json">{
+    "nome": "Mouse sem fio",
+    "preco": 59.9,
+    "ativo": true
+}
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>import json</code></td><td>Traz o módulo</td></tr>
+<tr><td><code>json.dumps(valor)</code></td><td>Python → texto JSON</td></tr>
+<tr><td><code>json.loads(texto)</code></td><td>Texto JSON → Python</td></tr>
+<tr><td><code>json.dump(valor, arquivo)</code></td><td>Python → arquivo (aberto com <code>"w"</code>)</td></tr>
+<tr><td><code>json.load(arquivo)</code></td><td>Arquivo → Python</td></tr>
+<tr><td><code>ensure_ascii=False</code></td><td>Acentos legíveis (<code>café</code> em vez de <code>café</code>)</td></tr>
+<tr><td><code>indent=2</code> / <code>indent=4</code></td><td>Uma informação por linha, com recuo</td></tr>
+<tr><td><code>sort_keys=True</code></td><td>Grava as chaves em ordem alfabética</td></tr>
+<tr><td><code>except json.JSONDecodeError as erro:</code></td><td>Captura um JSON inválido (<code>erro.lineno</code>, <code>erro.colno</code>)</td></tr>
+<tr><td><code>python3 -m json.tool arquivo.json</code></td><td>No terminal: confere e mostra o JSON arrumado</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>Expecting property name enclosed in double quotes</code></td><td>Chave com aspas simples (ou um <code>str(dicionario)</code> no lugar de JSON)</td></tr>
+<tr><td><code>Illegal trailing comma before end of object</code> (ou <code>of array</code>)</td><td>Vírgula sobrando antes do <code>}</code> ou do <code>]</code></td></tr>
+<tr><td><code>Expecting value: line 1 column 1 (char 0)</code></td><td>Texto ou arquivo vazio; ou um valor inválido, como <code>True</code>, <code>None</code> ou <code>'texto'</code></td></tr>
+<tr><td><code>Object of type set is not JSON serializable</code></td><td>Tipo sem tradução (<code>set</code>, data, objeto): converta antes</td></tr>
+<tr><td><code>dump() missing 1 required positional argument: 'fp'</code></td><td>Usou <code>dump</code> querendo <code>dumps</code>, ou esqueceu o arquivo</td></tr>
+<tr><td>Aparece <code>é</code> no lugar de <code>é</code></td><td>Faltou <code>ensure_ascii=False</code> (não é erro, só fica feio)</td></tr>
+<tr><td>A tupla voltou como lista, a chave <code>1</code> voltou como <code>'1'</code></td><td>O JSON não tem tupla nem chave numérica</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Dicionário para texto</h3>
+<p>Complete para transformar o dicionário em texto JSON, com os acentos legíveis:</p>
+<div class="ex-code">texto = json.<input data-answer="dumps" aria-label="função">(produto, ensure_ascii=<input data-answer="False" aria-label="valor">)</div>
+</div>
+
+<div class="exercise">
+<h3>2. A tradução</h3>
+<p>No JSON, o <code>None</code> do Python se escreve:</p>
+<div class="ex-code"><input data-answer="null" aria-label="resposta"></div>
+</div>
+
+<div class="exercise">
+<h3>3. Lendo do arquivo</h3>
+<p>Complete para ler a agenda do arquivo aberto:</p>
+<div class="ex-code">with open("contatos.json", encoding="utf-8") as arquivo:<br>&nbsp;&nbsp;&nbsp;&nbsp;contatos = json.<input data-answer="load" aria-label="função">(arquivo)</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Qual destes textos é um JSON válido?</p>
+<label><input type="radio" name="q4"> <code>{'nome': 'Bia'}</code></label>
+<label><input type="radio" name="q4"> <code>{"nome": "Bia", "vip": false}</code></label>
+<label><input type="radio" name="q4"> <code>{"nome": "Bia", "vip": False}</code></label>
+<label><input type="radio" name="q4"> <code>{"nome": "Bia",}</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. <code>json.loads(json.dumps({"pontos": (1, 2)}))</code> devolve:</p>
+<label><input type="radio" name="q5"> <code>{'pontos': (1, 2)}</code></label>
+<label><input type="radio" name="q5"> Dá <code>TypeError</code>: tupla não vira JSON</label>
+<label><input type="radio" name="q5"> <code>{'pontos': [1, 2]}</code></label>
+<label><input type="radio" name="q5"> <code>'{"pontos": [1, 2]}'</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Qual é a diferença entre <code>json.dump</code> e <code>json.dumps</code>?</p>
+<label><input type="radio" name="q6"> <code>dump</code> grava num arquivo; <code>dumps</code> devolve um texto</label>
+<label><input type="radio" name="q6"> <code>dumps</code> grava vários dicionários; <code>dump</code>, um só</label>
+<label><input type="radio" name="q6"> <code>dump</code> lê; <code>dumps</code> grava</label>
+<label><input type="radio" name="q6"> Nenhuma, são dois nomes para a mesma função</label>
+</div>
+
+<h3>Missão final: um contato novo na agenda</h3>
+
+<div class="trypy" data-goal="out:3 contatos;;arquivo:contatos.json~&quot;Duda&quot;;;arquivo:contatos.json~&quot;Bia&quot;;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa lê a agenda de <code>contatos.json</code> e acrescenta a Duda, mas esquece de <strong>gravar</strong>: a última linha relê o arquivo e só encontra 2 contatos. Grave a lista atualizada com <code>json.dump</code> (com <code>ensure_ascii=False</code> e <code>indent=2</code>) antes de reler.</p>
+<pre class="script" data-file="main.py">import json
+
+with open("contatos.json", encoding="utf-8") as arquivo:
+    contatos = json.load(arquivo)
+
+contatos.append({"nome": "Duda", "telefone": "86 99999-0003"})
+
+# grave aqui
+
+with open("contatos.json", encoding="utf-8") as arquivo:
+    print(len(json.load(arquivo)), "contatos")
+</pre>
+<pre class="script" data-file="contatos.json">[
+  {"nome": "Bia", "telefone": "86 99999-0001"},
+  {"nome": "Caio", "telefone": "86 99999-0002"}
+]
+</pre>
+<pre class="solucao" data-file="main.py">import json
+
+with open("contatos.json", encoding="utf-8") as arquivo:
+    contatos = json.load(arquivo)
+
+contatos.append({"nome": "Duda", "telefone": "86 99999-0003"})
+
+with open("contatos.json", "w", encoding="utf-8") as arquivo:
+    json.dump(contatos, arquivo, ensure_ascii=False, indent=2)
+
+with open("contatos.json", encoding="utf-8") as arquivo:
+    print(len(json.load(arquivo)), "contatos")
+</pre>
+</div>
+
+<p>A agenda completa, com busca e remoção de contatos, é o <a href="projeto-agenda.html">Projeto: Agenda de Contatos</a>.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>JSON é um formato de <strong>texto</strong> para guardar e trocar dados, entendido por qualquer linguagem. Parece um dicionário, mas só aceita aspas duplas, <code>true</code>/<code>false</code>/<code>null</code> e nada de vírgula no fim.</li>
+  <li><code>json.dumps</code> (Python → texto) e <code>json.loads</code> (texto → Python): o <strong>s</strong> é de <em>string</em>.</li>
+  <li><code>json.dump(valor, arquivo)</code> e <code>json.load(arquivo)</code> trabalham direto com o arquivo aberto, sempre com <code>encoding="utf-8"</code>.</li>
+  <li><code>ensure_ascii=False</code> deixa os acentos legíveis; <code>indent=2</code> deixa o arquivo arrumado.</li>
+  <li>Tupla volta como lista, chave numérica volta como texto; <code>set</code> e datas não viram JSON sem conversão.</li>
+  <li><code>str(dicionario)</code> não é JSON. Um JSON inválido dá <code>json.JSONDecodeError</code>, com a linha e a coluna do defeito.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
