@@ -332,7 +332,7 @@ RecursionError: maximum recursion depth exceeded
 <pre class="term">$ python3 -c "import sys; print(sys.getrecursionlimit())"
 1000
 </pre>
-<p>O <code>&lt;module&gt;</code> (o corpo do programa) conta como uma das mil; por isso couberam 999 chamadas da <code>contagem</code>. Os números do traceback podem variar de um lugar para outro. No editor do guia, que roda o Python dentro do navegador, o <code>sys.getrecursionlimit()</code> também responde 1000, mas o próprio editor ocupa uma das chamadas: lá a contagem mostra um número a menos, e o traceback diz <code>[Previous line repeated 995 more times]</code>. Em outros computadores e versões, o limite pode ser outro. Não decore o número; lembre que <strong>existe</strong> um limite. Existe também a função <code>sys.setrecursionlimit()</code>, que muda esse limite, mas ela não conserta uma função sem caso base: só faz o erro demorar mais para aparecer.</p>
+<p>O <code>&lt;module&gt;</code> (o corpo do programa) conta como uma das mil; por isso couberam 999 chamadas da <code>contagem</code>. Os números do traceback podem variar de um lugar para outro. No editor do guia, que roda o Python dentro do navegador, o <code>sys.getrecursionlimit()</code> também responde 1000 e cabem as mesmas chamadas: a contagem também vai até o <code>-995</code>, e o traceback diz o mesmo <code>[Previous line repeated 996 more times]</code>. Em outros computadores e versões, o limite pode ser outro. Não decore o número; lembre que <strong>existe</strong> um limite. Existe também a função <code>sys.setrecursionlimit()</code>, que muda esse limite, mas ela não conserta uma função sem caso base: só faz o erro demorar mais para aparecer.</p>
 </div>
 
 <div class="cenario">
