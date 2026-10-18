@@ -1,0 +1,887 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Métodos Especiais — __str__, __repr__, __eq__, __lt__, __len__ e __add__ | Guia Python</title>
+<meta name="description" content="Métodos especiais (dunder) para quem está começando: o que o print mostra de um objeto, __str__ × __repr__, __eq__ para comparar com ==, __lt__ para o sorted, __len__ para o len, __add__ para o +, NotImplemented e os erros reais do Python 3.14 (__str__ returned non-string, '<' not supported, unhashable type).">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Métodos Especiais</span></h1>
+
+<p class="intro">Você escreve <code>print(5)</code> e aparece <code>5</code>. Escreve <code>len("pão")</code> e aparece <code>3</code>. Escreve <code>[1, 2] + [3]</code> e aparece <code>[1, 2, 3]</code>. Mas experimente dar <code>print</code> num objeto da <strong>sua</strong> classe: sai um <code>&lt;__main__.Produto object at 0x7f…&gt;</code> que não diz nada. Os números, os textos e as listas sabem se mostrar, se comparar e se somar porque têm <strong>métodos especiais</strong>: métodos com nomes como <code>__str__</code> e <code>__eq__</code>, que o Python chama sozinho na hora certa. Nesta aula, você vai dar esses poderes às suas classes.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que são os métodos especiais (os "dunder") e quem chama cada um.</li>
+  <li><code>__str__</code>: o que o <code>print</code> mostra.</li>
+  <li><code>__repr__</code>: o que aparece dentro de uma lista e no modo interativo, e a diferença para o <code>__str__</code>.</li>
+  <li><code>__eq__</code>: quando dois objetos são "iguais" para o <code>==</code>.</li>
+  <li><code>__lt__</code>: "menor que", para o <code>sorted</code>, o <code>min</code> e o <code>max</code> funcionarem.</li>
+  <li><code>__len__</code> e <code>__add__</code>: o <code>len()</code> e o <code>+</code> nos seus objetos.</li>
+  <li>Os erros reais: <code>__str__ returned non-string</code>, <code>'&lt;' not supported between instances</code>, <code>unhashable type</code>, <code>unsupported operand type(s) for +</code>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: o Python pergunta ao objeto</h2>
+<p>Pense numa tomada. Qualquer aparelho que tenha o plugue certo funciona nela: a geladeira, o liquidificador, o carregador. A tomada não sabe nada de liquidificadores; ela só exige o plugue.</p>
+<p>O <code>print</code>, o <code>len</code>, o <code>==</code> e o <code>+</code> são tomadas. Quando você escreve <code>len(x)</code>, o Python não sabe o que é <code>x</code>; ele procura em <code>x</code> o "plugue" chamado <code>__len__</code> e o chama. Se o objeto tem o plugue, funciona. Se não tem, dá erro (ou, em alguns casos, o Python usa um comportamento padrão, sem graça).</p>
+
+<p>Dá para ver o plugue das coisas que você já conhece:</p>
+
+<pre class="file" data-file="por_dentro.py">texto = "lojinha"
+print(len(texto))
+print(texto.__len__())
+print(3 + 4)
+print((3).__add__(4))
+print([1, 2] + [3])
+print([1, 2].__add__([3]))
+</pre>
+
+<pre class="term">$ python3 por_dentro.py
+7
+7
+7
+7
+[1, 2, 3]
+[1, 2, 3]
+</pre>
+
+<p><code>len(texto)</code> e <code>texto.__len__()</code> dão o mesmo resultado, porque o primeiro chama o segundo. O mesmo vale para <code>3 + 4</code> e <code>(3).__add__(4)</code>. Você nunca vai escrever <code>texto.__len__()</code> no dia a dia (escreve <code>len(texto)</code>, que é mais claro), mas agora sabe o que acontece por baixo.</p>
+
+<div class="note">
+<strong>Por que tantos sublinhados?</strong>
+<p>São <strong>dois</strong> sublinhados antes e <strong>dois</strong> depois: <code>__len__</code>. Em inglês, "double underscore" virou o apelido <strong>dunder</strong>; por isso muita gente fala "métodos dunder" (ou "métodos mágicos"). Os sublinhados avisam: "este nome é especial, o Python chama sozinho". Você já conhece um: o <code>__init__</code>, que o Python chama quando o objeto nasce (aula <a href="init-self.html">__init__ e self</a>).</p>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Você escreve</th><th>O Python chama</th></tr>
+<tr><td><code>Produto("Café", 18.9)</code></td><td><code>__init__</code></td></tr>
+<tr><td><code>print(cafe)</code>, <code>str(cafe)</code>, <code>f"{cafe}"</code></td><td><code>__str__</code></td></tr>
+<tr><td><code>repr(cafe)</code>, <code>print([cafe])</code>, <code>&gt;&gt;&gt; cafe</code></td><td><code>__repr__</code></td></tr>
+<tr><td><code>a == b</code></td><td><code>__eq__</code></td></tr>
+<tr><td><code>a &lt; b</code>, <code>sorted(lista)</code>, <code>min</code>, <code>max</code></td><td><code>__lt__</code></td></tr>
+<tr><td><code>len(carrinho)</code>, <code>if carrinho:</code></td><td><code>__len__</code></td></tr>
+<tr><td><code>a + b</code></td><td><code>__add__</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. O problema: o <code>print</code> de um objeto</h2>
+
+<pre class="file" data-file="sem_str.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+
+cafe = Produto("Café", 18.9)
+print(cafe)
+</pre>
+
+<pre class="term">$ python3 sem_str.py
+&lt;__main__.Produto object at 0x7fb4e1594590&gt;
+</pre>
+
+<p>Sem ninguém ensinar, o Python mostra o comportamento padrão: "um objeto da classe <code>Produto</code>, no endereço de memória <code>0x7fb4e1594590</code>" (a aula <a href="classes.html">Classes e Objetos</a> lê essa linha pedaço por pedaço). O número do endereço muda a cada execução; no seu computador e no editor do guia vai aparecer outro. Para a Ana, que quer ver o nome e o preço, isso não serve.</p>
+
+<hr>
+
+<h2>2. <code>__str__</code>: o texto para as pessoas</h2>
+
+<pre class="file" data-file="com_str.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def __str__(self):
+        return f"{self.nome}: R$ {self.preco:.2f}"
+
+
+cafe = Produto("Café", 18.9)
+print(cafe)
+print(str(cafe))
+print(f"Hoje tem {cafe} na promoção")
+print("Mais vendido: " + str(cafe))
+</pre>
+
+<dl class="anatomy">
+  <dt>def __str__(self):</dt><dd>O método especial do texto. Recebe só o <code>self</code> (o objeto) e não recebe mais nada.</dd>
+  <dt>return f"…"</dt><dd>Ele tem de <strong>devolver</strong> (<code>return</code>) um texto. Não é ele que mostra na tela; quem mostra é o <code>print</code>, com o texto que ele devolveu.</dd>
+  <dt>print(cafe)</dt><dd>O <code>print</code> chama <code>cafe.__str__()</code> e mostra o resultado.</dd>
+  <dt>str(cafe)</dt><dd>Converte o objeto em texto, também pelo <code>__str__</code>. Útil para juntar com <code>+</code>.</dd>
+  <dt>f"Hoje tem {cafe}…"</dt><dd>A f-string também usa o <code>__str__</code> para encaixar o objeto no texto.</dd>
+</dl>
+
+<pre class="term">$ python3 com_str.py
+Café: R$ 18.90
+Café: R$ 18.90
+Hoje tem Café: R$ 18.90 na promoção
+Mais vendido: Café: R$ 18.90
+</pre>
+
+<p>Um método só, e o objeto ficou apresentável em todos os lugares onde o Python precisa dele como texto.</p>
+
+<div class="trypy" data-goal="out:Leite: R$ 5.49;;src:def __str__\(self\)">
+<p class="try-task"><strong>Missão:</strong> rode e veja o <code>&lt;__main__.Produto object at …&gt;</code>. Depois, acrescente à classe um <code>__str__</code> para que o <code>print</code> mostre <code>Leite: R$ 5.49</code>.</p>
+<pre class="script" data-file="main.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+
+leite = Produto("Leite", 5.49)
+print(leite)
+</pre>
+<pre class="solucao" data-file="main.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def __str__(self):
+        return f"{self.nome}: R$ {self.preco:.2f}"
+
+
+leite = Produto("Leite", 5.49)
+print(leite)
+</pre>
+</div>
+
+<hr>
+
+<h2>3. <code>__repr__</code>: o texto para quem programa</h2>
+<p>Com o <code>__str__</code> pronto, a Ana pôs dois produtos numa lista e mandou mostrar a lista:</p>
+
+<pre class="file" data-file="lista_str.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def __str__(self):
+        return f"{self.nome}: R$ {self.preco:.2f}"
+
+
+cesta = [Produto("Café", 18.9), Produto("Leite", 5.49)]
+print(cesta)
+print(cesta[0])
+</pre>
+
+<pre class="term">$ python3 lista_str.py
+[&lt;__main__.Produto object at 0x7fdd82990590&gt;, &lt;__main__.Produto object at 0x7fdd82978690&gt;]
+Café: R$ 18.90
+</pre>
+
+<p>O produto sozinho saiu bonito, mas dentro da lista voltou o endereço. É que uma lista, para se mostrar, <strong>não</strong> usa o <code>__str__</code> de cada item: usa o <code>__repr__</code> ("representação"). É o mesmo motivo pelo qual <code>print(["Café"])</code> mostra <code>['Café']</code>, com as aspas: dentro da lista, você vê cada item do jeito que ele seria <strong>escrito no código</strong>.</p>
+
+<p>O costume é fazer o <code>__repr__</code> devolver algo parecido com o código que cria o objeto:</p>
+
+<pre class="file" data-file="com_repr.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def __str__(self):
+        return f"{self.nome}: R$ {self.preco:.2f}"
+
+    def __repr__(self):
+        return f"Produto({self.nome!r}, {self.preco!r})"
+
+
+cafe = Produto("Café", 18.9)
+cesta = [cafe, Produto("Leite", 5.49)]
+print(cafe)
+print(repr(cafe))
+print(cesta)
+print(f"{cafe!r}")
+</pre>
+
+<dl class="anatomy">
+  <dt>def __repr__(self):</dt><dd>O método especial da representação. Também devolve um texto.</dd>
+  <dt>{self.nome!r}</dt><dd>O <code>!r</code> dentro da f-string pede o <code>repr</code> do valor, em vez do <code>str</code>. Para um texto, isso põe as aspas: <code>'Café'</code>. Assim o resultado fica igual ao código <code>Produto('Café', 18.9)</code>.</dd>
+  <dt>repr(cafe)</dt><dd>Chama o <code>__repr__</code> diretamente.</dd>
+  <dt>f"{cafe!r}"</dt><dd>O mesmo <code>!r</code>, agora aplicado ao produto.</dd>
+</dl>
+
+<pre class="term">$ python3 com_repr.py
+Café: R$ 18.90
+Produto('Café', 18.9)
+[Produto('Café', 18.9), Produto('Leite', 5.49)]
+Produto('Café', 18.9)
+</pre>
+
+<p>No <strong>modo interativo</strong> (aula <a href="repl.html">O Modo Interativo</a>) a diferença aparece de novo. Com a classe guardada no arquivo <code>produto.py</code>:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; from produto import Produto
+&gt;&gt;&gt; cafe = Produto("Café", 18.9)
+&gt;&gt;&gt; cafe
+Produto('Café', 18.9)
+&gt;&gt;&gt; print(cafe)
+Café: R$ 18.90
+&gt;&gt;&gt; [cafe]
+[Produto('Café', 18.9)]
+&gt;&gt;&gt; "Café"
+'Café'
+&gt;&gt;&gt; print("Café")
+Café
+&gt;&gt;&gt; exit()
+</pre>
+
+<p>Digitar só o nome (<code>&gt;&gt;&gt; cafe</code>) mostra o <code>__repr__</code>; o <code>print</code> mostra o <code>__str__</code>. Com o texto <code>"Café"</code> acontece a mesma coisa: com aspas no <code>repr</code>, sem aspas no <code>print</code>.</p>
+
+<h3>E se eu escrever só um dos dois?</h3>
+
+<pre class="file" data-file="so_repr.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def __repr__(self):
+        return f"Produto({self.nome!r}, {self.preco!r})"
+
+
+cafe = Produto("Café", 18.9)
+print(cafe)
+print([cafe])
+</pre>
+
+<pre class="term">$ python3 so_repr.py
+Produto('Café', 18.9)
+[Produto('Café', 18.9)]
+</pre>
+
+<p>Sem <code>__str__</code>, o <code>print</code> usa o <code>__repr__</code> no lugar. O contrário não acontece: com só o <code>__str__</code>, a lista mostra o endereço (você viu isso em <code>lista_str.py</code>). Por isso, se for escrever um só, escreva o <code>__repr__</code>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th><code>__str__</code></th><th><code>__repr__</code></th></tr>
+<tr><td>Para quem</td><td>Para o usuário do programa</td><td>Para quem programa (você, procurando um defeito)</td></tr>
+<tr><td>Quem usa</td><td><code>print(x)</code>, <code>str(x)</code>, <code>f"{x}"</code></td><td><code>repr(x)</code>, listas e dicionários, <code>&gt;&gt;&gt; x</code>, <code>f"{x!r}"</code></td></tr>
+<tr><td>Costume</td><td>Um texto bonito: <code>Café: R$ 18.90</code></td><td>Parecido com o código: <code>Produto('Café', 18.9)</code></td></tr>
+<tr><td>Se faltar</td><td>O Python usa o <code>__repr__</code></td><td>O Python mostra <code>&lt;… object at 0x…&gt;</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>4. <code>__eq__</code>: quando dois objetos são iguais</h2>
+<p>A Ana cadastrou o café duas vezes, com o mesmo nome e o mesmo preço. Para ela, é o mesmo produto. Para o Python:</p>
+
+<pre class="file" data-file="sem_eq.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+
+a = Produto("Café", 18.9)
+b = Produto("Café", 18.9)
+print(a == b)
+print(a == a)
+</pre>
+
+<pre class="term">$ python3 sem_eq.py
+False
+True
+</pre>
+
+<p>Sem <code>__eq__</code>, o <code>==</code> só responde <code>True</code> quando os dois lados são <strong>o mesmo objeto</strong>, igual ao <code>is</code> (aula <a href="operadores-is-in.html">is e in</a>). O Python não sabe que, para a lojinha, o que conta é o nome e o preço. Você ensina com o <code>__eq__</code> (de <em>equal</em>, "igual"):</p>
+
+<pre class="file" data-file="com_eq.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def __eq__(self, outro):
+        if not isinstance(outro, Produto):
+            return NotImplemented
+        return self.nome == outro.nome and self.preco == outro.preco
+
+
+a = Produto("Café", 18.9)
+b = Produto("Café", 18.9)
+c = Produto("Café", 21.0)
+print(a == b)
+print(a is b)
+print(a == c)
+print(a != c)
+print(a == "Café")
+print(b in [c, a])
+</pre>
+
+<dl class="anatomy">
+  <dt>def __eq__(self, outro):</dt><dd>Recebe os <strong>dois lados</strong> do <code>==</code>: em <code>a == b</code>, o <code>self</code> é <code>a</code> e o <code>outro</code> é <code>b</code>.</dd>
+  <dt>isinstance(outro, Produto)</dt><dd>"O outro lado é um <code>Produto</code>?" Se alguém comparar um produto com um texto, não faz sentido olhar <code>outro.nome</code>.</dd>
+  <dt>return NotImplemented</dt><dd>Um valor especial que quer dizer "não sei comparar com isso". O Python então tenta o outro lado e, se ninguém souber, responde <code>False</code> no <code>==</code>. Repare: é <code>return NotImplemented</code>, um valor, e não um erro.</dd>
+  <dt>return self.nome == outro.nome and …</dt><dd>A regra da lojinha: mesmo nome <strong>e</strong> mesmo preço. Devolve <code>True</code> ou <code>False</code>.</dd>
+</dl>
+
+<pre class="term">$ python3 com_eq.py
+True
+False
+False
+True
+False
+True
+</pre>
+
+<ul>
+  <li><code>a == b</code> agora é <code>True</code>: mesmo nome, mesmo preço.</li>
+  <li><code>a is b</code> continua <code>False</code>: são iguais, mas não são o mesmo objeto. O <code>is</code> não usa o <code>__eq__</code>.</li>
+  <li><code>a == c</code> é <code>False</code> (preços diferentes), e o <code>!=</code> deu <code>True</code> sem você escrever nada para ele: o Python usa o contrário do <code>__eq__</code>.</li>
+  <li><code>a == "Café"</code> deu <code>False</code>, sem erro, graças ao <code>NotImplemented</code>.</li>
+  <li>O <code>in</code> também usa o <code>==</code>: <code>b</code> está na lista porque é igual ao <code>a</code> que está lá.</li>
+</ul>
+
+<hr>
+
+<h2>5. <code>__lt__</code>: "menor que", para ordenar</h2>
+<p>A Ana quer a cesta ordenada do produto mais barato para o mais caro. Tenta o <code>sorted</code> (aula <a href="listas-ordenar.html">Ordenando Listas</a>):</p>
+
+<pre class="file" data-file="sem_lt.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+
+cesta = [Produto("Café", 18.9), Produto("Leite", 5.49), Produto("Arroz", 27.5)]
+print(sorted(cesta))
+</pre>
+
+<pre class="term">$ python3 sem_lt.py
+Traceback (most recent call last):
+  File "/home/ana/sem_lt.py", line 8, in &lt;module&gt;
+    print(sorted(cesta))
+          ~~~~~~^^^^^^^
+TypeError: '&lt;' not supported between instances of 'Produto' and 'Produto'
+</pre>
+
+<p>"O <code>&lt;</code> não é suportado entre objetos <code>Produto</code> e <code>Produto</code>." Para ordenar, o <code>sorted</code> fica perguntando "este é menor que aquele?", com o <code>&lt;</code>. E o Python não sabe o que é um produto ser "menor" que outro: mais barato? Nome antes no alfabeto? Quem decide é você, com o <code>__lt__</code> (de <em>less than</em>, "menor que"):</p>
+
+<pre class="file" data-file="com_lt.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def __repr__(self):
+        return f"Produto({self.nome!r}, {self.preco!r})"
+
+    def __lt__(self, outro):
+        return self.preco &lt; outro.preco
+
+
+cafe = Produto("Café", 18.9)
+leite = Produto("Leite", 5.49)
+arroz = Produto("Arroz", 27.5)
+cesta = [cafe, leite, arroz]
+print(leite &lt; cafe)
+print(cafe &gt; leite)
+print(sorted(cesta))
+print(sorted(cesta, reverse=True))
+print(min(cesta))
+print(max(cesta))
+</pre>
+
+<dl class="anatomy">
+  <dt>def __lt__(self, outro):</dt><dd>Em <code>leite &lt; cafe</code>, o <code>self</code> é o leite e o <code>outro</code> é o café.</dd>
+  <dt>return self.preco &lt; outro.preco</dt><dd>A regra: um produto é "menor" que outro quando é mais barato.</dd>
+</dl>
+
+<pre class="term">$ python3 com_lt.py
+True
+True
+[Produto('Leite', 5.49), Produto('Café', 18.9), Produto('Arroz', 27.5)]
+[Produto('Arroz', 27.5), Produto('Café', 18.9), Produto('Leite', 5.49)]
+Produto('Leite', 5.49)
+Produto('Arroz', 27.5)
+</pre>
+
+<p>Com um método só, funcionaram o <code>&lt;</code>, o <code>sorted</code> (nos dois sentidos), o <code>min</code> e o <code>max</code>. E até o <code>cafe &gt; leite</code>: o Python percebe que "café maior que leite" é o mesmo que "leite menor que café" e usa o <code>__lt__</code> do leite. (O <code>__repr__</code> está ali só para a lista sair legível.)</p>
+
+<div class="note">
+<strong>E o <code>&lt;=</code>?</strong>
+<p>Esse não vem de graça: <code>leite &lt;= cafe</code> dá o mesmo <code>TypeError</code>, agora com <code>'&lt;='</code>. Cada comparação tem o seu método: <code>__le__</code> (<code>&lt;=</code>), <code>__gt__</code> (<code>&gt;</code>), <code>__ge__</code> (<code>&gt;=</code>). Para ordenar, o <code>__lt__</code> basta. Se você precisar de todas, a próxima aula, <a href="dataclasses.html">Dataclasses</a>, mostra o <code>order=True</code>, que escreve todas sozinho.</p>
+</div>
+
+<div class="trypy" data-goal="outre:^Leite\nCafé\nArroz\n$;;src:def __lt__">
+<p class="try-task"><strong>Missão:</strong> o programa quer mostrar os produtos do mais barato para o mais caro, mas o <code>sorted</code> dá <code>TypeError</code>. Acrescente um <code>__lt__</code> que compare os preços.</p>
+<pre class="script" data-file="main.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+
+cesta = [Produto("Café", 18.9), Produto("Leite", 5.49), Produto("Arroz", 27.5)]
+for produto in sorted(cesta):
+    print(produto.nome)
+</pre>
+<pre class="solucao" data-file="main.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def __lt__(self, outro):
+        return self.preco &lt; outro.preco
+
+
+cesta = [Produto("Café", 18.9), Produto("Leite", 5.49), Produto("Arroz", 27.5)]
+for produto in sorted(cesta):
+    print(produto.nome)
+</pre>
+</div>
+
+<hr>
+
+<h2>6. <code>__len__</code>: o tamanho do objeto</h2>
+<p>A Ana fez uma classe <code>Carrinho</code>, que guarda os itens de uma compra numa lista. Faz sentido perguntar <code>len(carrinho)</code>:</p>
+
+<pre class="file" data-file="len.py">class Carrinho:
+    def __init__(self):
+        self.itens = []
+
+    def colocar(self, item):
+        self.itens.append(item)
+
+    def __len__(self):
+        return len(self.itens)
+
+
+carrinho = Carrinho()
+print(len(carrinho))
+if not carrinho:
+    print("O carrinho está vazio.")
+
+carrinho.colocar("café")
+carrinho.colocar("leite")
+print(len(carrinho))
+if carrinho:
+    print(f"O carrinho tem {len(carrinho)} itens.")
+</pre>
+
+<dl class="anatomy">
+  <dt>def __len__(self):</dt><dd>Chamado pelo <code>len(carrinho)</code>. Tem de devolver um número inteiro, 0 ou maior.</dd>
+  <dt>return len(self.itens)</dt><dd>O tamanho do carrinho é o tamanho da lista de itens dele.</dd>
+  <dt>if not carrinho:</dt><dd>Brinde: com <code>__len__</code>, o objeto passa a valer <code>False</code> no <code>if</code> quando o tamanho é 0, como uma lista vazia (aula <a href="booleanos.html">Booleanos</a>).</dd>
+</dl>
+
+<pre class="term">$ python3 len.py
+0
+O carrinho está vazio.
+2
+O carrinho tem 2 itens.
+</pre>
+
+<hr>
+
+<h2>7. <code>__add__</code>: o <code>+</code> entre objetos</h2>
+<p>A Ana e a Bia vão juntar as compras num carrinho só. Com o <code>__add__</code>, isso vira um <code>+</code>:</p>
+
+<pre class="file" data-file="add.py">class Carrinho:
+    def __init__(self, itens=None):
+        self.itens = list(itens) if itens else []
+
+    def __len__(self):
+        return len(self.itens)
+
+    def __str__(self):
+        return "Carrinho: " + ", ".join(self.itens)
+
+    def __add__(self, outro):
+        if not isinstance(outro, Carrinho):
+            return NotImplemented
+        return Carrinho(self.itens + outro.itens)
+
+
+ana = Carrinho(["café", "leite"])
+bia = Carrinho(["pão", "manteiga", "queijo"])
+juntos = ana + bia
+print(juntos)
+print(len(juntos))
+print(ana)
+</pre>
+
+<dl class="anatomy">
+  <dt>itens=None</dt><dd>O carrinho pode nascer vazio ou já com uma lista. (O <code>None</code> no lugar de <code>[]</code> é de propósito; o porquê está na aula <a href="argumentos-padrao.html">Valores Padrão</a>.)</dd>
+  <dt>", ".join(self.itens)</dt><dd>Junta os itens num texto, separados por vírgula e espaço.</dd>
+  <dt>def __add__(self, outro):</dt><dd>Chamado por <code>ana + bia</code>: o <code>self</code> é o carrinho da esquerda, o <code>outro</code> é o da direita.</dd>
+  <dt>return NotImplemented</dt><dd>Se o lado direito não for um carrinho, avisa "não sei somar isso", e o Python dá o erro certo (veja em <a href="#errado">Quando dá errado</a>).</dd>
+  <dt>return Carrinho(self.itens + outro.itens)</dt><dd>Devolve um carrinho <strong>novo</strong>, com os itens dos dois. Os carrinhos originais não mudam, como em <code>3 + 4</code>, que não muda nem o 3 nem o 4.</dd>
+</dl>
+
+<pre class="term">$ python3 add.py
+Carrinho: café, leite, pão, manteiga, queijo
+5
+Carrinho: café, leite
+</pre>
+
+<p>O carrinho juntado tem os 5 itens, e o da Ana continua com os dois dela.</p>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+<p>Para <strong>ordenar</strong>, existe outro caminho que não mexe na classe: o <code>key=</code> do <code>sorted</code>, que diz por qual valor ordenar (aula <a href="lambda.html">lambda</a>):</p>
+
+<pre class="file" data-file="key.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def __repr__(self):
+        return f"Produto({self.nome!r}, {self.preco!r})"
+
+
+cesta = [Produto("Café", 18.9), Produto("Leite", 5.49), Produto("Arroz", 27.5)]
+print(sorted(cesta, key=lambda p: p.preco))
+print(sorted(cesta, key=lambda p: p.nome))
+</pre>
+
+<pre class="term">$ python3 key.py
+[Produto('Leite', 5.49), Produto('Café', 18.9), Produto('Arroz', 27.5)]
+[Produto('Arroz', 27.5), Produto('Café', 18.9), Produto('Leite', 5.49)]
+</pre>
+
+<p>Sem <code>__lt__</code> nenhum, deu para ordenar por preço e por nome.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Você quer…</th><th>Use</th></tr>
+<tr><td>Um jeito "natural" e único de ordenar (o mais barato vem antes, sempre)</td><td><code>__lt__</code> na classe</td></tr>
+<tr><td>Ordenar ora por preço, ora por nome</td><td><code>sorted(lista, key=…)</code>, sem mexer na classe</td></tr>
+<tr><td>Mostrar o objeto para o usuário</td><td><code>__str__</code></td></tr>
+<tr><td>Ver o objeto ao procurar defeitos, ou dentro de listas</td><td><code>__repr__</code> (se for escrever um só, escreva este)</td></tr>
+<tr><td>Uma classe que é "só dados" (nome, preço…) com tudo isso pronto</td><td><code>@dataclass</code> (aula <a href="dataclasses.html">Dataclasses</a>)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Um <code>print</code> dentro do <code>__str__</code>, em vez de <code>return</code></strong>
+<pre class="file" data-file="str_print.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def __str__(self):
+        print(f"{self.nome}: R$ {self.preco:.2f}")
+
+
+cafe = Produto("Café", 18.9)
+print(cafe)
+</pre>
+<pre class="term">$ python3 str_print.py
+Café: R$ 18.90
+Traceback (most recent call last):
+  File "/home/ana/str_print.py", line 11, in &lt;module&gt;
+    print(cafe)
+    ~~~~~^^^^^^
+TypeError: __str__ returned non-string (type NoneType)
+</pre>
+<p>Confuso à primeira vista: o texto apareceu <strong>e</strong> deu erro. Linha por linha:</p>
+<ul>
+  <li><code>Café: R$ 18.90</code>: foi o <code>print</code> de <strong>dentro</strong> do <code>__str__</code>, que rodou quando o <code>print(cafe)</code> chamou o método.</li>
+  <li><code>File "/home/ana/str_print.py", line 11</code>: o erro foi na linha 11, o <code>print(cafe)</code>, marcado pelos <code>^^^^^^</code>.</li>
+  <li><code>TypeError: __str__ returned non-string (type NoneType)</code>: "o <code>__str__</code> devolveu algo que não é texto (do tipo <code>NoneType</code>)". Como o método não tem <code>return</code>, ele devolve <code>None</code> (aula <a href="none.html">O Valor None</a>), e o <code>print</code> de fora não tem o que mostrar.</li>
+</ul>
+<p><strong>Como consertar:</strong> o <code>__str__</code> <strong>devolve</strong> o texto: <code>return f"{self.nome}: R$ {self.preco:.2f}"</code>. Quem mostra é o <code>print</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O <code>__str__</code> devolvendo um número</strong>
+<pre class="file" data-file="str_numero.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def __str__(self):
+        return self.preco
+
+
+cafe = Produto("Café", 18.9)
+print(cafe)
+</pre>
+<pre class="term">$ python3 str_numero.py
+Traceback (most recent call last):
+  File "/home/ana/str_numero.py", line 11, in &lt;module&gt;
+    print(cafe)
+    ~~~~~^^^^^^
+TypeError: __str__ returned non-string (type float)
+</pre>
+<p>O mesmo erro, agora com <code>type float</code>: o método devolveu o número <code>18.9</code>, não um texto. O <code>__str__</code> (e o <code>__repr__</code>) têm de devolver <strong>texto</strong>. <strong>Como consertar:</strong> <code>return str(self.preco)</code> ou uma f-string.</p>
+</div>
+
+<div class="cenario">
+<strong>Um sublinhado só: nenhum erro, nenhum efeito</strong>
+<pre class="file" data-file="um_sublinhado.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def _str_(self):
+        return f"{self.nome}: R$ {self.preco:.2f}"
+
+
+cafe = Produto("Café", 18.9)
+print(cafe)
+</pre>
+<pre class="term">$ python3 um_sublinhado.py
+&lt;__main__.Produto object at 0x7f2da2d50590&gt;
+</pre>
+<p>Nenhum erro, mas o <code>print</code> ignorou o método. <code>_str_</code>, com um sublinhado de cada lado, é só um método comum com nome esquisito; o Python procura exatamente <code>__str__</code>, com <strong>dois</strong>. O mesmo vale para <code>__init__</code>, <code>__eq__</code> e todos os outros. <strong>Como consertar:</strong> conte os sublinhados: dois antes, dois depois.</p>
+</div>
+
+<div class="cenario">
+<strong>Ordenar sem <code>__lt__</code></strong>
+<p>Você já viu na seção 5: <code>sorted(cesta)</code> com produtos sem <code>__lt__</code> dá <code>TypeError: '&lt;' not supported between instances of 'Produto' and 'Produto'</code>. <strong>Como consertar:</strong> escreva o <code>__lt__</code> ou use <code>sorted(cesta, key=lambda p: p.preco)</code>. E se o erro falar de <code>'&lt;='</code>, é porque o código usou <code>&lt;=</code>, que precisa do <code>__le__</code>:</p>
+<pre class="file" data-file="menor_igual.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def __lt__(self, outro):
+        return self.preco &lt; outro.preco
+
+
+cafe = Produto("Café", 18.9)
+leite = Produto("Leite", 5.49)
+print(leite &lt;= cafe)
+</pre>
+<pre class="term">$ python3 menor_igual.py
+Traceback (most recent call last):
+  File "/home/ana/menor_igual.py", line 12, in &lt;module&gt;
+    print(leite &lt;= cafe)
+          ^^^^^^^^^^^^^
+TypeError: '&lt;=' not supported between instances of 'Produto' and 'Produto'
+</pre>
+</div>
+
+<div class="cenario">
+<strong>Escreveu <code>__eq__</code> e o objeto não entra mais num conjunto</strong>
+<pre class="file" data-file="unhashable.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def __eq__(self, outro):
+        return self.nome == outro.nome and self.preco == outro.preco
+
+
+cafe = Produto("Café", 18.9)
+vistos = {cafe}
+</pre>
+<pre class="term">$ python3 unhashable.py
+Traceback (most recent call last):
+  File "/home/ana/unhashable.py", line 11, in &lt;module&gt;
+    vistos = {cafe}
+             ^^^^^^
+TypeError: cannot use 'Produto' as a set element (unhashable type: 'Produto')
+</pre>
+<p>"Não dá para usar <code>Produto</code> como elemento de um conjunto (tipo não <em>hashable</em>)." Conjuntos (aula <a href="conjuntos.html">Conjuntos</a>) e chaves de dicionário precisam de um <strong>hash</strong>: um número de "etiqueta" que o Python calcula para achar o objeto depressa. Objetos iguais têm de ter a mesma etiqueta. Quando você escreve o seu <code>__eq__</code>, o Python não tem como saber qual etiqueta combina com a sua regra de igualdade e, por segurança, tira a etiqueta da classe.</p>
+<p><strong>Como consertar:</strong> se você precisa pôr os objetos num conjunto ou usá-los como chave, escreva também um <code>__hash__</code> que use <strong>os mesmos dados</strong> do <code>__eq__</code>:</p>
+<pre class="file" data-file="hash_ok.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    def __eq__(self, outro):
+        return self.nome == outro.nome and self.preco == outro.preco
+
+    def __hash__(self):
+        return hash((self.nome, self.preco))
+
+
+a = Produto("Café", 18.9)
+b = Produto("Café", 18.9)
+print(len({a, b}))
+</pre>
+<pre class="term">$ python3 hash_ok.py
+1
+</pre>
+<p>Agora os dois cafés iguais viram um item só no conjunto. Cuidado: depois disso, não mude o nome nem o preço de um objeto que já está dentro de um conjunto (ele ficaria com a etiqueta velha). A aula <a href="dataclasses.html">Dataclasses</a> mostra o <code>frozen=True</code>, que resolve isso proibindo a mudança.</p>
+</div>
+
+<div class="cenario">
+<strong>Somar um carrinho com outra coisa</strong>
+<pre class="file" data-file="add_erro.py">class Carrinho:
+    def __init__(self, itens=None):
+        self.itens = list(itens) if itens else []
+
+    def __add__(self, outro):
+        if not isinstance(outro, Carrinho):
+            return NotImplemented
+        return Carrinho(self.itens + outro.itens)
+
+
+ana = Carrinho(["café", "leite"])
+print(ana + "pão")
+</pre>
+<pre class="term">$ python3 add_erro.py
+Traceback (most recent call last):
+  File "/home/ana/add_erro.py", line 12, in &lt;module&gt;
+    print(ana + "pão")
+          ~~~~^~~~~~~
+TypeError: unsupported operand type(s) for +: 'Carrinho' and 'str'
+</pre>
+<p>"Tipos não suportados para o <code>+</code>: <code>Carrinho</code> e <code>str</code>." Foi o <code>NotImplemented</code> trabalhando: o <code>__add__</code> avisou que não sabe somar um carrinho com um texto, o texto também não sabia, e o Python deu um erro claro, com o <code>^</code> embaixo do <code>+</code>. Sem o <code>isinstance</code>, o erro seria outro, mais confuso, lá de dentro do método (<code>'str' object has no attribute 'itens'</code>). <strong>Como consertar:</strong> some carrinho com carrinho (<code>ana + Carrinho(["pão"])</code>), ou crie um método próprio para pôr um item.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Método</th><th>Chamado por</th><th>Deve devolver</th></tr>
+<tr><td><code>__init__(self, …)</code></td><td><code>Classe(…)</code></td><td>nada (<code>None</code>)</td></tr>
+<tr><td><code>__str__(self)</code></td><td><code>print(x)</code>, <code>str(x)</code>, <code>f"{x}"</code></td><td>um texto</td></tr>
+<tr><td><code>__repr__(self)</code></td><td><code>repr(x)</code>, listas, <code>&gt;&gt;&gt; x</code>, <code>f"{x!r}"</code></td><td>um texto (de preferência, parecido com o código)</td></tr>
+<tr><td><code>__eq__(self, outro)</code></td><td><code>x == y</code> (e <code>!=</code>, <code>in</code>)</td><td><code>True</code>/<code>False</code> ou <code>NotImplemented</code></td></tr>
+<tr><td><code>__lt__(self, outro)</code></td><td><code>x &lt; y</code>, <code>sorted</code>, <code>min</code>, <code>max</code></td><td><code>True</code>/<code>False</code> ou <code>NotImplemented</code></td></tr>
+<tr><td><code>__le__</code>, <code>__gt__</code>, <code>__ge__</code></td><td><code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code></td><td><code>True</code>/<code>False</code></td></tr>
+<tr><td><code>__len__(self)</code></td><td><code>len(x)</code>, <code>if x:</code></td><td>um inteiro, 0 ou mais</td></tr>
+<tr><td><code>__add__(self, outro)</code></td><td><code>x + y</code></td><td>um objeto novo ou <code>NotImplemented</code></td></tr>
+<tr><td><code>__hash__(self)</code></td><td>conjuntos e chaves de dicionário</td><td>um inteiro: <code>hash((campo1, campo2))</code></td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>&lt;__main__.Produto object at 0x…&gt;</code> no <code>print</code></td><td>Falta <code>__str__</code>/<code>__repr__</code>, ou o nome está com um sublinhado só</td></tr>
+<tr><td>Endereços dentro de uma lista, mas o <code>print</code> do item sai bonito</td><td>Tem <code>__str__</code>, falta <code>__repr__</code></td></tr>
+<tr><td><code>__str__ returned non-string (type NoneType)</code></td><td><code>print</code> no lugar do <code>return</code> dentro do <code>__str__</code></td></tr>
+<tr><td><code>__str__ returned non-string (type float)</code></td><td>O <code>__str__</code> devolveu um número</td></tr>
+<tr><td><code>'&lt;' not supported between instances of …</code></td><td><code>sorted</code>/<code>min</code>/<code>max</code> sem <code>__lt__</code></td></tr>
+<tr><td><code>unhashable type: 'Produto'</code></td><td>Tem <code>__eq__</code> e falta <code>__hash__</code></td></tr>
+<tr><td><code>unsupported operand type(s) for +</code></td><td>Sem <code>__add__</code>, ou somando com um tipo que o <code>__add__</code> recusa</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O texto do <code>print</code></h3>
+<p>Complete o nome do método que o <code>print</code> usa:</p>
+<div class="ex-code">def <input data-answer="__str__" aria-label="nome do método">(self):<br>&nbsp;&nbsp;&nbsp;&nbsp;return f"{self.nome}: R$ {self.preco:.2f}"</div>
+</div>
+
+<div class="exercise">
+<h3>2. O tamanho da turma</h3>
+<p>A classe <code>Turma</code> guarda os alunos na lista <code>self.alunos</code>. Complete para que <code>len(turma)</code> funcione:</p>
+<div class="ex-code">def <input data-answer="__len__" aria-label="nome do método">(self):<br>&nbsp;&nbsp;&nbsp;&nbsp;return <input data-answer="len(self.alunos)" aria-label="valor devolvido"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">3. Uma classe tem só o <code>__str__</code>. O que aparece em <code>print([cafe, leite])</code>?</p>
+<label><input type="radio" name="q3"> <code>[Café: R$ 18.90, Leite: R$ 5.49]</code></label>
+<label><input type="radio" name="q3"> Um <code>TypeError</code></label>
+<label><input type="radio" name="q3"> Os endereços: <code>[&lt;__main__.Produto object at 0x…&gt;, …]</code>, porque a lista usa o <code>__repr__</code></label>
+<label><input type="radio" name="q3"> Uma lista vazia</label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Sem <code>__eq__</code>, <code>Produto("Café", 18.9) == Produto("Café", 18.9)</code> dá:</p>
+<label><input type="radio" name="q4"> <code>True</code>, porque os dados são iguais</label>
+<label><input type="radio" name="q4"> <code>False</code>, porque são dois objetos diferentes e o <code>==</code> padrão só compara se é o mesmo objeto</label>
+<label><input type="radio" name="q4"> Um <code>TypeError</code></label>
+<label><input type="radio" name="q4"> <code>None</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. Qual método especial o <code>sorted(lista_de_produtos)</code> precisa encontrar nos produtos?</p>
+<label><input type="radio" name="q5"> <code>__eq__</code></label>
+<label><input type="radio" name="q5"> <code>__len__</code></label>
+<label><input type="radio" name="q5"> <code>__sorted__</code></label>
+<label><input type="radio" name="q5"> <code>__lt__</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. O que o <code>__add__</code> deve devolver quando não sabe somar com o tipo recebido?</p>
+<label><input type="radio" name="q6"> <code>NotImplemented</code>, para o Python tentar o outro lado e dar o erro certo</label>
+<label><input type="radio" name="q6"> <code>False</code></label>
+<label><input type="radio" name="q6"> <code>None</code></label>
+<label><input type="radio" name="q6"> O próprio <code>self</code>, sem mudar nada</label>
+</div>
+
+<h3>Missão final: os carrinhos da Ana e da Bia</h3>
+
+<div class="trypy" data-goal="out:Carrinho: café, leite, pão;;out:3 itens;;semerro;;src:def __add__;;src:def __len__">
+<p class="try-task"><strong>Missão:</strong> o programa quer juntar os carrinhos com <code>+</code> e contar os itens com <code>len</code>, mas a classe ainda não sabe fazer isso. Escreva o <code>__len__</code> (o número de itens) e o <code>__add__</code> (um carrinho novo com os itens dos dois).</p>
+<pre class="script" data-file="main.py">class Carrinho:
+    def __init__(self, itens):
+        self.itens = list(itens)
+
+    def __str__(self):
+        return "Carrinho: " + ", ".join(self.itens)
+
+    # escreva aqui o __len__
+
+    # escreva aqui o __add__
+
+
+ana = Carrinho(["café", "leite"])
+bia = Carrinho(["pão"])
+juntos = ana + bia
+print(juntos)
+print(len(juntos), "itens")
+</pre>
+<pre class="solucao" data-file="main.py">class Carrinho:
+    def __init__(self, itens):
+        self.itens = list(itens)
+
+    def __str__(self):
+        return "Carrinho: " + ", ".join(self.itens)
+
+    def __len__(self):
+        return len(self.itens)
+
+    def __add__(self, outro):
+        if not isinstance(outro, Carrinho):
+            return NotImplemented
+        return Carrinho(self.itens + outro.itens)
+
+
+ana = Carrinho(["café", "leite"])
+bia = Carrinho(["pão"])
+juntos = ana + bia
+print(juntos)
+print(len(juntos), "itens")
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Métodos especiais ("dunder") têm dois sublinhados de cada lado e são chamados <strong>pelo Python</strong>: o <code>print</code> chama o <code>__str__</code>, o <code>len</code> chama o <code>__len__</code>, o <code>+</code> chama o <code>__add__</code>.</li>
+  <li><code>__str__</code> é o texto para as pessoas (<code>print</code>, f-string); <code>__repr__</code> é o texto para quem programa (listas, modo interativo). Sem <code>__str__</code>, o Python usa o <code>__repr__</code>; se for escrever um só, escreva o <code>__repr__</code>.</li>
+  <li>Os dois devolvem texto com <code>return</code>; um <code>print</code> no lugar dá <code>__str__ returned non-string</code>.</li>
+  <li><code>__eq__</code> decide o <code>==</code> (e, com ele, o <code>!=</code> e o <code>in</code>). Com <code>__eq__</code>, escreva também <code>__hash__</code> se o objeto for para um conjunto ou virar chave.</li>
+  <li><code>__lt__</code> basta para <code>sorted</code>, <code>min</code> e <code>max</code>. Para ordenar de vários jeitos, prefira <code>key=</code>.</li>
+  <li>Quando o outro lado não é do tipo esperado, devolva <code>NotImplemented</code> (um valor, não um erro).</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
