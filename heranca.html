@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Herança — classes filhas que aproveitam a mãe | Guia Python</title>
+<meta name="description" content="Herança em Python para quem está começando: class Cachorro(Animal), o que a classe filha herda, como acrescentar e sobrescrever métodos, super().__init__ e super() em outros métodos, isinstance e issubclass, a ordem de busca (__mro__), herança × composição, uma palavra sobre herança múltipla, e os erros reais (super esquecido, self a mais no super, classe-mãe criada depois, método com nome errado).">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Herança</span></h1>
+
+<p class="intro">A Ana está montando o cadastro do petshop da vizinha. Todo animal tem nome e come; o cachorro, além disso, busca a bolinha; o gato mia em vez de latir. Escrever três classes do zero, repetindo o nome e o <code>comer</code> em todas, seria trabalho dobrado, e cada correção teria de ser feita três vezes. A <strong>herança</strong> resolve: você escreve uma classe geral, <code>Animal</code>, e cria classes <strong>filhas</strong>, <code>Cachorro</code> e <code>Gato</code>, que <strong>recebem tudo</strong> o que a mãe tem e só acrescentam ou mudam o que é diferente.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A criar uma classe filha com <code>class Cachorro(Animal):</code>, e o que ela herda.</li>
+  <li>A <strong>acrescentar</strong> métodos na filha e a <strong>sobrescrever</strong> (trocar) um método da mãe.</li>
+  <li>A usar <code>super()</code> para aproveitar o <code>__init__</code> e os métodos da mãe.</li>
+  <li>A perguntar "é um?" com <code>isinstance</code> e "é filha de?" com <code>issubclass</code>.</li>
+  <li>Como o Python procura um método: primeiro na filha, depois na mãe (<code>__mro__</code>).</li>
+  <li>Quando usar herança ("é um") e quando guardar um objeto dentro do outro ("tem um").</li>
+  <li>Os erros reais: o <code>super().__init__</code> esquecido, o <code>self</code> a mais, a mãe criada depois da filha e o método com nome errado.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: "é um"</h2>
+<p>Na ficha do petshop há uma parte que vale para todo animal (nome, idade, vacinas) e uma parte que muda: o cachorro tem raça e porte; o peixe, o tipo de aquário. A herança segue a mesma lógica da frase "<strong>é um</strong>": um cachorro <strong>é um</strong> animal, um gato <strong>é um</strong> animal. Tudo o que vale para animal vale também para cachorro.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Nome</th><th>Também chamada de</th><th>No exemplo</th></tr>
+<tr><td>Classe <strong>mãe</strong></td><td>classe base, superclasse, classe pai</td><td><code>Animal</code></td></tr>
+<tr><td>Classe <strong>filha</strong></td><td>subclasse, classe derivada</td><td><code>Cachorro</code>, <code>Gato</code></td></tr>
+<tr><td><strong>Herdar</strong></td><td>estender, derivar</td><td><code>Cachorro</code> herda de <code>Animal</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. A filha recebe tudo</h2>
+
+<pre class="file" data-file="animal.py">class Animal:
+    def __init__(self, nome):
+        self.nome = nome
+
+    def comer(self):
+        print(f"{self.nome} está comendo.")
+
+    def falar(self):
+        print(f"{self.nome} faz um som.")
+
+
+class Cachorro(Animal):
+    pass
+
+
+rex = Cachorro("Rex")
+rex.comer()
+rex.falar()
+print(type(rex))
+</pre>
+
+<dl class="anatomy">
+  <dt>class Animal:</dt><dd>A classe mãe, escrita como qualquer classe.</dd>
+  <dt>class Cachorro(Animal):</dt><dd>O nome da mãe <strong>entre parênteses</strong> depois do nome da classe: "o <code>Cachorro</code> herda de <code>Animal</code>". São os parênteses que a aula <a href="classes.html">Classes e Objetos</a> prometeu explicar.</dd>
+  <dt>pass</dt><dd>A filha não acrescenta nada (por enquanto). Mesmo assim, ela já tem tudo o que a mãe tem.</dd>
+  <dt>Cachorro("Rex")</dt><dd>O <code>Cachorro</code> não escreveu <code>__init__</code>: usa o da mãe, que pede o <code>nome</code>.</dd>
+</dl>
+
+<pre class="term">$ python3 animal.py
+Rex está comendo.
+Rex faz um som.
+&lt;class '__main__.Cachorro'&gt;
+</pre>
+
+<p>Com duas linhas (<code>class Cachorro(Animal):</code> e <code>pass</code>), o cachorro já tem <code>__init__</code>, <code>comer</code> e <code>falar</code>. E o <code>rex</code> é um <code>Cachorro</code>, não um <code>Animal</code> "genérico": o <code>type</code> mostra.</p>
+
+<hr>
+
+<h2>2. Acrescentando: o que só a filha faz</h2>
+
+<pre class="file" data-file="novo_metodo.py">class Animal:
+    def __init__(self, nome):
+        self.nome = nome
+
+    def comer(self):
+        print(f"{self.nome} está comendo.")
+
+
+class Cachorro(Animal):
+    def buscar(self):
+        print(f"{self.nome} foi buscar a bolinha.")
+
+
+rex = Cachorro("Rex")
+rex.comer()
+rex.buscar()
+
+bicho = Animal("Bicho")
+bicho.buscar()
+</pre>
+
+<pre class="term">$ python3 novo_metodo.py
+Rex está comendo.
+Rex foi buscar a bolinha.
+Traceback (most recent call last):
+  File "/home/ana/novo_metodo.py", line 19, in &lt;module&gt;
+    bicho.buscar()
+    ^^^^^^^^^^^^
+AttributeError: 'Animal' object has no attribute 'buscar'
+</pre>
+
+<p>O <code>rex</code> sabe comer (herdou da mãe) <strong>e</strong> buscar (escrito na filha). Repare que o <code>buscar</code> usa o <code>self.nome</code>, criado pelo <code>__init__</code> da mãe: tudo se mistura num objeto só. Mas a herança vai num sentido só: <strong>da mãe para a filha</strong>. Um <code>Animal</code> qualquer não ganhou o <code>buscar</code>, e daí o <code>AttributeError</code>. Nem todo animal busca bolinha.</p>
+
+<hr>
+
+<h2>3. Sobrescrevendo: a filha faz do seu jeito</h2>
+<p>Se a filha escreve um método com <strong>o mesmo nome</strong> de um método da mãe, o da filha vale para ela. Isso se chama <strong>sobrescrever</strong> (em inglês, <em>override</em>, "passar por cima").</p>
+
+<pre class="file" data-file="sobrescrever.py">class Animal:
+    def __init__(self, nome):
+        self.nome = nome
+
+    def falar(self):
+        print(f"{self.nome} faz um som.")
+
+
+class Cachorro(Animal):
+    def falar(self):
+        print(f"{self.nome} diz: Au au!")
+
+
+class Gato(Animal):
+    def falar(self):
+        print(f"{self.nome} diz: Miau!")
+
+
+class Peixe(Animal):
+    pass
+
+
+for bicho in [Cachorro("Rex"), Gato("Mimi"), Peixe("Nemo")]:
+    bicho.falar()
+</pre>
+
+<pre class="term">$ python3 sobrescrever.py
+Rex diz: Au au!
+Mimi diz: Miau!
+Nemo faz um som.                   « o Peixe não sobrescreveu: usou o da mãe
+</pre>
+
+<p>Como o Python decide qual <code>falar</code> usar? Ele procura o método <strong>primeiro na classe do objeto</strong>; se não achar, sobe para a mãe. No <code>Cachorro</code>, achou logo. No <code>Peixe</code>, não achou e subiu para o <code>Animal</code>. É a mesma busca da aula <a href="atributos-metodos.html">Atributos e Métodos</a> (primeiro o objeto, depois a classe), com mais um andar: depois da classe, a mãe.</p>
+
+<div class="trypy" data-goal="out:Piu diz: Piu piu!;;src:class Passaro\(Animal\);;semerro">
+<p class="try-task"><strong>Missão:</strong> o petshop agora atende passarinhos. Crie a classe <code>Passaro</code>, filha de <code>Animal</code>, que sobrescreve o <code>falar</code> para mostrar <code>Piu diz: Piu piu!</code> (use o <code>self.nome</code>).</p>
+<pre class="script" data-file="main.py">class Animal:
+    def __init__(self, nome):
+        self.nome = nome
+
+    def falar(self):
+        print(f"{self.nome} faz um som.")
+
+
+# crie aqui a classe Passaro
+
+
+piu = Passaro("Piu")
+piu.falar()
+</pre>
+<pre class="solucao" data-file="main.py">class Animal:
+    def __init__(self, nome):
+        self.nome = nome
+
+    def falar(self):
+        print(f"{self.nome} faz um som.")
+
+
+class Passaro(Animal):
+    def falar(self):
+        print(f"{self.nome} diz: Piu piu!")
+
+
+piu = Passaro("Piu")
+piu.falar()
+</pre>
+</div>
+
+<hr>
+
+<h2>4. <code>super()</code>: aproveitando o <code>__init__</code> da mãe</h2>
+<p>O cachorro precisa guardar a raça, além do nome. Então ele precisa do seu próprio <code>__init__</code>. Mas o <code>__init__</code> da filha <strong>sobrescreve</strong> o da mãe, e aí ninguém guardaria o nome. A solução é a filha <strong>chamar</strong> o <code>__init__</code> da mãe, para ela fazer a parte dela, e depois fazer a sua:</p>
+
+<pre class="file" data-file="super_init.py">class Animal:
+    def __init__(self, nome):
+        self.nome = nome
+
+    def falar(self):
+        print(f"{self.nome} faz um som.")
+
+
+class Cachorro(Animal):
+    def __init__(self, nome, raca):
+        super().__init__(nome)
+        self.raca = raca
+
+    def falar(self):
+        print(f"{self.nome}, o {self.raca}, diz: Au au!")
+
+
+rex = Cachorro("Rex", "vira-lata")
+print(rex.nome, rex.raca)
+rex.falar()
+print(vars(rex))
+</pre>
+
+<dl class="anatomy">
+  <dt>def __init__(self, nome, raca):</dt><dd>O <code>__init__</code> do cachorro recebe tudo o que um cachorro precisa: o nome (que todo animal tem) e a raça (só dele).</dd>
+  <dt>super()</dt><dd>"A classe de cima", a mãe. <code>super()</code> dá acesso aos métodos da mãe, mesmo os que a filha sobrescreveu.</dd>
+  <dt>super().__init__(nome)</dt><dd>Chama o <code>__init__</code> do <code>Animal</code>, que guarda o <code>self.nome</code>. <strong>Sem <code>self</code> nos parênteses</strong>: o <code>super()</code> já sabe qual é o objeto.</dd>
+  <dt>self.raca = raca</dt><dd>Depois, a parte que só o cachorro tem.</dd>
+</dl>
+
+<pre class="term">$ python3 super_init.py
+Rex vira-lata
+Rex, o vira-lata, diz: Au au!
+{'nome': 'Rex', 'raca': 'vira-lata'}
+</pre>
+
+<p>O <code>vars(rex)</code> mostra os dois atributos num objeto só: o <code>nome</code>, guardado pelo <code>__init__</code> da mãe, e a <code>raca</code>, pelo da filha. O costume é chamar o <code>super().__init__</code> <strong>na primeira linha</strong> do <code>__init__</code> da filha: primeiro a parte geral, depois a específica.</p>
+
+<h3><code>super()</code> em outros métodos</h3>
+<p>O <code>super()</code> serve para qualquer método, não só o <code>__init__</code>. Use quando a filha quer fazer <strong>o mesmo que a mãe e mais um pouco</strong>. Uma conta poupança mostra o saldo como qualquer conta, mais uma linha sobre o rendimento:</p>
+
+<pre class="file" data-file="conta.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self.saldo = saldo
+
+    def mostrar(self):
+        print(f"{self.titular}: R$ {self.saldo:.2f}")
+
+
+class ContaPoupanca(ContaBancaria):
+    def __init__(self, titular, saldo=0, taxa=0.01):
+        super().__init__(titular, saldo)
+        self.taxa = taxa
+
+    def render(self):
+        self.saldo += self.saldo * self.taxa
+
+    def mostrar(self):
+        super().mostrar()
+        print(f"  (poupança, rende {self.taxa:.0%} ao mês)")
+
+
+corrente = ContaBancaria("Ana", 500)
+poupanca = ContaPoupanca("Bia", 1000)
+poupanca.render()
+
+corrente.mostrar()
+poupanca.mostrar()
+</pre>
+
+<pre class="term">$ python3 conta.py
+Ana: R$ 500.00
+Bia: R$ 1010.00
+  (poupança, rende 1% ao mês)
+</pre>
+
+<p>O <code>mostrar</code> da poupança chama o <code>super().mostrar()</code> (a linha com o titular e o saldo, escrita uma vez só, na mãe) e acrescenta a sua linha. Se um dia o banco mudar o jeito de mostrar o saldo, a mudança na mãe vale para as duas contas. (O <code>:.0%</code> mostra o <code>0.01</code> como porcentagem sem casas: <code>1%</code>. Veja a <a href="ref-formatacao.html">Formatação</a>.)</p>
+
+<hr>
+
+<h2>5. "É um?": <code>isinstance</code> e <code>issubclass</code></h2>
+
+<pre class="file" data-file="isinst.py">class Animal:
+    pass
+
+
+class Cachorro(Animal):
+    pass
+
+
+class Gato(Animal):
+    pass
+
+
+rex = Cachorro()
+print(isinstance(rex, Cachorro))
+print(isinstance(rex, Animal))
+print(isinstance(rex, Gato))
+print(type(rex) == Animal)
+print(issubclass(Cachorro, Animal))
+print(issubclass(Animal, Cachorro))
+print(issubclass(Cachorro, object))
+print(Cachorro.__mro__)
+</pre>
+
+<pre class="term">$ python3 isinst.py
+True                               « o rex é um Cachorro
+True                               « …e também é um Animal
+False                              « mas não é um Gato
+False                              « o type() só olha a classe exata
+True                               « Cachorro é filha de Animal
+False                              « Animal não é filha de Cachorro
+True                               « toda classe é filha de object
+(&lt;class '__main__.Cachorro'&gt;, &lt;class '__main__.Animal'&gt;, &lt;class 'object'&gt;)
+</pre>
+
+<dl class="anatomy">
+  <dt>isinstance(rex, Animal)</dt><dd><code>True</code>: um cachorro <strong>é um</strong> animal. O <code>isinstance</code> aceita a classe do objeto e todas as mães dela. Era isso que a aula <a href="classes.html">Classes e Objetos</a> prometeu: por isso ele é preferido ao <code>type() ==</code>, que responde <code>False</code> aqui.</dd>
+  <dt>issubclass(Cachorro, Animal)</dt><dd>Pergunta sobre as <strong>classes</strong>, não sobre objetos: "<code>Cachorro</code> é filha (ou neta…) de <code>Animal</code>?".</dd>
+  <dt>Cachorro.__mro__</dt><dd>A <strong>ordem de busca</strong> dos métodos (MRO, de <em>method resolution order</em>, "ordem de resolução de métodos"): primeiro <code>Cachorro</code>, depois <code>Animal</code>, por fim <code>object</code>, a mãe de todas as classes.</dd>
+</dl>
+
+<div class="note">
+<strong>Herança múltipla: uma palavra</strong>
+<p>Em Python, uma classe pode ter <strong>mais de uma mãe</strong>: <code>class Pato(Voador, Nadador):</code>. O pato recebe os métodos das duas.</p>
+<pre class="file" data-file="multipla.py">class Voador:
+    def voar(self):
+        print("Voando!")
+
+
+class Nadador:
+    def nadar(self):
+        print("Nadando!")
+
+
+class Pato(Voador, Nadador):
+    pass
+
+
+donald = Pato()
+donald.voar()
+donald.nadar()
+print(Pato.__mro__)
+</pre>
+<pre class="term">$ python3 multipla.py
+Voando!
+Nadando!
+(&lt;class '__main__.Pato'&gt;, &lt;class '__main__.Voador'&gt;, &lt;class '__main__.Nadador'&gt;, &lt;class 'object'&gt;)
+</pre>
+<p>O <code>__mro__</code> diz a ordem da busca: se as duas mães tiverem um método com o mesmo nome, vale o da que aparece primeiro. A herança múltipla tem regras próprias e é fácil de embaralhar; para quem está começando, uma mãe só basta para quase tudo.</p>
+</div>
+
+<hr>
+
+<h2>Formas diferentes: herdar ou guardar dentro?</h2>
+<p>Herança não é o único jeito de aproveitar uma classe. Outro, muito comum, é um objeto <strong>guardar outro</strong> como atributo. Isso se chama <strong>composição</strong>, e segue a frase "<strong>tem um</strong>": a aluna <strong>tem um</strong> endereço (ela não <strong>é um</strong> endereço).</p>
+
+<pre class="file" data-file="composicao.py">class Endereco:
+    def __init__(self, rua, cidade):
+        self.rua = rua
+        self.cidade = cidade
+
+
+class Aluno:
+    def __init__(self, nome, endereco):
+        self.nome = nome
+        self.endereco = endereco
+
+
+casa = Endereco("Rua das Flores, 10", "Teresina")
+bia = Aluno("Bia", casa)
+print(bia.nome, "mora em", bia.endereco.cidade)
+</pre>
+
+<pre class="term">$ python3 composicao.py
+Bia mora em Teresina
+</pre>
+
+<p>O <code>bia.endereco.cidade</code> se lê da esquerda para a direita: o <code>endereco</code> da <code>bia</code> (um objeto <code>Endereco</code>), e a <code>cidade</code> dele.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>A frase</th><th>Quando usar</th></tr>
+<tr><td>Herança: <code>class Cachorro(Animal):</code></td><td>"Um cachorro <strong>é um</strong> animal"</td><td>Quando a filha é um tipo mais específico da mãe e serve em todo lugar onde a mãe serve</td></tr>
+<tr><td>Composição: <code>self.endereco = endereco</code></td><td>"A aluna <strong>tem um</strong> endereço"</td><td>Quando um objeto só usa o outro como parte de si. Na dúvida, prefira esta: é mais simples de mudar depois</td></tr>
+<tr><td>Copiar e colar o código</td><td>—</td><td>Nunca: cada correção teria de ser feita em todas as cópias</td></tr>
+</table>
+</div>
+
+<p>Uma armadilha clássica: fazer <code>class Aluno(Endereco):</code> só para "ganhar" a rua e a cidade. Funciona, mas a frase fica errada ("um aluno é um endereço?"), e o aluno herda coisas de endereço que não fazem sentido para ele.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Esquecer o <code>super().__init__</code></strong>
+<pre class="file" data-file="sem_super.py">class Animal:
+    def __init__(self, nome):
+        self.nome = nome
+
+
+class Cachorro(Animal):
+    def __init__(self, nome, raca):
+        self.raca = raca
+
+
+rex = Cachorro("Rex", "vira-lata")
+print(rex.raca)
+print(rex.nome)
+</pre>
+<pre class="term">$ python3 sem_super.py
+vira-lata
+Traceback (most recent call last):
+  File "/home/ana/sem_super.py", line 13, in &lt;module&gt;
+    print(rex.nome)
+          ^^^^^^^^
+AttributeError: 'Cachorro' object has no attribute 'nome'
+</pre>
+<p>O cachorro nasceu sem nome. O <code>__init__</code> da filha <strong>sobrescreveu</strong> o da mãe, e o Python não chama o da mãe sozinho: quem não chamou, ficou sem. O <code>nome</code> até chegou como parâmetro, mas ninguém o guardou. <strong>Como consertar:</strong> comece o <code>__init__</code> da filha com <code>super().__init__(nome)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Passar o <code>self</code> para o <code>super()</code>: <code>takes 2 positional arguments but 3 were given</code></strong>
+<pre class="file" data-file="super_self.py">class Animal:
+    def __init__(self, nome):
+        self.nome = nome
+
+
+class Cachorro(Animal):
+    def __init__(self, nome, raca):
+        super().__init__(self, nome)
+        self.raca = raca
+
+
+rex = Cachorro("Rex", "vira-lata")
+</pre>
+<pre class="term">$ python3 super_self.py
+Traceback (most recent call last):
+  File "/home/ana/super_self.py", line 12, in &lt;module&gt;
+    rex = Cachorro("Rex", "vira-lata")
+  File "/home/ana/super_self.py", line 8, in __init__
+    super().__init__(self, nome)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+TypeError: Animal.__init__() takes 2 positional arguments but 3 were given
+</pre>
+<p>Lendo de baixo para cima: o erro foi na linha 8, dentro do <code>__init__</code> do cachorro, que tinha sido chamado pela linha 12. "O <code>Animal.__init__()</code> recebe 2 argumentos (<code>self</code> e <code>nome</code>), mas ganhou 3". O <code>super()</code> já passa o objeto como <code>self</code>, sozinho, como o <code>rex.falar()</code> passa o <code>rex</code>. O <code>self</code> escrito à mão foi o terceiro. <strong>Como consertar:</strong> <code>super().__init__(nome)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Não passar o que a mãe pede: <code>missing 1 required positional argument</code></strong>
+<pre class="file" data-file="super_falta.py">class Animal:
+    def __init__(self, nome):
+        self.nome = nome
+
+
+class Cachorro(Animal):
+    def __init__(self, nome, raca):
+        super().__init__()
+        self.raca = raca
+
+
+rex = Cachorro("Rex", "vira-lata")
+</pre>
+<pre class="term">$ python3 super_falta.py
+Traceback (most recent call last):
+  File "/home/ana/super_falta.py", line 12, in &lt;module&gt;
+    rex = Cachorro("Rex", "vira-lata")
+  File "/home/ana/super_falta.py", line 8, in __init__
+    super().__init__()
+    ~~~~~~~~~~~~~~~~^^
+TypeError: Animal.__init__() missing 1 required positional argument: 'nome'
+</pre>
+<p>O <code>super().__init__</code> é uma chamada como outra qualquer: precisa dos dados que o <code>__init__</code> da mãe pede. <strong>Como consertar:</strong> repasse o nome: <code>super().__init__(nome)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>A filha antes da mãe: <code>NameError</code></strong>
+<pre class="file" data-file="ordem.py">class Cachorro(Animal):
+    pass
+
+
+class Animal:
+    pass
+</pre>
+<pre class="term">$ python3 ordem.py
+Traceback (most recent call last):
+  File "/home/ana/ordem.py", line 1, in &lt;module&gt;
+    class Cachorro(Animal):
+                   ^^^^^^
+NameError: name 'Animal' is not defined
+</pre>
+<p>Na linha 1, o Python precisa da mãe para montar a filha, e o <code>Animal</code> só é criado na linha 5. Os <code>^^^^^^</code> apontam exatamente o nome que faltou. O mesmo erro aparece se o nome da mãe estiver digitado errado (<code>Animall</code>). <strong>Como consertar:</strong> escreva a classe mãe <strong>antes</strong> das filhas.</p>
+</div>
+
+<div class="cenario">
+<strong>Sobrescrever com o nome errado: nenhum erro, e nada muda</strong>
+<pre class="file" data-file="nome_errado.py">class Animal:
+    def __init__(self, nome):
+        self.nome = nome
+
+    def falar(self):
+        print(f"{self.nome} faz um som.")
+
+
+class Cachorro(Animal):
+    def fala(self):
+        print(f"{self.nome} diz: Au au!")
+
+
+rex = Cachorro("Rex")
+rex.falar()
+</pre>
+<pre class="term">$ python3 nome_errado.py
+Rex faz um som.                    « era para latir!
+</pre>
+<p>Faltou o <strong>r</strong>: a filha escreveu <code>fala</code>, um método <strong>novo</strong>, e não sobrescreveu o <code>falar</code>. Para o Python está tudo certo; o <code>rex.falar()</code> achou o da mãe. <strong>Como consertar:</strong> o método da filha precisa ter <strong>exatamente</strong> o nome do método da mãe: <code>def falar(self):</code>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>class Cachorro(Animal):</code></td><td>Cria a classe filha <code>Cachorro</code>, que herda tudo de <code>Animal</code></td></tr>
+<tr><td>Método novo na filha</td><td>Só os objetos da filha ganham</td></tr>
+<tr><td>Método com o mesmo nome do da mãe</td><td>Sobrescreve: para a filha, vale o dela</td></tr>
+<tr><td><code>super().__init__(nome)</code></td><td>Chama o <code>__init__</code> da mãe (sem <code>self</code>)</td></tr>
+<tr><td><code>super().mostrar()</code></td><td>Chama o <code>mostrar</code> da mãe, de dentro da filha</td></tr>
+<tr><td><code>isinstance(rex, Animal)</code></td><td><code>True</code> se o objeto for da classe ou de uma filha dela</td></tr>
+<tr><td><code>issubclass(Cachorro, Animal)</code></td><td><code>True</code> se a classe for filha (ou neta…) da outra</td></tr>
+<tr><td><code>Cachorro.__mro__</code></td><td>A ordem em que o Python procura os métodos</td></tr>
+<tr><td><code>class Pato(Voador, Nadador):</code></td><td>Herança múltipla: duas mães</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>AttributeError</code> num atributo que a mãe deveria criar</td><td>A filha tem <code>__init__</code> e não chamou o <code>super().__init__(…)</code></td></tr>
+<tr><td><code>takes 2 positional arguments but 3 were given</code> no <code>super()</code></td><td><code>self</code> a mais: <code>super().__init__(self, nome)</code></td></tr>
+<tr><td><code>missing 1 required positional argument</code> no <code>super()</code></td><td>Faltou repassar um dado para a mãe</td></tr>
+<tr><td><code>NameError: name 'Animal' is not defined</code> no <code>class</code></td><td>A mãe foi escrita depois da filha (ou o nome está errado)</td></tr>
+<tr><td>A filha continua fazendo o que a mãe faz</td><td>O método da filha tem um nome diferente do da mãe</td></tr>
+<tr><td><code>AttributeError</code> num objeto da mãe</td><td>O método só existe na filha: a herança vai da mãe para a filha, não ao contrário</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A classe filha</h3>
+<p>Complete para a classe <code>Gato</code> herdar de <code>Animal</code>:</p>
+<div class="ex-code">class Gato<input data-answer="(Animal)" aria-label="herança">:</div>
+</div>
+
+<div class="exercise">
+<h3>2. Chamando a mãe</h3>
+<p>Complete a primeira linha do <code>__init__</code> do <code>Gato</code>, que repassa o nome para o <code>__init__</code> do <code>Animal</code>:</p>
+<div class="ex-code"><input data-answer="super().__init__(nome)" aria-label="chamada"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. <code>Peixe</code> herda de <code>Animal</code> e não escreve <code>falar</code>. O que acontece em <code>Peixe("Nemo").falar()</code>?</p>
+<label><input type="radio" name="q3"> <code>AttributeError</code></label>
+<label><input type="radio" name="q3"> Roda o <code>falar</code> do <code>Animal</code></label>
+<label><input type="radio" name="q3"> Não faz nada</label>
+<label><input type="radio" name="q3"> Roda o <code>falar</code> do <code>Cachorro</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">4. Com <code>class Cachorro(Animal)</code> e <code>rex = Cachorro("Rex")</code>, quanto vale <code>isinstance(rex, Animal)</code>?</p>
+<label><input type="radio" name="q4"> <code>False</code>, porque o <code>rex</code> é um <code>Cachorro</code></label>
+<label><input type="radio" name="q4"> Dá erro</label>
+<label><input type="radio" name="q4"> <code>None</code></label>
+<label><input type="radio" name="q4"> <code>True</code>: um cachorro é um animal</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Qual destas relações pede <strong>composição</strong> (um objeto guardado dentro do outro), e não herança?</p>
+<label><input type="radio" name="q5"> Um carro e o seu motor</label>
+<label><input type="radio" name="q5"> Um gato e um animal</label>
+<label><input type="radio" name="q5"> Uma conta poupança e uma conta bancária</label>
+<label><input type="radio" name="q5"> Um aluno de pós-graduação e um aluno</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">6. O <code>__init__</code> da filha começa com <code>super().__init__(self, nome)</code> e dá <code>TypeError</code>. Por quê?</p>
+<label><input type="radio" name="q6"> Faltou o <code>return</code></label>
+<label><input type="radio" name="q6"> O <code>super()</code> só funciona fora do <code>__init__</code></label>
+<label><input type="radio" name="q6"> O <code>super()</code> já passa o objeto; o <code>self</code> escrito à mão sobrou</label>
+<label><input type="radio" name="q6"> A mãe não tem <code>__init__</code></label>
+</div>
+
+<h3>Missão final: a conta poupança</h3>
+
+<div class="trypy" data-goal="out:Bia: R$ 1010.00;;src:super\(\)\.__init__\(;;semerro">
+<p class="try-task"><strong>Missão:</strong> complete a <code>ContaPoupanca</code>, filha de <code>ContaBancaria</code>. (1) No <code>__init__</code>, chame o <code>__init__</code> da mãe com <code>super()</code> (passando o titular e o saldo) e guarde a <code>taxa</code>. (2) Escreva o método <code>render(self)</code>, que soma ao saldo o saldo vezes a taxa. A Bia tem 1000 reais a 1% ao mês: depois de render, o programa mostra <code>Bia: R$ 1010.00</code>.</p>
+<pre class="script" data-file="main.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self.saldo = saldo
+
+    def mostrar(self):
+        print(f"{self.titular}: R$ {self.saldo:.2f}")
+
+
+class ContaPoupanca(ContaBancaria):
+    def __init__(self, titular, saldo=0, taxa=0.01):
+        self.taxa = taxa
+
+    # escreva aqui o método render
+
+
+poupanca = ContaPoupanca("Bia", 1000)
+poupanca.render()
+poupanca.mostrar()
+</pre>
+<pre class="solucao" data-file="main.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self.saldo = saldo
+
+    def mostrar(self):
+        print(f"{self.titular}: R$ {self.saldo:.2f}")
+
+
+class ContaPoupanca(ContaBancaria):
+    def __init__(self, titular, saldo=0, taxa=0.01):
+        super().__init__(titular, saldo)
+        self.taxa = taxa
+
+    def render(self):
+        self.saldo += self.saldo * self.taxa
+
+
+poupanca = ContaPoupanca("Bia", 1000)
+poupanca.render()
+poupanca.mostrar()
+</pre>
+</div>
+
+<p>Se aparecer <code>'ContaPoupanca' object has no attribute 'saldo'</code>, o <code>super().__init__</code> ainda não está lá. Repare que você não escreveu <code>mostrar</code> na poupança: ela herdou o da mãe.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>class Filha(Mae):</code> cria uma classe que <strong>herda</strong> tudo da mãe: <code>__init__</code>, métodos, atributos de classe. Use quando a frase "a filha <strong>é uma</strong> mãe" fizer sentido.</li>
+  <li>A filha pode <strong>acrescentar</strong> métodos (só ela ganha) e <strong>sobrescrever</strong> métodos da mãe, com o mesmo nome exato.</li>
+  <li>O Python procura um método primeiro na classe do objeto, depois na mãe, até <code>object</code>: é o <code>__mro__</code>.</li>
+  <li>Se a filha tem <code>__init__</code>, ela precisa chamar <code>super().__init__(…)</code>, sem <code>self</code>, para a mãe fazer a parte dela.</li>
+  <li><code>super().metodo()</code> aproveita o método da mãe para "fazer o mesmo e mais um pouco".</li>
+  <li><code>isinstance(obj, Mae)</code> é <code>True</code> também para objetos das filhas; <code>issubclass(Filha, Mae)</code> pergunta sobre as classes.</li>
+  <li>"Tem um" é composição (<code>self.endereco = …</code>), não herança. Herança múltipla existe, mas uma mãe basta para quase tudo.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
