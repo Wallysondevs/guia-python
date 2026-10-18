@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python itertools — count, cycle, chain, groupby, combinações e product | Guia Python</title>
+<meta name="description" content="O módulo itertools para quem está começando: count e cycle (iteradores sem fim), islice, chain para emendar listas, groupby e a pegadinha de exigir os dados ordenados, combinations, permutations e product para montar combinações, accumulate, pairwise e batched, e os erros reais do Python 3.14.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">O Módulo itertools</span></h1>
+
+<p class="intro">Nas aulas <a href="iteradores.html">Iteradores</a> e <a href="geradores.html">Geradores</a>, você viu que um iterador entrega um item por vez, sob encomenda. O módulo <code>itertools</code> ("ferramentas de iteração") é uma caixa de iteradores prontos para os trabalhos que aparecem sempre: numerar sem fim, revezar, emendar listas, agrupar, montar todas as combinações de um cardápio. Cada ferramenta substitui um laço que você escreveria na mão, e quase sempre com menos chance de errar.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li><code>count</code> e <code>cycle</code>: iteradores <strong>sem fim</strong>, e como limitá-los com <code>zip</code> e <code>islice</code>.</li>
+  <li><code>chain</code>: percorrer várias listas como se fossem uma.</li>
+  <li><code>groupby</code>: agrupar itens vizinhos, e por que os dados <strong>precisam estar ordenados</strong>.</li>
+  <li><code>combinations</code>, <code>permutations</code> e <code>product</code>: todas as duplas, pódios e combos.</li>
+  <li><code>accumulate</code>, <code>pairwise</code> e <code>batched</code>: saldo acumulado, pares vizinhos e lotes.</li>
+  <li>Os erros reais: o <code>groupby</code> que repete grupos, o grupo que esvazia, <code>not subscriptable</code> e <code>'int' object is not iterable</code>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: as máquinas da cozinha</h2>
+<p>A Ana poderia bater massa com um garfo, mas a padaria tem batedeira, liquidificador e máquina de fatiar. Cada máquina faz um serviço só, e faz bem. As ferramentas do <code>itertools</code> são assim: cada uma recebe iteráveis (listas, textos, geradores) e devolve um <strong>iterador</strong> que entrega o resultado aos poucos. Como iteradores, elas gastam pouca memória, e se gastam numa passada só.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Ferramenta</th><th>O serviço</th><th>Exemplo da Ana</th></tr>
+<tr><td><code>count</code></td><td>Contar sem parar</td><td>Números de senha: 101, 102, 103…</td></tr>
+<tr><td><code>cycle</code></td><td>Repetir uma sequência em roda</td><td>Rodízio de quem abre a padaria</td></tr>
+<tr><td><code>chain</code></td><td>Emendar várias sequências</td><td>Os pedidos da manhã, da tarde e da noite</td></tr>
+<tr><td><code>groupby</code></td><td>Juntar vizinhos iguais</td><td>Total vendido de cada produto</td></tr>
+<tr><td><code>combinations</code>, <code>permutations</code>, <code>product</code></td><td>Montar combinações</td><td>Duplas de trabalho, pódio, combo lanche + suco</td></tr>
+</table>
+</div>
+
+<p>Importe só o que for usar: <code>from itertools import count, cycle</code>.</p>
+
+<hr>
+
+<h2>1. <code>count</code>: contar sem fim</h2>
+<p><code>count(inicio)</code> entrega <code>inicio</code>, <code>inicio + 1</code>, <code>inicio + 2</code>… para sempre. Sozinho, ele nunca para; junto com algo que tem fim, como o <code>zip</code> (aula <a href="enumerate-zip.html">enumerate() e zip()</a>), ele para quando o outro acaba:</p>
+
+<pre class="file" data-file="contar.py">from itertools import count, islice
+
+clientes = ["Ana", "Bruno", "Carla"]
+for senha, nome in zip(count(101), clientes):
+    print(f"Senha {senha}: {nome}")
+
+print(list(islice(count(10, 5), 4)))
+print(count(1))
+</pre>
+
+<pre class="term">$ python3 contar.py
+Senha 101: Ana
+Senha 102: Bruno
+Senha 103: Carla
+[10, 15, 20, 25]
+count(1)</pre>
+
+<dl class="anatomy">
+  <dt>zip(count(101), clientes)</dt><dd>O <code>zip</code> anda nos dois ao mesmo tempo e para quando o <strong>mais curto</strong> acaba. Os clientes acabam em 3; o <code>count</code> nunca chega a dar o 104.</dd>
+  <dt>count(10, 5)</dt><dd>Começa em 10 e anda de 5 em 5. O segundo argumento é o passo.</dd>
+  <dt>islice(…, 4)</dt><dd>"Fatia de iterador": só os 4 primeiros. É o jeito de cortar um iterador sem fim (a aula <a href="geradores.html">Geradores</a> já o usou).</dd>
+  <dt>print(count(1))</dt><dd>Mostra só <code>count(1)</code>: o iterador não calculou nada ainda.</dd>
+</dl>
+
+<p>Para numerar uma lista que já existe, o <code>enumerate(clientes, start=101)</code> faz o mesmo. O <code>count</code> serve quando o que vai ser numerado não é uma lista pronta, ou quando você quer passos diferentes de 1.</p>
+
+<h2>2. <code>cycle</code>: em roda</h2>
+<p><code>cycle(sequencia)</code> entrega os itens da sequência e, quando acaba, recomeça do primeiro, para sempre. O rodízio de quem abre a padaria:</p>
+
+<pre class="file" data-file="ciclo.py">from itertools import cycle
+
+dias = ["seg", "ter", "qua", "qui", "sex"]
+equipe = cycle(["Ana", "Bruno"])
+
+for dia, quem in zip(dias, equipe):
+    print(dia, "-", quem, "abre a padaria")
+</pre>
+
+<pre class="term">$ python3 ciclo.py
+seg - Ana abre a padaria
+ter - Bruno abre a padaria
+qua - Ana abre a padaria
+qui - Bruno abre a padaria
+sex - Ana abre a padaria</pre>
+
+<p>Mais uma vez, quem dá o fim é o <code>zip</code>: os 5 dias. Sem o <code>dias</code>, um <code>for quem in equipe:</code> nunca terminaria.</p>
+
+<div class="warning">
+<strong><code>count</code> e <code>cycle</code> não têm fim</strong>
+<p>Nunca peça "tudo" deles: <code>list(count())</code>, <code>sum(cycle(…))</code> ou um <code>for</code> sem <code>break</code> rodam até a memória acabar ou você apertar Ctrl+C. Sempre limite com <code>zip</code>, <code>islice</code> ou <code>break</code>.</p>
+</div>
+
+<hr>
+
+<h2>3. <code>chain</code>: emendar sequências</h2>
+<p><code>chain(a, b, c)</code> ("corrente") percorre <code>a</code> inteira, depois <code>b</code>, depois <code>c</code>, como se fossem uma lista só, mas sem criar a lista grande:</p>
+
+<pre class="file" data-file="corrente.py">from itertools import chain
+
+manha = ["pão", "leite"]
+tarde = ["café", "bolo"]
+noite = ["pizza"]
+
+for item in chain(manha, tarde, noite):
+    print(item, end=" ")
+print()
+
+pedidos_por_mesa = [["suco", "pastel"], ["café"], ["coxinha", "refrigerante"]]
+print(list(chain.from_iterable(pedidos_por_mesa)))
+print(manha + tarde + noite)
+</pre>
+
+<pre class="term">$ python3 corrente.py
+pão leite café bolo pizza
+['suco', 'pastel', 'café', 'coxinha', 'refrigerante']
+['pão', 'leite', 'café', 'bolo', 'pizza']</pre>
+
+<ul>
+  <li><code>chain(manha, tarde, noite)</code>: as três listas em sequência. O <code>end=" "</code> põe tudo na mesma linha (aula <a href="print-sep-end.html">As Opções sep e end</a>).</li>
+  <li><code>chain.from_iterable(lista_de_listas)</code>: para quando as listas já estão dentro de uma lista. "Achata" um nível.</li>
+  <li><code>manha + tarde + noite</code> dá o mesmo resultado, mas monta uma lista nova com tudo. O <code>chain</code> funciona também com geradores e arquivos, que não aceitam <code>+</code>.</li>
+</ul>
+
+<hr>
+
+<h2>4. <code>groupby</code>: juntar vizinhos iguais</h2>
+<p>A padaria anotou as vendas do dia, uma por linha, e quer o total de cada produto. O <code>groupby</code> ("agrupar por") junta itens <strong>seguidos</strong> que têm a mesma chave:</p>
+
+<pre class="file" data-file="agrupar.py">from itertools import groupby
+
+vendas = [("leite", 3), ("pão", 12), ("café", 1), ("pão", 8), ("leite", 2)]
+
+vendas.sort(key=lambda venda: venda[0])
+print(vendas)
+
+for produto, grupo in groupby(vendas, key=lambda venda: venda[0]):
+    quantidades = [qtd for _, qtd in grupo]
+    print(f"{produto}: {quantidades} -&gt; {sum(quantidades)}")
+</pre>
+
+<pre class="term">$ python3 agrupar.py
+[('café', 1), ('leite', 3), ('leite', 2), ('pão', 12), ('pão', 8)]
+café: [1] -&gt; 1
+leite: [3, 2] -&gt; 5
+pão: [12, 8] -&gt; 20</pre>
+
+<dl class="anatomy">
+  <dt>vendas.sort(key=…)</dt><dd><strong>Primeiro, ordena</strong> pela mesma chave que vai agrupar (aula <a href="listas-ordenar.html">Ordenando Listas</a>). Agora as vendas de leite estão lado a lado, e as de pão também.</dd>
+  <dt>key=lambda venda: venda[0]</dt><dd>A chave do grupo: o nome do produto, posição 0 da tupla (aula <a href="lambda.html">lambda</a>).</dd>
+  <dt>for produto, grupo in groupby(…)</dt><dd>A cada volta, <code>produto</code> é a chave e <code>grupo</code> é um <strong>iterador</strong> com os itens daquele grupo.</dd>
+  <dt>[qtd for _, qtd in grupo]</dt><dd>Tira as quantidades do grupo. O <code>_</code> é o nome do produto, que aqui não interessa.</dd>
+</dl>
+
+<h3>A pegadinha: sem ordenar, os grupos se repetem</h3>
+<p>O <code>groupby</code> só olha o <strong>vizinho</strong>. Ele não procura a lista inteira: quando a chave muda, fecha o grupo e abre outro. Veja o mesmo programa sem o <code>sort</code>:</p>
+
+<pre class="file" data-file="agrupar_errado.py">from itertools import groupby
+
+vendas = [("leite", 3), ("pão", 12), ("café", 1), ("pão", 8), ("leite", 2)]
+
+for produto, grupo in groupby(vendas, key=lambda venda: venda[0]):
+    quantidades = [qtd for _, qtd in grupo]
+    print(f"{produto}: {quantidades} -&gt; {sum(quantidades)}")
+</pre>
+
+<pre class="term">$ python3 agrupar_errado.py
+leite: [3] -&gt; 3
+pão: [12] -&gt; 12
+café: [1] -&gt; 1
+pão: [8] -&gt; 8
+leite: [2] -&gt; 2</pre>
+
+<p>Nenhum erro, nenhum aviso, e a resposta está errada: o pão aparece duas vezes, com 12 e com 8, em vez de 20. Cada vez que o produto mudou de uma linha para a outra, começou um grupo novo. É como uma pessoa que separa as fichas olhando só a de cima da pilha: se as fichas estão embaralhadas, ela faz pilhas repetidas.</p>
+
+<p>Esse comportamento é útil quando você quer justamente as "corridas" de itens iguais, como numa contagem de letras repetidas em sequência:</p>
+
+<pre class="file" data-file="agrupar_letras.py">from itertools import groupby
+
+print([(letra, len(list(grupo))) for letra, grupo in groupby("aaabbcaa")])
+</pre>
+
+<pre class="term">$ python3 agrupar_letras.py
+[('a', 3), ('b', 2), ('c', 1), ('a', 2)]</pre>
+
+<p>Os dois <code>a</code> do fim formam um grupo separado, porque não estão encostados nos três primeiros. Para somar <strong>todos</strong> os itens de cada chave, onde quer que estejam, ordene antes; ou use um <code>defaultdict(int)</code> ou um <code>Counter</code>, da aula <a href="collections.html">O Módulo collections</a>, que não precisam de ordem.</p>
+
+<div class="trypy" data-goal="out:pão: 20;;out:leite: 5;;out:café: 1;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa deveria mostrar o total de cada produto, mas o pão e o leite aparecem duas vezes. Rode e veja. Conserte ordenando as vendas antes do <code>groupby</code>: acrescente <code>vendas.sort()</code> logo depois da lista. (Tuplas se ordenam pelo primeiro item, o nome do produto.)</p>
+<pre class="script" data-file="main.py">from itertools import groupby
+
+vendas = [("leite", 3), ("pão", 12), ("café", 1), ("pão", 8), ("leite", 2)]
+
+for produto, grupo in groupby(vendas, key=lambda venda: venda[0]):
+    total = sum(qtd for _, qtd in grupo)
+    print(f"{produto}: {total}")
+</pre>
+<pre class="solucao" data-file="main.py">from itertools import groupby
+
+vendas = [("leite", 3), ("pão", 12), ("café", 1), ("pão", 8), ("leite", 2)]
+vendas.sort()
+
+for produto, grupo in groupby(vendas, key=lambda venda: venda[0]):
+    total = sum(qtd for _, qtd in grupo)
+    print(f"{produto}: {total}")
+</pre>
+</div>
+
+<hr>
+
+<h2>5. Combinações: <code>combinations</code>, <code>permutations</code> e <code>product</code></h2>
+<p>Três ferramentas montam "todas as possibilidades". A diferença entre elas é a pergunta: <strong>a ordem importa?</strong> e <strong>de onde vêm os itens?</strong></p>
+
+<pre class="file" data-file="combinar.py">from itertools import combinations, permutations
+
+sabores = ["chocolate", "morango", "limão"]
+
+print("Casquinha com 2 bolas (a ordem não importa):")
+for dupla in combinations(sabores, 2):
+    print(" ", dupla)
+
+print("Pódio do concurso de bolos (a ordem importa):")
+for primeiro, segundo in permutations(["Ana", "Bruno", "Carla"], 2):
+    print(f"  1º {primeiro}, 2º {segundo}")
+</pre>
+
+<pre class="term">$ python3 combinar.py
+Casquinha com 2 bolas (a ordem não importa):
+  ('chocolate', 'morango')
+  ('chocolate', 'limão')
+  ('morango', 'limão')
+Pódio do concurso de bolos (a ordem importa):
+  1º Ana, 2º Bruno
+  1º Ana, 2º Carla
+  1º Bruno, 2º Ana
+  1º Bruno, 2º Carla
+  1º Carla, 2º Ana
+  1º Carla, 2º Bruno</pre>
+
+<ul>
+  <li><code>combinations(sabores, 2)</code>: grupos de 2, sem repetir e <strong>sem ligar para a ordem</strong>. Chocolate com morango é a mesma casquinha que morango com chocolate, então só aparece uma vez: 3 casquinhas.</li>
+  <li><code>permutations(pessoas, 2)</code>: arrumações de 2 em que <strong>a ordem importa</strong>. Ana em 1º e Bruno em 2º é outro pódio que Bruno em 1º e Ana em 2º: 6 pódios.</li>
+</ul>
+
+<p>Quantas são? O <code>math</code> (aula <a href="math.html">O Módulo math</a>) tem as contas prontas, <code>comb</code> e <code>perm</code>, que dão o número sem montar a lista:</p>
+
+<pre class="file" data-file="contas.py">from itertools import combinations, permutations
+from math import comb, perm
+
+turma = ["Ana", "Bruno", "Carla", "Davi", "Eva"]
+print(len(list(combinations(turma, 2))), comb(5, 2))
+print(len(list(permutations(turma, 2))), perm(5, 2))
+print(len(list(permutations(turma))))
+</pre>
+
+<pre class="term">$ python3 contas.py
+10 10
+20 20
+120</pre>
+
+<p>Sem o segundo argumento, <code>permutations(turma)</code> dá todas as filas possíveis com os 5: 120. Com 10 pessoas já seriam 3.628.800, e com 15, mais de um trilhão: essas listas crescem muito depressa, então pense antes de pedir <code>list()</code> delas.</p>
+
+<h3><code>product</code>: um de cada</h3>
+<p><code>product(a, b)</code> ("produto") combina <strong>um item de cada</strong> sequência, como dois <code>for</code> um dentro do outro (aula <a href="lacos-aninhados.html">Laços Aninhados</a>). O almoço do restaurante, prato + bebida:</p>
+
+<pre class="file" data-file="produto.py">from itertools import product
+
+pratos = ["arroz e feijão", "macarrão"]
+bebidas = ["suco", "refrigerante", "água"]
+
+for prato, bebida in product(pratos, bebidas):
+    print(f"{prato} + {bebida}")
+
+print(list(product([0, 1], repeat=3)))
+</pre>
+
+<pre class="term">$ python3 produto.py
+arroz e feijão + suco
+arroz e feijão + refrigerante
+arroz e feijão + água
+macarrão + suco
+macarrão + refrigerante
+macarrão + água
+[(0, 0, 0), (0, 0, 1), (0, 1, 0), (0, 1, 1), (1, 0, 0), (1, 0, 1), (1, 1, 0), (1, 1, 1)]</pre>
+
+<p>2 pratos × 3 bebidas = 6 almoços. O <code>repeat=3</code> combina a mesma sequência com ela mesma três vezes: todas as respostas possíveis de três perguntas de sim (1) ou não (0).</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Pergunta</th><th>Ferramenta</th><th>Com <code>"ABC"</code>, de 2 em 2</th></tr>
+<tr><td>Grupos, a ordem não importa</td><td><code>combinations(x, 2)</code></td><td>AB AC BC (3)</td></tr>
+<tr><td>Arrumações, a ordem importa</td><td><code>permutations(x, 2)</code></td><td>AB AC BA BC CA CB (6)</td></tr>
+<tr><td>Um de cada lista (pode repetir)</td><td><code>product(x, x)</code> ou <code>product(x, repeat=2)</code></td><td>AA AB AC BA BB BC CA CB CC (9)</td></tr>
+</table>
+</div>
+
+<div class="trypy" data-goal="out:Total: 6 combos;;out:coxinha + suco de uva;;src:product\s*\(;;semerro">
+<p class="try-task"><strong>Missão:</strong> a lanchonete quer anunciar todos os combos lanche + suco. Use <code>product(lanches, sucos)</code>, mostre cada combo como <code>misto + suco de laranja</code> e, no fim, <code>Total: 6 combos</code>. Dica: guarde em <code>combos = list(product(…))</code> para poder percorrer e contar.</p>
+<pre class="script" data-file="main.py">from itertools import product
+
+lanches = ["misto", "pastel", "coxinha"]
+sucos = ["laranja", "uva"]
+
+print(lanches)
+print(sucos)
+</pre>
+<pre class="solucao" data-file="main.py">from itertools import product
+
+lanches = ["misto", "pastel", "coxinha"]
+sucos = ["laranja", "uva"]
+
+combos = list(product(lanches, sucos))
+for lanche, suco in combos:
+    print(f"{lanche} + suco de {suco}")
+print("Total:", len(combos), "combos")
+</pre>
+</div>
+
+<hr>
+
+<h2>6. Mais três úteis: <code>accumulate</code>, <code>pairwise</code>, <code>batched</code></h2>
+
+<pre class="file" data-file="outros.py">from itertools import accumulate, pairwise, batched
+
+movimentos = [100, -30, -20, 50]
+print(list(accumulate(movimentos)))
+
+temperaturas = [21, 24, 23, 27]
+for antes, depois in pairwise(temperaturas):
+    print(f"{antes} -&gt; {depois}: {depois - antes:+}")
+
+convidados = ["Ana", "Bruno", "Carla", "Davi", "Eva"]
+for mesa in batched(convidados, 2):
+    print(mesa)
+</pre>
+
+<pre class="term">$ python3 outros.py
+[100, 70, 50, 100]
+21 -&gt; 24: +3
+24 -&gt; 23: -1
+23 -&gt; 27: +4
+('Ana', 'Bruno')
+('Carla', 'Davi')
+('Eva',)</pre>
+
+<dl class="anatomy">
+  <dt>accumulate(movimentos)</dt><dd>"Acumular": a soma até ali, item por item. É o saldo da conta depois de cada movimento: 100, 100 − 30 = 70, 70 − 20 = 50, 50 + 50 = 100.</dd>
+  <dt>pairwise(temperaturas)</dt><dd>"Aos pares": cada item com o seguinte, (21, 24), (24, 23), (23, 27). Bom para calcular diferenças. O <code>:+</code> da f-string mostra o sinal sempre (aula <a href="ref-formatacao.html">Formatação</a>). Existe desde o Python 3.10.</dd>
+  <dt>batched(convidados, 2)</dt><dd>"Em lotes": tuplas de 2 em 2; o último lote fica com o que sobrou. São as mesas de dois lugares da festa. Existe desde o Python 3.12.</dd>
+</dl>
+
+<div class="note">
+<strong>Python mais antigo</strong>
+<p>O <code>batched</code> chegou no Python 3.12 e o <code>pairwise</code> no 3.10. O Ubuntu 26.04 e o editor do guia têm o 3.14, e o Debian 13, o 3.13: todos têm os dois. Num Python mais velho, <code>from itertools import batched</code> dá <code>ImportError</code>.</p>
+</div>
+
+<hr>
+
+<h2>Formas diferentes: <code>itertools</code> ou laço na mão?</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Tarefa</th><th>Laço na mão</th><th>Com <code>itertools</code></th></tr>
+<tr><td>Numerar a partir de 101</td><td><code>senha = 101</code> … <code>senha += 1</code></td><td><code>zip(count(101), itens)</code> (ou <code>enumerate(itens, 101)</code>)</td></tr>
+<tr><td>Rodízio</td><td><code>itens[i % len(itens)]</code></td><td><code>cycle(itens)</code></td></tr>
+<tr><td>Emendar listas</td><td><code>a + b + c</code></td><td><code>chain(a, b, c)</code>: serve também para geradores</td></tr>
+<tr><td>Total por produto</td><td><code>defaultdict(int)</code> num <code>for</code></td><td><code>sort</code> + <code>groupby</code>: útil quando os dados já vêm ordenados</td></tr>
+<tr><td>Todos os pares</td><td>Dois <code>for</code> com <code>range(i + 1, n)</code></td><td><code>combinations(itens, 2)</code></td></tr>
+<tr><td>Um de cada lista</td><td><code>for</code> dentro de <code>for</code></td><td><code>product(a, b)</code>: um nível só, mesmo com 5 listas</td></tr>
+</table>
+</div>
+
+<p>O laço na mão não está errado, e às vezes é mais fácil de ler para quem está começando. As ferramentas valem a pena quando o laço fica com índices e contas que podem sair errados por um.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong><code>groupby</code> sem ordenar (sem erro nenhum)</strong>
+<p>É o <code>agrupar_errado.py</code> da seção 4: o pão apareceu duas vezes, <code>pão: [12] -&gt; 12</code> e <code>pão: [8] -&gt; 8</code>. O <code>groupby</code> junta só vizinhos. <strong>Como consertar:</strong> ordene pela mesma chave antes de agrupar: <code>dados.sort(key=chave)</code> e <code>groupby(dados, key=chave)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O grupo esvaziou</strong>
+<pre class="file" data-file="grupo_gasto.py">from itertools import groupby
+
+alunos = ["Ana", "Alice", "Bruno", "Beatriz", "Caio"]
+grupos = groupby(alunos, key=lambda nome: nome[0])
+
+guardados = {}
+for letra, grupo in grupos:
+    guardados[letra] = grupo
+
+for letra, grupo in guardados.items():
+    print(letra, list(grupo))
+</pre>
+<pre class="term">$ python3 grupo_gasto.py
+A []
+B []
+C []</pre>
+<p>Os nomes sumiram! Cada <code>grupo</code> é um iterador que lê a lista <strong>junto</strong> com o <code>groupby</code>. Quando o <code>for</code> passou para o grupo seguinte, o anterior ficou para trás e foi gasto. <strong>Como consertar:</strong> transforme o grupo em lista na mesma volta em que ele aparece:</p>
+<pre class="file" data-file="grupo_ok.py">from itertools import groupby
+
+alunos = ["Ana", "Alice", "Bruno", "Beatriz", "Caio"]
+
+guardados = {}
+for letra, grupo in groupby(alunos, key=lambda nome: nome[0]):
+    guardados[letra] = list(grupo)
+
+print(guardados)
+</pre>
+<pre class="term">$ python3 grupo_ok.py
+{'A': ['Ana', 'Alice'], 'B': ['Bruno', 'Beatriz'], 'C': ['Caio']}</pre>
+</div>
+
+<div class="cenario">
+<strong>Fatiar com <code>[ ]</code></strong>
+<pre class="file" data-file="erro_fatia.py">from itertools import count
+
+senhas = count(1)
+print(senhas[:5])
+</pre>
+<pre class="term">$ python3 erro_fatia.py
+Traceback (most recent call last):
+  File "/home/ana/erro_fatia.py", line 4, in &lt;module&gt;
+    print(senhas[:5])
+          ~~~~~~^^^^
+TypeError: 'itertools.count' object is not subscriptable</pre>
+<p>"O objeto <code>itertools.count</code> não aceita índice nem fatia". Iteradores não guardam os itens, então não têm "do 0 ao 5". <strong>Como consertar:</strong> <code>list(islice(senhas, 5))</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Passar números soltos para o <code>chain</code></strong>
+<pre class="file" data-file="erro_chain.py">from itertools import chain
+
+total = chain(10, 20)
+print("Criei a corrente.")
+print(list(total))
+</pre>
+<pre class="term">$ python3 erro_chain.py
+Criei a corrente.
+Traceback (most recent call last):
+  File "/home/ana/erro_chain.py", line 5, in &lt;module&gt;
+    print(list(total))
+          ~~~~^^^^^^^
+TypeError: 'int' object is not iterable</pre>
+<p>"Um objeto <code>int</code> não é iterável". O <code>chain</code> emenda <strong>sequências</strong>, e 10 não é uma sequência. Repare que o erro só apareceu na linha 5, e não na 3: como todo iterador, o <code>chain</code> não faz nada até alguém pedir o primeiro item. <strong>Como consertar:</strong> passe listas, <code>chain([10], [20])</code>; para somar números, é só <code>10 + 20</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Mostrar o iterador no lugar dos itens</strong>
+<pre class="term">$ python3 print_obj.py
+&lt;itertools.combinations object at 0x7f1893929bc0&gt;</pre>
+<p>Um <code>print(combinations(["a", "b", "c"], 2))</code> mostra o objeto, não as duplas: ele ainda não calculou nenhuma. <strong>Como consertar:</strong> <code>print(list(combinations(…)))</code>, ou percorra com <code>for</code>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Ferramenta</th><th>Entrega</th><th>Exemplo → resultado</th></tr>
+<tr><td><code>count(inicio, passo)</code></td><td>Números sem fim</td><td><code>count(10, 5)</code> → 10 15 20 …</td></tr>
+<tr><td><code>cycle(seq)</code></td><td>A sequência em roda, sem fim</td><td><code>cycle("AB")</code> → A B A B …</td></tr>
+<tr><td><code>islice(it, n)</code></td><td>Os <code>n</code> primeiros</td><td><code>islice(count(), 3)</code> → 0 1 2</td></tr>
+<tr><td><code>chain(a, b)</code></td><td><code>a</code> e depois <code>b</code></td><td><code>chain("ab", "cd")</code> → a b c d</td></tr>
+<tr><td><code>chain.from_iterable(listas)</code></td><td>As listas de dentro, emendadas</td><td><code>[[1], [2, 3]]</code> → 1 2 3</td></tr>
+<tr><td><code>groupby(seq, key)</code></td><td>Pares (chave, grupo) de vizinhos iguais</td><td><code>"aab"</code> → ('a', aa) ('b', b)</td></tr>
+<tr><td><code>combinations(seq, r)</code></td><td>Grupos de <code>r</code>, sem ordem</td><td><code>"ABC", 2</code> → AB AC BC</td></tr>
+<tr><td><code>permutations(seq, r)</code></td><td>Arrumações de <code>r</code>, com ordem</td><td><code>"AB"</code> → AB BA</td></tr>
+<tr><td><code>product(a, b)</code> / <code>repeat=n</code></td><td>Um de cada</td><td><code>"AB", "12"</code> → A1 A2 B1 B2</td></tr>
+<tr><td><code>accumulate(seq)</code></td><td>Somas parciais</td><td><code>[1, 2, 3]</code> → 1 3 6</td></tr>
+<tr><td><code>pairwise(seq)</code></td><td>Pares de vizinhos (3.10+)</td><td><code>[1, 2, 3]</code> → (1, 2) (2, 3)</td></tr>
+<tr><td><code>batched(seq, n)</code></td><td>Lotes de <code>n</code> (3.12+)</td><td><code>"ABCDE", 2</code> → AB CD E</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td>O <code>groupby</code> repete a mesma chave</td><td>Os dados não estavam ordenados pela chave</td></tr>
+<tr><td>Os grupos guardados estão vazios</td><td>Guardou o iterador do grupo; use <code>list(grupo)</code> na mesma volta</td></tr>
+<tr><td><code>TypeError: 'itertools.…' object is not subscriptable</code></td><td>Usou <code>[ ]</code> num iterador: use <code>islice</code></td></tr>
+<tr><td><code>TypeError: 'int' object is not iterable</code></td><td>Passou um número onde se espera uma sequência</td></tr>
+<tr><td><code>&lt;itertools.… object at 0x…&gt;</code></td><td>Mostrou o iterador: use <code>list()</code></td></tr>
+<tr><td>O programa não termina</td><td><code>count</code> ou <code>cycle</code> sem <code>zip</code>, <code>islice</code> ou <code>break</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Os 3 primeiros</h3>
+<p>Complete para mostrar <code>[1, 2, 3]</code>:</p>
+<div class="ex-code">print(list(<input data-answer="islice(count(1), 3)|islice(count(1),3)" aria-label="expressão">))</div>
+</div>
+
+<div class="exercise">
+<h3>2. Quantas duplas?</h3>
+<p>Uma turma de 4 alunos. Quantos itens tem <code>list(combinations(turma, 2))</code>?</p>
+<div class="ex-code"><input data-answer="6" aria-label="quantidade"></div>
+</div>
+
+<div class="exercise">
+<h3>3. Um de cada</h3>
+<p>Qual ferramenta combina um item de cada lista, como dois <code>for</code> aninhados? Escreva só o nome.</p>
+<div class="ex-code"><input data-answer="product" aria-label="ferramenta"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. <code>[(k, len(list(g))) for k, g in groupby("aabaa")]</code> dá:</p>
+<label><input type="radio" name="q4"> <code>[('a', 4), ('b', 1)]</code></label>
+<label><input type="radio" name="q4"> <code>[('a', 2), ('b', 1)]</code></label>
+<label><input type="radio" name="q4"> <code>[('a', 2), ('b', 1), ('a', 2)]</code></label>
+<label><input type="radio" name="q4"> Um <code>TypeError</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. Para sortear o 1º e o 2º lugar de uma rifa entre 10 pessoas, interessa a ordem. Qual ferramenta lista todas as possibilidades?</p>
+<label><input type="radio" name="q5"> <code>combinations(pessoas, 2)</code></label>
+<label><input type="radio" name="q5"> <code>permutations(pessoas, 2)</code></label>
+<label><input type="radio" name="q5"> <code>chain(pessoas, pessoas)</code></label>
+<label><input type="radio" name="q5"> <code>cycle(pessoas)</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Por que <code>for x in cycle(["a", "b"]): print(x)</code> é perigoso?</p>
+<label><input type="radio" name="q6"> Porque nunca termina: <code>cycle</code> não tem fim</label>
+<label><input type="radio" name="q6"> Porque dá <code>StopIteration</code> depois do <code>"b"</code></label>
+<label><input type="radio" name="q6"> Porque <code>cycle</code> só aceita números</label>
+<label><input type="radio" name="q6"> Porque mostra só o <code>"a"</code></label>
+</div>
+
+<h3>Missão final: as duplas do trabalho</h3>
+
+<div class="trypy" data-goal="out:Total de duplas: 6;;out:Carla e Davi;;src:combinations\s*\(;;semerro">
+<p class="try-task"><strong>Missão:</strong> a professora quer ver todas as duplas possíveis para o trabalho em grupo (Ana com Bruno é a mesma dupla que Bruno com Ana). Use <code>combinations(alunos, 2)</code> para montar a lista <code>duplas</code>, mostre cada uma como <code>Ana e Bruno</code> e, no fim, o total.</p>
+<pre class="script" data-file="main.py">from itertools import combinations
+
+alunos = ["Ana", "Bruno", "Carla", "Davi"]
+
+duplas = []
+for a, b in duplas:
+    print(a, "e", b)
+print("Total de duplas:", len(duplas))
+</pre>
+<pre class="solucao" data-file="main.py">from itertools import combinations
+
+alunos = ["Ana", "Bruno", "Carla", "Davi"]
+
+duplas = list(combinations(alunos, 2))
+for a, b in duplas:
+    print(a, "e", b)
+print("Total de duplas:", len(duplas))
+</pre>
+</div>
+
+<p>São 6 duplas, de <code>Ana e Bruno</code> até <code>Carla e Davi</code>. Troque <code>combinations</code> por <code>permutations</code> e veja o total dobrar para 12: agora "Ana e Bruno" e "Bruno e Ana" contam separado.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>itertools</code> traz iteradores prontos; todos entregam aos poucos e se gastam numa passada.</li>
+  <li><code>count</code> e <code>cycle</code> não têm fim: limite com <code>zip</code>, <code>islice</code> ou <code>break</code>.</li>
+  <li><code>chain</code> emenda sequências (inclusive geradores) sem montar uma lista grande.</li>
+  <li><code>groupby</code> junta só <strong>vizinhos</strong>: ordene antes pela mesma chave, e transforme cada grupo em lista na mesma volta.</li>
+  <li><code>combinations</code> (sem ordem), <code>permutations</code> (com ordem) e <code>product</code> (um de cada) montam todas as possibilidades; elas crescem depressa.</li>
+  <li><code>accumulate</code> dá somas parciais, <code>pairwise</code> dá vizinhos, <code>batched</code> dá lotes.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
