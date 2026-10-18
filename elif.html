@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python elif — escolher entre vários caminhos | Guia Python</title>
+<meta name="description" content="O elif do Python para quem nunca programou: várias condições em sequência, o Python testa de cima para baixo e para na primeira verdadeira, por que a ordem das condições importa, else opcional no fim, elif × vários if, e os erros reais do Python 3.14: else if (expected ':'), elseif (Did you mean 'elif'?), 'elif' block follows an 'else' block. Com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">elif</span></h1>
+
+<p class="intro">Com <a href="if-else.html">if e else</a>, o programa escolhe entre <strong>dois</strong> caminhos. Mas a vida tem mais opções: a nota pode valer conceito A, B, C ou D; o frete pode ser grátis, R$ 10 ou R$ 20; o semáforo pode estar verde, amarelo ou vermelho. Para três, quatro ou mais caminhos existe o <code>elif</code>, abreviação de <em>else if</em> ("senão, se"). Nesta aula você também vai ver o detalhe que mais engana quem está começando: <strong>a ordem das condições importa</strong>.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A escrever uma escada de <code>if</code> … <code>elif</code> … <code>elif</code> … <code>else</code>.</li>
+  <li>Como o Python percorre a escada: de cima para baixo, <strong>parando na primeira condição verdadeira</strong>.</li>
+  <li>Por que a ordem das condições muda o resultado, e como escolher a ordem certa.</li>
+  <li>Que o <code>else</code> do fim é opcional, e o que acontece sem ele.</li>
+  <li>A diferença entre <code>elif</code> e vários <code>if</code> seguidos.</li>
+  <li>Os erros reais do Python 3.14: <code>else if</code>, <code>elseif</code>, <code>elif</code> depois do <code>else</code>, <code>elif</code> sem <code>if</code> e <code>elif</code> sem condição.</li>
+</ul>
+</div>
+
+<p>Todos os programas desta aula rodaram no <strong>Python 3.14</strong> do computador fictício da Ana (usuária <code>ana</code>, computador <code>notebook</code>), na pasta pessoal dela, com <code>python3 arquivo.py</code>.</p>
+
+<hr>
+
+<h2>A ideia: a fila de perguntas</h2>
+<p>A professora da Ana corrige as provas e dá um conceito a cada uma. Para cada prova, ela faz as perguntas <strong>em ordem</strong>, e para na primeira resposta "sim":</p>
+<ol class="passo">
+  <li>A nota é 9 ou mais? Se sim, conceito <strong>A</strong>, e acabou: ela pega a próxima prova.</li>
+  <li>Se não: a nota é 7 ou mais? Se sim, conceito <strong>B</strong>, e acabou.</li>
+  <li>Se não: a nota é 5 ou mais? Se sim, conceito <strong>C</strong>, e acabou.</li>
+  <li>Se nenhuma pergunta deu "sim": conceito <strong>D</strong>.</li>
+</ol>
+<p>Repare que, na pergunta 2, ela nem precisa conferir se a nota é menor que 9: se fosse 9 ou mais, ela já teria parado na pergunta 1. É exatamente assim que o <code>elif</code> funciona.</p>
+
+<hr>
+
+<h2>1. A escada de conceitos</h2>
+
+<pre class="file" data-file="conceito.py">nota = float(input("Nota da prova: "))
+if nota &gt;= 9:
+    print("Conceito A: excelente!")
+elif nota &gt;= 7:
+    print("Conceito B: aprovada.")
+elif nota &gt;= 5:
+    print("Conceito C: recuperação.")
+else:
+    print("Conceito D: reprovada.")
+print("Boletim fechado.")
+</pre>
+
+<pre class="term">$ python3 conceito.py
+Nota da prova: 9.5
+Conceito A: excelente!             « 9.5 &gt;= 9: parou na primeira pergunta
+Boletim fechado.
+$ python3 conceito.py
+Nota da prova: 7
+Conceito B: aprovada.              « 7 &gt;= 9 não; 7 &gt;= 7 sim
+Boletim fechado.
+$ python3 conceito.py
+Nota da prova: 5.5
+Conceito C: recuperação.
+Boletim fechado.
+$ python3 conceito.py
+Nota da prova: 3
+Conceito D: reprovada.             « nenhuma deu True: rodou o else
+Boletim fechado.</pre>
+
+<dl class="anatomy">
+  <dt>if nota &gt;= 9:</dt><dd>A primeira pergunta. Toda escada começa com um <code>if</code>.</dd>
+  <dt>elif nota &gt;= 7:</dt><dd>"Senão, se a nota é 7 ou mais". Só é testada se a pergunta de cima deu <code>False</code>. Tem condição própria e termina com dois-pontos, como o <code>if</code>.</dd>
+  <dt>elif nota &gt;= 5:</dt><dd>Mais um degrau. Você pode pôr quantos <code>elif</code> quiser.</dd>
+  <dt>else:</dt><dd>"Senão": roda quando <strong>nenhuma</strong> condição acima deu <code>True</code>. É opcional e, se existir, é sempre o último.</dd>
+  <dt>a mesma coluna</dt><dd><code>if</code>, os <code>elif</code> e o <code>else</code> ficam todos alinhados na mesma coluna. Cada um tem o seu bloco recuado embaixo.</dd>
+</dl>
+
+<div class="tip">
+<strong>A regra da escada</strong>
+<p>O Python testa as condições <strong>de cima para baixo</strong> e roda o bloco da <strong>primeira</strong> que der <code>True</code>. Os degraus de baixo nem são testados. Por isso, numa escada <code>if</code>/<code>elif</code>/<code>else</code>, roda <strong>no máximo um</strong> bloco (e exatamente um, quando há <code>else</code>).</p>
+</div>
+
+<div class="trypy">
+<p class="try-task"><strong>Experimente:</strong> clique em Rodar e digite várias notas: 10, 9, 8.9, 7, 6.99, 5, 0. Antes de cada uma, tente adivinhar o conceito. Depois acrescente um degrau no topo: <code>if nota == 10:</code> mostrando "Nota máxima!" (e troque o <code>if nota &gt;= 9:</code> de baixo por <code>elif</code>).</p>
+<pre class="script" data-file="main.py">nota = float(input("Nota da prova: "))
+if nota &gt;= 9:
+    print("Conceito A: excelente!")
+elif nota &gt;= 7:
+    print("Conceito B: aprovada.")
+elif nota &gt;= 5:
+    print("Conceito C: recuperação.")
+else:
+    print("Conceito D: reprovada.")
+print("Boletim fechado.")
+</pre>
+</div>
+
+<hr>
+
+<h2>2. A ordem das condições importa</h2>
+<p>A Ana escreveu as mesmas perguntas, só que de baixo para cima, começando pelo conceito C:</p>
+
+<pre class="file" data-file="ordem_errada.py">nota = 9.5
+if nota &gt;= 5:
+    print("Conceito C")
+elif nota &gt;= 7:
+    print("Conceito B")
+elif nota &gt;= 9:
+    print("Conceito A")
+else:
+    print("Conceito D")
+</pre>
+
+<pre class="term">$ python3 ordem_errada.py
+Conceito C                         « 9.5 levou C!</pre>
+
+<p>Nenhum erro, e o resultado está errado. A primeira pergunta, <code>9.5 &gt;= 5</code>, deu <code>True</code>, e a escada parou ali. As perguntas de baixo, que dariam a resposta certa, nem foram feitas. Nessa ordem, os conceitos A e B ficaram <strong>impossíveis</strong>: toda nota que é 7 ou mais também é 5 ou mais, e já cai no primeiro degrau.</p>
+
+<div class="warning">
+<strong>Como escolher a ordem</strong>
+<p>Quando as condições são do tipo "maior ou igual a", comece pela <strong>mais exigente</strong> (o número maior) e desça. A pergunta "mais difícil de cumprir" vem primeiro; a "mais fácil", por último. Com "menor que", é o contrário: comece pelo número menor e suba (veja <a href="#formas">Formas diferentes</a>).</p>
+</div>
+
+<div class="trypy" data-stdin="9.5" data-goal="out:Conceito A;;semerro">
+<p class="try-task"><strong>Missão:</strong> a escada abaixo está na ordem errada, e a nota preparada, <code>9.5</code>, leva conceito C. Reorganize os degraus (só mude a ordem das condições e dos <code>print</code>) para que 9.5 dê <code>Conceito A</code>.</p>
+<pre class="script" data-file="main.py">nota = float(input("Nota da prova: "))
+if nota &gt;= 5:
+    print("Conceito C")
+elif nota &gt;= 7:
+    print("Conceito B")
+elif nota &gt;= 9:
+    print("Conceito A")
+else:
+    print("Conceito D")
+</pre>
+<pre class="solucao" data-file="main.py">nota = float(input("Nota da prova: "))
+if nota &gt;= 9:
+    print("Conceito A")
+elif nota &gt;= 7:
+    print("Conceito B")
+elif nota &gt;= 5:
+    print("Conceito C")
+else:
+    print("Conceito D")
+</pre>
+</div>
+
+<hr>
+
+<h2>3. <code>elif</code> × vários <code>if</code></h2>
+<p>E se a Ana trocasse cada <code>elif</code> por um <code>if</code>?</p>
+
+<pre class="file" data-file="varios_ifs.py">nota = 9.5
+if nota &gt;= 9:
+    print("Conceito A")
+if nota &gt;= 7:
+    print("Conceito B")
+if nota &gt;= 5:
+    print("Conceito C")
+</pre>
+
+<pre class="term">$ python3 varios_ifs.py
+Conceito A
+Conceito B
+Conceito C                         « três conceitos para a mesma prova</pre>
+
+<p>Vários <code>if</code> são perguntas <strong>independentes</strong> (aula <a href="if.html">if</a>): todas são feitas, e cada uma que der "sim" roda o seu bloco. Já os degraus de uma escada <code>elif</code> são <strong>ligados</strong>: o primeiro "sim" encerra a escada.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th><code>if</code> … <code>elif</code> … <code>elif</code></th><th><code>if</code> … <code>if</code> … <code>if</code></th></tr>
+<tr><td>Quantas condições são testadas?</td><td>Até a primeira verdadeira</td><td>Todas, sempre</td></tr>
+<tr><td>Quantos blocos podem rodar?</td><td>No máximo um</td><td>Zero, um, vários ou todos</td></tr>
+<tr><td>Use quando…</td><td>as opções se excluem: uma prova tem <strong>um</strong> conceito</td><td>as perguntas são assuntos diferentes: "pode votar?" e "precisa de óculos?"</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>4. Faixas de valor: o frete</h2>
+<p>A loja da Ana mudou o frete: compras a partir de R$ 100 têm frete grátis; a partir de R$ 50, o frete é R$ 10,00; abaixo disso, R$ 20,00.</p>
+
+<pre class="file" data-file="frete.py">total = float(input("Total da compra: R$ "))
+if total &gt;= 100:
+    frete = 0.0
+elif total &gt;= 50:
+    frete = 10.0
+else:
+    frete = 20.0
+print(f"Frete: R$ {frete:.2f}")
+print(f"Total a pagar: R$ {total + frete:.2f}")
+</pre>
+
+<pre class="term">$ python3 frete.py
+Total da compra: R$ 120
+Frete: R$ 0.00
+Total a pagar: R$ 120.00
+$ python3 frete.py
+Total da compra: R$ 60
+Frete: R$ 10.00
+Total a pagar: R$ 70.00
+$ python3 frete.py
+Total da compra: R$ 30
+Frete: R$ 20.00
+Total a pagar: R$ 50.00</pre>
+
+<p>Os três caminhos dão valor à mesma variável, <code>frete</code>, e o programa continua depois da escada com o valor escolhido. Como há um <code>else</code> no fim, <code>frete</code> sempre recebe algum valor.</p>
+
+<hr>
+
+<h2>5. Sem <code>else</code>: pode não rodar nada</h2>
+<p>O <code>else</code> é opcional. Sem ele, se nenhuma condição der <code>True</code>, nenhum bloco roda e o programa simplesmente segue:</p>
+
+<pre class="file" data-file="semaforo.py">cor = input("Cor do semáforo: ")
+if cor == "verde":
+    print("Pode seguir.")
+elif cor == "amarelo":
+    print("Atenção: vai fechar.")
+elif cor == "vermelho":
+    print("Pare!")
+print("--")
+</pre>
+
+<pre class="term">$ python3 semaforo.py
+Cor do semáforo: amarelo
+Atenção: vai fechar.
+--
+$ python3 semaforo.py
+Cor do semáforo: azul
+--                                 « nenhuma cor bateu, e não há else</pre>
+
+<p>Aqui, comparando textos com <code>==</code>, a ordem não importa: uma cor não pode ser "verde" e "amarelo" ao mesmo tempo, então só uma condição pode dar <code>True</code>. A ordem só importa quando mais de uma condição pode ser verdadeira para o mesmo valor, como nas faixas de nota. Seria bom um <code>else</code> avisando "Cor desconhecida", não seria? Esse é o assunto da missão final. (Para comparar um valor com uma lista de opções fixas, como estas cores, o Python também tem o <a href="match.html">match e case</a>.)</p>
+
+<div class="trypy" data-stdin="vermelho" data-goal="out:Pare!;;semerro">
+<p class="try-task"><strong>Missão:</strong> o semáforo da Ana ainda não conhece o vermelho. Acrescente um <code>elif</code> para <code>"vermelho"</code> que mostre <code>Pare!</code>. A entrada preparada é <code>vermelho</code>.</p>
+<pre class="script" data-file="main.py">cor = input("Cor do semáforo: ")
+if cor == "verde":
+    print("Pode seguir.")
+elif cor == "amarelo":
+    print("Atenção: vai fechar.")
+print("--")
+</pre>
+<pre class="solucao" data-file="main.py">cor = input("Cor do semáforo: ")
+if cor == "verde":
+    print("Pode seguir.")
+elif cor == "amarelo":
+    print("Atenção: vai fechar.")
+elif cor == "vermelho":
+    print("Pare!")
+print("--")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="formas">Formas diferentes de escrever a mesma escada</h2>
+<p>As três escadas abaixo dão o mesmo conceito para qualquer nota (no lab, conferimos com 9.5, 7, 5.5 e 3: A, B, C e D nas três).</p>
+
+<pre class="file" data-file="descendo.py">if nota &gt;= 9:
+    conceito = "A"
+elif nota &gt;= 7:
+    conceito = "B"
+elif nota &gt;= 5:
+    conceito = "C"
+else:
+    conceito = "D"
+</pre>
+
+<pre class="file" data-file="subindo.py">if nota &lt; 5:
+    conceito = "D"
+elif nota &lt; 7:
+    conceito = "C"
+elif nota &lt; 9:
+    conceito = "B"
+else:
+    conceito = "A"
+</pre>
+
+<pre class="file" data-file="faixas.py">if 7 &lt;= nota &lt; 9:
+    conceito = "B"
+elif nota &gt;= 9:
+    conceito = "A"
+elif nota &lt; 5:
+    conceito = "D"
+elif 5 &lt;= nota &lt; 7:
+    conceito = "C"
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td>Descendo com <code>&gt;=</code> (do maior para o menor)</td><td>A mais comum. Cada degrau só precisa do limite de baixo, porque os de cima já foram descartados</td></tr>
+<tr><td>Subindo com <code>&lt;</code> (do menor para o maior)</td><td>Igualmente certa; escolha a que fica mais natural de ler para o problema</td></tr>
+<tr><td>Faixas completas (<code>7 &lt;= nota &lt; 9</code>)</td><td>Funciona em qualquer ordem, porque cada faixa diz o começo e o fim. Em troca, é mais longa, cada limite aparece duas vezes (mais chance de errar um), e sem <code>else</code> a variável pode ficar sem valor se você esquecer uma faixa</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong><code>else if</code>, separado</strong>
+<p>Quem vem de linguagens como C, Java ou JavaScript escreve <code>else if</code>, em duas palavras. No Python, isso não existe:</p>
+<pre class="file" data-file="else_if.py">nota = 6
+if nota &gt;= 7:
+    print("Aprovada")
+else if nota &gt;= 5:
+    print("Recuperação")
+else:
+    print("Reprovada")
+</pre>
+<pre class="term">$ python3 else_if.py
+  File "/home/ana/else_if.py", line 4
+    else if nota &gt;= 5:
+         ^^
+SyntaxError: expected ':'</pre>
+<p>"Era esperado um <code>:</code>", com a marca embaixo do <code>if</code>. O Python leu o <code>else</code> e esperava os dois-pontos logo depois (o <code>else</code> nunca tem condição); em vez disso, encontrou outro <code>if</code>. A mensagem não fala em <code>elif</code>, então é bom reconhecer o padrão: <code>expected ':'</code> logo depois de um <code>else</code> quase sempre é um <code>else if</code> ou um <code>else</code> com condição. <strong>Como consertar:</strong> junte e encurte: <code>elif nota &gt;= 5:</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>elseif</code> ou outra grafia</strong>
+<pre class="file" data-file="elseif.py">nota = 6
+if nota &gt;= 7:
+    print("Aprovada")
+elseif nota &gt;= 5:
+    print("Recuperação")
+</pre>
+<pre class="term">$ python3 elseif.py
+  File "/home/ana/elseif.py", line 4
+    elseif nota &gt;= 5:
+    ^^^^^^
+SyntaxError: invalid syntax. Did you mean 'elif'?</pre>
+<p>Aqui o Python 3.14 reconhece a palavra parecida e sugere: "Você quis dizer <code>'elif'</code>?". O nome certo tem 4 letras: <strong>e-l-i-f</strong>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>elif</code> depois do <code>else</code></strong>
+<pre class="file" data-file="elif_depois_else.py">nota = 6
+if nota &gt;= 7:
+    print("Aprovada")
+else:
+    print("Reprovada")
+elif nota &gt;= 5:
+    print("Recuperação")
+</pre>
+<pre class="term">$ python3 elif_depois_else.py
+  File "/home/ana/elif_depois_else.py", line 6
+    elif nota &gt;= 5:
+    ^^^^
+SyntaxError: 'elif' block follows an 'else' block</pre>
+<p>"Um bloco <code>elif</code> vem depois de um bloco <code>else</code>". O <code>else</code> pega "todo o resto", então depois dele não sobra nada para um <code>elif</code> testar. <strong>Como consertar:</strong> o <code>else</code> é sempre o <strong>último</strong> degrau; mova o <code>elif</code> para cima dele.</p>
+</div>
+
+<div class="cenario">
+<strong><code>elif</code> sem <code>if</code></strong>
+<pre class="file" data-file="elif_sozinho.py">nota = 6
+elif nota &gt;= 5:
+    print("Recuperação")
+</pre>
+<pre class="term">$ python3 elif_sozinho.py
+  File "/home/ana/elif_sozinho.py", line 2
+    elif nota &gt;= 5:
+    ^^^^
+SyntaxError: invalid syntax</pre>
+<p>Como o <code>else</code>, o <code>elif</code> ("senão, se") precisa de um <code>if</code> antes dele, na mesma coluna e logo depois do bloco. Toda escada começa com <code>if</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>elif</code> sem condição</strong>
+<pre class="file" data-file="elif_sem_condicao.py">nota = 6
+if nota &gt;= 7:
+    print("Aprovada")
+elif:
+    print("Reprovada")
+</pre>
+<pre class="term">$ python3 elif_sem_condicao.py
+  File "/home/ana/elif_sem_condicao.py", line 4
+    elif:
+        ^
+SyntaxError: invalid syntax</pre>
+<p>O <code>elif</code> sempre tem uma condição. Para "todo o resto", sem pergunta, o certo é o <code>else:</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Sem mensagem nenhuma: a ordem errada</strong>
+<p>O erro mais perigoso do <code>elif</code> não tem traceback: é a escada na ordem errada da seção 2, que roda sem reclamar e dá a resposta errada. Para se proteger, teste o programa com um valor de <strong>cada faixa</strong> e com os <strong>limites</strong> (no conceito: 9, 8.9, 7, 6.9, 5, 4.9).</p>
+</div>
+
+<div class="note">
+<strong>E o <code>else:</code> com um <code>if</code> dentro?</strong>
+<p>Isto funciona e dá o mesmo resultado que um <code>elif</code>:</p>
+<pre class="file" data-file="aninhado_ok.py">nota = 6
+if nota &gt;= 7:
+    print("Aprovada")
+else:
+    if nota &gt;= 5:
+        print("Recuperação")
+    else:
+        print("Reprovada")
+</pre>
+<pre class="term">$ python3 aninhado_ok.py
+Recuperação</pre>
+<p>É um <code>if</code> dentro do bloco do <code>else</code>: uma condição <strong>aninhada</strong>, o assunto da próxima aula (<a href="condicoes-aninhadas.html">Condições Aninhadas</a>). Cada degrau empurra o código mais para a direita; com <code>elif</code>, a escada fica toda na mesma coluna e mais fácil de ler.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>if c1:</code> … <code>elif c2:</code> … <code>else:</code></td><td>Testa c1, depois c2…, e roda o bloco da primeira verdadeira; se nenhuma for, roda o <code>else</code></td></tr>
+<tr><td>Vários <code>elif</code></td><td>Quantos degraus forem precisos</td></tr>
+<tr><td>Sem <code>else</code></td><td>Se nenhuma condição for verdadeira, nenhum bloco roda</td></tr>
+<tr><td>Ordem com <code>&gt;=</code></td><td>Do limite maior para o menor</td></tr>
+<tr><td>Ordem com <code>&lt;</code></td><td>Do limite menor para o maior</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>SyntaxError: expected ':'</code>, marcando o <code>if</code> depois do <code>else</code></td><td>Escreveu <code>else if</code>: no Python é <code>elif</code></td></tr>
+<tr><td><code>SyntaxError: invalid syntax. Did you mean 'elif'?</code></td><td>Escreveu <code>elseif</code> (ou outra grafia parecida)</td></tr>
+<tr><td><code>SyntaxError: 'elif' block follows an 'else' block</code></td><td><code>elif</code> depois do <code>else</code>: o <code>else</code> tem de ser o último</td></tr>
+<tr><td><code>SyntaxError: invalid syntax</code>, marcando o <code>elif</code></td><td><code>elif</code> sem <code>if</code> antes, ou <code>elif</code> sem condição</td></tr>
+<tr><td>Resposta errada, sem erro</td><td>Condições na ordem errada: uma de cima "engole" as de baixo</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Complete a escada</h3>
+<p>Complete a palavra que faltou no meio da escada:</p>
+<div class="ex-code">if temperatura &gt; 30:<br>&nbsp;&nbsp;&nbsp;&nbsp;print("Calor")<br><input data-answer="elif" aria-label="palavra-chave"> temperatura &gt; 20:<br>&nbsp;&nbsp;&nbsp;&nbsp;print("Agradável")<br>else:<br>&nbsp;&nbsp;&nbsp;&nbsp;print("Frio")</div>
+</div>
+
+<div class="exercise">
+<h3>2. Qual sai?</h3>
+<p>Na escada do exercício 1, o que aparece quando <code>temperatura = 25</code>?</p>
+<div class="ex-code">Resposta: <input data-answer="Agradável|agradável" aria-label="saída"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">3. O que este programa mostra?</p>
+<pre class="file">idade = 70
+if idade &gt;= 18:
+    print("Adulto")
+elif idade &gt;= 60:
+    print("Idoso")
+else:
+    print("Criança")
+</pre>
+<label><input type="radio" name="q3"> <code>Idoso</code></label>
+<label><input type="radio" name="q3"> <code>Adulto</code> e <code>Idoso</code></label>
+<label><input type="radio" name="q3"> <code>Adulto</code></label>
+<label><input type="radio" name="q3"> <code>Criança</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. No exercício 3, como fazer 70 anos mostrar <code>Idoso</code>?</p>
+<label><input type="radio" name="q4"> Trocar o <code>elif</code> por <code>else if</code></label>
+<label><input type="radio" name="q4"> Pôr o teste <code>idade &gt;= 60</code> antes do <code>idade &gt;= 18</code></label>
+<label><input type="radio" name="q4"> Apagar o <code>else</code></label>
+<label><input type="radio" name="q4"> Não tem jeito: o Python sempre para no primeiro <code>if</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Numa escada <code>if</code>/<code>elif</code>/<code>elif</code> <strong>sem</strong> <code>else</code>, quantos blocos podem rodar?</p>
+<label><input type="radio" name="q5"> Nenhum ou um</label>
+<label><input type="radio" name="q5"> Exatamente um</label>
+<label><input type="radio" name="q5"> Todos os que tiverem condição verdadeira</label>
+<label><input type="radio" name="q5"> Sempre todos</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. O Python mostrou <code>SyntaxError: 'elif' block follows an 'else' block</code>. O que fazer?</p>
+<label><input type="radio" name="q6"> Trocar o <code>elif</code> por <code>else if</code></label>
+<label><input type="radio" name="q6"> Recuar o <code>elif</code> com 4 espaços</label>
+<label><input type="radio" name="q6"> Apagar a condição do <code>elif</code></label>
+<label><input type="radio" name="q6"> Mover o <code>elif</code> para antes do <code>else</code></label>
+</div>
+
+<h3>Missão final: três preços no cinema</h3>
+
+<div class="trypy" data-stdin="8" data-goal="out:Criança: R$ 10.00;;src:^\s*elif\b">
+<p class="try-task"><strong>Missão:</strong> o cinema agora tem três preços: <strong>criança</strong> (menos de 12 anos) paga R$ 10.00, <strong>idoso</strong> (60 anos ou mais) paga R$ 15.00 e os outros pagam R$ 30.00. O programa só conhece idoso e adulto. Acrescente um <code>elif</code> para as crianças, mostrando <code>Criança: R$ 10.00</code>. A entrada preparada é <code>8</code>.</p>
+<pre class="script" data-file="main.py">idade = int(input("Idade: "))
+if idade &gt;= 60:
+    print("Idoso: R$ 15.00")
+else:
+    print("Adulto: R$ 30.00")
+</pre>
+<pre class="solucao" data-file="main.py">idade = int(input("Idade: "))
+if idade &gt;= 60:
+    print("Idoso: R$ 15.00")
+elif idade &lt; 12:
+    print("Criança: R$ 10.00")
+else:
+    print("Adulto: R$ 30.00")
+</pre>
+</div>
+
+<p>Aqui a ordem dos dois primeiros degraus não importa: ninguém tem ao mesmo tempo menos de 12 e 60 anos ou mais. No lab, a solução mostrou <code>Criança: R$ 10.00</code> para 8, <code>Adulto: R$ 30.00</code> para 30 e <code>Idoso: R$ 15.00</code> para 70.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>elif</code> ("senão, se") acrescenta degraus a um <code>if</code>: <code>if</code> → <code>elif</code> → <code>elif</code> → … → <code>else</code>, todos na mesma coluna.</li>
+  <li>O Python testa de <strong>cima para baixo</strong> e roda só o bloco da <strong>primeira</strong> condição verdadeira; o resto da escada é pulado.</li>
+  <li><strong>A ordem importa</strong> quando mais de uma condição pode ser verdadeira: com <code>&gt;=</code>, comece pelo limite maior. A ordem errada não dá erro, dá a resposta errada.</li>
+  <li>O <code>else</code> do fim é opcional; sem ele, pode não rodar bloco nenhum.</li>
+  <li>Vários <code>if</code> são perguntas independentes (vários blocos podem rodar); <code>elif</code> são opções que se excluem (no máximo um).</li>
+  <li>No Python não existe <code>else if</code> nem <code>elseif</code>: é <code>elif</code>. E nada de <code>elif</code> depois do <code>else</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
