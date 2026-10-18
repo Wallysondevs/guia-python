@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Tipos de Dados — texto, inteiro, decimal, booleano e None | Guia Python</title>
+<meta name="description" content="Os tipos de dados do Python para quem nunca programou: str, int, float, bool e None, como o Python descobre o tipo pela escrita, por que o tipo decide o que o + e o * fazem (3 + 4 e &quot;3&quot; + &quot;4&quot;), um primeiro olhar nas listas, tuplas, dicionários e conjuntos, e os TypeError reais do Python 3.14 explicados em português, com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Tipos de Dados</span></h1>
+
+<p class="intro">Nas aulas anteriores apareceram valores bem diferentes: o texto <code>"Ana"</code>, o número <code>29</code>, o preço <code>7.5</code>. Você já viu que <code>"2" + "3"</code> dá <code>"23"</code> e que <code>2 + 3</code> dá <code>5</code>. A diferença está no <strong>tipo</strong> de cada valor: todo valor no Python tem um tipo, e é o tipo que decide o que dá para fazer com ele. Esta aula é o mapa dos tipos que você vai usar o tempo todo.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é o <strong>tipo</strong> de um valor e por que ele importa.</li>
+  <li>Os cinco tipos básicos: <code>str</code> (texto), <code>int</code> (inteiro), <code>float</code> (decimal), <code>bool</code> (verdadeiro/falso) e <code>None</code> (nada).</li>
+  <li>Como o Python descobre o tipo só pela escrita do valor.</li>
+  <li>Que quem tem tipo é o <strong>valor</strong>, e não a variável.</li>
+  <li>Por que o mesmo <code>+</code> soma números e junta textos.</li>
+  <li>Um primeiro olhar nas coleções: listas, tuplas, dicionários e conjuntos.</li>
+  <li>Os <code>TypeError</code> reais de misturar tipos que não combinam.</li>
+</ul>
+</div>
+
+<p>Os programas desta aula foram rodados com o <strong>Python 3.14</strong> na máquina fictícia da Ana (usuária <code>ana</code>, computador <code>notebook</code>), com <code>python3 arquivo.py</code>.</p>
+
+<hr>
+
+<h2>A ideia: cada coisa no seu tipo de embalagem</h2>
+<p>Na padaria, cada coisa vem num tipo de embalagem: o leite em caixa, os ovos em bandeja, o pão em saco de papel. A embalagem diz o que dá para fazer: você <strong>despeja</strong> o leite, mas não despeja os ovos; você <strong>conta</strong> os ovos, mas não conta o leite (você mede). Ninguém tenta fatiar a caixa de leite.</p>
+
+<p>No Python, o <strong>tipo</strong> é a embalagem do valor. Com um número (<code>int</code>), dá para fazer conta. Com um texto (<code>str</code>), dá para juntar, procurar uma letra, pôr em maiúsculas. Quando você tenta fazer com um valor uma coisa que o tipo dele não permite, o Python para e avisa com um <code>TypeError</code>, "erro de tipo".</p>
+
+<hr>
+
+<h2>1. Os cinco tipos básicos</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Tipo</th><th>Nome em inglês</th><th>O que guarda</th><th>Exemplos</th></tr>
+<tr><td><code>str</code></td><td><em>string</em>, "cordão" de caracteres</td><td>Texto</td><td><code>"Ana"</code>, <code>'pão'</code>, <code>"42"</code>, <code>""</code></td></tr>
+<tr><td><code>int</code></td><td><em>integer</em>, "inteiro"</td><td>Número inteiro, positivo ou negativo</td><td><code>29</code>, <code>0</code>, <code>-5</code>, <code>1000000</code></td></tr>
+<tr><td><code>float</code></td><td><em>floating point</em>, "ponto flutuante"</td><td>Número com casas decimais</td><td><code>1.65</code>, <code>7.5</code>, <code>-0.25</code>, <code>3.0</code></td></tr>
+<tr><td><code>bool</code></td><td><em>boolean</em>, de George Boole, um matemático</td><td>Verdadeiro ou falso</td><td><code>True</code>, <code>False</code></td></tr>
+<tr><td><code>NoneType</code></td><td><em>none</em>, "nenhum"</td><td>A ausência de valor</td><td><code>None</code> (o único valor desse tipo)</td></tr>
+</table>
+</div>
+
+<pre class="file" data-file="td-basicos.py">nome = "Ana"
+idade = 29
+altura = 1.65
+cliente_vip = True
+apelido = None
+print(nome, idade, altura, cliente_vip, apelido)
+print(type(nome))
+print(type(idade))
+print(type(altura))
+print(type(cliente_vip))
+print(type(apelido))
+</pre>
+
+<pre class="term">$ python3 td-basicos.py
+Ana 29 1.65 True None
+&lt;class 'str'&gt;
+&lt;class 'int'&gt;
+&lt;class 'float'&gt;
+&lt;class 'bool'&gt;
+&lt;class 'NoneType'&gt;
+</pre>
+
+<p>A função <code>type()</code> responde qual é o tipo de um valor; a resposta vem no formato <code>&lt;class 'nome-do-tipo'&gt;</code> ("classe" é o nome que o Python dá a um tipo). Ela é o assunto da próxima aula, <a href="type.html">Descobrindo o Tipo</a>. Agora, cada tipo com calma.</p>
+
+<dl class="anatomy">
+  <dt>str — <code>"Ana"</code></dt><dd>Tudo o que está entre aspas é texto, mesmo que pareça um número: <code>"42"</code> é um <code>str</code>. Um texto pode até ser vazio, <code>""</code>. Aulas: <a href="strings.html">Strings</a> e as seguintes.</dd>
+  <dt>int — <code>29</code></dt><dd>Números sem ponto decimal. Não têm limite de tamanho: <code>2 ** 100</code> (2 elevado a 100) dá <code>1267650600228229401496703205376</code>, sem erro. Aula: <a href="numeros.html">Números</a>.</dd>
+  <dt>float — <code>1.65</code></dt><dd>Números <strong>com ponto</strong>. Basta o ponto para ser <code>float</code>: <code>3.0</code> é <code>float</code>, <code>3</code> é <code>int</code>. As contas com <code>float</code> às vezes têm um errinho na última casa (<code>0.1 + 0.2</code> dá <code>0.30000000000000004</code>), explicado em <a href="numeros.html">Números</a>.</dd>
+  <dt>bool — <code>True</code></dt><dd>Só existem dois valores: <code>True</code> (verdadeiro) e <code>False</code> (falso), com a primeira letra maiúscula e sem aspas. São a resposta das comparações: <code>5 &gt; 3</code> dá <code>True</code>. Aula: <a href="booleanos.html">Booleanos</a>.</dd>
+  <dt>None — <code>None</code></dt><dd>"Nada", "ainda não tem". A Ana não tem apelido, então <code>apelido = None</code>. Não é zero nem texto vazio: é a ausência de valor. Aula: <a href="none.html">O Valor None</a>.</dd>
+</dl>
+
+<hr>
+
+<h2>2. O Python descobre o tipo pela escrita</h2>
+<p>Você nunca disse ao Python "isto é um inteiro". Ele descobre olhando <strong>como o valor foi escrito</strong>:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Tipo</th><th>Pista</th></tr>
+<tr><td><code>7</code></td><td><code>int</code></td><td>Só algarismos</td></tr>
+<tr><td><code>7.0</code></td><td><code>float</code></td><td>Tem ponto</td></tr>
+<tr><td><code>"7"</code></td><td><code>str</code></td><td>Tem aspas</td></tr>
+<tr><td><code>True</code></td><td><code>bool</code></td><td>A palavra <code>True</code> ou <code>False</code>, sem aspas</td></tr>
+<tr><td><code>None</code></td><td><code>NoneType</code></td><td>A palavra <code>None</code>, sem aspas</td></tr>
+</table>
+</div>
+
+<p>Para o Python, <code>7</code>, <code>7.0</code> e <code>"7"</code> são três coisas diferentes. Os dois números valem o mesmo; o texto, não:</p>
+
+<pre class="file" data-file="td-aspas.py">print(7 == 7)
+print("7" == 7)
+print(type(7), type("7"), type(7.0))
+</pre>
+
+<pre class="term">$ python3 td-aspas.py
+True
+False
+&lt;class 'int'&gt; &lt;class 'str'&gt; &lt;class 'float'&gt;
+</pre>
+
+<p>O <code>==</code> pergunta "é igual?" (aula <a href="operadores-comparacao.html">Comparações</a>). O texto <code>"7"</code> não é igual ao número <code>7</code>: um é um desenho do algarismo, o outro é a quantidade sete.</p>
+
+<hr>
+
+<h2>3. Quem tem tipo é o valor, não a variável</h2>
+<p>Na aula <a href="variaveis.html">Variáveis</a>, a variável era uma etiqueta presa a um valor. O tipo pertence ao <strong>valor</strong>. A etiqueta pode ser presa a um valor de outro tipo, e aí o tipo "da variável" muda junto:</p>
+
+<pre class="file" data-file="td-mudar.py">caixa = 10
+print(caixa, type(caixa))
+caixa = "dez"
+print(caixa, type(caixa))
+</pre>
+
+<pre class="term">$ python3 td-mudar.py
+10 &lt;class 'int'&gt;
+dez &lt;class 'str'&gt;
+</pre>
+
+<p>Por isso se diz que o Python tem <strong>tipagem dinâmica</strong>: o tipo é conferido na hora em que o programa roda, valor por valor. E também <strong>tipagem forte</strong>: o Python não converte um tipo em outro por conta própria quando eles não combinam; ele prefere dar erro (seção 4). Em C ou Java, ao contrário, a variável tem um tipo fixo, declarado antes.</p>
+
+<hr>
+
+<h2>4. O tipo decide o que o operador faz</h2>
+<p>O mesmo sinal faz coisas diferentes conforme o tipo dos valores:</p>
+
+<pre class="file" data-file="td-mais.py">print(3 + 4)
+print("3" + "4")
+print(3 * 4)
+print("3" * 4)
+print(7 / 2)
+print(10 / 2)
+print(3 + 0.5)
+</pre>
+
+<pre class="term">$ python3 td-mais.py
+7
+34
+12
+3333
+3.5
+5.0
+3.5
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Linha</th><th>Tipos</th><th>O que aconteceu</th></tr>
+<tr><td><code>3 + 4</code></td><td><code>int</code> + <code>int</code></td><td>Soma: <code>7</code></td></tr>
+<tr><td><code>"3" + "4"</code></td><td><code>str</code> + <code>str</code></td><td><strong>Junta</strong> os textos: <code>"34"</code></td></tr>
+<tr><td><code>3 * 4</code></td><td><code>int</code> * <code>int</code></td><td>Multiplica: <code>12</code></td></tr>
+<tr><td><code>"3" * 4</code></td><td><code>str</code> * <code>int</code></td><td><strong>Repete</strong> o texto 4 vezes: <code>"3333"</code></td></tr>
+<tr><td><code>7 / 2</code></td><td><code>int</code> / <code>int</code></td><td>A divisão com <code>/</code> sempre dá <code>float</code>: <code>3.5</code></td></tr>
+<tr><td><code>10 / 2</code></td><td><code>int</code> / <code>int</code></td><td>Mesmo exata, dá <code>float</code>: <code>5.0</code></td></tr>
+<tr><td><code>3 + 0.5</code></td><td><code>int</code> + <code>float</code></td><td>Números se misturam bem; o resultado é <code>float</code>: <code>3.5</code></td></tr>
+</table>
+</div>
+
+<p><code>int</code> e <code>float</code> são parentes: os dois são números e se misturam nas contas. Já texto e número não se misturam (seção "Quando dá errado"). As contas têm aula própria: <a href="operadores-aritmeticos.html">Operadores Aritméticos</a>.</p>
+
+<div class="trypy" data-goal="semerro;;out:Total: 42">
+<p class="try-task"><strong>Missão:</strong> a Ana vendeu 15 pães de manhã e 27 à tarde, mas o programa mostra <code>Total: 1527</code>. Mude o <strong>tipo</strong> dos dois valores (sem mudar o <code>print</code>) para aparecer <code>Total: 42</code>.</p>
+<pre class="script" data-file="main.py">manha = "15"
+tarde = "27"
+print("Total:", manha + tarde)
+</pre>
+<pre class="solucao" data-file="main.py">manha = 15
+tarde = 27
+print("Total:", manha + tarde)
+</pre>
+</div>
+
+<hr>
+
+<h2>5. Um primeiro olhar nas coleções</h2>
+<p>Além dos tipos básicos, que guardam <strong>um</strong> valor, o Python tem tipos que guardam <strong>vários</strong>: as coleções. Cada uma tem o seu grupo de aulas no Nível 2; aqui é só para você reconhecer quando encontrar:</p>
+
+<pre class="file" data-file="td-colecoes.py">compras = ["pão", "leite", "café"]
+ponto = (10, 20)
+precos = {"pão": 0.75, "leite": 5.9}
+sabores = {"coco", "milho"}
+print(type(compras))
+print(type(ponto))
+print(type(precos))
+print(type(sabores))
+</pre>
+
+<pre class="term">$ python3 td-colecoes.py
+&lt;class 'list'&gt;
+&lt;class 'tuple'&gt;
+&lt;class 'dict'&gt;
+&lt;class 'set'&gt;
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Tipo</th><th>Escrita</th><th>O que é</th><th>Aula</th></tr>
+<tr><td><code>list</code> (lista)</td><td><code>["pão", "leite"]</code></td><td>Vários valores em ordem; pode mudar</td><td><a href="listas.html">Listas</a></td></tr>
+<tr><td><code>tuple</code> (tupla)</td><td><code>(10, 20)</code></td><td>Vários valores em ordem; não muda</td><td><a href="tuplas.html">Tuplas</a></td></tr>
+<tr><td><code>dict</code> (dicionário)</td><td><code>{"pão": 0.75}</code></td><td>Pares "chave: valor", como um cardápio com preços</td><td><a href="dicionarios.html">Dicionários</a></td></tr>
+<tr><td><code>set</code> (conjunto)</td><td><code>{"coco", "milho"}</code></td><td>Valores sem repetição e sem ordem</td><td><a href="conjuntos.html">Conjuntos</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de escrever o mesmo valor</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Você quer…</th><th>Escreva</th><th>Evite</th></tr>
+<tr><td>Um texto</td><td><code>"pão"</code> ou <code>'pão'</code></td><td>Misturar as duas aspas no mesmo texto</td></tr>
+<tr><td>Uma quantidade inteira</td><td><code>12</code></td><td><code>"12"</code> (é texto) e <code>12.0</code> (é <code>float</code>, sem necessidade)</td></tr>
+<tr><td>Um preço, um peso</td><td><code>7.5</code></td><td><code>7,5</code> (vira dois valores) e <code>"7.5"</code> (é texto)</td></tr>
+<tr><td>Sim ou não</td><td><code>True</code> / <code>False</code></td><td><code>"sim"</code>, <code>1</code>/<code>0</code>, ou <code>true</code> minúsculo (dá <code>NameError</code>)</td></tr>
+<tr><td>"Não tem"</td><td><code>None</code></td><td><code>0</code> ou <code>""</code>, que são valores de verdade</td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>E quando o valor veio com o tipo errado?</strong>
+<p>Acontece o tempo todo: o <code>input()</code> sempre devolve <code>str</code> (aula <a href="input.html">input()</a>). Para transformar um tipo em outro existem <code>int()</code>, <code>float()</code>, <code>str()</code> e <code>bool()</code>, assunto da aula <a href="conversao.html">Conversão de Tipos</a>.</p>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Número + texto</strong>
+<pre class="file" data-file="td-err1.py">print(4 + "3")
+</pre>
+<pre class="term">$ python3 td-err1.py
+Traceback (most recent call last):
+  File "/home/ana/td-err1.py", line 1, in &lt;module&gt;
+    print(4 + "3")
+          ~~^~~~~
+TypeError: unsupported operand type(s) for +: 'int' and 'str'
+</pre>
+<p>"Tipos de operando não suportados para <code>+</code>: <code>int</code> e <code>str</code>". Um <strong>operando</strong> é cada valor de uma conta. O Python não sabe somar um número com um texto, e não tenta adivinhar se você queria <code>7</code> ou <code>"43"</code>. Com o texto na frente (<code>"3" + 4</code>), a mensagem muda para a que você viu em <a href="print.html">print()</a>, <code>can only concatenate str (not "int") to str</code>, mas o problema é o mesmo. <strong>Como consertar:</strong> deixe os dois do mesmo tipo: <code>4 + 3</code> (números) ou <code>"4" + "3"</code> (textos).</p>
+</div>
+
+<div class="cenario">
+<strong>Subtrair textos</strong>
+<pre class="file" data-file="td-err2.py">print("pão" - "p")
+</pre>
+<pre class="term">$ python3 td-err2.py
+Traceback (most recent call last):
+  File "/home/ana/td-err2.py", line 1, in &lt;module&gt;
+    print("pão" - "p")
+          ~~~~~~^~~~~
+TypeError: unsupported operand type(s) for -: 'str' and 'str'
+</pre>
+<p>Desta vez os dois são do mesmo tipo, e mesmo assim deu erro: o tipo <code>str</code> sabe juntar (<code>+</code>) e repetir (<code>*</code>), mas não sabe "tirar" (<code>-</code>). Para tirar letras de um texto existe o método <code>replace()</code> (aula <a href="strings-metodos.html">Métodos de Texto</a>).</p>
+</div>
+
+<div class="cenario">
+<strong>Repetir um texto um número quebrado de vezes</strong>
+<pre class="file" data-file="td-err3.py">print("ab" * 2.5)
+</pre>
+<pre class="term">$ python3 td-err3.py
+Traceback (most recent call last):
+  File "/home/ana/td-err3.py", line 1, in &lt;module&gt;
+    print("ab" * 2.5)
+          ~~~~~^~~~~
+TypeError: can't multiply sequence by non-int of type 'float'
+</pre>
+<p>"Não dá para multiplicar uma sequência por um não inteiro do tipo <code>float</code>". Repetir um texto "duas vezes e meia" não faz sentido; o número de repetições tem de ser um <code>int</code>. (Uma <strong>sequência</strong> é um valor com itens em ordem, como o texto, que é uma sequência de letras.)</p>
+</div>
+
+<div class="cenario">
+<strong>Pedir algo que o tipo não tem</strong>
+<pre class="file" data-file="td-err4.py">print(len(42))
+</pre>
+<pre class="term">$ python3 td-err4.py
+Traceback (most recent call last):
+  File "/home/ana/td-err4.py", line 1, in &lt;module&gt;
+    print(len(42))
+          ~~~^^^^
+TypeError: object of type 'int' has no len()
+</pre>
+<p>A função <code>len()</code> (de <em>length</em>, "comprimento") conta os itens de um valor: <code>len("Ana")</code> dá <code>3</code>, três letras. Um número não tem itens para contar: "um objeto do tipo <code>int</code> não tem <code>len()</code>". Se você queria contar os algarismos, o número precisaria virar texto antes: <code>len(str(42))</code> (aula <a href="conversao.html">Conversão de Tipos</a>).</p>
+</div>
+
+<div class="trypy" data-goal="semerro;;out:Estoque: 12 bolos">
+<p class="try-task"><strong>Missão:</strong> o programa para com <code>TypeError</code>. Conserte o <code>print</code> para mostrar <code>Estoque: 12 bolos</code>, mantendo <code>estoque</code> como número.</p>
+<pre class="script" data-file="main.py">estoque = 12
+print("Estoque: " + estoque + " bolos")
+</pre>
+<pre class="solucao" data-file="main.py">estoque = 12
+print("Estoque:", estoque, "bolos")
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Tipo</th><th>Exemplo</th><th><code>type()</code> responde</th><th>Para quê</th></tr>
+<tr><td>Texto</td><td><code>"Ana"</code></td><td><code>&lt;class 'str'&gt;</code></td><td>Nomes, recados, qualquer texto</td></tr>
+<tr><td>Inteiro</td><td><code>29</code></td><td><code>&lt;class 'int'&gt;</code></td><td>Quantidades, contagens, idades</td></tr>
+<tr><td>Decimal</td><td><code>7.5</code></td><td><code>&lt;class 'float'&gt;</code></td><td>Preços, pesos, medidas</td></tr>
+<tr><td>Booleano</td><td><code>True</code>, <code>False</code></td><td><code>&lt;class 'bool'&gt;</code></td><td>Sim/não, resultado de comparações</td></tr>
+<tr><td>Nada</td><td><code>None</code></td><td><code>&lt;class 'NoneType'&gt;</code></td><td>"Ainda não tem valor"</td></tr>
+<tr><td>Lista</td><td><code>["pão", "leite"]</code></td><td><code>&lt;class 'list'&gt;</code></td><td>Vários valores em ordem</td></tr>
+<tr><td>Tupla</td><td><code>(10, 20)</code></td><td><code>&lt;class 'tuple'&gt;</code></td><td>Vários valores fixos</td></tr>
+<tr><td>Dicionário</td><td><code>{"pão": 0.75}</code></td><td><code>&lt;class 'dict'&gt;</code></td><td>Pares chave: valor</td></tr>
+<tr><td>Conjunto</td><td><code>{"coco", "milho"}</code></td><td><code>&lt;class 'set'&gt;</code></td><td>Valores sem repetição</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>TypeError: unsupported operand type(s) for +: 'int' and 'str'</code></td><td>Número + texto</td></tr>
+<tr><td><code>TypeError: can only concatenate str (not "int") to str</code></td><td>Texto + número</td></tr>
+<tr><td><code>TypeError: unsupported operand type(s) for -: 'str' and 'str'</code></td><td>Conta que o tipo não sabe fazer</td></tr>
+<tr><td><code>TypeError: can't multiply sequence by non-int of type 'float'</code></td><td>Texto vezes número com casas decimais</td></tr>
+<tr><td><code>TypeError: object of type 'int' has no len()</code></td><td><code>len()</code> num número</td></tr>
+<tr><td><code>"15" + "27"</code> deu <code>1527</code>, sem erro</td><td>Números guardados como texto</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Qual é o tipo?</h3>
+<p>Qual é o tipo de <code>3.0</code>? (o nome curto, em minúsculas)</p>
+<div class="ex-code">Tipo: <input data-answer="float" aria-label="tipo"></div>
+</div>
+
+<div class="exercise">
+<h3>2. E este?</h3>
+<p>Qual é o tipo de <code>"3"</code>?</p>
+<div class="ex-code">Tipo: <input data-answer="str" aria-label="tipo"></div>
+</div>
+
+<div class="exercise">
+<h3>3. Qual é a saída?</h3>
+<p>O que mostra <code>print("ab" * 3)</code>?</p>
+<div class="ex-code">Saída: <input data-answer="ababab" aria-label="saída"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Qual é o resultado de <code>8 / 2</code>?</p>
+<label><input type="radio" name="q4"> <code>4</code></label>
+<label><input type="radio" name="q4"> <code>"4"</code></label>
+<label><input type="radio" name="q4"> <code>4.0</code></label>
+<label><input type="radio" name="q4"> <code>TypeError</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Qual destes valores é um <code>bool</code>?</p>
+<label><input type="radio" name="q5"> <code>False</code></label>
+<label><input type="radio" name="q5"> <code>"False"</code></label>
+<label><input type="radio" name="q5"> <code>false</code></label>
+<label><input type="radio" name="q5"> <code>0.0</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">6. A Ana ainda não sabe o telefone de um cliente. Qual valor combina melhor?</p>
+<label><input type="radio" name="q6"> <code>0</code></label>
+<label><input type="radio" name="q6"> <code>None</code></label>
+<label><input type="radio" name="q6"> <code>"0"</code></label>
+<label><input type="radio" name="q6"> <code>False</code></label>
+</div>
+
+<h3>Missão final: a ficha do produto</h3>
+
+<div class="trypy" data-goal="out:&lt;class 'str'&gt;;;out:&lt;class 'int'&gt;;;out:&lt;class 'float'&gt;;;out:&lt;class 'bool'&gt;;;semerro">
+<p class="try-task"><strong>Missão:</strong> monte a ficha do sonho de padaria com uma variável de cada tipo: <code>produto</code> com o texto <code>"Sonho"</code> (já está pronta), <code>quantidade</code> com o inteiro <code>6</code>, <code>preco</code> com o decimal <code>2.5</code> e <code>em_promocao</code> com <code>True</code>. Depois mostre o tipo de cada uma com <code>print(type(...))</code>, como já é feito com <code>produto</code>.</p>
+<pre class="script" data-file="main.py">produto = "Sonho"
+print(type(produto))
+</pre>
+<pre class="solucao" data-file="main.py">produto = "Sonho"
+quantidade = 6
+preco = 2.5
+em_promocao = True
+print(type(produto))
+print(type(quantidade))
+print(type(preco))
+print(type(em_promocao))
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Todo valor tem um <strong>tipo</strong>, e o tipo decide o que dá para fazer com ele.</li>
+  <li>Os básicos: <code>str</code> (texto, entre aspas), <code>int</code> (inteiro), <code>float</code> (com ponto), <code>bool</code> (<code>True</code>/<code>False</code>) e <code>None</code> (nada).</li>
+  <li>O Python descobre o tipo pela escrita: <code>7</code>, <code>7.0</code> e <code>"7"</code> são três tipos diferentes.</li>
+  <li>Quem tem tipo é o valor; a variável só aponta para ele e pode passar a apontar para um valor de outro tipo.</li>
+  <li><code>+</code> soma números e junta textos; <code>*</code> multiplica números e repete textos; <code>/</code> sempre dá <code>float</code>.</li>
+  <li><code>int</code> e <code>float</code> se misturam nas contas; texto e número não: <code>TypeError</code>.</li>
+  <li>Coleções guardam vários valores: <code>list</code>, <code>tuple</code>, <code>dict</code>, <code>set</code> (aulas no Nível 2).</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
