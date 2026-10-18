@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Modo Interativo — o prompt >>> (REPL) do Python 3.14 | Guia Python</title>
+<meta name="description" content="O modo interativo do Python (o REPL, com o prompt >>>) para quem está começando: como abrir e sair (exit, quit, Ctrl+D), o banner, expressões que mostram o resultado sozinhas, o _ , blocos com ... e a indentação automática, help, histórico, F1/F2/F3, as cores do Python 3.14, o que se perde ao sair e as diferenças entre o >>> e o $ do terminal, com sessões reais.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">O Modo Interativo (&gt;&gt;&gt;)</span></h1>
+
+<p class="intro">Até aqui você escreveu o programa num arquivo e mandou o Python rodar tudo de uma vez. Existe outro jeito de usar o Python: <strong>conversar</strong> com ele, uma linha de cada vez. Você digita uma instrução, aperta <kbd>Enter</kbd>, e ele responde na hora. É o <strong>modo interativo</strong>, também chamado de <strong>REPL</strong>, e você o reconhece pelo prompt <code>&gt;&gt;&gt;</code>. Ele é perfeito para testar uma ideia, fazer uma conta ou tirar uma dúvida rápida sobre como algo funciona. Nesta aula você vai abrir, usar e fechar o modo interativo do Python 3.14, que ficou bem mais confortável nas versões recentes.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A abrir o modo interativo com <code>python3</code>, e o que diz a mensagem de boas-vindas.</li>
+  <li>A diferença entre o <code>$</code> (o terminal) e o <code>&gt;&gt;&gt;</code> (o Python).</li>
+  <li>Por que, no <code>&gt;&gt;&gt;</code>, o resultado aparece sozinho, sem <code>print</code>, e num arquivo não.</li>
+  <li>A escrever blocos de várias linhas (o prompt <code>...</code>) e a terminá-los.</li>
+  <li>A sair: <code>exit</code>, <code>quit</code>, <kbd>Ctrl</kbd>+<kbd>D</kbd>.</li>
+  <li>Os atalhos: histórico com as setas, <kbd>Tab</kbd>, <code>help</code>, <kbd>F1</kbd>, <kbd>F2</kbd>, <kbd>F3</kbd>, e as cores do Python 3.14.</li>
+  <li>O que acontece quando dá erro no <code>&gt;&gt;&gt;</code>, e o que se perde quando você sai.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a calculadora e a carta</h2>
+<p>Existem dois jeitos de pedir uma coisa a alguém. Você pode escrever uma <strong>carta</strong> com todos os pedidos, em ordem, e entregar: a pessoa lê tudo e faz. Ou pode <strong>conversar</strong>: pede uma coisa, espera a resposta, e decide o próximo pedido conforme o que ouviu.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th>Programa em arquivo (<code>python3 ola.py</code>)</th><th>Modo interativo (<code>&gt;&gt;&gt;</code>)</th></tr>
+<tr><td><strong>Comparação</strong></td><td>A carta: tudo escrito antes, executado de uma vez</td><td>A conversa (ou uma calculadora): uma linha, uma resposta</td></tr>
+<tr><td><strong>Fica guardado?</strong></td><td>Sim: o arquivo continua lá para rodar de novo</td><td>Não: ao sair, o que você digitou não vira arquivo</td></tr>
+<tr><td><strong>Mostra resultados</strong></td><td>Só o que você mandar com <code>print</code></td><td>O valor de cada linha aparece sozinho</td></tr>
+<tr><td><strong>Bom para</strong></td><td>Programas de verdade, que você vai usar de novo</td><td>Testar uma ideia, fazer contas, tirar dúvidas</td></tr>
+</table>
+</div>
+
+<p>"REPL" é a sigla em inglês do que ele faz, sem parar: <strong>R</strong>ead (lê o que você digitou), <strong>E</strong>val (avalia, ou seja, executa), <strong>P</strong>rint (mostra o resultado) e <strong>L</strong>oop (volta ao começo e espera a próxima linha).</p>
+
+<hr>
+
+<h2>1. Abrindo o modo interativo</h2>
+<p>No terminal, digite <code>python3</code> sozinho, sem nome de arquivo:</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt;</pre>
+
+<dl class="anatomy">
+  <dt>Python 3.14.4</dt><dd>A versão do Python que está ouvindo você.</dd>
+  <dt>(main, Aug 20 2026, 10:41:58)</dt><dd>Quando esse Python foi compilado (montado a partir do código-fonte) pela equipe do Ubuntu.</dd>
+  <dt>[GCC 15.2.0]</dt><dd>O compilador de C usado para montá-lo (lembra que o CPython é escrito em C?).</dd>
+  <dt>on linux</dt><dd>O sistema: Linux.</dd>
+  <dt>Type "help", "copyright", "credits" or "license" for more information.</dt><dd>"Digite <code>help</code>, <code>copyright</code>, <code>credits</code> ou <code>license</code> para mais informações." Você vai usar o <code>help</code> daqui a pouco.</dd>
+  <dt>&gt;&gt;&gt;</dt><dd>O <strong>prompt</strong> do Python: "estou ouvindo, pode digitar".</dd>
+</dl>
+
+<p>Com <code>python3 -q</code> (de <em>quiet</em>, "quieto"), ele abre direto no <code>&gt;&gt;&gt;</code>, sem a mensagem de boas-vindas. Várias sessões desta aula usam o <code>-q</code> para economizar espaço.</p>
+
+<div class="warning">
+<strong><code>$</code> ou <code>&gt;&gt;&gt;</code>: quem está ouvindo?</strong>
+<p>Repare no começo da linha antes de digitar. Com <code>$</code> (no guia, <code>ana@notebook:~$</code>), quem ouve é o <strong>terminal</strong>: ali vão <code>ls</code>, <code>cd</code>, <code>python3 ola.py</code>. Com <code>&gt;&gt;&gt;</code>, quem ouve é o <strong>Python</strong>: ali vão <code>print("Olá")</code>, <code>2 + 3</code>. Trocar um pelo outro é o erro mais comum de quem está começando; a seção <a href="#errado">Quando dá errado</a> mostra as mensagens dos dois lados.</p>
+</div>
+
+<hr>
+
+<h2>2. A calculadora que responde sozinha</h2>
+<p>Digite uma conta e aperte <kbd>Enter</kbd>:</p>
+
+<pre class="term">&gt;&gt;&gt; 2 + 3
+5
+&gt;&gt;&gt; 10 / 4
+2.5
+&gt;&gt;&gt; 7 * 8 - 6
+50</pre>
+
+<p>O Python calculou e mostrou o resultado, sem você pedir. O <code>*</code> é a multiplicação e o <code>/</code> é a divisão; o resultado <code>2.5</code> usa <strong>ponto</strong> como separador decimal, como em inglês. (As contas têm aula própria: <a href="operadores-aritmeticos.html">Operadores Aritméticos</a>.)</p>
+
+<h3>Com e sem <code>print</code></h3>
+<p>No modo interativo, o Python mostra o <strong>valor</strong> de cada linha que você digita. Olhe a diferença entre escrever um texto sozinho e mandar o <code>print</code> mostrá-lo:</p>
+
+<pre class="term">&gt;&gt;&gt; "Ana"
+'Ana'                                              « o valor: um texto (por isso as aspas)
+&gt;&gt;&gt; print("Ana")
+Ana                                                « o print mostra o texto, sem aspas</pre>
+
+<p>Na primeira linha, o Python está dizendo "o valor do que você digitou é o texto <code>'Ana'</code>", e as aspas mostram que é um texto. Na segunda, o <code>print</code> <strong>escreve</strong> o texto na tela, como o leitor do seu programa veria, sem aspas. Mais um exemplo, com uma <a href="variaveis.html">variável</a> (um nome que guarda um valor):</p>
+
+<pre class="term">&gt;&gt;&gt; nome = "Ana"                                « guardar não mostra nada
+&gt;&gt;&gt; nome
+'Ana'
+&gt;&gt;&gt; print("Olá,", nome)
+Olá, Ana</pre>
+
+<p>A linha <code>nome = "Ana"</code> não mostrou nada: ela só guarda o valor, e guardar não tem resultado para mostrar. Digitar <code>nome</code> sozinho mostra o que está guardado.</p>
+
+<h3>Num arquivo, sem <code>print</code>, nada aparece</h3>
+<p>Essa "resposta sozinha" é <strong>só do modo interativo</strong>. Num programa em arquivo, o Python calcula tudo, mas só mostra o que você mandar mostrar. A Ana gravou as mesmas linhas num arquivo:</p>
+
+<pre class="file" data-file="conta.py">2 + 3
+"Ana"
+</pre>
+
+<pre class="term" data-cwd="~/python">$ python3 conta.py
+$                                                  « nenhuma saída</pre>
+
+<p>Nada. O Python fez a conta, viu o texto e terminou, sem mostrar coisa nenhuma, porque ninguém pediu. As caixas Experimente do guia rodam um arquivo (o <code>main.py</code>), então lá vale a mesma regra: <strong>use <code>print</code></strong>.</p>
+
+<div class="trypy" data-goal="out:5;;src:print\s*\(">
+<p class="try-task"><strong>Missão:</strong> o editor roda um arquivo, como <code>python3 main.py</code>, então a conta abaixo não aparece. Rode para ver que não sai nada. Depois, ponha a conta dentro de um <code>print( )</code> e rode de novo, até aparecer o <code>5</code>.</p>
+<pre class="script" data-file="main.py">2 + 3
+</pre>
+<pre class="solucao" data-file="main.py">print(2 + 3)
+</pre>
+</div>
+
+<h3>O <code>_</code>: o último resultado</h3>
+<p>No modo interativo, o sublinhado <code>_</code> guarda o último valor que o Python mostrou sozinho. É útil para continuar uma conta:</p>
+
+<pre class="term">&gt;&gt;&gt; 2 + 3
+5
+&gt;&gt;&gt; _ * 10                                       « o 5 de antes, vezes 10
+50</pre>
+
+<p>O <code>_</code> só existe no modo interativo, e só guarda os valores que apareceram sozinhos (o que o <code>print</code> escreveu não conta). Num arquivo, use variáveis com nomes de verdade.</p>
+
+<hr>
+
+<h2>3. Várias linhas: o prompt <code>...</code></h2>
+<p>Algumas instruções do Python ocupam mais de uma linha, como o <code>for</code>, que repete um bloco. Quando a linha termina com dois-pontos (<code>:</code>), o Python sabe que vem um bloco e troca o prompt para <code>...</code>, que quer dizer "continue, estou esperando o resto":</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; compras = ["arroz", "feijão", "café"]
+&gt;&gt;&gt; for item in compras:
+...     print("Comprar:", item)                    « os 4 espaços vieram sozinhos
+...                                                « linha vazia: fim do bloco
+Comprar: arroz
+Comprar: feijão
+Comprar: café
+&gt;&gt;&gt; len(compras)
+3</pre>
+
+<ol class="passo">
+  <li>Depois de <code>for item in compras:</code> e <kbd>Enter</kbd>, o prompt virou <code>...</code> e o cursor já começou com <strong>4 espaços</strong> de recuo. O modo interativo do Python 3.13 em diante <strong>indenta sozinho</strong> depois dos dois-pontos. (A indentação é o assunto da aula <a href="sintaxe.html">Sintaxe e Indentação</a>.)</li>
+  <li>A Ana digitou o <code>print</code> e apertou <kbd>Enter</kbd>. O Python continuou esperando, porque o bloco poderia ter mais linhas.</li>
+  <li>Para dizer "acabou o bloco", ela apertou <kbd>Enter</kbd> numa linha <strong>vazia</strong>. Só então o Python executou o <code>for</code> inteiro.</li>
+</ol>
+
+<p>Os parênteses também fazem o Python esperar. Se você esquecer de fechar um, ele mostra <code>...</code> até você fechar:</p>
+
+<pre class="term">&gt;&gt;&gt; print("Olá, Ana!"
+... )                                              « o parêntese que faltava
+Olá, Ana!</pre>
+
+<div class="warning">
+<strong>A indentação automática e a linha vazia</strong>
+<p>Como o recuo vem sozinho, a próxima linha que você digitar também fica <strong>dentro</strong> do bloco. A Ana queria escrever "Fim da lista" uma vez só, depois do <code>for</code>, mas digitou sem a linha vazia:</p>
+<pre class="term">&gt;&gt;&gt; compras = ["arroz", "feijão"]
+&gt;&gt;&gt; for item in compras:
+...     print(item)
+...     print("Fim da lista")                      « também ficou dentro do for
+...
+arroz
+Fim da lista
+feijão
+Fim da lista</pre>
+<p>O "Fim da lista" saiu duas vezes, uma para cada item, porque entrou no bloco que se repete. No modo interativo, termine o bloco com uma <strong>linha vazia</strong> antes de escrever o que vem depois. (Para apagar o recuo automático de uma linha, use a tecla <kbd>Backspace</kbd>.) Para programas com vários blocos, um arquivo é bem mais confortável.</p>
+</div>
+
+<hr>
+
+<h2>4. Saindo</h2>
+<p>Há três jeitos de sair do modo interativo e voltar ao <code>$</code> do terminal:</p>
+
+<pre class="term">&gt;&gt;&gt; exit
+$</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Jeito</th><th>Observação</th></tr>
+<tr><td><code>exit</code> ou <code>quit</code></td><td>"Sair". No Python 3.13 em diante, sem parênteses</td></tr>
+<tr><td><code>exit()</code> ou <code>quit()</code></td><td>Com parênteses: funciona em <strong>qualquer</strong> versão do Python</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>D</kbd></td><td>O atalho de "fim da entrada" do Linux e do macOS. No Windows, <kbd>Ctrl</kbd>+<kbd>Z</kbd> e <kbd>Enter</kbd> (ou <code>exit</code>)</td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>Num Python mais antigo, <code>exit</code> sem parênteses não sai</strong>
+<p>Até o Python 3.12 (e, ainda hoje, quando o modo interativo novo está desligado), digitar <code>exit</code> sem parênteses só mostra um recado. A Ana ligou o modo antigo com a variável <code>PYTHON_BASIC_REPL=1</code> para ver:</p>
+<pre class="term">$ PYTHON_BASIC_REPL=1 python3 -q
+&gt;&gt;&gt; exit
+Use exit() or Ctrl-D (i.e. EOF) to exit            « "use exit() ou Ctrl-D (ou seja, fim da entrada) para sair"
+&gt;&gt;&gt; exit()
+$</pre>
+<p>Se o seu Python for antigo (o Ubuntu 24.04 traz o 3.12), use <code>exit()</code>, com parênteses: funciona em todas as versões.</p>
+</div>
+
+<h3>O que você digitou some ao sair</h3>
+<p>As variáveis que você criou no modo interativo vivem só enquanto ele está aberto. A Ana saiu e abriu de novo:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; compras
+Traceback (most recent call last):
+  File "&lt;python-input-0&gt;", line 1, in &lt;module&gt;
+    compras
+NameError: name 'compras' is not defined
+&gt;&gt;&gt;                                                « aqui a Ana apertou Ctrl+D
+$</pre>
+
+<p>A lista de compras da sessão anterior não existe mais: cada vez que você abre o <code>python3</code>, ele começa do zero, como uma calculadora recém-ligada. Por isso, tudo o que você quer guardar vai num <strong>arquivo</strong> (aula <a href="executar.html">Rodando um Programa (.py)</a>). As <strong>linhas</strong> que você digitou, porém, ficam no histórico (seção 6), e você pode reaproveitá-las.</p>
+
+<hr>
+
+<h2>5. Pedindo ajuda: <code>help</code></h2>
+<p>O Python tem um manual embutido. Digite <code>help</code> (ou aperte <kbd>F1</kbd>) e o prompt vira <code>help&gt;</code>. Ali você digita o nome de qualquer coisa do Python:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; help
+Welcome to Python 3.14's help utility! If this is your first time using
+Python, you should definitely check out the tutorial at
+https://docs.python.org/3.14/tutorial/.
+
+Enter the name of any module, keyword, or topic to get help on writing
+Python programs and using Python modules.  To get a list of available
+modules, keywords, symbols, or topics, enter "modules", "keywords",
+"symbols", or "topics".
+
+You can use the following keyboard shortcuts at the main interpreter prompt.
+F1: enter interactive help, F2: enter history browsing mode, F3: enter paste
+mode (press again to exit).
+
+Each module also comes with a one-line summary of what it does; to list
+the modules whose name or summary contain a given string such as "spam",
+enter "modules spam".
+
+To quit this help utility and return to the interpreter,
+enter "q", "quit" or "exit".
+
+help&gt; len
+Help on built-in function len in module builtins:
+
+len(obj, /)
+    Return the number of items in a container.
+
+help&gt;                                              « a página fechou (tecla q)
+help&gt; quit
+
+You are now leaving help and returning to the Python interpreter.
+If you want to ask for help on a particular object directly from the
+interpreter, you can type "help(object)".  Executing "help('string')"
+has the same effect as typing a particular string at the help&gt; prompt.
+&gt;&gt;&gt;</pre>
+
+<p>A mensagem de boas-vindas, traduzida: "Bem-vindo ao utilitário de ajuda do Python 3.14! Se é a sua primeira vez com Python, não deixe de ver o tutorial em docs.python.org. Digite o nome de qualquer módulo, palavra-chave ou tópico para obter ajuda. […] Para sair desta ajuda e voltar ao interpretador, digite <code>q</code>, <code>quit</code> ou <code>exit</code>." Ela também lista os atalhos <kbd>F1</kbd>, <kbd>F2</kbd> e <kbd>F3</kbd>, que você vai ver na próxima seção.</p>
+
+<p>Quando a Ana pediu <code>len</code>, a ajuda abriu numa <strong>página</strong> que ocupa o terminal (como um manual): as setas rolam o texto, e a tecla <kbd>q</kbd> fecha a página e volta ao <code>help&gt;</code>. A resposta diz que <code>len</code> é uma função embutida (<em>built-in</em>) e que ela "devolve o número de itens de um contêiner" (de uma lista, por exemplo). Sem entrar no <code>help&gt;</code>, dá para pedir direto: <code>help(len)</code>.</p>
+
+<div class="tip">
+<strong>A ajuda está em inglês, e tudo bem</strong>
+<p>O manual embutido e a documentação oficial (<a href="https://docs.python.org/pt-br/3/">docs.python.org/pt-br/3</a>, que tem muitas páginas traduzidas) são ótimos para tirar dúvidas pontuais. Nas primeiras semanas, o que mais ajuda é testar: na dúvida sobre como algo funciona, abra o <code>&gt;&gt;&gt;</code> e experimente.</p>
+</div>
+
+<hr>
+
+<h2>6. Atalhos e cores do modo interativo novo <span class="versao">3.14</span></h2>
+<p>O Python 3.13 trouxe um modo interativo novo, bem mais confortável, e o 3.14 acrescentou mais coisas. Os atalhos de teclado:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Tecla</th><th>O que faz</th></tr>
+<tr><td><kbd>↑</kbd> e <kbd>↓</kbd></td><td>Anda pelo <strong>histórico</strong>: traz de volta as linhas que você já digitou (inclusive de sessões anteriores), para repetir ou corrigir. Um bloco de várias linhas volta inteiro, para você editar</td></tr>
+<tr><td><kbd>←</kbd> e <kbd>→</kbd></td><td>Move o cursor dentro da linha, para corrigir sem apagar tudo</td></tr>
+<tr><td><kbd>Tab</kbd></td><td>Completa nomes: digite <code>pri</code> e aperte <kbd>Tab</kbd>, e o Python completa o nome <code>print</code>. No 3.14, completa também nomes de módulos depois de <code>import</code> <span class="versao">3.14</span></td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd></td><td>Desiste da linha que você está digitando (ou interrompe um programa que não para)</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>L</kbd></td><td>Limpa a tela</td></tr>
+<tr><td><kbd>F1</kbd></td><td>Abre a ajuda (o mesmo que <code>help</code>)</td></tr>
+<tr><td><kbd>F2</kbd></td><td>Mostra o histórico só com o que você digitou, sem as respostas e sem os <code>&gt;&gt;&gt;</code>: fácil de copiar para um arquivo</td></tr>
+<tr><td><kbd>F3</kbd></td><td>"Modo colar": para colar um trecho grande de código sem que a indentação automática atrapalhe. Aperte <kbd>F3</kbd> de novo para sair</td></tr>
+</table>
+</div>
+
+<p>Assim fica o <kbd>Ctrl</kbd>+<kbd>C</kbd> no meio de uma linha que a Ana desistiu de digitar:</p>
+
+<pre class="term">&gt;&gt;&gt;
+KeyboardInterrupt                                  « "interrupção pelo teclado": a linha foi descartada
+&gt;&gt;&gt;</pre>
+
+<p>O histórico fica guardado no arquivo <code>~/.python_history</code>, na sua pasta pessoal, e por isso as setas trazem até linhas de ontem.</p>
+
+<h3>As cores</h3>
+<p>No terminal, o modo interativo do Python 3.14 é <strong>colorido</strong>: o prompt <code>&gt;&gt;&gt;</code> aparece em destaque, e o código que você digita é colorido enquanto você escreve <span class="versao">3.14</span>. No terminal da Ana, os números saíram em amarelo, os textos entre aspas em verde e os nomes como <code>print</code> e <code>exit</code> em ciano. As mensagens de erro também vêm coloridas (desde o 3.13), com a linha do erro e os <code>^^^^</code> destacados. As sessões deste guia aparecem sem essas cores, mas o texto é exatamente o mesmo.</p>
+
+<p>Se as cores atrapalharem (por exemplo, num terminal de fundo claro), dá para desligá-las abrindo o Python assim: <code>PYTHON_COLORS=0 python3</code>. A variável <code>NO_COLOR=1</code>, que vale para muitos programas, também funciona.</p>
+
+<hr>
+
+<h2>7. O editor do guia não é um <code>&gt;&gt;&gt;</code></h2>
+<p>As caixas Experimente rodam o código como um <strong>arquivo</strong>, do começo ao fim, a cada clique em Rodar (como <code>python3 main.py</code>). Por isso, lá:</p>
+<ul>
+  <li>valores soltos <strong>não</strong> aparecem sozinhos: use <code>print</code>;</li>
+  <li>o <code>_</code> do último resultado não existe;</li>
+  <li>cada Rodar começa do zero, como um <code>&gt;&gt;&gt;</code> recém-aberto.</li>
+</ul>
+<p>Para "conversar" linha por linha com o Python, use o <code>python3</code> do seu computador. A aula <a href="simulador.html">O Editor do Guia</a> mostra tudo o que as caixas fazem.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Para…</th><th>Use</th></tr>
+<tr><td>Fazer uma conta rápida ou testar como algo funciona</td><td>O <code>&gt;&gt;&gt;</code> (<code>python3</code>)</td></tr>
+<tr><td>Rodar um arquivo e depois investigar as variáveis dele</td><td><code>python3 -i arquivo.py</code></td></tr>
+<tr><td>Um programa que você vai usar de novo, ou com vários blocos</td><td>Um arquivo <code>.py</code> (<code>python3 arquivo.py</code>)</td></tr>
+<tr><td>Estudar as aulas sem instalar nada</td><td>As caixas Experimente</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Um erro no <code>&gt;&gt;&gt;</code> não fecha nada</strong>
+<pre class="term">&gt;&gt;&gt; nome = "Ana"
+&gt;&gt;&gt; idade
+Traceback (most recent call last):
+  File "&lt;python-input-3&gt;", line 1, in &lt;module&gt;
+    idade
+NameError: name 'idade' is not defined
+&gt;&gt;&gt; nome
+'Ana'                                              « o que já existia continua lá</pre>
+<p><strong>O que aconteceu:</strong> a Ana pediu <code>idade</code>, que nunca foi criada: "o nome <code>idade</code> não está definido". No modo interativo, o "arquivo" do traceback se chama <code>&lt;python-input-3&gt;</code>: é a entrada de número 3 da sessão (a contagem começa no 0, e a Ana já tinha digitado outras linhas antes dessas). Diferente de um programa em arquivo, o erro <strong>não encerra</strong> nada: o Python mostra a mensagem e volta ao <code>&gt;&gt;&gt;</code>, com tudo o que você já tinha criado.</p>
+<p><strong>Como resolver:</strong> crie a variável antes de usar (<code>idade = 30</code>), ou confira se o nome está escrito certo.</p>
+</div>
+
+<div class="cenario">
+<strong>Maiúscula no lugar errado: <code>Print</code></strong>
+<pre class="term">&gt;&gt;&gt; Print(nome)
+Traceback (most recent call last):
+  File "&lt;python-input-5&gt;", line 1, in &lt;module&gt;
+    Print(nome)
+    ^^^^^
+NameError: name 'Print' is not defined. Did you mean: 'print'?</pre>
+<p><strong>O que aconteceu:</strong> para o Python, <code>Print</code> e <code>print</code> são nomes diferentes, e só o segundo existe. Ele mesmo sugere: "você quis dizer <code>print</code>?". <strong>Como resolver:</strong> use as setas (<kbd>↑</kbd>) para trazer a linha de volta, corrija o <code>P</code> e aperte <kbd>Enter</kbd>.</p>
+</div>
+
+<div class="cenario">
+<strong>Comando do terminal dentro do <code>&gt;&gt;&gt;</code></strong>
+<pre class="term" data-cwd="~/python">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; python3 ola.py
+  File "&lt;python-input-0&gt;", line 1
+    python3 ola.py
+            ^^^
+SyntaxError: invalid syntax
+&gt;&gt;&gt; ls
+Traceback (most recent call last):
+  File "&lt;python-input-1&gt;", line 1, in &lt;module&gt;
+    ls
+NameError: name 'ls' is not defined
+&gt;&gt;&gt; exit()</pre>
+<p><strong>O que aconteceu:</strong> <code>python3 ola.py</code> e <code>ls</code> são comandos do <strong>terminal</strong>, mas quem estava ouvindo era o Python. No primeiro, ele nem entendeu a frase: <code>SyntaxError: invalid syntax</code>, "sintaxe inválida", com os <code>^^^</code> embaixo do <code>ola</code> (para o Python, dois nomes lado a lado, separados só por espaço, não formam uma instrução). No segundo, ele entendeu <code>ls</code> como o nome de uma variável que não existe.</p>
+<p><strong>Como resolver:</strong> saia com <code>exit()</code> e digite o comando no <code>$</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Código Python no terminal</strong>
+<p>O contrário também acontece: a Ana saiu do Python e, no <code>$</code>, digitou uma linha de Python:</p>
+<pre class="term">$ print("Olá")
+bash: erro de sintaxe próximo ao token inesperado `"Olá"'</pre>
+<p><strong>O que aconteceu:</strong> quem respondeu foi o <strong>bash</strong>, o programa do terminal, em português e sem <code>Traceback</code>. Os parênteses têm outro significado para ele, e ele não entendeu a linha.</p>
+<p><strong>Como resolver:</strong> abra o Python primeiro (<code>python3</code>) e digite no <code>&gt;&gt;&gt;</code>, ou grave a linha num arquivo e rode com <code>python3 arquivo.py</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O prompt virou <code>...</code> e não sai mais</strong>
+<p><strong>O que aconteceu:</strong> o Python está esperando o resto de alguma coisa: um bloco depois de <code>:</code>, um parêntese, colchete ou aspas que não foram fechados. Enquanto aparecer <code>...</code>, cada <kbd>Enter</kbd> só acrescenta uma linha.</p>
+<p><strong>Como resolver:</strong> feche o que ficou aberto (por exemplo, digite <code>)</code>), ou aperte <kbd>Enter</kbd> numa linha vazia para terminar um bloco. Se você se perdeu, <kbd>Ctrl</kbd>+<kbd>C</kbd> descarta tudo e volta ao <code>&gt;&gt;&gt;</code>.</p>
+</div>
+
+<h3>Missão: a calculadora da feira</h3>
+
+<div class="trypy" data-goal="out:20.75;;semerro">
+<p class="try-task"><strong>Missão:</strong> a Ana comprou três coisas na feira: R$ 5,50, R$ 12,00 e R$ 3,25. O programa esqueceu o último preço. Acrescente <code>+ 3.25</code> dentro do <code>print</code> (com ponto, não vírgula) e rode até aparecer o total certo, <code>20.75</code>. Se tiver o Python instalado, faça a mesma conta no <code>&gt;&gt;&gt;</code>, sem <code>print</code>.</p>
+<pre class="script" data-file="main.py">print(5.50 + 12.00)
+</pre>
+<pre class="solucao" data-file="main.py">print(5.50 + 12.00 + 3.25)
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>python3</code></td><td>Abre o modo interativo (com a mensagem de boas-vindas)</td></tr>
+<tr><td><code>python3 -q</code></td><td>Abre sem a mensagem</td></tr>
+<tr><td><code>python3 -i arquivo.py</code></td><td>Roda o arquivo e abre o <code>&gt;&gt;&gt;</code> no fim</td></tr>
+<tr><td><code>&gt;&gt;&gt;</code></td><td>O Python está esperando uma instrução nova</td></tr>
+<tr><td><code>...</code></td><td>O Python está esperando o resto (bloco, parêntese, aspas)</td></tr>
+<tr><td>Linha vazia depois de um bloco</td><td>Termina o bloco e executa</td></tr>
+<tr><td><code>_</code></td><td>O último valor mostrado (só no modo interativo)</td></tr>
+<tr><td><code>help</code>, <code>help(len)</code>, <kbd>F1</kbd></td><td>A ajuda embutida (<kbd>q</kbd> fecha a página; <code>quit</code> sai da ajuda)</td></tr>
+<tr><td><kbd>↑</kbd> <kbd>↓</kbd>, <kbd>Tab</kbd>, <kbd>F2</kbd>, <kbd>F3</kbd></td><td>Histórico, completar, histórico limpo, modo colar</td></tr>
+<tr><td><code>exit</code>, <code>quit</code>, <code>exit()</code>, <kbd>Ctrl</kbd>+<kbd>D</kbd></td><td>Sai e volta ao terminal (<code>exit()</code> vale em qualquer versão)</td></tr>
+<tr><td><code>PYTHON_COLORS=0 python3</code></td><td>Abre sem cores</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">1. No modo interativo, a Ana digitou <code>"Ana"</code> e o Python respondeu <code>'Ana'</code>. Num arquivo <code>teste.py</code> com essa mesma linha, o que aparece ao rodar <code>python3 teste.py</code>?</p>
+<label><input type="radio" name="q1"> <code>'Ana'</code></label>
+<label><input type="radio" name="q1"> <code>Ana</code></label>
+<label><input type="radio" name="q1"> Nada: num arquivo, só aparece o que você mandar mostrar com <code>print</code>.</label>
+<label><input type="radio" name="q1"> Um <code>SyntaxError</code>.</label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">2. O prompt mudou de <code>&gt;&gt;&gt;</code> para <code>...</code>. O que isso quer dizer?</p>
+<label><input type="radio" name="q2"> Que o Python travou.</label>
+<label><input type="radio" name="q2"> Que o Python está esperando o resto da instrução (um bloco, um parêntese ou aspas sem fechar).</label>
+<label><input type="radio" name="q2"> Que o programa terminou.</label>
+<label><input type="radio" name="q2"> Que você voltou para o terminal.</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">3. A Ana criou <code>preco = 10</code> no modo interativo, saiu com <code>exit</code> e abriu o <code>python3</code> de novo. O que acontece se ela digitar <code>preco</code>?</p>
+<label><input type="radio" name="q3"> Aparece <code>10</code>.</label>
+<label><input type="radio" name="q3"> Aparece <code>preco</code>.</label>
+<label><input type="radio" name="q3"> O terminal fecha.</label>
+<label><input type="radio" name="q3"> <code>NameError: name 'preco' is not defined</code>: cada sessão começa do zero.</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">4. Qual jeito de sair do modo interativo funciona em <strong>qualquer</strong> versão do Python 3?</p>
+<label><input type="radio" name="q4"> <code>exit()</code></label>
+<label><input type="radio" name="q4"> <code>exit</code></label>
+<label><input type="radio" name="q4"> <code>sair</code></label>
+<label><input type="radio" name="q4"> <code>close</code></label>
+</div>
+
+<div class="exercise">
+<h3>5. Abrir sem a mensagem</h3>
+<p>Complete o comando que abre o modo interativo sem a mensagem de boas-vindas:</p>
+<div class="ex-code">$ python3 <input data-answer="-q" aria-label="opção"></div>
+</div>
+
+<div class="exercise">
+<h3>6. O último resultado</h3>
+<p>A Ana digitou <code>2 + 3</code> e viu <code>5</code>. Complete para multiplicar esse último resultado por 4:</p>
+<div class="ex-code">&gt;&gt;&gt; <input data-answer="_" aria-label="nome"> * 4</div>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>O <strong>modo interativo</strong> (REPL) é uma conversa com o Python: você digita uma linha, ele responde. Abra com <code>python3</code> (ou <code>python3 -q</code>, sem a mensagem).</li>
+  <li><code>$</code> é o terminal; <code>&gt;&gt;&gt;</code> é o Python. Cada um entende a sua língua.</li>
+  <li>No <code>&gt;&gt;&gt;</code>, o valor de cada linha aparece sozinho (textos com aspas, como <code>'Ana'</code>); num arquivo, e no editor do guia, só aparece o que vai no <code>print</code>.</li>
+  <li><code>...</code> quer dizer "continue": depois de <code>:</code> o recuo vem sozinho, e uma <strong>linha vazia</strong> termina o bloco.</li>
+  <li>Erros no <code>&gt;&gt;&gt;</code> não fecham nada (o "arquivo" se chama <code>&lt;python-input-N&gt;</code>), mas ao sair tudo o que você criou se perde.</li>
+  <li>Saia com <code>exit</code>, <code>quit</code>, <code>exit()</code> ou <kbd>Ctrl</kbd>+<kbd>D</kbd>. Peça ajuda com <code>help</code>. Use as setas, o <kbd>Tab</kbd>, o <kbd>F2</kbd> e o <kbd>F3</kbd>.</li>
+  <li>O Python 3.14 colore o código enquanto você digita; <code>PYTHON_COLORS=0</code> desliga as cores.</li>
+  <li>Próximo passo: conhecer as caixas Experimente a fundo, em <a href="simulador.html">O Editor do Guia</a>, e depois escrever <a href="primeiro-programa.html">Seu Primeiro Programa</a>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
