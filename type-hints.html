@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Dicas de Tipo (Type Hints) — anotando os tipos das funções | Guia Python</title>
+<meta name="description" content="Type hints para quem está começando: anotar os tipos dos parâmetros (n: int), do retorno (-&gt; int) e das variáveis, list[float], dict[str, float], o | None para quando pode não haver valor, a prova de que o Python não confere os tipos sozinho, o mypy que confere (saída real), __annotations__ e as anotações preguiçosas do Python 3.14 (PEP 649), com os erros reais.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Dicas de Tipo (Type Hints)</span></h1>
+
+<p class="intro">Olhe esta linha: <code>def total(preco, quantidade):</code>. O preço é um número com casas decimais ou um texto como <code>"R$ 2,50"</code>? A quantidade pode ser 1.5? E a função devolve o quê? No Python, nada disso precisa ser dito: qualquer variável aceita qualquer tipo. Mas você <strong>pode</strong> dizer, escrevendo <strong>dicas de tipo</strong> (em inglês, <em>type hints</em>): <code>def total(preco: float, quantidade: int) -&gt; float:</code>. Elas deixam o código mais fácil de entender, ajudam o editor de código a sugerir e avisar, e ferramentas próprias conseguem achar erros antes de você rodar o programa. Só tem um detalhe importante, e é o centro desta aula: <strong>o Python, sozinho, não confere essas dicas</strong>.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A anotar o tipo dos parâmetros (<code>n: int</code>), do valor devolvido (<code>-&gt; int</code>) e das variáveis.</li>
+  <li>Que as dicas são só dicas: o programa roda mesmo com o tipo errado (e você vai ver o que acontece).</li>
+  <li>A escrever tipos de coleções: <code>list[float]</code>, <code>dict[str, float]</code>, <code>tuple[str, int]</code>.</li>
+  <li>A dizer "pode ser este tipo ou nada" com <code>| None</code>.</li>
+  <li>Como uma ferramenta como o <strong>mypy</strong> usa as dicas para achar erros.</li>
+  <li>As anotações "preguiçosas" do Python 3.14 <span class="versao">3.14</span> e o <code>__annotations__</code>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a etiqueta da tomada</h2>
+<p>Ao lado de algumas tomadas da casa da Ana há uma etiqueta: <strong>220V</strong>. A etiqueta não impede ninguém de ligar ali um secador de 127V; ela só <strong>avisa</strong>. Quem lê a etiqueta antes não queima o secador.</p>
+<p>As dicas de tipo são essas etiquetas. <code>quantidade: int</code> avisa "aqui vai um número inteiro". O Python não impede você de passar um texto, do mesmo jeito que a etiqueta não trava a tomada. Mas quem lê o código, o editor de código e as ferramentas de checagem leem a etiqueta e avisam antes do estrago.</p>
+
+<hr>
+
+<h2>1. Anotando uma função</h2>
+
+<pre class="file" data-file="dobro.py">def dobro(n: int) -&gt; int:
+    return n * 2
+
+
+print(dobro(5))
+</pre>
+
+<dl class="anatomy">
+  <dt>n: int</dt><dd>Depois do nome do parâmetro, dois-pontos e o tipo esperado: "<code>n</code> deve ser um <code>int</code>" (número inteiro; aula <a href="tipos-de-dados.html">Tipos de Dados</a>).</dd>
+  <dt>-&gt; int</dt><dd>Uma setinha (hífen e sinal de maior) antes dos dois-pontos do <code>def</code>: o tipo do valor que a função <strong>devolve</strong> com o <code>return</code> (aula <a href="return.html">return</a>). Lê-se "devolve um <code>int</code>".</dd>
+  <dt>:</dt><dd>O dois-pontos do fim do <code>def</code> continua lá, depois da setinha.</dd>
+  <dt>O resto</dt><dd>O corpo da função é igual ao de sempre. As dicas não mudam o que a função faz.</dd>
+</dl>
+
+<p>Com vários parâmetros, cada um ganha a sua dica:</p>
+<pre class="file" data-file="total.py">def total(preco: float, quantidade: int) -&gt; float:
+    return preco * quantidade
+</pre>
+<p>Uma função que não devolve nada (só mostra algo na tela, por exemplo) leva <code>-&gt; None</code> (aula <a href="none.html">O Valor None</a>):</p>
+<pre class="file" data-file="aviso.py">def avisar(mensagem: str) -&gt; None:
+    print("Atenção:", mensagem)
+</pre>
+
+<h3>Os tipos mais comuns</h3>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Dica</th><th>Quer dizer</th><th>Exemplo de valor</th></tr>
+<tr><td><code>int</code></td><td>Número inteiro</td><td><code>3</code></td></tr>
+<tr><td><code>float</code></td><td>Número com casas decimais (aceita inteiros também)</td><td><code>2.5</code></td></tr>
+<tr><td><code>str</code></td><td>Texto</td><td><code>"Ana"</code></td></tr>
+<tr><td><code>bool</code></td><td><code>True</code> ou <code>False</code></td><td><code>True</code></td></tr>
+<tr><td><code>None</code></td><td>Nada (no retorno: "não devolve nada")</td><td><code>None</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>2. O Python não confere as dicas</h2>
+<p>Agora o teste. A função diz que espera um <code>int</code>. O que acontece se você passar um texto, ou uma lista?</p>
+
+<pre class="file" data-file="dobro.py">def dobro(n: int) -&gt; int:
+    return n * 2
+
+
+print(dobro(5))
+print(dobro("ab"))
+print(dobro([1, 2]))
+</pre>
+
+<pre class="term">$ python3 dobro.py
+10
+abab
+[1, 2, 1, 2]
+</pre>
+
+<p><strong>Rodou, sem nenhuma reclamação.</strong> O Python ignorou a dica e fez o que <code>* 2</code> faz com cada tipo: com número, multiplica; com texto, repete (<code>"ab" * 2</code> é <code>"abab"</code>, aula <a href="strings-juntar.html">Juntar e Repetir Textos</a>); com lista, também repete. A função "funcionou", mas devolveu um texto e uma lista, quando a etiqueta prometia um <code>int</code>.</p>
+
+<p>Às vezes, o tipo errado não passa calado: ele explode <strong>lá dentro</strong> da função, longe de onde o erro de verdade aconteceu.</p>
+
+<pre class="file" data-file="total.py">def total(preco: float, quantidade: int) -&gt; float:
+    return preco * quantidade
+
+
+print(total(2.5, 3))
+print(total(2.5, "3"))
+</pre>
+
+<pre class="term">$ python3 total.py
+7.5
+Traceback (most recent call last):
+  File "/home/ana/total.py", line 6, in &lt;module&gt;
+    print(total(2.5, "3"))
+          ~~~~~^^^^^^^^^^
+  File "/home/ana/total.py", line 2, in total
+    return preco * quantidade
+           ~~~~~~^~~~~~~~~~~~
+TypeError: can't multiply sequence by non-int of type 'float'
+</pre>
+
+<dl class="anatomy">
+  <dt>7.5</dt><dd>A primeira chamada, com os tipos certos, deu certo: 2.5 × 3.</dd>
+  <dt>line 6, in &lt;module&gt;</dt><dd>A chamada com o problema: <code>total(2.5, "3")</code>. O <code>"3"</code> é um <strong>texto</strong>, com aspas.</dd>
+  <dt>line 2, in total</dt><dd>O erro estourou dentro da função, na conta. O <code>^</code> embaixo do <code>*</code> mostra a operação que falhou.</dd>
+  <dt>TypeError: can't multiply sequence by non-int of type 'float'</dt><dd>"Não dá para multiplicar uma sequência (o texto <code>"3"</code>) por um não inteiro do tipo <code>float</code> (o 2.5)." Texto vezes inteiro repete o texto; texto vezes 2.5 não faz sentido.</dd>
+</dl>
+
+<p>Repare: a dica <code>quantidade: int</code> estava lá o tempo todo, e o Python não a usou para avisar "você passou um <code>str</code> onde devia ir um <code>int</code>". Ele só descobriu o problema quando a conta falhou. Por isso as dicas, sozinhas, são <strong>documentação</strong>. Para que elas encontrem erros, é preciso uma ferramenta que as leia (seção 5).</p>
+
+<div class="trypy" data-goal="out:7.5;;semerro">
+<p class="try-task"><strong>Missão:</strong> a quantidade chegou do <code>input()</code>, como texto, e o programa dá <code>TypeError</code>. A dica <code>quantidade: int</code> diz o que a função espera: converta a quantidade com <code>int()</code> antes de chamar a função (aula <a href="conversao.html">Conversão de Tipos</a>).</p>
+<pre class="script" data-file="main.py">def total(preco: float, quantidade: int) -&gt; float:
+    return preco * quantidade
+
+
+quantidade = "3"  # veio do input(), é texto
+print(total(2.5, quantidade))
+</pre>
+<pre class="solucao" data-file="main.py">def total(preco: float, quantidade: int) -&gt; float:
+    return preco * quantidade
+
+
+quantidade = "3"  # veio do input(), é texto
+print(total(2.5, int(quantidade)))
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Dicas em variáveis e em coleções</h2>
+<p>Variáveis também podem ter dica: o nome, dois-pontos, o tipo, e depois o <code>=</code> de sempre. E para listas e dicionários, você diz o tipo <strong>dos itens</strong> entre colchetes:</p>
+
+<pre class="file" data-file="media_tipos.py">def media(notas: list[float]) -&gt; float:
+    return sum(notas) / len(notas)
+
+
+turma: list[float] = [7.5, 8.0, 6.5]
+resultado: float = media(turma)
+print(resultado)
+print(media.__annotations__)
+</pre>
+
+<pre class="term">$ python3 media_tipos.py
+7.333333333333333
+{'notas': list[float], 'return': &lt;class 'float'&gt;}
+</pre>
+
+<dl class="anatomy">
+  <dt>list[float]</dt><dd>"Uma lista de <code>float</code>": a lista (aula <a href="listas.html">Listas</a>) e, entre colchetes, o tipo de cada item.</dd>
+  <dt>turma: list[float] = […]</dt><dd>Uma variável com dica. O <code>= [7.5, 8.0, 6.5]</code> é a atribuição comum.</dd>
+  <dt>media.__annotations__</dt><dd>As dicas ficam guardadas na função, num dicionário chamado <code>__annotations__</code> ("anotações", o nome técnico das dicas). A chave <code>'return'</code> guarda a dica do <code>-&gt;</code>. É assim que o editor de código e as ferramentas leem as dicas.</dd>
+  <dt>&lt;class 'float'&gt;</dt><dd>É como o Python mostra o próprio tipo <code>float</code> (aula <a href="type.html">Descobrindo o Tipo</a>).</dd>
+</dl>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Dica</th><th>Quer dizer</th><th>Exemplo de valor</th></tr>
+<tr><td><code>list[int]</code></td><td>Lista de inteiros</td><td><code>[3, 1, 2]</code></td></tr>
+<tr><td><code>list[str]</code></td><td>Lista de textos</td><td><code>["arroz", "sal"]</code></td></tr>
+<tr><td><code>dict[str, float]</code></td><td>Dicionário: chaves texto, valores <code>float</code></td><td><code>{"pão": 0.75}</code></td></tr>
+<tr><td><code>tuple[str, int]</code></td><td>Tupla de dois itens: um texto e um inteiro</td><td><code>("Ana", 30)</code></td></tr>
+<tr><td><code>set[str]</code></td><td>Conjunto de textos</td><td><code>{"PI", "CE"}</code></td></tr>
+</table>
+</div>
+
+<div class="cenario">
+<strong>Só a dica, sem valor</strong>
+<p>Uma dica sozinha não cria a variável:</p>
+<pre class="file" data-file="so_anotacao.py">quantidade: int
+print(quantidade)
+</pre>
+<pre class="term">$ python3 so_anotacao.py
+Traceback (most recent call last):
+  File "/home/ana/so_anotacao.py", line 2, in &lt;module&gt;
+    print(quantidade)
+          ^^^^^^^^^^
+NameError: name 'quantidade' is not defined
+</pre>
+<p>"O nome <code>quantidade</code> não está definido." A linha 1 só disse que tipo a variável <strong>vai</strong> ter; ninguém guardou um valor nela. <strong>Como consertar:</strong> <code>quantidade: int = 0</code> (ou o valor que fizer sentido).</p>
+</div>
+
+<div class="trypy" data-goal="src:preco:\s*float;;src:desconto:\s*float;;src:\)\s*-&gt;\s*float\s*:;;out:45.0">
+<p class="try-task"><strong>Missão:</strong> acrescente as dicas de tipo à função: <code>preco</code> e <code>desconto</code> são <code>float</code>, e ela devolve um <code>float</code>. A saída continua <code>45.0</code>.</p>
+<pre class="script" data-file="main.py">def preco_final(preco, desconto):
+    return preco - preco * desconto
+
+
+print(preco_final(50.0, 0.1))
+</pre>
+<pre class="solucao" data-file="main.py">def preco_final(preco: float, desconto: float) -&gt; float:
+    return preco - preco * desconto
+
+
+print(preco_final(50.0, 0.1))
+</pre>
+</div>
+
+<hr>
+
+<h2>4. "Pode não ter": <code>| None</code></h2>
+<p>A Ana tem uma tabela de preços e uma função que procura um produto nela. Se o produto existe, a função devolve o preço; se não existe, devolve <code>None</code>. Como dizer isso na dica? Com a barra vertical <code>|</code>, que aqui quer dizer "<strong>ou</strong>":</p>
+
+<pre class="file" data-file="busca.py">def buscar_preco(produto: str, tabela: dict[str, float]) -&gt; float | None:
+    if produto in tabela:
+        return tabela[produto]
+    return None
+
+
+precos = {"pão": 0.75, "leite": 5.5}
+print(buscar_preco("leite", precos))
+print(buscar_preco("café", precos))
+</pre>
+
+<pre class="term">$ python3 busca.py
+5.5
+None
+</pre>
+
+<dl class="anatomy">
+  <dt>-&gt; float | None</dt><dd>"Devolve um <code>float</code> <strong>ou</strong> <code>None</code>." Quem chama a função fica avisado: o resultado pode não ser um número, e é preciso tratar esse caso (com um <code>if preco is None:</code>, aula <a href="operadores-is-in.html">is e in</a>).</dd>
+  <dt>dict[str, float]</dt><dd>A tabela: nomes de produtos (texto) ligados a preços (<code>float</code>).</dd>
+</dl>
+
+<p>O uso mais comum do <code>| None</code> é num parâmetro com valor padrão <code>None</code> (aula <a href="argumentos-padrao.html">Valores Padrão</a>):</p>
+
+<pre class="file" data-file="saudacao.py">def saudacao(nome: str | None = None) -&gt; str:
+    if nome is None:
+        return "Olá, visitante!"
+    return f"Olá, {nome}!"
+
+
+print(saudacao("Ana"))
+print(saudacao())
+</pre>
+
+<pre class="term">$ python3 saudacao.py
+Olá, Ana!
+Olá, visitante!
+</pre>
+
+<p>A ordem é: o nome, a dica (<code>str | None</code>) e depois o valor padrão (<code>= None</code>). O mesmo <code>|</code> serve para outros tipos: <code>int | float</code> quer dizer "inteiro ou com casas decimais".</p>
+
+<div class="note">
+<strong>O <code>Optional</code> dos códigos mais antigos</strong>
+<p>Em código escrito para versões antigas do Python, você vai encontrar <code>Optional[str]</code> (do módulo <code>typing</code>) no lugar de <code>str | None</code>, e <code>List[int]</code>, com L maiúsculo, no lugar de <code>list[int]</code>. Querem dizer a mesma coisa. Nas versões atuais (o 3.14 do guia, o 3.13 do Debian), prefira as formas curtas, <code>str | None</code> e <code>list[int]</code>, que não precisam de <code>import</code>.</p>
+</div>
+
+<hr>
+
+<h2>5. Quem confere as dicas: o mypy</h2>
+<p>Se o Python não confere, para que escrever? Porque <strong>outros programas</strong> conferem. O mais conhecido é o <strong>mypy</strong>: ele lê o seu arquivo, <strong>sem rodá-lo</strong>, e compara cada chamada com as dicas. O mypy não vem com o Python; ele é instalado com o <code>pip</code>, dentro de um ambiente virtual (as aulas <a href="pip.html">pip</a> e <a href="venv.html">venv</a> mostram como). Os editores de código, como o VS Code, fazem uma checagem parecida enquanto você digita e sublinham os erros em vermelho.</p>
+
+<p>A Ana juntou os erros desta aula num arquivo:</p>
+<pre class="file" data-file="checar.py">def dobro(n: int) -&gt; int:
+    return n * 2
+
+
+def total(preco: float, quantidade: int) -&gt; float:
+    return preco * quantidade
+
+
+print(dobro("ab"))
+print(total(2.5, "3"))
+idade: int = 30
+idade = "trinta"
+</pre>
+
+<p>Ela instalou o mypy num ambiente virtual (<code>.venv</code>) e mandou conferir. A saída abaixo é real, com a versão do mypy do dia (2.4.0); em outra versão, os detalhes podem mudar:</p>
+
+<pre class="term">$ .venv/bin/mypy checar.py
+checar.py:9: error: Argument 1 to "dobro" has incompatible type "str"; expected "int"  [arg-type]
+checar.py:10: error: Argument 2 to "total" has incompatible type "str"; expected "int"  [arg-type]
+checar.py:12: error: Incompatible types in assignment (expression has type "str", variable has type "int")  [assignment]
+Found 3 errors in 1 file (checked 1 source file)
+$ .venv/bin/mypy saudacao.py busca.py
+Success: no issues found in 2 source files
+</pre>
+
+<dl class="anatomy">
+  <dt>checar.py:9:</dt><dd>O arquivo e a linha do problema.</dd>
+  <dt>Argument 1 to "dobro" has incompatible type "str"; expected "int"</dt><dd>"O argumento 1 de <code>dobro</code> tem o tipo incompatível <code>str</code>; esperava <code>int</code>." Exatamente o aviso que o Python, sozinho, não deu: o <code>dobro("ab")</code> rodou calado.</dd>
+  <dt>checar.py:10: … Argument 2 to "total"</dt><dd>O <code>"3"</code> do <code>total</code>, encontrado <strong>antes</strong> de rodar, sem esperar a conta explodir lá dentro.</dd>
+  <dt>checar.py:12: Incompatible types in assignment</dt><dd>"Tipos incompatíveis na atribuição": a variável <code>idade</code> foi anunciada como <code>int</code> e recebeu um texto. O Python aceitaria sem reclamar.</dd>
+  <dt>Success: no issues found</dt><dd>"Sucesso: nenhum problema encontrado" nos arquivos <code>saudacao.py</code> e <code>busca.py</code>, que usam as dicas direito.</dd>
+</dl>
+
+<div class="tip">
+<strong>Vale a pena para quem está começando?</strong>
+<p>Em programas pequenos, como os das aulas, as dicas são opcionais. Elas começam a valer muito quando o programa cresce e é dividido em vários arquivos, ou quando outras pessoas vão usar as suas funções: a dica responde na hora "o que eu passo aqui?", sem ninguém precisar ler o corpo da função. Junto com a <a href="docstrings.html">docstring</a>, é a melhor etiqueta que uma função pode ter.</p>
+</div>
+
+<hr>
+
+<h2>6. As anotações preguiçosas do Python 3.14 <span class="versao">3.14</span></h2>
+<p>No Python 3.14, as dicas passaram a ser avaliadas de um jeito "preguiçoso" (é a mudança descrita nas PEPs 649 e 749). Até o 3.13, o Python calculava as dicas no momento em que lia o <code>def</code>. Agora, ele guarda as dicas sem calculá-las, e só as calcula quando alguém pede, por exemplo ao ler o <code>__annotations__</code>.</p>
+
+<p>Na prática, isso deixa você usar numa dica um nome que <strong>só vai existir mais adiante</strong> no arquivo. Aqui, a função usa o tipo <code>Produto</code>, que é uma classe (aula <a href="classes.html">Classes e Objetos</a>) criada só depois:</p>
+
+<pre class="file" data-file="adiantado.py">def cadastrar(produto: Produto) -&gt; None:
+    print("Cadastrado:", produto.nome)
+
+
+class Produto:
+    def __init__(self, nome: str):
+        self.nome = nome
+
+
+cadastrar(Produto("café"))
+print(cadastrar.__annotations__)
+</pre>
+
+<pre class="term">$ python3 adiantado.py
+Cadastrado: café
+{'produto': &lt;class '__main__.Produto'&gt;, 'return': None}
+</pre>
+
+<p>Quando o Python leu o <code>def cadastrar</code>, o nome <code>Produto</code> ainda não existia, e não houve erro. Na última linha, quando o <code>__annotations__</code> foi pedido, a classe já existia, e a dica foi calculada sem problema.</p>
+
+<div class="note">
+<strong>Se você tem o Python 3.13 (o do Debian 13) ou mais antigo</strong>
+<p>Nessas versões, as dicas são calculadas na hora do <code>def</code>. Pela documentação oficial (<a href="https://docs.python.org/3/whatsnew/3.14.html">What's New in Python 3.14</a>), o <code>adiantado.py</code> acima pararia logo na linha 1 com um <code>NameError</code>, porque <code>Produto</code> ainda não existe. (Não rodamos isso: o laboratório do guia tem o 3.14.) O jeito antigo de contornar é escrever a dica entre aspas, <code>produto: "Produto"</code>, o que funciona em todas as versões. No 3.14, as aspas deixaram de ser necessárias.</p>
+</div>
+
+<div class="cenario">
+<strong>Um nome que não existe, em nenhum momento</strong>
+<p>A preguiça tem um outro lado: um erro de digitação numa dica também só aparece quando alguém pede as dicas.</p>
+<pre class="file" data-file="inexistente.py">def dobro(n: inteiro) -&gt; inteiro:
+    return n * 2
+
+
+print(dobro(5))
+print(dobro.__annotations__)
+</pre>
+<pre class="term">$ python3 inexistente.py
+10
+Traceback (most recent call last):
+  File "/home/ana/inexistente.py", line 6, in &lt;module&gt;
+    print(dobro.__annotations__)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ana/inexistente.py", line 1, in __annotate__
+    def dobro(n: inteiro) -&gt; inteiro:
+                 ^^^^^^^
+NameError: name 'inteiro' is not defined
+</pre>
+<dl class="anatomy">
+  <dt>10</dt><dd>A função funcionou: as dicas não são calculadas para rodar a função.</dd>
+  <dt>line 6, in &lt;module&gt;</dt><dd>O erro só veio quando o programa pediu <code>dobro.__annotations__</code>.</dd>
+  <dt>line 1, in __annotate__</dt><dd><code>__annotate__</code> é a funçãozinha escondida em que o Python 3.14 guarda as dicas para calcular depois. Ela rodou agora, e o <code>^^^^^^^</code> aponta para <code>inteiro</code>.</dd>
+  <dt>NameError: name 'inteiro' is not defined</dt><dd>"O nome <code>inteiro</code> não está definido." O tipo dos inteiros, em Python, se chama <code>int</code>.</dd>
+</dl>
+<p><strong>Como consertar:</strong> <code>def dobro(n: int) -&gt; int:</code>. O mypy e os editores de código apontam esse erro na hora, sem precisar rodar.</p>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+
+<pre class="file" data-file="forma1.py">def total(preco, quantidade):
+    return preco * quantidade
+</pre>
+<pre class="file" data-file="forma2.py">def total(preco, quantidade):
+    """Devolve o preço (float, em reais) vezes a quantidade (int)."""
+    return preco * quantidade
+</pre>
+<pre class="file" data-file="forma3.py">def total(preco: float, quantidade: int) -&gt; float:
+    """Devolve o valor total da compra, em reais."""
+    return preco * quantidade
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td>Sem dicas</td><td>Programas pequenos e rápidos, como os exercícios das aulas. É Python válido e muito comum</td></tr>
+<tr><td>Os tipos só na docstring</td><td>Funciona para quem lê, mas o editor de código e o mypy não entendem texto livre</td></tr>
+<tr><td>Dicas de tipo + docstring</td><td>Funções que outras pessoas (ou você, daqui a meses) vão usar, e programas maiores. As dicas dizem os tipos; a docstring diz o resto</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>A seta errada: <code>=&gt;</code> no lugar de <code>-&gt;</code></strong>
+<p>Quem conhece JavaScript costuma escrever a seta com um sinal de igual:</p>
+<pre class="file" data-file="seta.py">def dobro(n: int) =&gt; int:
+    return n * 2
+</pre>
+<pre class="term">$ python3 seta.py
+  File "/home/ana/seta.py", line 1
+    def dobro(n: int) =&gt; int:
+                      ^
+SyntaxError: expected ':'
+</pre>
+<p>"Esperava <code>:</code>." Depois dos parênteses do <code>def</code>, o Python só aceita a seta <code>-&gt;</code> (hífen e maior) ou os dois-pontos. O <code>^</code> aponta para o <code>=</code>. Não há <code>Traceback</code>: o programa nem começou a rodar. <strong>Como consertar:</strong> <code>def dobro(n: int) -&gt; int:</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Achar que a dica converte o valor</strong>
+<p>A dica <code>quantidade: int</code> <strong>não transforma</strong> o <code>"3"</code> em <code>3</code>. Você viu na seção 2: o texto chegou como texto até a conta, e lá veio o <code>TypeError: can't multiply sequence by non-int of type 'float'</code>. Com <code>dobro("ab")</code> foi pior: nenhum erro, e um resultado errado (<code>abab</code>). <strong>Como consertar:</strong> converta você mesmo, com <code>int()</code> e <code>float()</code>, o que vem do <code>input()</code> ou de arquivos; e use o mypy ou o editor de código para conferir as dicas.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que diz</th></tr>
+<tr><td><code>def f(n: int) -&gt; int:</code></td><td>Recebe um inteiro, devolve um inteiro</td></tr>
+<tr><td><code>def f(msg: str) -&gt; None:</code></td><td>Recebe um texto, não devolve nada</td></tr>
+<tr><td><code>idade: int = 30</code></td><td>Variável com dica e valor</td></tr>
+<tr><td><code>list[float]</code>, <code>set[str]</code></td><td>Coleção e o tipo dos itens</td></tr>
+<tr><td><code>dict[str, float]</code></td><td>Dicionário: tipo das chaves, tipo dos valores</td></tr>
+<tr><td><code>tuple[str, int]</code></td><td>Tupla com um tipo para cada posição</td></tr>
+<tr><td><code>float | None</code></td><td>Um <code>float</code> ou <code>None</code></td></tr>
+<tr><td><code>nome: str | None = None</code></td><td>Parâmetro opcional</td></tr>
+<tr><td><code>f.__annotations__</code></td><td>O dicionário com as dicas da função</td></tr>
+<tr><td><code>mypy arquivo.py</code></td><td>Confere as dicas sem rodar (instale com <code>pip</code> numa venv)</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td>O programa roda com o tipo errado, sem aviso</td><td>Normal: o Python não confere as dicas. Use o mypy</td></tr>
+<tr><td><code>TypeError</code> dentro da função, numa conta</td><td>Um argumento do tipo errado chegou até a conta (ex.: texto do <code>input()</code> sem <code>int()</code>)</td></tr>
+<tr><td><code>SyntaxError: expected ':'</code> no <code>def</code></td><td>Seta escrita como <code>=&gt;</code>; o certo é <code>-&gt;</code></td></tr>
+<tr><td><code>NameError: name 'x' is not defined</code> ao usar uma variável só anotada</td><td><code>x: int</code> sem <code>= valor</code> não cria a variável</td></tr>
+<tr><td><code>NameError … in __annotate__</code></td><td>Um nome que não existe dentro de uma dica (ex.: <code>inteiro</code> no lugar de <code>int</code>)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A dica do parâmetro</h3>
+<p>Complete: <code>nome</code> é um texto.</p>
+<div class="ex-code">def saudar(nome: <input data-answer="str" aria-label="tipo">) -&gt; None:</div>
+</div>
+
+<div class="exercise">
+<h3>2. A seta</h3>
+<p>Complete a seta do retorno (a função devolve um <code>float</code>):</p>
+<div class="ex-code">def media(notas: list[float]) <input data-answer="-&gt;" aria-label="seta"> float:</div>
+</div>
+
+<div class="exercise">
+<h3>3. Lista de inteiros</h3>
+<p>Escreva a dica de "uma lista de inteiros":</p>
+<div class="ex-code">idades: <input data-answer="list[int]" aria-label="tipo"> = [12, 35, 7]</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. A função é <code>def dobro(n: int) -&gt; int: return n * 2</code>. O que acontece com <code>dobro("ab")</code>?</p>
+<label><input type="radio" name="q4"> <code>TypeError</code>, porque <code>"ab"</code> não é <code>int</code></label>
+<label><input type="radio" name="q4"> Roda e devolve <code>'abab'</code>: o Python não confere as dicas</label>
+<label><input type="radio" name="q4"> O Python converte <code>"ab"</code> para número</label>
+<label><input type="radio" name="q4"> <code>SyntaxError</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. O que quer dizer <code>-&gt; float | None</code>?</p>
+<label><input type="radio" name="q5"> A função recebe um <code>float</code></label>
+<label><input type="radio" name="q5"> A função nunca devolve nada</label>
+<label><input type="radio" name="q5"> A função devolve um <code>float</code> e um <code>None</code>, juntos</label>
+<label><input type="radio" name="q5"> A função devolve um <code>float</code> ou <code>None</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">6. Qual destas ferramentas confere as dicas de tipo <strong>sem rodar</strong> o programa?</p>
+<label><input type="radio" name="q6"> O próprio <code>python3</code></label>
+<label><input type="radio" name="q6"> O <code>help()</code></label>
+<label><input type="radio" name="q6"> O <code>mypy</code></label>
+<label><input type="radio" name="q6"> O <code>print()</code></label>
+</div>
+
+<h3>Missão final: a saudação opcional</h3>
+
+<div class="trypy" data-goal="out:Olá, Ana!;;out:Olá, visitante!;;src:str\s*\|\s*None">
+<p class="try-task"><strong>Missão:</strong> a segunda chamada, sem nome, dá erro. Faça o parâmetro <code>nome</code> ser opcional, com a dica <code>str | None</code> e o padrão <code>None</code>, e devolva <code>Olá, visitante!</code> quando não vier nome.</p>
+<pre class="script" data-file="main.py">def saudacao(nome) -&gt; str:
+    return f"Olá, {nome}!"
+
+
+print(saudacao("Ana"))
+print(saudacao())
+</pre>
+<pre class="solucao" data-file="main.py">def saudacao(nome: str | None = None) -&gt; str:
+    if nome is None:
+        return "Olá, visitante!"
+    return f"Olá, {nome}!"
+
+
+print(saudacao("Ana"))
+print(saudacao())
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><strong>Dicas de tipo</strong> dizem que tipo cada coisa deve ter: <code>n: int</code> no parâmetro, <code>-&gt; int</code> no retorno, <code>idade: int = 30</code> na variável.</li>
+  <li><strong>O Python não confere as dicas.</strong> Com o tipo errado, o programa roda (e às vezes dá um resultado errado ou um <code>TypeError</code> lá dentro).</li>
+  <li>Coleções: <code>list[float]</code>, <code>dict[str, float]</code>, <code>tuple[str, int]</code>. "Ou": <code>float | None</code>, <code>str | None = None</code>.</li>
+  <li>Quem confere é uma ferramenta como o <strong>mypy</strong> (ou o seu editor de código), que lê o arquivo sem rodá-lo.</li>
+  <li>As dicas ficam em <code>funcao.__annotations__</code>.</li>
+  <li><span class="versao">3.14</span> As dicas agora são calculadas só quando alguém pede: dá para usar um nome definido mais adiante, sem aspas. No 3.13, escreva esse nome entre aspas.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
