@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Instalar — Python 3.14 no Linux, no Windows e no macOS | Guia Python</title>
+<meta name="description" content="Como ter o Python 3.14 no seu computador: conferir com python3 --version, por que o comando python não existe no Ubuntu (e a mensagem real), python3-pip e python3-venv, um editor para escrever, Fedora e Arch, o novo Python install manager do Windows (py install, py list) e o instalador do python.org e o Homebrew no macOS, com os erros mais comuns.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Instalar</span></h1>
+
+<p class="intro">As caixas Experimente do guia rodam Python de verdade no navegador, então você pode estudar as primeiras aulas sem instalar nada. Mas, para escrever os seus próprios programas, guardar os arquivos e rodar quando quiser, você vai querer o Python no seu computador. A boa notícia: no Linux ele quase sempre <strong>já vem instalado</strong>, e no Windows e no macOS a instalação leva poucos minutos. Nesta aula você vai conferir a sua versão, entender por que o comando <code>python</code> não existe no Ubuntu, instalar as peças que faltam e fazer um teste final.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>Como descobrir se o Python já está instalado, e qual versão, com <code>python3 --version</code>.</li>
+  <li>Por que, no Ubuntu, o comando é <code>python3</code>, e o que acontece se você digitar só <code>python</code>.</li>
+  <li>Para que servem o <code>python3-pip</code> e o <code>python3-venv</code>, e como instalá-los.</li>
+  <li>Qual editor usar para escrever os programas.</li>
+  <li>Como instalar no Fedora e no Arch, no <strong>Windows</strong> (o novo <em>Python install manager</em>) e no <strong>macOS</strong> (python.org e Homebrew).</li>
+  <li>Os erros mais comuns de quem está instalando, com as mensagens reais.</li>
+</ul>
+</div>
+
+<p>As saídas de terminal desta aula vêm do computador da Ana, que usa <strong>Ubuntu 26.04</strong>. O que não deu para rodar lá (os comandos que instalam com <code>sudo</code>, e tudo o que é de Windows e de macOS) está marcado como <strong>ilustrativo</strong>, conferido na documentação oficial (<a href="https://docs.python.org/3/using/">docs.python.org/3/using</a>).</p>
+
+<hr>
+
+<h2>A ideia: a música e o tocador</h2>
+<p>Um arquivo de música no celular não toca sozinho: você precisa de um aplicativo de música para tocá-lo. Com o Python é igual. O seu programa (o arquivo <code>.py</code>) é a música; o <strong>interpretador Python</strong> é o tocador. "Instalar o Python" é instalar o tocador. Depois disso, qualquer programa Python, seu ou de outra pessoa, pode ser "tocado" no seu computador.</p>
+
+<p>Junto com o interpretador vem a <strong>biblioteca padrão</strong>: centenas de ferramentas prontas (para datas, contas, arquivos, sorteios…). E existem duas peças extras, que no Ubuntu vêm em pacotes separados:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Peça</th><th>O que é</th><th>Comparação</th></tr>
+<tr><td><strong><code>python3</code></strong></td><td>O interpretador e a biblioteca padrão</td><td>O tocador de música</td></tr>
+<tr><td><strong><code>pip</code></strong></td><td>O instalador de <strong>pacotes</strong>: bibliotecas feitas por outras pessoas, que não vêm com o Python</td><td>A loja onde você baixa músicas novas</td></tr>
+<tr><td><strong><code>venv</code></strong></td><td>Cria um <strong>ambiente virtual</strong>: uma pasta separada, só de um projeto, com os pacotes dele</td><td>Uma playlist separada para cada ocasião, sem misturar tudo</td></tr>
+</table>
+</div>
+
+<p>Para as aulas do Nível 1, só o <code>python3</code> basta. O <code>pip</code> e o <code>venv</code> têm aulas próprias, mais adiante (<a href="pip.html">pip: Instalando Pacotes</a> e <a href="venv.html">Ambientes Virtuais (venv)</a>), mas vale instalar logo, para não esquecer.</p>
+
+<hr>
+
+<h2>1. O Python já está instalado?</h2>
+<p>Antes de instalar, pergunte ao computador. Abra o terminal (no Ubuntu: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>T</kbd>) e digite:</p>
+
+<pre class="term">$ python3 --version
+Python 3.14.4</pre>
+
+<dl class="anatomy">
+  <dt>python3</dt><dd>O nome do interpretador do Python 3, como você aprendeu na <a href="introducao.html">Introdução</a>.</dd>
+  <dt>--version</dt><dd>"Versão": em vez de rodar um programa, mostre a versão e saia. O atalho <code>-V</code> (V maiúsculo) faz o mesmo.</dd>
+</dl>
+
+<p>A resposta <code>Python 3.14.4</code> quer dizer: Python <strong>3</strong>, versão <strong>3.14</strong>, revisão <strong>4</strong> (as revisões só corrigem defeitos; tudo o que o guia ensina vale para qualquer 3.14.x). O atalho dá a mesma resposta:</p>
+
+<pre class="term">$ python3 -V
+Python 3.14.4</pre>
+
+<p>E onde ele está? O comando <code>which</code> ("qual") mostra o caminho do programa:</p>
+
+<pre class="term">$ which python3
+/usr/bin/python3
+$ ls /usr/bin/python*
+/usr/bin/python3
+/usr/bin/python3.14                                « o mesmo Python, pelo nome completo</pre>
+
+<p>Se apareceu uma versão, o Python já está aí. Se ela for a <strong>3.14 ou mais nova</strong>, você tem tudo de que o guia precisa. Se for mais antiga, veja a tabela da próxima seção.</p>
+
+<hr>
+
+<h2>2. Ubuntu e Debian: já vem instalado</h2>
+<p>O Ubuntu e o Debian usam o Python nos seus próprios programas (você viu um deles na <a href="introducao.html">Introdução</a>: a mensagem de "comando não encontrado"). Por isso, o <code>python3</code> vem em toda instalação. A versão depende da versão do sistema:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sistema</th><th>Python que vem com ele</th></tr>
+<tr><td>Ubuntu 26.04 LTS (o da Ana)</td><td>3.14</td></tr>
+<tr><td>Ubuntu 24.04 LTS</td><td>3.12</td></tr>
+<tr><td>Debian 13 ("trixie")</td><td>3.13</td></tr>
+<tr><td>Debian 12 ("bookworm")</td><td>3.11</td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>Tenho um Python mais antigo. E agora?</strong>
+<p>Quase tudo do Nível 1 funciona igual do 3.10 em diante. O que é novidade da 3.14 vem marcado no guia com o selo <span class="versao">3.14</span>, e a página <a href="novidades.html">Novidades do Python</a> reúne essas mudanças. Duas diferenças você vai notar logo: as dicas nas mensagens de erro e as cores do <a href="repl.html">modo interativo</a> ficaram melhores nas versões novas. Não troque o Python do sistema por outro "na mão": o Ubuntu depende dele. Se precisar mesmo de uma versão mais nova, use as caixas Experimente do guia (que rodam o 3.14) ou atualize o sistema.</p>
+</div>
+
+<h3>O comando <code>python</code> não existe</h3>
+<p>Muito tutorial na internet manda digitar <code>python</code>, sem o 3. No Ubuntu, a Ana tentou:</p>
+
+<pre class="term">$ python --version
+Comando 'python' não encontrado, você quis dizer:
+  comando 'python3' do deb python3
+  comando 'python' do deb python-is-python3</pre>
+
+<p>O terminal não achou nenhum programa chamado <code>python</code>, e o Ubuntu (com aquele programa escrito em Python) sugeriu duas saídas. A palavra "deb" quer dizer "pacote" (os pacotes do Ubuntu são arquivos <code>.deb</code>):</p>
+<ul>
+  <li><strong><code>comando 'python3' do deb python3</code></strong>: "existe o comando <code>python3</code>, do pacote <code>python3</code>", que já está instalado. É só usar <code>python3</code>.</li>
+  <li><strong><code>comando 'python' do deb python-is-python3</code></strong>: "existe um pacote chamado <code>python-is-python3</code>" ("python é python3"), que cria o comando <code>python</code> como um apelido do <code>python3</code>.</li>
+</ul>
+
+<p>O <code>apt</code> deixa simular a instalação, sem instalar nada, com <code>-s</code>. Assim dá para ver o que ela faria:</p>
+
+<pre class="term">$ apt-get install -s python-is-python3
+NOTA: Esta é apenas uma simulação!
+      apt-get precisa de privilégios de root para execução real.
+      Lembre-se também de que a trava está desativada e,
+      portanto, não dependa da relevância para a situação real atual!
+Lendo listas de pacotes...
+Construindo árvore de dependências...
+Lendo informação de estado...
+Resolvendo dependências...
+Os NOVOS pacotes a seguir serão instalados:
+  python-is-python3                                « só um pacote, pequeno
+0 pacotes atualizados, 1 pacotes novos instalados, 0 a serem removidos e 0 não atualizados.
+Inst python-is-python3 (3.13.3-1+build1 Ubuntu:26.04/resolute [all])
+Conf python-is-python3 (3.13.3-1+build1 Ubuntu:26.04/resolute [all])</pre>
+
+<p>Para instalar de verdade, o comando seria <code>sudo apt install python-is-python3</code> (<strong>ilustrativo</strong>: o <code>sudo</code> pede a sua senha, e a Ana não instalou). <strong>Este guia não precisa dele:</strong> todas as aulas usam <code>python3</code>, que funciona em qualquer Ubuntu e Debian, sem instalar nada. Quando um tutorial disser <code>python</code>, escreva <code>python3</code>.</p>
+
+<hr>
+
+<h2>3. O <code>pip</code> e o <code>venv</code></h2>
+<p>Numa instalação nova do Ubuntu, o <code>python3</code> vem, mas o <code>pip</code> e o <code>venv</code> <strong>não</strong>. Eles estão nos pacotes <code>python3-pip</code> e <code>python3-venv</code>. Para instalar os dois de uma vez (<strong>ilustrativo</strong>; o <code>sudo</code> pede a sua senha):</p>
+
+<pre class="file" data-file="terminal (ilustrativo)">sudo apt install python3-pip python3-venv
+</pre>
+
+<dl class="anatomy">
+  <dt>sudo</dt><dd>"Faça como administrador". Instalar programas mexe no sistema, então o Ubuntu pede a sua senha. Enquanto você digita, nada aparece na tela (nem asteriscos): é normal.</dd>
+  <dt>apt</dt><dd>O gerenciador de pacotes do Ubuntu e do Debian: a "loja de aplicativos" do terminal.</dd>
+  <dt>install</dt><dd>"Instale".</dd>
+  <dt>python3-pip python3-venv</dt><dd>Os dois pacotes, separados por espaço.</dd>
+</dl>
+
+<p>No computador da Ana, eles já estavam instalados. A simulação mostra isso:</p>
+
+<pre class="term">$ apt-get install -s python3-pip python3-venv
+NOTA: Esta é apenas uma simulação!
+      apt-get precisa de privilégios de root para execução real.
+      Lembre-se também de que a trava está desativada e,
+      portanto, não dependa da relevância para a situação real atual!
+Lendo listas de pacotes...
+Construindo árvore de dependências...
+Lendo informação de estado...
+python3-pip já é a versão mais nova (25.1.1+dfsg-1ubuntu2).      « já instalado
+python3-venv já é a versão mais nova (3.14.3-0ubuntu2).           « já instalado
+Resolvendo dependências...
+0 pacotes atualizados, 0 pacotes novos instalados, 0 a serem removidos e 0 não atualizados.</pre>
+
+<p>Para conferir depois de instalar, pergunte a versão do <code>pip</code>. O jeito recomendado é pedir ao próprio Python que rode o módulo <code>pip</code> (<code>-m</code> quer dizer "módulo"):</p>
+
+<pre class="term">$ python3 -m pip --version
+pip 25.1.1 from /usr/lib/python3/dist-packages/pip (python 3.14)</pre>
+
+<p>A resposta diz a versão do <code>pip</code> (25.1.1), onde ele está e, no fim, <strong>para qual Python</strong> ele instala pacotes: o 3.14. Também dá para listar os pacotes do Python instalados no sistema:</p>
+
+<pre class="term">$ apt list --installed 2&gt;/dev/null | grep -E "^python3(-pip|-venv|\.14|-minimal)?/"
+python3-minimal/resolute,now 3.14.3-0ubuntu2 amd64 [instalado,automático]
+python3-pip/resolute,now 25.1.1+dfsg-1ubuntu2 all [instalado]
+python3-venv/resolute,now 3.14.3-0ubuntu2 amd64 [instalado]
+python3.14/resolute-updates,resolute-security,now 3.14.4-1ubuntu0.2 amd64 [instalado,automático]
+python3/resolute,now 3.14.3-0ubuntu2 amd64 [instalado]</pre>
+
+<p>(O <code>grep</code> filtrou a lista enorme, deixando só as linhas que interessam; o <code>2&gt;/dev/null</code> esconde um aviso do <code>apt</code>. Não se preocupe com esses detalhes do terminal.)</p>
+
+<div class="tip">
+<strong>Tudo de uma vez: <code>python3-full</code></strong>
+<p>O pacote <code>python3-full</code> é um "kit" que traz o Python completo: o <code>venv</code>, o editor IDLE e o <code>tkinter</code> (para janelas). Se você não quer pensar em pacotes, <code>sudo apt install python3-full python3-pip</code> resolve (ilustrativo). A lista do que vem no kit:</p>
+<pre class="term">$ apt-cache show python3-full | grep -E "^(Depends|Description)"
+Depends: python3 (= 3.14.3-0ubuntu2), python3.14-full (&gt;= 3.14.3), python3-venv (= 3.14.3-0ubuntu2), idle, python3-gdbm, python3-tk
+Description-en: Default Python Interpreter with complete class library</pre>
+</div>
+
+<div class="warning">
+<strong>Não use <code>sudo pip install</code></strong>
+<p>No Ubuntu e no Debian, o <code>pip</code> se recusa a instalar pacotes direto no Python do sistema (ele mostra um erro chamado <code>externally-managed-environment</code>). É de propósito: o sistema depende daquele Python, e um pacote errado pode quebrá-lo. O jeito certo é instalar pacotes dentro de um <strong>ambiente virtual</strong>. As aulas <a href="pip.html">pip</a> e <a href="venv.html">venv</a> mostram o passo a passo; até lá, você não vai precisar de pacote nenhum.</p>
+</div>
+
+<hr>
+
+<h2>4. Um editor para escrever os programas</h2>
+<p>Um programa Python é um arquivo de <strong>texto puro</strong>. Qualquer editor de texto serve, menos os de "documento", como o LibreOffice Writer ou o Word: eles gravam fontes, cores e margens junto com o texto, e o Python não entende nada disso. Algumas opções:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Editor</th><th>Como conseguir no Ubuntu</th><th>Bom para</th></tr>
+<tr><td><strong>nano</strong></td><td>Já vem. Roda dentro do terminal.</td><td>Arquivos pequenos, sem sair do terminal. É o que as aulas usam (aula <a href="executar.html">Rodando um Programa</a>).</td></tr>
+<tr><td><strong>Editor de Texto</strong></td><td>Já vem (é o editor com janela do Ubuntu).</td><td>Começar sem instalar nada.</td></tr>
+<tr><td><strong>Thonny</strong></td><td><code>sudo apt install thonny</code> (ilustrativo)</td><td>Iniciantes: um editor feito para aprender Python, com um botão de rodar e um modo que mostra o programa passo a passo.</td></tr>
+<tr><td><strong>IDLE</strong></td><td><code>sudo apt install idle</code> (ilustrativo)</td><td>O editor que vem com o Python no Windows e no macOS. Simples, com o modo interativo embutido.</td></tr>
+<tr><td><strong>VS Code</strong></td><td>Baixado do site da Microsoft ou pela Central de Aplicativos, mais a extensão "Python"</td><td>Quem quer o editor que a maioria dos programadores usa, com cores, dicas e correção enquanto digita.</td></tr>
+</table>
+</div>
+
+<p>Não existe editor "certo". Para as primeiras aulas, o <strong>nano</strong> ou o <strong>Thonny</strong> são ótimos. Se for usar o Editor de Texto, o VS Code ou outro, confira nas configurações que a tecla <kbd>Tab</kbd> insere <strong>4 espaços</strong> (você vai entender o porquê na aula <a href="sintaxe.html">Sintaxe e Indentação</a>).</p>
+
+<hr>
+
+<h2>5. Outras distribuições Linux</h2>
+<p>No Fedora e no Arch, o Python também costuma vir instalado. Se não vier, o comando é este (<strong>ilustrativo</strong>: não foi rodado no computador da Ana, que usa Ubuntu):</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Distribuição</th><th>Instalar</th><th>O comando <code>python</code> existe?</th></tr>
+<tr><td>Ubuntu, Debian, Linux Mint</td><td><code>sudo apt install python3 python3-pip python3-venv</code></td><td>Não (só com o <code>python-is-python3</code>)</td></tr>
+<tr><td>Fedora</td><td><code>sudo dnf install python3 python3-pip</code> (o <code>venv</code> já vem no <code>python3</code>)</td><td>Sim, é o mesmo que <code>python3</code></td></tr>
+<tr><td>Arch, Manjaro</td><td><code>sudo pacman -S python python-pip</code></td><td>Sim, é o mesmo que <code>python3</code></td></tr>
+</table>
+</div>
+
+<p>Em qualquer uma delas, <code>python3</code> funciona. Por isso o guia usa sempre <code>python3</code>.</p>
+
+<hr>
+
+<h2>6. Windows</h2>
+<p>O Windows não vem com Python. Desde a versão 3.14, o jeito recomendado pela documentação oficial é o <strong>Python install manager</strong> ("gerenciador de instalação do Python"): um programa pequeno que instala o Python, cria os comandos no terminal e cuida das atualizações. Tudo nesta seção é <strong>ilustrativo</strong> (o computador da Ana usa Linux), conferido em <a href="https://docs.python.org/3/using/windows.html">docs.python.org/3/using/windows.html</a>.</p>
+
+<h3>Instalando o Python install manager</h3>
+<ol class="passo">
+  <li>Abra a <strong>Microsoft Store</strong>, procure por "Python install manager" (ou "Python") e clique em <strong>Instalar</strong>. Outra opção: baixe o instalador do Windows em <a href="https://www.python.org/downloads/">python.org/downloads</a> e dê dois cliques nele. A documentação diz que as duas versões são idênticas.</li>
+  <li>Abra o <strong>Terminal</strong> (ou o PowerShell) e digite <code>python</code>. Se nenhum Python estiver instalado ainda, o gerenciador <strong>baixa e instala a versão mais recente sozinho</strong> e abre o <a href="repl.html">modo interativo</a>.</li>
+  <li>Na primeira instalação, ele pode perguntar se você quer acrescentar uma pasta ao <code>PATH</code> (a lista de pastas onde o Windows procura comandos). É opcional: <code>python</code> e <code>py</code> funcionam de qualquer jeito.</li>
+</ol>
+
+<p>Depois de instalado, você tem estes comandos:</p>
+
+<pre class="file" data-file="PowerShell (ilustrativo)">python --version          # mostra a versão do Python padrão
+python ola.py             # roda um programa
+py list                   # lista os Pythons instalados
+py install 3.14           # instala o Python 3.14
+py -V:3.14 ola.py         # roda com uma versão específica
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Comando</th><th>O que é</th></tr>
+<tr><td><code>python</code></td><td>O comando recomendado para rodar o Python no Windows. Lá ele existe, e é o Python 3 (no Ubuntu, use <code>python3</code>).</td></tr>
+<tr><td><code>py</code></td><td>O mesmo, mais as ordens para gerenciar versões: <code>py list</code>, <code>py install</code>, <code>py uninstall</code>. Útil quando você tem mais de um Python.</td></tr>
+<tr><td><code>python3</code></td><td>Existe, mas só para pegar quem digita por costume do Linux; a documentação não recomenda usar no Windows.</td></tr>
+</table>
+</div>
+
+<h3>O instalador tradicional (está saindo)</h3>
+<p>Muito tutorial mostra o instalador antigo do python.org, um <code>.exe</code> com a caixinha <strong>"Add python.exe to PATH"</strong> na primeira tela. Ele ainda existe para o 3.14, mas está <strong>obsoleto</strong>: a documentação avisa que ele não será mais produzido a partir do Python 3.16. Se usar esse instalador, <strong>marque a caixinha do PATH</strong>; sem ela, o comando <code>python</code> não funciona no terminal.</p>
+
+<div class="note">
+<strong>Linux no Windows: o WSL</strong>
+<p>Se você quer seguir o guia exatamente como ele é, com os mesmos comandos do Ubuntu, o Windows 10 e o 11 podem rodar um Ubuntu de verdade dentro deles, o <strong>WSL</strong> (<em>Windows Subsystem for Linux</em>). Com ele, tudo das seções 1 a 4 vale igual.</p>
+</div>
+
+<hr>
+
+<h2>7. macOS</h2>
+<p>O macOS tem uma pegadinha: ele pode até ter um <code>/usr/bin/python3</code>, mas esse Python é da Apple, para as ferramentas de programação dela (o Xcode), costuma ser antigo e incompleto, e a documentação oficial pede que você <strong>nunca</strong> o modifique nem apague. Instale o seu, por um destes dois caminhos (<strong>ilustrativo</strong>, conferido em <a href="https://docs.python.org/3/using/mac.html">docs.python.org/3/using/mac.html</a>):</p>
+
+<h3>Pelo python.org</h3>
+<ol class="passo">
+  <li>Baixe o instalador do macOS (um arquivo <code>.pkg</code>) em <a href="https://www.python.org/downloads/">python.org/downloads</a>. O mesmo arquivo serve para Macs com processador Apple (M1, M2…) e Intel.</li>
+  <li>Dê dois cliques e siga as telas. Ele cria a pasta <strong>Python 3.14</strong> em Aplicativos, com o editor <strong>IDLE</strong>.</li>
+  <li>Nessa pasta, dê dois cliques em <strong>Install Certificates.command</strong>. Ele instala os certificados que o Python usa para acessar sites com <code>https</code>. Sem isso, programas que baixam coisas da internet dão erro.</li>
+  <li>Abra o Terminal e confira com <code>python3 --version</code>. O instalador ajusta o terminal para que o <code>python3</code> seja o novo, e não o da Apple.</li>
+</ol>
+
+<h3>Pelo Homebrew</h3>
+<p>Quem já usa o <a href="https://brew.sh/">Homebrew</a>, o gerenciador de pacotes mais usado no macOS, pode instalar pelo terminal:</p>
+
+<pre class="file" data-file="Terminal do macOS (ilustrativo)">brew install python@3.14
+python3 --version
+</pre>
+
+<p>Nos dois casos, no macOS o comando é <code>python3</code>, como no Ubuntu. Tudo o que o guia mostra no terminal vale igual lá.</p>
+
+<hr>
+
+<h2>8. O teste final</h2>
+<p>Com o Python instalado, rode um programinha de teste. Crie um arquivo chamado <code>teste.py</code> com este conteúdo (a aula <a href="executar.html">Rodando um Programa (.py)</a> mostra como criar o arquivo pelo terminal):</p>
+
+<pre class="file" data-file="teste.py">import sys
+print("Python está funcionando!")
+print("Versão:", sys.version_info.major, sys.version_info.minor)
+</pre>
+
+<pre class="term">$ python3 teste.py
+Python está funcionando!
+Versão: 3 14</pre>
+
+<dl class="anatomy">
+  <dt>import sys</dt><dd>"Importe o módulo <code>sys</code>": uma das ferramentas da biblioteca padrão, com informações sobre o próprio Python. Os módulos têm aula própria (<a href="modulos.html">Módulos e import</a>).</dd>
+  <dt>print("Python está funcionando!")</dt><dd>Mostra a frase na tela.</dd>
+  <dt>sys.version_info.major</dt><dd>O número principal da versão: <code>3</code>.</dd>
+  <dt>sys.version_info.minor</dt><dd>O número secundário: <code>14</code>.</dd>
+</dl>
+
+<p>Se apareceram as duas linhas, está tudo pronto. Faça o mesmo teste no editor do guia:</p>
+
+<div class="trypy" data-goal="src:sys\.version_info\.minor;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa mostra só o número principal da versão. Acrescente, na mesma linha do <code>print</code>, depois de uma vírgula, o número secundário: <code>sys.version_info.minor</code>. Rode e veja qual versão o editor do guia usa.</p>
+<pre class="script" data-file="main.py">import sys
+print("Python está funcionando!")
+print("Versão:", sys.version_info.major)
+</pre>
+<pre class="solucao" data-file="main.py">import sys
+print("Python está funcionando!")
+print("Versão:", sys.version_info.major, sys.version_info.minor)
+</pre>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de ter o Python</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Onde</th><th>Como</th><th>Quando usar</th></tr>
+<tr><td>No navegador</td><td>As caixas Experimente do guia (aula <a href="simulador.html">O Editor do Guia</a>)</td><td>Para começar já, ou num computador em que você não pode instalar nada</td></tr>
+<tr><td>Ubuntu e Debian</td><td>Já vem: <code>python3</code>. Acrescente <code>sudo apt install python3-pip python3-venv</code></td><td>Sempre que você usa Linux. É o que o guia mostra</td></tr>
+<tr><td>Windows</td><td>Python install manager (Microsoft Store ou python.org)</td><td>O jeito recomendado desde o 3.14</td></tr>
+<tr><td>Windows</td><td>Instalador tradicional <code>.exe</code> (marque "Add python.exe to PATH")</td><td>Só se o install manager não servir; está saindo</td></tr>
+<tr><td>Windows</td><td>WSL, com Ubuntu dentro</td><td>Para seguir o guia exatamente igual</td></tr>
+<tr><td>macOS</td><td>Instalador <code>.pkg</code> do python.org</td><td>O mais simples, com o IDLE</td></tr>
+<tr><td>macOS</td><td><code>brew install python@3.14</code></td><td>Para quem já usa o Homebrew</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Quando dá errado</h2>
+
+<div class="cenario">
+<strong><code>Comando 'python' não encontrado</code></strong>
+<pre class="term">$ python --version
+Comando 'python' não encontrado, você quis dizer:
+  comando 'python3' do deb python3
+  comando 'python' do deb python-is-python3</pre>
+<p><strong>O que aconteceu:</strong> no Ubuntu e no Debian, o comando se chama <code>python3</code>; <code>python</code>, sozinho, não existe. O tutorial que você estava seguindo era de Windows, de outra distribuição ou antigo.</p>
+<p><strong>Como resolver:</strong> escreva <code>python3</code>. (Ou, se fizer muita questão do nome curto, instale o <code>python-is-python3</code>.)</p>
+</div>
+
+<div class="cenario">
+<strong><code>Python3</code> com P maiúsculo</strong>
+<pre class="term">$ Python3 --version
+Comando 'Python3' não encontrado, você quis dizer:
+  comando 'python3' do deb python3 (3.14.3-0ubuntu2)
+  comando 'cython3' do deb cython3 (3.1.6+dfsg-1ubuntu2)
+Experimente: apt install &lt;deb name&gt;</pre>
+<p><strong>O que aconteceu:</strong> no Linux, maiúsculas e minúsculas são letras diferentes: <code>Python3</code> e <code>python3</code> são nomes diferentes, e só o segundo existe. O Ubuntu percebeu a semelhança e sugeriu o <code>python3</code> (e, de brinde, o <code>cython3</code>, um programa de nome parecido que não tem nada a ver com o assunto).</p>
+<p><strong>Como resolver:</strong> tudo em minúsculas: <code>python3</code>. Isso vai valer para o Python também: lá dentro, <code>Print</code> e <code>print</code> são coisas diferentes (aula <a href="sintaxe.html">Sintaxe e Indentação</a>).</p>
+</div>
+
+<div class="cenario">
+<strong>Opção digitada errada: <code>Unknown option</code></strong>
+<pre class="term">$ python3 --vesion
+Unknown option: --vesion
+usage: python3 [option] ... [-c cmd | -m mod | file | -] [arg] ...
+Try `python -h' for more information.</pre>
+<p><strong>O que aconteceu:</strong> faltou o <code>r</code> de <code>--version</code>. "Opção desconhecida: <code>--vesion</code>". Depois, o Python mostra o jeito de usar (<em>usage</em>): <code>python3</code>, opções, e então um programa (<code>-c</code> com um texto, <code>-m</code> com um módulo, ou um arquivo). A última linha diz "tente <code>python -h</code> para mais informações" (o <code>-h</code> é de <em>help</em>, "ajuda"; no Ubuntu, digite <code>python3 -h</code>).</p>
+<p><strong>Como resolver:</strong> <code>python3 --version</code>, ou o atalho <code>python3 -V</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Digitei <code>python3 --version</code> dentro do Python</strong>
+<p>A Ana abriu o modo interativo do Python (o <code>&gt;&gt;&gt;</code>) e, lá dentro, quis conferir a versão:</p>
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; python3 --version
+Traceback (most recent call last):
+  File "&lt;python-input-0&gt;", line 1, in &lt;module&gt;
+    python3 --version
+    ^^^^^^^
+NameError: name 'python3' is not defined
+&gt;&gt;&gt; exit
+$ python3 --version
+Python 3.14.4</pre>
+<p><strong>O que aconteceu:</strong> o <code>&gt;&gt;&gt;</code> quer dizer que quem está ouvindo é o <strong>Python</strong>, e não o terminal. O Python tentou entender <code>python3 --version</code> como uma conta ("<code>python3</code> menos menos <code>version</code>") e reclamou: <code>NameError: name 'python3' is not defined</code>, "o nome <code>python3</code> não está definido". Para o Python, <code>python3</code> não é nada. Repare que a primeira linha (a que começa com <code>Python 3.14.4</code>) já tinha dito a versão.</p>
+<p><strong>Como resolver:</strong> saia do Python com <code>exit</code> e digite o comando no terminal, onde aparece o <code>$</code>. A aula <a href="repl.html">O Modo Interativo (&gt;&gt;&gt;)</a> mostra a diferença entre os dois com calma.</p>
+</div>
+
+<div class="cenario">
+<strong>Windows: digitar <code>python</code> abre a Microsoft Store (ilustrativo)</strong>
+<p><strong>O que aconteceu:</strong> o Windows tem "apelidos de execução" (<em>app execution aliases</em>): atalhos que fazem o comando <code>python</code> abrir a loja quando nenhum Python está instalado, ou quando o apelido está desligado.</p>
+<p><strong>Como resolver:</strong> instale o Python install manager pela loja. Se ele já estiver instalado e o problema continuar, a documentação oficial sugere abrir o menu Iniciar, procurar por "aliases de execução" (em inglês, <em>Manage app execution aliases</em>) e conferir que os apelidos do Python estão ligados (se já estiverem, desligue e ligue de novo).</p>
+</div>
+
+<div class="cenario">
+<strong>Um erro de digitação no programa de teste</strong>
+<p>A Ana digitou o teste com pressa e esqueceu uma letra:</p>
+<pre class="file" data-file="teste_erro.py">prnt("Python está funcionando!")
+</pre>
+<pre class="term">$ python3 teste_erro.py
+Traceback (most recent call last):
+  File "/home/ana/teste_erro.py", line 1, in &lt;module&gt;
+    prnt("Python está funcionando!")
+    ^^^^
+NameError: name 'prnt' is not defined. Did you mean: 'print'?</pre>
+<p><strong>O que aconteceu:</strong> a instalação está ótima; o erro é do programa. <code>Traceback (most recent call last)</code> é o "rastro" do erro ("a chamada mais recente por último"); depois vêm o arquivo e a linha, a linha copiada, os <code>^^^^</code> embaixo de <code>prnt</code> e a explicação: "o nome <code>prnt</code> não está definido. Você quis dizer <code>print</code>?". A aula <a href="erros.html">Lendo uma Mensagem de Erro</a> ensina a ler todo tipo de traceback.</p>
+<p><strong>Como resolver:</strong> conserte para <code>print</code>.</p>
+</div>
+
+<div class="trypy" data-goal="out:Python está funcionando!;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa de teste da Ana dá <code>NameError</code>. Rode para ver o erro, conserte e rode de novo, até aparecer <code>Python está funcionando!</code>.</p>
+<pre class="script" data-file="main.py">prnt("Python está funcionando!")
+</pre>
+<pre class="solucao" data-file="main.py">print("Python está funcionando!")
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Comando</th><th>O que faz</th></tr>
+<tr><td><code>python3 --version</code> ou <code>python3 -V</code></td><td>Mostra a versão do Python</td></tr>
+<tr><td><code>which python3</code></td><td>Mostra onde o programa <code>python3</code> está</td></tr>
+<tr><td><code>sudo apt install python3-pip python3-venv</code></td><td>Ubuntu/Debian: instala o <code>pip</code> e o <code>venv</code></td></tr>
+<tr><td><code>sudo apt install python3-full</code></td><td>Ubuntu/Debian: o Python completo (com <code>venv</code>, IDLE e <code>tkinter</code>)</td></tr>
+<tr><td><code>sudo apt install python-is-python3</code></td><td>Ubuntu/Debian: cria o comando <code>python</code> (opcional; o guia usa <code>python3</code>)</td></tr>
+<tr><td><code>python3 -m pip --version</code></td><td>Confere o <code>pip</code> e para qual Python ele instala</td></tr>
+<tr><td><code>python3 -h</code></td><td>Mostra a ajuda das opções do <code>python3</code></td></tr>
+<tr><td><code>py list</code>, <code>py install 3.14</code></td><td>Windows (Python install manager): lista e instala versões</td></tr>
+<tr><td><code>brew install python@3.14</code></td><td>macOS com Homebrew: instala o Python 3.14</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A versão</h3>
+<p>Complete o comando que mostra a versão do Python no Ubuntu:</p>
+<div class="ex-code">$ <input data-answer="python3" aria-label="comando"> <input data-answer="--version|-V" aria-label="opção"></div>
+</div>
+
+<div class="exercise">
+<h3>2. O pip e o venv</h3>
+<p>Complete o comando que instala o <code>pip</code> no Ubuntu:</p>
+<div class="ex-code">$ sudo apt install <input data-answer="python3-pip" aria-label="pacote"> python3-venv</div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">3. No Ubuntu, a Ana digitou <code>python ola.py</code> e recebeu <code>Comando 'python' não encontrado</code>. O que ela deve fazer?</p>
+<label><input type="radio" name="q3"> Instalar o Python, porque ele não está no computador.</label>
+<label><input type="radio" name="q3"> Renomear o arquivo para <code>ola.python</code>.</label>
+<label><input type="radio" name="q3"> Digitar <code>python3 ola.py</code>: o Python está instalado, só o nome do comando é outro.</label>
+<label><input type="radio" name="q3"> Reiniciar o computador.</label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. No Windows, qual é o jeito de instalar o Python que a documentação oficial recomenda para o 3.14?</p>
+<label><input type="radio" name="q4"> Copiar a pasta do Python de outro computador.</label>
+<label><input type="radio" name="q4"> O Python install manager, pela Microsoft Store ou pelo python.org.</label>
+<label><input type="radio" name="q4"> O Windows já vem com o Python 3.14.</label>
+<label><input type="radio" name="q4"> Só dá para usar Python no Windows pelo navegador.</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. A Ana viu <code>&gt;&gt;&gt;</code> na tela e digitou <code>python3 --version</code>. Recebeu <code>NameError: name 'python3' is not defined</code>. Por quê?</p>
+<label><input type="radio" name="q5"> O Python dela está quebrado.</label>
+<label><input type="radio" name="q5"> Faltou o <code>sudo</code>.</label>
+<label><input type="radio" name="q5"> O certo é <code>Python3</code>, com P maiúsculo.</label>
+<label><input type="radio" name="q5"> Ela estava dentro do Python (o <code>&gt;&gt;&gt;</code>), e não no terminal; lá dentro, <code>python3</code> não quer dizer nada.</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. No macOS, por que não usar o <code>/usr/bin/python3</code> que já vem no sistema?</p>
+<label><input type="radio" name="q6"> Porque ele é da Apple, para as ferramentas de programação dela, costuma ser antigo e não deve ser modificado.</label>
+<label><input type="radio" name="q6"> Porque ele é o Python 2.</label>
+<label><input type="radio" name="q6"> Porque ele só funciona com o Homebrew.</label>
+<label><input type="radio" name="q6"> Porque o macOS não tem terminal.</label>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Instalar o Python é instalar o <strong>interpretador</strong>, o "tocador" dos seus programas <code>.py</code>. Confira se ele já está aí com <code>python3 --version</code>.</li>
+  <li>No <strong>Ubuntu e no Debian</strong>, o Python já vem (o Ubuntu 26.04 traz o 3.14). O comando é <code>python3</code>; <code>python</code>, sozinho, dá "Comando 'python' não encontrado".</li>
+  <li>O <code>pip</code> (instalador de pacotes) e o <code>venv</code> (ambientes virtuais) vêm em <code>python3-pip</code> e <code>python3-venv</code>: <code>sudo apt install python3-pip python3-venv</code>. Nunca use <code>sudo pip install</code>.</li>
+  <li>Escreva os programas num editor de texto puro (nano, Thonny, IDLE, VS Code), com <kbd>Tab</kbd> valendo 4 espaços.</li>
+  <li>No <strong>Windows</strong>, use o <strong>Python install manager</strong> (comandos <code>python</code> e <code>py</code>); o instalador <code>.exe</code> antigo está saindo e, se usado, precisa da caixinha do PATH.</li>
+  <li>No <strong>macOS</strong>, instale pelo python.org (e rode o <code>Install Certificates.command</code>) ou pelo Homebrew; o comando é <code>python3</code>.</li>
+  <li>Dentro do <code>&gt;&gt;&gt;</code> quem ouve é o Python; os comandos do terminal vão no <code>$</code>.</li>
+  <li>Próximo passo: escrever um arquivo e rodá-lo, em <a href="executar.html">Rodando um Programa (.py)</a>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
