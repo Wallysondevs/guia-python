@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Palavras-chave — as 35 palavras reservadas e as 4 palavras-chave suaves | Guia Python</title>
+<meta name="description" content="Referência das palavras-chave do Python 3.14: as 35 de keyword.kwlist (if, for, def, class, return, import, try, with, lambda, yield…) e as 4 suaves de keyword.softkwlist (match, case, type, _), o que cada uma faz, exemplo com resultado real, os erros de usar uma como nome e o link para a aula.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Palavras-chave</span></h1>
+
+<p class="intro">As <strong>palavras-chave</strong> (<em>keywords</em>) são as palavras que fazem parte da própria língua do Python: <code>if</code>, <code>for</code>, <code>def</code>, <code>return</code>… São como as palavras de um formulário que você não pode apagar: elas já têm um papel fixo, e por isso <strong>não podem ser usadas como nome</strong> de variável, função ou classe. No Python 3.14 são 35, mais 4 palavras-chave "suaves" que só são especiais em certos lugares. Esta página lista todas, com o que cada uma faz e o link para a aula. A regra dos nomes está na aula <a href="nomes-variaveis.html">Nomes de Variáveis</a>.</p>
+
+<div class="note">
+<strong>Como ler as tabelas</strong>
+<ul>
+  <li><strong>Exemplo</strong> é um trecho curto de programa; <strong>Resultado</strong> é o que o Python 3.14.4 mostrou no computador da Ana ao rodá-lo.</li>
+  <li>As palavras-chave são escritas sempre em <strong>minúsculas</strong>, menos três: <code>True</code>, <code>False</code> e <code>None</code>, que começam com maiúscula. <code>true</code> (minúsculo) não é nada para o Python: é um nome qualquer, e <code>print(true)</code> dá <code>NameError: name 'true' is not defined. Did you mean: 'True'?</code>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2 id="lista">A lista oficial, perguntada ao Python</h2>
+
+<p>O módulo <code>keyword</code> ("palavra-chave") guarda a lista oficial. <code>kwlist</code> são as palavras reservadas; <code>softkwlist</code>, as suaves:</p>
+
+<pre class="file" data-file="kw.py">import keyword
+
+print(keyword.kwlist)
+print(len(keyword.kwlist))
+print(keyword.softkwlist)
+</pre>
+
+<pre class="term">$ python3 kw.py
+['False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await', 'break', 'class', 'continue', 'def', 'del', 'elif', 'else', 'except', 'finally', 'for', 'from', 'global', 'if', 'import', 'in', 'is', 'lambda', 'nonlocal', 'not', 'or', 'pass', 'raise', 'return', 'try', 'while', 'with', 'yield']
+35
+['_', 'case', 'match', 'type']
+</pre>
+
+<p>O mesmo módulo responde se uma palavra é reservada: <code>keyword.iskeyword("for")</code> deu <code>True</code>, <code>keyword.iskeyword("print")</code> deu <code>False</code> (<code>print</code> é uma função, não uma palavra-chave) e <code>keyword.iskeyword("match")</code> deu <code>False</code>, porque <code>match</code> é suave: quem responde <code>True</code> para ela é <code>keyword.issoftkeyword("match")</code>.</p>
+
+<p>A ajuda embutida também mostra a lista, em colunas:</p>
+
+<pre class="term">$ python3 -c 'help("keywords")'
+
+Here is a list of the Python keywords.  Enter any keyword to get more help.
+
+False               class               from                or
+None                continue            global              pass
+True                def                 if                  raise
+and                 del                 import              return
+as                  elif                in                  try
+assert              else                is                  while
+async               except              lambda              with
+await               finally             nonlocal            yield
+break               for                 not
+
+</pre>
+
+<p>"Aqui está a lista das palavras-chave do Python. Digite qualquer uma para ter mais ajuda": no <a href="repl.html">modo interativo</a>, <code>help("for")</code> mostra a explicação (em inglês) de cada uma.</p>
+
+<hr>
+
+<h2 id="valores">Valores</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Palavra</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>True</code></td><td>O valor "verdadeiro".</td><td><code>print(3 &lt; 5)</code></td><td><code>True</code></td><td><a href="booleanos.html">Booleanos</a></td></tr>
+<tr><td><code>False</code></td><td>O valor "falso".</td><td><code>print(3 &gt; 5)</code></td><td><code>False</code></td><td><a href="booleanos.html">Booleanos</a></td></tr>
+<tr><td><code>None</code></td><td>"Nada", "nenhum valor". É o que uma função sem <code>return</code> devolve.</td><td><code>print(type(None))</code></td><td><code>&lt;class 'NoneType'&gt;</code></td><td><a href="none.html">O Valor None</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="logica">Lógica e comparação</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Palavra</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>and</code></td><td>"e": verdadeiro só se os dois lados forem.</td><td><code>print(True and False)</code></td><td><code>False</code></td><td><a href="operadores-logicos.html">and, or e not</a></td></tr>
+<tr><td><code>or</code></td><td>"ou": verdadeiro se um dos lados for. Devolve o primeiro valor verdadeiro.</td><td><code>print(0 or "padrão")</code></td><td><code>padrão</code></td><td><a href="operadores-logicos.html">and, or e not</a></td></tr>
+<tr><td><code>not</code></td><td>"não": inverte.</td><td><code>print(not True)</code></td><td><code>False</code></td><td><a href="operadores-logicos.html">and, or e not</a></td></tr>
+<tr><td><code>in</code></td><td>"está em?". Também faz parte do <code>for … in</code>.</td><td><code>print("café" in ["pão", "café"])</code></td><td><code>True</code></td><td><a href="operadores-is-in.html">is e in</a></td></tr>
+<tr><td><code>not in</code></td><td>"não está em?"</td><td><code>print("chá" not in ["pão"])</code></td><td><code>True</code></td><td><a href="operadores-is-in.html">is e in</a></td></tr>
+<tr><td><code>is</code></td><td>"é o mesmo objeto?" (não só igual: o mesmo).</td><td><code>a = [1]; b = a; c = [1]</code><br><code>print(a is b, a is c, a == c)</code></td><td><code>True False True</code></td><td><a href="operadores-is-in.html">is e in</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="decisoes">Decisões</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Palavra</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>if</code></td><td>"se": roda o bloco só se a condição for verdadeira.</td><td rowspan="3"><code>def checar(nota):</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;if nota &gt;= 7:</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return "aprovada"</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;elif nota &gt;= 5:</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return "recuperação"</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;else:</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return "reprovada"</code><br><code>print(checar(8), checar(5))</code></td><td rowspan="3"><code>aprovada recuperação</code></td><td><a href="if.html">if</a></td></tr>
+<tr><td><code>elif</code></td><td>"senão, se": mais uma condição, testada só se as de cima falharam.</td><td><a href="elif.html">elif</a></td></tr>
+<tr><td><code>else</code></td><td>"senão": o caso que sobrou. Também aparece em <code>for</code>, <code>while</code> e <code>try</code>.</td><td><a href="if-else.html">if e else</a></td></tr>
+<tr><td><code>if … else</code> numa linha</td><td>Escolhe um de dois valores.</td><td><code>n = 0</code><br><code>print(5 if n == 0 else 6)</code></td><td><code>5</code></td><td><a href="if-ternario.html">if em uma Linha</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="repeticoes">Repetições</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Palavra</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>while</code></td><td>"enquanto": repete enquanto a condição for verdadeira.</td><td><code>n = 3</code><br><code>while n &gt; 0:</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;n -= 1</code><br><code>print(n)</code></td><td><code>0</code></td><td><a href="while.html">while</a></td></tr>
+<tr><td><code>for</code></td><td>"para cada": passa por cada item de uma sequência.</td><td rowspan="3"><code>for i in range(5):</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;if i == 1: continue</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;if i == 3: break</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;print(i)</code><br><code>else:</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;print("nunca")</code></td><td rowspan="3"><code>0</code><br><code>2</code><br>(o <code>1</code> foi pulado, o laço parou no <code>3</code> e o <code>else</code> não rodou, por causa do <code>break</code>)</td><td><a href="for.html">for</a></td></tr>
+<tr><td><code>continue</code></td><td>"continuar": pula o resto desta volta e vai para a próxima.</td><td><a href="break-continue.html">break e continue</a></td></tr>
+<tr><td><code>break</code></td><td>"quebrar": sai do laço na hora.</td><td><a href="break-continue.html">break e continue</a></td></tr>
+<tr><td><code>else</code> no laço</td><td>Roda quando o laço termina <strong>sem</strong> <code>break</code>.</td><td colspan="2">veja o exemplo acima</td><td><a href="lacos-else.html">else nos Laços</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="funcoes">Funções</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Palavra</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>def</code></td><td>"definir": cria uma função.</td><td rowspan="2"><code>def dobro(x):</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;return x * 2</code></td><td rowspan="2">(cria a função; <code>dobro(21)</code> dá <code>42</code>)</td><td><a href="funcoes.html">Funções (def)</a></td></tr>
+<tr><td><code>return</code></td><td>"devolver": termina a função e entrega um valor.</td><td><a href="return.html">return</a></td></tr>
+<tr><td><code>lambda</code></td><td>Uma função pequena, de uma expressão só, sem nome.</td><td><code>f = lambda x: x * 2</code><br><code>print(f(21))</code></td><td><code>42</code></td><td><a href="lambda.html">lambda</a></td></tr>
+<tr><td><code>yield</code></td><td>"render, entregar": faz da função um gerador, que entrega um valor por vez.</td><td><code>def gera():</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;yield 1</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;yield 2</code><br><code>print(list(gera()))</code></td><td><code>[1, 2]</code></td><td><a href="geradores.html">Geradores (yield)</a></td></tr>
+<tr><td><code>global</code></td><td>Dentro de uma função, diz "esta variável é a de fora, do programa todo".</td><td><code>total = 0</code><br><code>def somar(valor):</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;global total</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;total += valor</code><br><code>somar(5); somar(3)</code><br><code>print(total)</code></td><td><code>8</code></td><td><a href="escopo.html">Escopo</a></td></tr>
+<tr><td><code>nonlocal</code></td><td>Numa função dentro de outra, diz "esta variável é a da função de fora".</td><td><code>def contador():</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;n = 0</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;def mais():</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nonlocal n</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;n += 1</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return n</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;return mais</code><br><code>m = contador(); m()</code><br><code>print(m())</code></td><td><code>2</code></td><td><a href="escopo.html">Escopo</a></td></tr>
+<tr><td><code>pass</code></td><td>"passar": não faz nada. Serve para deixar um bloco vazio sem erro.</td><td><code>class Vazia:</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;pass</code><br><code>print(Vazia)</code></td><td><code>&lt;class '__main__.Vazia'&gt;</code></td><td><a href="sintaxe.html">Sintaxe e Indentação</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="classes-modulos">Classes e módulos</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Palavra</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>class</code></td><td>"classe": cria um molde de objetos.</td><td><code>class Vazia:</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;pass</code></td><td>(veja <code>pass</code> acima)</td><td><a href="classes.html">Classes e Objetos</a></td></tr>
+<tr><td><code>import</code></td><td>"importar": traz um módulo para o programa.</td><td rowspan="3"><code>import math as m2</code><br><code>from math import pi</code><br><code>print(m2.sqrt(16), pi)</code></td><td rowspan="3"><code>4.0 3.141592653589793</code></td><td><a href="modulos.html">Módulos e import</a></td></tr>
+<tr><td><code>from</code></td><td>"de": traz só um nome de dentro do módulo.</td><td><a href="modulos.html">Módulos e import</a></td></tr>
+<tr><td><code>as</code></td><td>"como": dá um apelido. Também em <code>with … as</code> e <code>except … as</code>.</td><td><a href="modulos.html">Módulos e import</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="erros">Erros</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Palavra</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>try</code></td><td>"tentar": roda o bloco vigiando erros.</td><td rowspan="4"><code>try:</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;checar(-1)</code><br><code>except ValueError as erro:</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;print("erro:", erro)</code><br><code>finally:</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;print("fim")</code><br><br>(com um <code>checar</code> que faz <code>raise ValueError("nota negativa")</code> para nota menor que zero)</td><td rowspan="4"><code>erro: nota negativa</code><br><code>fim</code></td><td><a href="try-except.html">try e except</a></td></tr>
+<tr><td><code>except</code></td><td>"exceto": o que fazer se aquele erro acontecer.</td><td><a href="try-except.html">try e except</a></td></tr>
+<tr><td><code>finally</code></td><td>"finalmente": roda sempre, com erro ou sem.</td><td><a href="else-finally.html">else e finally</a></td></tr>
+<tr><td><code>raise</code></td><td>"levantar": lança um erro de propósito.</td><td><a href="raise.html">raise</a></td></tr>
+<tr><td><code>assert</code></td><td>"afirmar": confere uma condição; se for falsa, lança <code>AssertionError</code>.</td><td><code>assert 1 &gt; 2, "a nota não pode passar de 10"</code></td><td><code>AssertionError: a nota não pode passar de 10</code></td><td><a href="testes.html">Testes</a></td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>Novidade do 3.14: aviso para <code>return</code> dentro de <code>finally</code></strong> <span class="versao">3.14</span>
+<p>Um <code>return</code>, <code>break</code> ou <code>continue</code> dentro do <code>finally</code> apaga em silêncio o resultado (ou o erro) do <code>try</code>. O 3.14 passou a avisar (<a href="https://peps.python.org/pep-0765/">PEP 765</a>):</p>
+<pre class="file" data-file="fim.py">def f():
+    try:
+        return 1
+    finally:
+        return 2
+print(f())
+</pre>
+<pre class="term">$ python3 fim.py
+/home/ana/fim.py:5: SyntaxWarning: 'return' in a 'finally' block
+  return 2
+2
+</pre>
+<p>O programa roda (é só um aviso), mas o <code>return 1</code> foi jogado fora. Os nomes dos erros que vão no <code>except</code> estão na <a href="ref-excecoes.html">referência de exceções</a>.</p>
+</div>
+
+<hr>
+
+<h2 id="outras">Arquivos, apagar e esperar</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Palavra</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>with</code></td><td>"com": abre algo (um arquivo) e garante que será fechado no fim do bloco.</td><td><code>with open("lista.txt", "w") as arquivo:</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;arquivo.write("pão\n")</code><br><code>print(arquivo.closed)</code></td><td><code>True</code> (o arquivo já está fechado)</td><td><a href="gerenciadores-contexto.html">Gerenciadores de Contexto</a></td></tr>
+<tr><td><code>del</code></td><td>"apagar": apaga uma variável, um item de lista ou uma chave de dicionário.</td><td><code>x = 10</code><br><code>del x</code><br><code>print(x)</code></td><td><code>NameError: name 'x' is not defined</code></td><td><a href="listas-remover.html">Removendo Itens</a></td></tr>
+<tr><td><code>async</code></td><td>"assíncrono": cria uma função que pode esperar sem travar o programa.</td><td rowspan="2"><code>import asyncio</code><br><code>async def oi():</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;await asyncio.sleep(0)</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;return "oi"</code><br><code>print(asyncio.run(oi()))</code></td><td rowspan="2"><code>oi</code></td><td><a href="asyncio.html">asyncio</a></td></tr>
+<tr><td><code>await</code></td><td>"aguardar": dentro de uma função <code>async</code>, espera outra terminar.</td><td><a href="asyncio.html">asyncio</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="suaves">As palavras-chave suaves: <code>match</code>, <code>case</code>, <code>type</code> e <code>_</code></h2>
+
+<p>As palavras-chave <strong>suaves</strong> (<em>soft keywords</em>) só são especiais <strong>em certo lugar</strong>. Fora dele, são nomes comuns. Elas entraram depois que muita gente já tinha variáveis chamadas <code>match</code> ou <code>type</code>; tornar essas palavras proibidas quebraria esses programas.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Palavra</th><th>Especial quando…</th><th>Desde</th><th>Aula</th></tr>
+<tr><td><code>match</code></td><td>começa uma linha <code>match valor:</code> (escolher entre vários casos)</td><td>3.10</td><td><a href="match.html">match e case</a></td></tr>
+<tr><td><code>case</code></td><td>está dentro de um <code>match</code>: <code>case padrão:</code></td><td>3.10</td><td><a href="match.html">match e case</a></td></tr>
+<tr><td><code>_</code></td><td>é o padrão de um <code>case _:</code>, o "qualquer outra coisa"</td><td>3.10</td><td><a href="match.html">match e case</a></td></tr>
+<tr><td><code>type</code></td><td>começa uma linha <code>type Nome = …</code> (dar nome a um tipo)</td><td>3.12</td><td><a href="type-hints.html">Dicas de Tipo</a></td></tr>
+</table>
+</div>
+
+<p>As três primeiras trabalhando juntas:</p>
+
+<pre class="file" data-file="ponto.py">def ponto(p):
+    match p:
+        case (0, 0):
+            return "origem"
+        case (x, 0):
+            return f"no eixo x, em {x}"
+        case _:
+            return "outro lugar"
+
+print(ponto((0, 0)), ponto((3, 0)), ponto((1, 2)))
+</pre>
+
+<pre class="term">$ python3 ponto.py
+origem no eixo x, em 3 outro lugar
+</pre>
+
+<p>E a prova de que, fora desses lugares, elas são nomes comuns: este trecho rodou sem erro e mostrou <code>5</code> e depois <code>ok texto 9</code>.</p>
+
+<pre class="file" data-file="suaves.py">match = 5
+print(match)
+case = "ok"; type = "texto"; _ = 9
+print(case, type, _)
+</pre>
+
+<p>Poder não quer dizer dever: <code>type</code> também é o nome da função <code>type()</code>, que descobre o tipo de um valor, e uma variável <code>type</code> a esconde (veja o quadro abaixo). Já a frase <code>type Nota = float</code> não atrapalha a função: depois dela, <code>print(type(7.5))</code> continuou mostrando <code>&lt;class 'float'&gt;</code>, e <code>print(Nota.__value__)</code> mostrou <code>&lt;class 'float'&gt;</code>.</p>
+
+<hr>
+
+<h2 id="nao-sao">O que <strong>não</strong> é palavra-chave (mas parece)</h2>
+
+<p><code>print</code>, <code>input</code>, <code>len</code>, <code>list</code>, <code>str</code>, <code>int</code>, <code>type</code>, <code>sum</code>, <code>max</code>… são <a href="ref-funcoes-embutidas.html">funções embutidas</a>, não palavras-chave. O Python <strong>deixa</strong> você usar esses nomes para uma variável, e é justamente esse o perigo: a variável toma o lugar da função.</p>
+
+<div class="cenario">
+<strong>Uma variável chamada <code>print</code></strong>
+<pre class="file" data-file="sombra.py">print = "Bom dia"
+print("Olá, Ana!")
+</pre>
+<pre class="term">$ python3 sombra.py
+Traceback (most recent call last):
+  File "/home/ana/sombra.py", line 2, in &lt;module&gt;
+    print("Olá, Ana!")
+    ~~~~~^^^^^^^^^^^^^
+TypeError: 'str' object is not callable
+</pre>
+<p>A linha 1 é aceita: <code>print</code> não é reservada, e virou o texto <code>"Bom dia"</code>. Na linha 2, <code>print(…)</code> tenta "chamar" esse texto como se fosse função, e o Python reclama: <code>'str' object is not callable</code> ("um objeto <code>str</code> não pode ser chamado"). O mesmo acontece com uma variável <code>list</code>, <code>sum</code> ou <code>input</code>. Escolha nomes que descrevem o conteúdo: <code>saudacao</code>, <code>compras</code>, <code>total</code>.</p>
+</div>
+
+<hr>
+
+<h2 id="quando-da-errado">Quando dá errado: uma palavra-chave como nome</h2>
+
+<p>A Ana quis guardar a turma numa variável chamada <code>class</code>:</p>
+
+<div class="cenario">
+<strong><code>class</code> como nome de variável</strong>
+<pre class="file" data-file="turma.py">aluna = "Ana"
+class = "3A"
+print(aluna, class)
+</pre>
+<pre class="term">$ python3 turma.py
+  File "/home/ana/turma.py", line 2
+    class = "3A"
+          ^
+SyntaxError: invalid syntax
+</pre>
+<ul>
+  <li>Não há a linha <code>Traceback</code>: o erro foi achado na <strong>leitura</strong> do arquivo, e nenhuma linha rodou (nem a 1).</li>
+  <li><code>line 2</code> e o <code>^</code> embaixo do <code>=</code>: depois de <code>class</code> o Python esperava o nome de uma classe, e encontrou um sinal de igual.</li>
+  <li><code>SyntaxError: invalid syntax</code>: "sintaxe inválida". A mensagem não diz "palavra reservada"; quando um <code>invalid syntax</code> aparece numa linha que parece certa, confira se algum nome dela está na lista desta página.</li>
+</ul>
+<p>O conserto é trocar o nome: <code>turma = "3A"</code>.</p>
+</div>
+
+<p>As mensagens reais de cada caso, colhidas com <code>python3 -c '…'</code> no computador da Ana:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Código</th><th>Mensagem real</th><th>Quer dizer</th></tr>
+<tr><td><code>class = "3A"</code>, <code>for = 3</code>, <code>pass = 1</code>, <code>from = "Ana"</code>, <code>import = 1</code></td><td><code>SyntaxError: invalid syntax</code></td><td>palavra reservada usada como nome</td></tr>
+<tr><td><code>def if(): pass</code></td><td><code>SyntaxError: invalid syntax</code> (com <code>^^</code> embaixo do <code>if</code>)</td><td>o mesmo, como nome de função</td></tr>
+<tr><td><code>True = 1</code></td><td><code>SyntaxError: cannot assign to True</code></td><td>"não dá para atribuir a <code>True</code>"</td></tr>
+<tr><td><code>None = 0</code></td><td><code>SyntaxError: cannot assign to None</code></td><td>o mesmo com <code>None</code></td></tr>
+<tr><td><code>print(lambda)</code></td><td><code>SyntaxError: invalid syntax</code></td><td><code>lambda</code> sozinha está incompleta</td></tr>
+<tr><td><code>break</code> fora de um laço</td><td><code>SyntaxError: 'break' outside loop</code></td><td>"<code>break</code> fora de laço"</td></tr>
+<tr><td><code>continue</code> fora de um laço</td><td><code>SyntaxError: 'continue' not properly in loop</code></td><td>"<code>continue</code> não está num laço"</td></tr>
+<tr><td><code>return 5</code> fora de função</td><td><code>SyntaxError: 'return' outside function</code></td><td>"<code>return</code> fora de função"</td></tr>
+<tr><td><code>yield 1</code> fora de função</td><td><code>SyntaxError: 'yield' outside function</code></td><td>o mesmo com <code>yield</code></td></tr>
+<tr><td><code>await x</code> fora de função</td><td><code>SyntaxError: 'await' outside function</code></td><td>só vale dentro de <code>async def</code></td></tr>
+<tr><td><code>nonlocal x</code> no programa principal</td><td><code>SyntaxError: nonlocal declaration not allowed at module level</code></td><td>só vale numa função dentro de outra</td></tr>
+<tr><td><code>nonlocal y</code> sem um <code>y</code> na função de fora</td><td><code>SyntaxError: no binding for nonlocal 'y' found</code></td><td>"nenhum <code>y</code> encontrado lá fora"</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Experimente</h2>
+
+<div class="trypy">
+<p class="try-task"><strong>Livre:</strong> pergunte ao Python se uma palavra é reservada. Troque as palavras da lista (tente <code>"else"</code>, <code>"input"</code>, <code>"case"</code>, <code>"true"</code>) e rode.</p>
+<pre class="script" data-file="main.py">import keyword
+
+for palavra in ["for", "print", "match", "True", "lista"]:
+    if keyword.iskeyword(palavra):
+        tipo = "palavra-chave: não pode ser nome"
+    elif keyword.issoftkeyword(palavra):
+        tipo = "palavra-chave suave: especial só em certos lugares"
+    else:
+        tipo = "nome livre"
+    print(f"{palavra:8} {tipo}")
+
+print(len(keyword.kwlist), "palavras-chave e", len(keyword.softkwlist), "suaves")
+</pre>
+</div>
+
+<p>No computador da Ana, sem mudar nada, a saída foi:</p>
+
+<pre class="term">$ python3 livre.py
+for      palavra-chave: não pode ser nome
+print    nome livre
+match    palavra-chave suave: especial só em certos lugares
+True     palavra-chave: não pode ser nome
+lista    nome livre
+35 palavras-chave e 4 suaves
+</pre>
+
+<div class="trypy" data-goal="out:Ana 3A;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa da Ana não roda porque usa <code>class</code> como nome de variável. Rode para ver o erro, depois troque o nome (nas duas linhas!) por um que não seja palavra-chave, como <code>turma</code>. A saída deve ser <code>Ana 3A</code>.</p>
+<pre class="script" data-file="main.py">aluna = "Ana"
+class = "3A"
+print(aluna, class)
+</pre>
+<pre class="solucao" data-file="main.py">aluna = "Ana"
+turma = "3A"
+print(aluna, turma)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>O Python 3.14 tem <strong>35 palavras-chave</strong> (<code>keyword.kwlist</code>) e <strong>4 suaves</strong> (<code>keyword.softkwlist</code>: <code>match</code>, <code>case</code>, <code>type</code>, <code>_</code>).</li>
+  <li>Uma palavra-chave não pode ser nome de variável, função ou classe: o resultado é <code>SyntaxError</code>, antes de o programa rodar.</li>
+  <li>As suaves só são especiais no lugar delas (<code>match …:</code>, <code>case …:</code>, <code>type X = …</code>); fora dali, são nomes comuns.</li>
+  <li>Só <code>True</code>, <code>False</code> e <code>None</code> começam com maiúscula.</li>
+  <li><code>print</code>, <code>list</code>, <code>input</code>, <code>type</code> não são palavras-chave: o Python aceita esses nomes para variáveis, mas a variável esconde a função. Evite.</li>
+  <li>Dúvida? <code>keyword.iskeyword("palavra")</code> responde, e <code>help("for")</code> explica cada uma.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
