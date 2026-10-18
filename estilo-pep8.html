@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python PEP 8 — o estilo de código do Python | Guia Python</title>
+<meta name="description" content="O guia de estilo do Python (PEP 8) para quem está começando: indentação de 4 espaços, nomes em minúsculas_com_sublinhado, CapWords nas classes, MAIÚSCULAS nas constantes, espaços, linhas em branco, tamanho da linha, imports, comparações com None e True, o Zen do Python e as ferramentas ruff e black, com saídas reais e os erros que um nome mal escolhido provoca.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">PEP 8</span></h1>
+
+<p class="intro">Os dois programas abaixo fazem exatamente a mesma coisa e mostram o mesmo resultado. Um deles você entende em segundos; o outro, você precisa decifrar. A diferença não está no que o código faz, está no <strong>jeito de escrever</strong>. A comunidade Python combinou um jeito, escrito num documento chamado <strong>PEP 8</strong>, e quase todo código Python que você vai encontrar segue esse combinado. Nesta aula você aprende as regras principais e as ferramentas que conferem (e até arrumam) o código por você.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é a PEP 8 e por que estilo importa, se o Python roda de qualquer jeito.</li>
+  <li>Indentação, tamanho da linha e linhas em branco.</li>
+  <li>Como dar nome a variáveis, funções, classes, constantes e módulos.</li>
+  <li>Onde vão (e onde não vão) os espaços.</li>
+  <li>Como organizar os <code>import</code>s, e por que evitar <code>from modulo import *</code>.</li>
+  <li>Comparações no estilo do Python: <code>is None</code>, <code>if lista:</code>, sem <code>== True</code>.</li>
+  <li>As ferramentas <code>ruff</code> e <code>black</code>, com a saída real.</li>
+  <li>Os erros de verdade que um nome mal escolhido causa.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: letra legível e ortografia combinada</h2>
+<p>Um bilhete escrito às pressas, sem pontuação, com abreviações que só você entende, até passa a mensagem. Mas quem lê sofre. Por isso existem a ortografia e as regras de pontuação: todo mundo escreve do mesmo jeito, e todo mundo lê sem esforço.</p>
+<p>Com código é igual. O Python aceita muita coisa, mas um programa é <strong>lido muito mais vezes do que é escrito</strong>: por você mesma daqui a um mês, por quem vai continuar o seu trabalho, por quem vai ajudar a achar um erro. A PEP 8 é a "ortografia" do Python.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Termo</th><th>O que é</th></tr>
+<tr><td><strong>PEP</strong></td><td><em>Python Enhancement Proposal</em>, "proposta de melhoria do Python": os documentos numerados em que a linguagem é discutida e decidida. Toda novidade do Python nasce de uma PEP (veja as <a href="novidades.html">Novidades</a>)</td></tr>
+<tr><td><strong>PEP 8</strong></td><td>A de número 8: o "Guia de Estilo para Código Python", escrito em 2001 por Guido van Rossum (o criador do Python) e outros, e atualizado desde então. Está em <code>peps.python.org/pep-0008</code></td></tr>
+<tr><td><strong>Estilo</strong></td><td>Tudo o que muda a aparência do código sem mudar o que ele faz: espaços, nomes, quebras de linha</td></tr>
+</table>
+</div>
+
+<h3>Antes e depois</h3>
+
+<pre class="file" data-file="baguncado.py">import sys, os
+def CalculaTotal( Itens,Desc ):
+  T=0
+  for i in Itens :
+      T=T+i[ 0 ]*i[1]
+  if Desc==True : T = T*0.9
+  return T
+class carrinho:
+    def __init__(self,dono): self.dono=dono;self.itens=[]
+print(CalculaTotal([(27.90,2),(8.49,3)],True))
+</pre>
+
+<pre class="file" data-file="arrumado.py">DESCONTO_CLIENTE_FIEL = 0.10
+
+
+def calcular_total(itens, cliente_fiel):
+    total = 0
+    for preco, quantidade in itens:
+        total += preco * quantidade
+    if cliente_fiel:
+        total *= 1 - DESCONTO_CLIENTE_FIEL
+    return total
+
+
+class Carrinho:
+    def __init__(self, dono):
+        self.dono = dono
+        self.itens = []
+
+
+print(calcular_total([(27.90, 2), (8.49, 3)], True))
+</pre>
+
+<pre class="term">$ python3 baguncado.py
+73.143
+$ python3 arrumado.py
+73.143
+</pre>
+
+<p>Mesmo resultado. Mas no segundo dá para ler como um texto: "para cada preço e quantidade nos itens, some ao total; se for cliente fiel, aplique o desconto". As seções a seguir mostram, uma por uma, as regras que transformaram o primeiro no segundo.</p>
+
+<hr>
+
+<h2>1. Indentação: 4 espaços</h2>
+<p>No Python, a indentação (o recuo no começo da linha) não é enfeite: é ela que diz o que está dentro do <code>for</code>, do <code>if</code>, da função (veja <a href="sintaxe.html">Sintaxe e Indentação</a>). O Python aceita qualquer quantidade de espaços, desde que você seja coerente dentro do bloco. O <code>baguncado.py</code> usa 2 espaços num lugar, 6 em outro e 4 na classe, e funciona. A PEP 8 combina: <strong>4 espaços por nível</strong>, sempre.</p>
+
+<pre class="file" data-file="indentacao.py">def calcular_total(itens):
+    total = 0  # 1 nível: 4 espaços
+    for preco, quantidade in itens:
+        total += preco * quantidade  # 2 níveis: 8 espaços
+    return total
+</pre>
+
+<p>E a tecla Tab? A PEP 8 prefere espaços. Os editores de código (VS Code, o editor deste guia e outros) já trocam o Tab por 4 espaços sozinhos. O que <strong>não pode</strong> é misturar os dois no mesmo bloco: o Python recusa (veja <a href="#errado">Quando dá errado</a>).</p>
+
+<hr>
+
+<h2>2. Nomes</h2>
+<p>Cada tipo de coisa tem o seu jeito de escrever o nome. Assim, só de olhar, você sabe se <code>Carrinho</code> é uma classe e se <code>calcular_total</code> é uma função.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>O quê</th><th>Estilo</th><th>Exemplo</th><th>Errado (pela PEP 8)</th></tr>
+<tr><td>Variáveis</td><td><code>minusculas_com_sublinhado</code> (o "snake_case", "jeito de cobra")</td><td><code>preco_unitario</code>, <code>total</code></td><td><code>PrecoUnitario</code>, <code>precoUnitario</code>, <code>T</code></td></tr>
+<tr><td>Funções e métodos</td><td><code>minusculas_com_sublinhado</code></td><td><code>calcular_total()</code></td><td><code>CalculaTotal()</code></td></tr>
+<tr><td>Parâmetros</td><td><code>minusculas_com_sublinhado</code></td><td><code>itens</code>, <code>cliente_fiel</code></td><td><code>Itens</code>, <code>Desc</code></td></tr>
+<tr><td>Classes</td><td><code>PalavrasComMaiuscula</code> (o "CapWords")</td><td><code>Carrinho</code>, <code>ContaBancaria</code></td><td><code>carrinho</code>, <code>conta_bancaria</code></td></tr>
+<tr><td>Constantes</td><td><code>MAIUSCULAS_COM_SUBLINHADO</code></td><td><code>DESCONTO_CLIENTE_FIEL</code>, <code>TAXA_ENTREGA</code></td><td><code>desconto</code> (para um valor que nunca muda)</td></tr>
+<tr><td>Módulos (arquivos <code>.py</code>)</td><td>minúsculas, curtos, sublinhado se ajudar</td><td><code>loja.py</code>, <code>notas_turma.py</code></td><td><code>Loja.py</code>, <code>Notas Turma.py</code></td></tr>
+</table>
+</div>
+
+<p>Mais quatro conselhos sobre nomes:</p>
+<ul>
+  <li><strong>Diga o que é.</strong> <code>for preco, quantidade in itens:</code> se lê sozinho; <code>for i in Itens:</code> com <code>i[0]</code> e <code>i[1]</code> obriga quem lê a adivinhar. Letras soltas (<code>i</code>, <code>x</code>) só para contadores e contas curtas.</li>
+  <li><strong>Nunca use <code>l</code> (L minúsculo), <code>O</code> (o maiúsculo) ou <code>I</code> (i maiúsculo) sozinhos como nome.</strong> Em muitas fontes eles se confundem com <code>1</code> e <code>0</code>: <code>l = 1</code>, <code>O = 0</code>.</li>
+  <li><strong>Não use nomes que o Python já usa</strong>, como <code>list</code>, <code>str</code>, <code>sum</code>, <code>id</code>, <code>input</code>: você esconde a função embutida (o erro está em <a href="#errado">Quando dá errado</a>). Se o nome bom é uma palavra reservada, a PEP 8 sugere um sublinhado no fim: <code>class_</code>, <code>id_</code>.</li>
+  <li><strong>Sem acento, por costume.</strong> O Python 3 aceita <code>preço = 10</code>, mas quase ninguém escreve assim (é difícil de digitar em teclados de outros países). Este guia usa <code>preco</code>.</li>
+</ul>
+
+<div class="trypy" data-goal="src:def calcular_media\(;;src:^notas_da_turma =;;src:calcular_media\(notas_da_turma\);;out:Média: 7.5">
+<p class="try-task"><strong>Missão:</strong> renomeie, no estilo da PEP 8, a função <code>CalcularMedia</code> para <code>calcular_media</code> e a variável <code>NotasDaTurma</code> para <code>notas_da_turma</code> (em todos os lugares em que elas aparecem). O resultado continua o mesmo.</p>
+<pre class="script" data-file="main.py">def CalcularMedia(Notas):
+    return sum(Notas) / len(Notas)
+
+
+NotasDaTurma = [8, 7, 9, 6]
+print("Média:", CalcularMedia(NotasDaTurma))
+</pre>
+<pre class="solucao" data-file="main.py">def calcular_media(notas):
+    return sum(notas) / len(notas)
+
+
+notas_da_turma = [8, 7, 9, 6]
+print("Média:", calcular_media(notas_da_turma))
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Espaços</h2>
+<p>A regra geral: espaço onde ajuda a separar as ideias, nenhum espaço onde só atrapalha.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Regra</th><th>Assim</th><th>Assim não</th></tr>
+<tr><td>Um espaço de cada lado da atribuição e das comparações</td><td><code>total = 0</code>, <code>if desconto == 10:</code></td><td><code>total=0</code>, <code>if desconto==10:</code></td></tr>
+<tr><td>Um espaço de cada lado dos operadores (<code>+</code>, <code>-</code>, <code>+=</code>, <code>and</code>…)</td><td><code>total = total + preco</code></td><td><code>total=total+preco</code></td></tr>
+<tr><td>Espaço depois da vírgula, nunca antes</td><td><code>(27.90, 2)</code>, <code>def f(a, b):</code></td><td><code>(27.90,2)</code>, <code>(27.90 , 2)</code></td></tr>
+<tr><td>Nada logo depois de abrir nem antes de fechar <code>( [ {</code></td><td><code>itens[0]</code>, <code>calcular(itens)</code></td><td><code>itens[ 0 ]</code>, <code>calcular( itens )</code></td></tr>
+<tr><td>Nada entre o nome da função e o <code>(</code></td><td><code>print("oi")</code></td><td><code>print ("oi")</code></td></tr>
+<tr><td>Nada antes do <code>:</code> do <code>if</code>, <code>for</code>, <code>def</code></td><td><code>for item in itens:</code></td><td><code>for item in itens :</code></td></tr>
+<tr><td>Argumento nomeado e valor padrão: <strong>sem</strong> espaço no <code>=</code></td><td><code>print(a, end="")</code>, <code>def f(x=0):</code></td><td><code>print(a, end = "")</code></td></tr>
+<tr><td>Uma instrução por linha</td><td><code>if desconto:</code> e, na linha de baixo, o que fazer</td><td><code>if desconto: total *= 0.9</code>, <code>a = 1; b = 2</code></td></tr>
+</table>
+</div>
+
+<p>Em contas misturadas, a PEP 8 permite tirar os espaços do operador que é feito primeiro, para mostrar a <a href="precedencia.html">precedência</a>: <code>x = a*2 + b</code> fica mais claro que <code>x = a * 2 + b</code>. As duas formas são aceitas.</p>
+
+<hr>
+
+<h2>4. Linhas: tamanho e linhas em branco</h2>
+
+<h3>No máximo 79 caracteres</h3>
+<p>A PEP 8 pede linhas de até <strong>79 caracteres</strong> (72 nos comentários e docstrings), para caber em janelas estreitas e em dois arquivos lado a lado. Muitas equipes combinam um limite um pouco maior (o <code>black</code> e o <code>ruff</code> usam 88; a própria PEP 8 aceita até 99 quando a equipe concorda). Para quebrar uma linha comprida, use os <strong>parênteses</strong>: dentro de <code>( )</code>, <code>[ ]</code> ou <code>{ }</code>, o Python deixa você continuar na linha de baixo.</p>
+
+<pre class="file" data-file="linhas.py"># comprida demais (111 caracteres)
+mensagem = f"Olá, {nome_do_cliente}! O seu pedido de número {numero_do_pedido} saiu para entrega e chega hoje."
+
+# quebrada com parênteses: dois textos seguidos viram um só
+mensagem = (
+    f"Olá, {nome_do_cliente}! O seu pedido de número {numero_do_pedido} "
+    "saiu para entrega e chega hoje."
+)
+
+# uma chamada com muitos argumentos: um por linha
+total = calcular_total(
+    itens=carrinho,
+    cliente_fiel=True,
+    cupom="PADARIA10",
+)
+</pre>
+
+<p>A vírgula depois do último argumento (<code>cupom="PADARIA10",</code>) é permitida e costumeira quando cada item está na sua linha: acrescentar um item depois mexe numa linha só. Existe também a barra invertida <code>\</code> no fim da linha para continuar na próxima, mas a PEP 8 prefere os parênteses.</p>
+
+<h3>Linhas em branco</h3>
+<ul>
+  <li><strong>Duas</strong> linhas em branco antes e depois de cada função e classe "de fora" (as que não estão dentro de outra coisa).</li>
+  <li><strong>Uma</strong> linha em branco entre os métodos dentro de uma classe.</li>
+  <li>Dentro de uma função, uma linha em branco de vez em quando para separar as "etapas", como parágrafos de um texto. Sem exagero.</li>
+</ul>
+<p>Volte ao <code>arrumado.py</code> e repare: duas linhas antes de <code>def calcular_total</code>, duas antes de <code>class Carrinho</code>, duas antes do <code>print</code> final.</p>
+
+<hr>
+
+<h2>5. <code>import</code>s</h2>
+
+<pre class="file" data-file="imports.py">import csv
+import json
+from pathlib import Path
+
+import requests
+
+from loja import calcular_total
+</pre>
+
+<ol class="passo">
+  <li><strong>No começo do arquivo</strong> (depois só da docstring do módulo, se houver).</li>
+  <li><strong>Um módulo por linha:</strong> <code>import csv</code> e <code>import json</code>, e não <code>import csv, json</code>. (Já <code>from pathlib import Path, PurePath</code>, vários nomes do mesmo módulo, pode.)</li>
+  <li><strong>Em três grupos, separados por uma linha em branco:</strong> primeiro a biblioteca padrão (o que vem com o Python: <code>csv</code>, <code>json</code>, <code>pathlib</code>); depois os pacotes instalados com o <a href="pip.html">pip</a> (como o <code>requests</code>); por último os seus <a href="modulos-proprios.html">módulos</a> (<code>loja</code>). Dentro de cada grupo, em ordem alfabética, por costume.</li>
+  <li><strong>Evite <code>from modulo import *</code></strong> ("importe tudo"): ninguém sabe de onde veio cada nome, e um nome importado pode esconder outro, como o <code>open</code> do exemplo em <a href="#errado">Quando dá errado</a>.</li>
+  <li><strong>Não importe o que não usa.</strong> O <code>baguncado.py</code> importava <code>sys</code> e <code>os</code> sem usar nenhum dos dois.</li>
+</ol>
+
+<hr>
+
+<h2>6. Comparações no estilo do Python</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Para saber se…</th><th>Escreva</th><th>Em vez de</th><th>Por quê</th></tr>
+<tr><td>uma variável é <code>None</code></td><td><code>if resposta is None:</code></td><td><code>if resposta == None:</code></td><td><code>None</code> é um só; <code>is</code> confere se é ele mesmo (veja <a href="operadores-is-in.html">is e in</a>)</td></tr>
+<tr><td>um valor verdadeiro/falso é verdadeiro</td><td><code>if cliente_fiel:</code></td><td><code>if cliente_fiel == True:</code></td><td>O <code>if</code> já testa a verdade; o <code>== True</code> não acrescenta nada</td></tr>
+<tr><td>…é falso</td><td><code>if not cliente_fiel:</code></td><td><code>if cliente_fiel == False:</code></td><td>Idem</td></tr>
+<tr><td>uma lista (ou texto, dicionário) está vazia</td><td><code>if not itens:</code></td><td><code>if len(itens) == 0:</code></td><td>Coleções vazias valem "falso" (veja <a href="booleanos.html">Booleanos</a>)</td></tr>
+<tr><td>uma lista tem algo</td><td><code>if itens:</code></td><td><code>if len(itens) &gt; 0:</code></td><td>Idem</td></tr>
+<tr><td>o tipo de um valor</td><td><code>if isinstance(x, int):</code></td><td><code>if type(x) == int:</code></td><td><code>isinstance</code> também aceita os tipos "filhos" (veja <a href="type.html">type</a>)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>7. O Zen do Python</h2>
+<p>Por trás da PEP 8 há uma "filosofia", escondida dentro do próprio Python. Digite <code>import this</code>:</p>
+
+<pre class="term">$ python3 -c "import this"
+The Zen of Python, by Tim Peters
+
+Beautiful is better than ugly.
+Explicit is better than implicit.
+Simple is better than complex.
+Complex is better than complicated.
+Flat is better than nested.
+Sparse is better than dense.
+Readability counts.
+Special cases aren't special enough to break the rules.
+Although practicality beats purity.
+Errors should never pass silently.
+Unless explicitly silenced.
+In the face of ambiguity, refuse the temptation to guess.
+There should be one-- and preferably only one --obvious way to do it.
+Although that way may not be obvious at first unless you're Dutch.
+Now is better than never.
+Although never is often better than *right* now.
+If the implementation is hard to explain, it's a bad idea.
+If the implementation is easy to explain, it may be a good idea.
+Namespaces are one honking great idea -- let's do more of those!
+</pre>
+
+<p>"O Zen do Python", 19 frases de Tim Peters. Algumas, traduzidas: "Bonito é melhor que feio." "Explícito é melhor que implícito." "Simples é melhor que complexo." "<strong>A legibilidade conta.</strong>" "Erros nunca devem passar em silêncio." "Deve haver um (e de preferência só um) jeito óbvio de fazer." "Se a implementação é difícil de explicar, é uma má ideia." (A brincadeira do "a não ser que você seja holandês" é com o Guido van Rossum, que é holandês.)</p>
+
+<div class="trypy">
+<p class="try-task"><strong>Experimente:</strong> rode e leia o Zen do Python. Qual frase combina mais com o <code>baguncado.py</code>?</p>
+<pre class="script" data-file="main.py">import this
+</pre>
+</div>
+
+<hr>
+
+<h2>8. As ferramentas: <code>ruff</code> e <code>black</code></h2>
+<p>Ninguém confere a PEP 8 de olho. Há programas que fazem isso: os <strong>linters</strong> (de <em>lint</em>, os fiapos de tecido que grudam na roupa) apontam os problemas, e os <strong>formatadores</strong> reescrevem o código no estilo certo. Os dois mais usados hoje são o <code>ruff</code> (linter e formatador) e o <code>black</code> (formatador). Eles não vêm com o Python: a Ana instalou os dois num <a href="venv.html">ambiente virtual</a>.</p>
+
+<pre class="term">$ python3 -m venv .venv
+$ .venv/bin/pip install -q ruff black
+$ .venv/bin/ruff --version
+ruff 0.17.1
+$ .venv/bin/black --version
+black, 26.10.1 (compiled: yes)
+Python (CPython) 3.14.4
+</pre>
+
+<p>(As versões mudam com o tempo; as saídas abaixo são destas versões.)</p>
+
+<h3>O linter: <code>ruff check</code></h3>
+<p>Por padrão, o <code>ruff check</code> confere só um grupo pequeno de regras (nesta versão, entre outras, os imports desnecessários e a ordem dos imports):</p>
+
+<pre class="term">$ .venv/bin/ruff check --output-format concise baguncado.py
+baguncado.py:1:1: I001 [*] Import block is un-sorted or un-formatted
+baguncado.py:1:8: F401 [*] `sys` imported but unused
+baguncado.py:1:13: F401 [*] `os` imported but unused
+Found 3 errors.
+[*] 3 fixable with `--fix`.
+</pre>
+
+<p>Pedindo mais regras com <code>--select</code> (<code>E</code> e <code>W</code>: os erros e avisos de estilo da PEP 8; <code>F</code>: os erros prováveis; <code>N</code>: os nomes), aparece quase tudo o que você viu nesta aula:</p>
+
+<pre class="term">$ .venv/bin/ruff check --select E,W,F,N --output-format concise baguncado.py
+baguncado.py:1:1: E401 [*] Multiple imports on one line
+baguncado.py:1:8: F401 [*] `sys` imported but unused
+baguncado.py:1:13: F401 [*] `os` imported but unused
+baguncado.py:2:5: N802 Function name `CalculaTotal` should be lowercase
+baguncado.py:2:19: N803 Argument name `Itens` should be lowercase
+baguncado.py:2:25: N803 Argument name `Desc` should be lowercase
+baguncado.py:3:3: N806 Variable `T` in function should be lowercase
+baguncado.py:5:7: N806 Variable `T` in function should be lowercase
+baguncado.py:6:6: E712 Avoid equality comparisons to `True`; use `Desc:` for truth checks
+baguncado.py:6:17: E701 Multiple statements on one line (colon)
+baguncado.py:6:19: N806 Variable `T` in function should be lowercase
+baguncado.py:8:7: N801 Class name `carrinho` should use CapWords convention
+baguncado.py:9:44: E702 Multiple statements on one line (semicolon)
+Found 13 errors.
+[*] 3 fixable with `--fix` (1 unsafe fix available with `--fix --unsafe-fixes`).
+</pre>
+
+<dl class="anatomy">
+  <dt>baguncado.py:2:5:</dt><dd>Arquivo, linha 2, coluna 5: onde está o problema.</dd>
+  <dt>N802</dt><dd>O código da regra. Cada letra é uma família (<code>E</code>, <code>W</code>, <code>F</code>, <code>N</code>, <code>I</code> de <em>imports</em>…). Com o código, você acha a explicação completa na documentação do <code>ruff</code>.</dd>
+  <dt>Function name `CalculaTotal` should be lowercase</dt><dd>"O nome da função <code>CalculaTotal</code> deveria ser em minúsculas."</dd>
+  <dt>[*]</dt><dd>O <code>ruff</code> sabe consertar este sozinho, com <code>--fix</code>.</dd>
+</dl>
+
+<p>Algumas traduções: <code>E401</code> "vários imports numa linha"; <code>F401</code> "<code>sys</code> importado mas não usado"; <code>E712</code> "evite comparar com <code>True</code>; use <code>Desc:</code>"; <code>E701</code>/<code>E702</code> "várias instruções numa linha (dois-pontos / ponto e vírgula)"; <code>N801</code> "o nome da classe <code>carrinho</code> deveria usar CapWords". E o tamanho da linha tem a regra <code>E501</code>:</p>
+
+<pre class="term">$ .venv/bin/ruff check --select E501 --output-format concise linha_longa.py
+linha_longa.py:1:89: E501 Line too long (111 &gt; 88)
+Found 1 error.
+</pre>
+
+<p>"Linha comprida demais (111 &gt; 88)". O <code>ruff</code> usa 88 como limite, a não ser que você configure outro. Um código sem nenhum problema recebe: <code>All checks passed!</code> ("tudo conferido"), como o <code>arrumado.py</code>:</p>
+
+<pre class="term">$ .venv/bin/ruff check --output-format concise arrumado.py
+All checks passed!
+</pre>
+
+<h3>O formatador: <code>ruff format</code> (ou <code>black</code>)</h3>
+<p>Com <code>--diff</code>, o formatador mostra o que <strong>mudaria</strong>, sem mexer no arquivo. As linhas com <code>-</code> saem, as com <code>+</code> entram:</p>
+
+<pre class="term">$ .venv/bin/ruff format --diff baguncado.py
+--- baguncado.py
++++ baguncado.py
+@@ -1,10 +1,19 @@
+ import sys, os
+-def CalculaTotal( Itens,Desc ):
+-  T=0
+-  for i in Itens :
+-      T=T+i[ 0 ]*i[1]
+-  if Desc==True : T = T*0.9
+-  return T
++
++
++def CalculaTotal(Itens, Desc):
++    T = 0
++    for i in Itens:
++        T = T + i[0] * i[1]
++    if Desc == True:
++        T = T * 0.9
++    return T
++
++
+ class carrinho:
+-    def __init__(self,dono): self.dono=dono;self.itens=[]
+-print(CalculaTotal([(27.90,2),(8.49,3)],True))
++    def __init__(self, dono):
++        self.dono = dono
++        self.itens = []
++
++
++print(CalculaTotal([(27.90, 2), (8.49, 3)], True))
+
+1 file would be reformatted
+</pre>
+
+<p>Indentação de 4, espaços nos lugares certos, uma instrução por linha, duas linhas em branco entre as definições. O <code>black --diff baguncado.py</code> propõe exatamente as mesmas mudanças (o <code>ruff format</code> foi feito para imitar o <code>black</code>). Sem o <code>--diff</code>, o arquivo é reescrito. A Ana fez isso numa cópia, e depois pediu ao <code>ruff check --fix</code> que consertasse o que soubesse:</p>
+
+<pre class="term">$ cp baguncado.py copia.py
+$ .venv/bin/ruff format copia.py
+1 file reformatted
+$ .venv/bin/ruff check --fix --output-format concise copia.py
+Found 2 errors (2 fixed, 0 remaining).
+$ .venv/bin/ruff format copia.py
+1 file reformatted
+$ cat copia.py
+def CalculaTotal(Itens, Desc):
+    T = 0
+    for i in Itens:
+        T = T + i[0] * i[1]
+    if Desc == True:
+        T = T * 0.9
+    return T
+
+
+class carrinho:
+    def __init__(self, dono):
+        self.dono = dono
+        self.itens = []
+
+
+print(CalculaTotal([(27.90, 2), (8.49, 3)], True))
+$ python3 copia.py
+73.143
+</pre>
+
+<p>O <code>--fix</code> apagou os dois imports inúteis, e o segundo <code>format</code> limpou as linhas em branco que sobraram no começo. O programa continua dando 73.143. Mas repare no que <strong>ficou</strong>: <code>CalculaTotal</code>, <code>T</code>, <code>carrinho</code>, <code>i[0]</code>, <code>== True</code>. As ferramentas cuidam da "pontuação"; <strong>dar bons nomes e escrever com clareza continua sendo trabalho seu</strong>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Ferramenta</th><th>Tipo</th><th>Comando</th></tr>
+<tr><td><code>ruff check</code></td><td>Linter: aponta problemas</td><td><code>ruff check arquivo.py</code> (<code>--fix</code> conserta o que souber)</td></tr>
+<tr><td><code>ruff format</code></td><td>Formatador: reescreve o estilo</td><td><code>ruff format arquivo.py</code> (<code>--diff</code> só mostra)</td></tr>
+<tr><td><code>black</code></td><td>Formatador (o que popularizou a ideia)</td><td><code>black arquivo.py</code> (<code>--diff</code> só mostra)</td></tr>
+<tr><td><code>pycodestyle</code>, <code>flake8</code>, <code>pylint</code></td><td>Linters mais antigos</td><td>Você vai encontrá-los em projetos mais velhos</td></tr>
+<tr><td>O seu editor de código</td><td>Quase todos rodam essas ferramentas ao salvar</td><td>Procure "format on save" nas configurações</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de seguir o estilo</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Jeito</th><th>Vantagem</th><th>Quando usar</th></tr>
+<tr><td>De cabeça, conhecendo as regras</td><td>Nada para instalar; o código já nasce arrumado</td><td>Sempre: é o que esta aula ensina</td></tr>
+<tr><td>Linter (<code>ruff check</code>)</td><td>Pega o que você deixou passar, inclusive erros prováveis (<code>F401</code>)</td><td>Antes de entregar ou guardar o código</td></tr>
+<tr><td>Formatador (<code>ruff format</code>, <code>black</code>)</td><td>Ninguém discute espaços: a ferramenta decide</td><td>Em equipe, todos com a mesma ferramenta</td></tr>
+<tr><td>O estilo do projeto</td><td>Coerência</td><td>Num projeto que já existe, siga o estilo dele, mesmo que difira da PEP 8</td></tr>
+</table>
+</div>
+
+<div class="tip">
+<strong>"Uma coerência tola…"</strong>
+<p>A própria PEP 8 tem uma seção com o título "Uma coerência tola é o duende das mentes pequenas". Ela diz: o mais importante é a coerência <strong>dentro</strong> de um projeto, e uma regra pode ser quebrada quando segui-la deixaria o código menos legível. As regras servem à legibilidade, e não o contrário.</p>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+<p>Estilo ruim, na maior parte das vezes, não quebra nada: só dificulta a leitura. Mas algumas escolhas de estilo provocam erros de verdade.</p>
+
+<div class="cenario">
+<strong>Tab e espaços misturados</strong>
+<p>No arquivo abaixo, a linha 2 começa com 4 espaços e a linha 3, com um Tab. No editor de texto as duas parecem alinhadas:</p>
+<pre class="file" data-file="tab.py">def saudacao(nome):
+    mensagem = "Olá, " + nome
+	return mensagem
+
+print(saudacao("Ana"))
+</pre>
+<pre class="term">$ python3 tab.py
+  File "/home/ana/tab.py", line 3
+    	return mensagem
+    ^
+TabError: inconsistent use of tabs and spaces in indentation
+</pre>
+<p>"Uso inconsistente de tabs e espaços na indentação." O Python não tem como saber quantos espaços "vale" um Tab, então recusa a mistura. Repare que o erro aparece antes de o programa rodar (não há <code>Traceback</code>): é um erro de sintaxe. <strong>Como consertar:</strong> troque o Tab por 4 espaços. Configure o seu editor para inserir espaços quando você aperta Tab (quase todos já vêm assim).</p>
+</div>
+
+<div class="cenario">
+<strong>Um nome que esconde uma função embutida</strong>
+<pre class="file" data-file="sombra.py">list = ["arroz", "feijão", "café"]
+print(list)
+letras = list("Ana")
+</pre>
+<pre class="term">$ python3 sombra.py
+['arroz', 'feijão', 'café']
+Traceback (most recent call last):
+  File "/home/ana/sombra.py", line 3, in &lt;module&gt;
+    letras = list("Ana")
+TypeError: 'list' object is not callable
+</pre>
+<p>"Um objeto <code>list</code> não pode ser chamado." Na linha 1, o nome <code>list</code> passou a ser <strong>a lista de compras</strong>, e não mais a função que cria listas. Na linha 3, <code>list("Ana")</code> tenta "chamar" a lista de compras como se fosse função. O erro acontece longe da causa, o que o torna difícil de achar. <strong>Como consertar:</strong> dê um nome que diga o que é: <code>compras = [...]</code>. O mesmo vale para <code>str</code>, <code>sum</code>, <code>max</code>, <code>input</code>, <code>id</code>, <code>type</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>from os import *</code> e o <code>open</code> trocado</strong>
+<pre class="file" data-file="estrela.py">from os import *
+
+with open("compras.txt", "w") as arquivo:
+    arquivo.write("arroz\n")
+</pre>
+<pre class="term">$ python3 estrela.py
+Traceback (most recent call last):
+  File "/home/ana/estrela.py", line 3, in &lt;module&gt;
+    with open("compras.txt", "w") as arquivo:
+         ~~~~^^^^^^^^^^^^^^^^^^^^
+TypeError: 'str' object cannot be interpreted as an integer
+</pre>
+<p>"Um texto não pode ser interpretado como número inteiro"? O <code>open</code> de sempre aceita <code>"w"</code>. Só que o módulo <code>os</code> também tem uma função chamada <code>open</code> (uma mais "baixa", que espera números no segundo argumento), e o <code>import *</code> a trouxe por cima do <code>open</code> embutido, sem avisar. <strong>Como consertar:</strong> <code>import os</code> e use <code>os.</code> na frente do que for do módulo; ou importe só os nomes de que precisa: <code>from os import listdir</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Uma palavra reservada como nome</strong>
+<pre class="file" data-file="palavra_chave.py">class = "3º ano B"
+print(class)
+</pre>
+<pre class="term">$ python3 palavra_chave.py
+  File "/home/ana/palavra_chave.py", line 1
+    class = "3º ano B"
+          ^
+SyntaxError: invalid syntax
+</pre>
+<p>"Sintaxe inválida." <code>class</code> é uma <a href="ref-palavras-chave.html">palavra-chave</a>: ela já quer dizer "aqui começa uma classe", e o Python não entendeu o <code>=</code> depois dela. <strong>Como consertar:</strong> use outro nome (<code>turma = "3º ano B"</code>) ou, se o nome for mesmo o melhor, a sugestão da PEP 8: um sublinhado no fim, <code>class_</code>.</p>
+</div>
+
+<div class="trypy" data-goal="out:['A', 'n', 'a'];;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa quebra com <code>'list' object is not callable</code>. Dê à lista de compras um nome que não esconda a função <code>list</code> (por exemplo, <code>compras</code>), nos dois lugares em que ela aparece.</p>
+<pre class="script" data-file="main.py">list = ["arroz", "feijão", "café"]
+print(list)
+letras = list("Ana")
+print(letras)
+</pre>
+<pre class="solucao" data-file="main.py">compras = ["arroz", "feijão", "café"]
+print(compras)
+letras = list("Ana")
+print(letras)
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Assunto</th><th>A regra da PEP 8</th></tr>
+<tr><td>Indentação</td><td>4 espaços por nível; nunca misturar com Tab</td></tr>
+<tr><td>Tamanho da linha</td><td>Até 79 caracteres (72 em comentários); quebre com parênteses</td></tr>
+<tr><td>Linhas em branco</td><td>2 em volta de funções e classes de fora; 1 entre métodos</td></tr>
+<tr><td>Variáveis, funções, parâmetros, módulos</td><td><code>minusculas_com_sublinhado</code></td></tr>
+<tr><td>Classes</td><td><code>PalavrasComMaiuscula</code></td></tr>
+<tr><td>Constantes</td><td><code>MAIUSCULAS_COM_SUBLINHADO</code></td></tr>
+<tr><td>Nomes a evitar</td><td><code>l</code>, <code>O</code>, <code>I</code> sozinhos; nomes embutidos (<code>list</code>, <code>str</code>, <code>sum</code>…); palavra-chave → <code>class_</code></td></tr>
+<tr><td>Espaços</td><td>Em volta de <code>=</code> e operadores; depois da vírgula; nunca dentro de <code>( )</code>, antes de <code>(</code> ou <code>:</code>; nenhum no <code>=</code> de argumento nomeado</td></tr>
+<tr><td>Instruções</td><td>Uma por linha (sem <code>;</code>, sem <code>if x: faça</code> na mesma linha)</td></tr>
+<tr><td>Imports</td><td>No topo, um por linha, em grupos (padrão, de terceiros, seus); sem <code>*</code></td></tr>
+<tr><td>Comparações</td><td><code>is None</code>; <code>if x:</code> em vez de <code>== True</code>; <code>if not lista:</code> em vez de <code>len(lista) == 0</code></td></tr>
+<tr><td>Ferramentas</td><td><code>ruff check</code> (aponta), <code>ruff format</code> / <code>black</code> (arrumam)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O nome da função</h3>
+<p>Reescreva o nome <code>CalcularFrete</code> no estilo da PEP 8 para funções:</p>
+<div class="ex-code">def <input data-answer="calcular_frete" aria-label="nome">(peso):</div>
+</div>
+
+<div class="exercise">
+<h3>2. A constante</h3>
+<p>A taxa de entrega é sempre 7.5 e nunca muda no programa. Como a PEP 8 manda escrever o nome?</p>
+<div class="ex-code"><input data-answer="TAXA_ENTREGA|TAXA_DE_ENTREGA" aria-label="nome"> = 7.5</div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">3. Qual linha está no estilo da PEP 8?</p>
+<label><input type="radio" name="q3"> <code>print ( total , end = "" )</code></label>
+<label><input type="radio" name="q3"> <code>print(total,end="")</code></label>
+<label><input type="radio" name="q3"> <code>print(total, end="")</code></label>
+<label><input type="radio" name="q3"> <code>print(total, end = "")</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">4. Como a PEP 8 manda testar se a variável <code>resposta</code> é <code>None</code>?</p>
+<label><input type="radio" name="q4"> <code>if resposta is None:</code></label>
+<label><input type="radio" name="q4"> <code>if resposta == None:</code></label>
+<label><input type="radio" name="q4"> <code>if not resposta:</code></label>
+<label><input type="radio" name="q4"> <code>if resposta = None:</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. Qual destes nomes é o certo para uma <strong>classe</strong>?</p>
+<label><input type="radio" name="q5"> <code>conta_bancaria</code></label>
+<label><input type="radio" name="q5"> <code>CONTA_BANCARIA</code></label>
+<label><input type="radio" name="q5"> <code>contaBancaria</code></label>
+<label><input type="radio" name="q5"> <code>ContaBancaria</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">6. Depois de <code>ruff format</code> e <code>ruff check --fix</code>, o que ainda pode precisar de você?</p>
+<label><input type="radio" name="q6"> Os espaços em volta do <code>=</code></label>
+<label><input type="radio" name="q6"> Os nomes ruins, como <code>T</code> e <code>CalculaTotal</code>, e trechos difíceis de ler</label>
+<label><input type="radio" name="q6"> A indentação de 4 espaços</label>
+<label><input type="radio" name="q6"> As linhas em branco entre as funções</label>
+</div>
+
+<h3>Missão final: arrumando o <code>baguncado.py</code></h3>
+
+<div class="trypy" data-goal="src:def calcular_total\(itens, cliente_fiel\):;;src:^ +if cliente_fiel:;;src:^class Carrinho:;;out:73.143;;semerro">
+<p class="try-task"><strong>Missão:</strong> reescreva o programa no estilo da PEP 8: a função passa a se chamar <code>calcular_total</code>, com os parâmetros <code>itens</code> e <code>cliente_fiel</code>; a classe, <code>Carrinho</code>; a comparação vira <code>if cliente_fiel:</code>, sem <code>== True</code>; tire os imports que não são usados; 4 espaços de indentação, uma instrução por linha, os espaços e as linhas em branco nos lugares certos. Bons nomes para <code>T</code> e <code>i</code> também contam. O resultado tem de continuar <code>73.143</code>.</p>
+<pre class="script" data-file="main.py">import sys, os
+def CalculaTotal( Itens,Desc ):
+  T=0
+  for i in Itens :
+      T=T+i[ 0 ]*i[1]
+  if Desc==True : T = T*0.9
+  return T
+class carrinho:
+    def __init__(self,dono): self.dono=dono;self.itens=[]
+print(CalculaTotal([(27.90,2),(8.49,3)],True))
+</pre>
+<pre class="solucao" data-file="main.py">def calcular_total(itens, cliente_fiel):
+    total = 0
+    for preco, quantidade in itens:
+        total = total + preco * quantidade
+    if cliente_fiel:
+        total = total * 0.9
+    return total
+
+
+class Carrinho:
+    def __init__(self, dono):
+        self.dono = dono
+        self.itens = []
+
+
+print(calcular_total([(27.90, 2), (8.49, 3)], True))
+</pre>
+</div>
+
+<p>Compare a sua versão com o <code>arrumado.py</code> do começo da aula. Lá, o 0.9 virou uma constante com nome (<code>DESCONTO_CLIENTE_FIEL = 0.10</code>), o que conta para quem lê de onde veio aquele número.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>A PEP 8 é o guia de estilo do Python: o jeito combinado de escrever, porque o código é lido muito mais vezes do que é escrito.</li>
+  <li>4 espaços de indentação (nunca misturados com Tab); linhas de até 79 caracteres, quebradas com parênteses; 2 linhas em branco entre funções e classes, 1 entre métodos.</li>
+  <li>Nomes: <code>minusculas_com_sublinhado</code> para variáveis e funções, <code>PalavrasComMaiuscula</code> para classes, <code>MAIUSCULAS</code> para constantes. Nada de <code>l</code>/<code>O</code>/<code>I</code> sozinhos, nem de nomes embutidos como <code>list</code>.</li>
+  <li>Espaços em volta de <code>=</code> e operadores e depois da vírgula; nenhum dentro dos parênteses, nem no <code>=</code> de argumento nomeado. Uma instrução por linha.</li>
+  <li>Imports no topo, um por linha, em grupos; sem <code>import *</code>. Compare com <code>is None</code>; teste a verdade com <code>if x:</code>.</li>
+  <li><code>ruff check</code> aponta os problemas; <code>ruff format</code> e <code>black</code> arrumam o estilo. Bons nomes continuam sendo com você.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
