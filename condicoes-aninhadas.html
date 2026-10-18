@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Condições Aninhadas — um if dentro do outro | Guia Python</title>
+<meta name="description" content="Condições aninhadas no Python para quem nunca programou: um if dentro do bloco de outro, os níveis de indentação (4, 8, 12 espaços), a qual if cada else pertence, quando trocar o aninhamento por and ou por uma escada elif, a pirâmide de ifs, e os erros reais do Python 3.14: else no nível errado, NameError de variável criada só num caminho, IndentationError. Com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Condições Aninhadas</span></h1>
+
+<p class="intro">Algumas perguntas só fazem sentido <strong>depois</strong> de outra. No caixa eletrônico, só faz sentido perguntar o valor do saque se a senha estiver certa. Na porta do show, só faz sentido conferir a idade de quem tem ingresso. Para isso, você põe um <code>if</code> <strong>dentro do bloco</strong> de outro <code>if</code>. Isso se chama <strong>condição aninhada</strong> (como um ninho dentro do outro, ou uma caixa dentro de outra caixa).</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A escrever um <code>if</code> (com ou sem <code>else</code>) dentro do bloco de outro.</li>
+  <li>Como os <strong>níveis de recuo</strong> (4, 8, 12 espaços) mostram o que está dentro de quê.</li>
+  <li>A descobrir a qual <code>if</code> cada <code>else</code> pertence, pela coluna.</li>
+  <li>Quando o aninhamento pode virar um <code>and</code> ou uma escada <code>elif</code>, e por que a "pirâmide" de <code>if</code> é difícil de ler.</li>
+  <li>Os erros reais: o <code>else</code> no nível errado (que não dá erro nenhum), o <code>NameError</code> de uma variável criada só num caminho e os <code>IndentationError</code>.</li>
+</ul>
+</div>
+
+<p>Todos os programas desta aula rodaram no <strong>Python 3.14</strong> do computador fictício da Ana (usuária <code>ana</code>, computador <code>notebook</code>), na pasta pessoal dela, com <code>python3 arquivo.py</code>.</p>
+
+<hr>
+
+<h2>A ideia: a porta do show</h2>
+<p>Na entrada de um show, o segurança faz duas perguntas, uma depois da outra:</p>
+<ol class="passo">
+  <li>"Você tem ingresso?" Se <strong>não</strong>: "Compre na bilheteria", e a conversa acaba aí.</li>
+  <li>Se <strong>sim</strong>, aí vem a segunda pergunta: "Você tem 18 anos?" Se sim, pulseira verde (pode comprar bebida); se não, pulseira azul.</li>
+</ol>
+<p>A pergunta da idade está <strong>dentro</strong> do "sim" da primeira. Quem não tem ingresso nunca ouve a segunda pergunta. Em Python:</p>
+
+<pre class="file" data-file="show.py">ingresso = input("Tem ingresso? (sim/não) ")
+if ingresso == "sim":
+    idade = int(input("Idade: "))
+    if idade &gt;= 18:
+        print("Pulseira verde: pode comprar bebida.")
+    else:
+        print("Pulseira azul: sem bebida.")
+    print("Pode entrar. Bom show!")
+else:
+    print("Compre o ingresso na bilheteria.")
+</pre>
+
+<pre class="term">$ python3 show.py
+Tem ingresso? (sim/não) sim
+Idade: 15
+Pulseira azul: sem bebida.
+Pode entrar. Bom show!
+$ python3 show.py
+Tem ingresso? (sim/não) sim
+Idade: 20
+Pulseira verde: pode comprar bebida.
+Pode entrar. Bom show!
+$ python3 show.py
+Tem ingresso? (sim/não) não
+Compre o ingresso na bilheteria.    « nem perguntou a idade</pre>
+
+<dl class="anatomy">
+  <dt>if ingresso == "sim":</dt><dd>O <code>if</code> de <strong>fora</strong> (na margem, 0 espaços).</dd>
+  <dt>idade = int(input(…))</dt><dd>4 espaços: está dentro do bloco do <code>if</code> de fora. Só roda para quem respondeu "sim".</dd>
+  <dt>if idade &gt;= 18:</dt><dd>O <code>if</code> de <strong>dentro</strong>, também com 4 espaços: ele é uma das linhas do bloco de fora.</dd>
+  <dt>print("Pulseira verde…")</dt><dd>8 espaços: dentro do bloco do <code>if</code> de dentro.</dd>
+  <dt>else: (4 espaços)</dt><dd>Na mesma coluna do <code>if idade &gt;= 18</code>: é o "senão" <strong>dele</strong>.</dd>
+  <dt>print("Pode entrar…")</dt><dd>4 espaços: voltou para o bloco de fora. Roda para todo mundo que tem ingresso, qualquer que seja a idade.</dd>
+  <dt>else: (0 espaços)</dt><dd>Na margem, na coluna do <code>if ingresso == "sim"</code>: é o "senão" do <code>if</code> de fora.</dd>
+</dl>
+
+<hr>
+
+<h2>1. Os níveis de recuo</h2>
+<p>Cada <code>if</code> aninhado acrescenta <strong>mais 4 espaços</strong>. Dá para ler o programa como caixas dentro de caixas:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Recuo</th><th>Onde a linha está</th><th>No <code>show.py</code></th></tr>
+<tr><td>0 espaços</td><td>No programa principal: roda sempre</td><td><code>ingresso = input(…)</code>, <code>if ingresso == "sim":</code>, o último <code>else:</code></td></tr>
+<tr><td>4 espaços</td><td>Dentro do primeiro <code>if</code> (ou do seu <code>else</code>)</td><td><code>idade = …</code>, <code>if idade &gt;= 18:</code>, <code>print("Pode entrar…")</code></td></tr>
+<tr><td>8 espaços</td><td>Dentro do segundo <code>if</code>, que está dentro do primeiro</td><td>Os dois <code>print</code> das pulseiras</td></tr>
+</table>
+</div>
+
+<div class="tip">
+<strong>A régua da coluna</strong>
+<p>Para saber a qual <code>if</code> um <code>else</code> pertence, olhe só a <strong>coluna</strong> em que ele começa e suba até encontrar um <code>if</code> que comece <strong>na mesma coluna</strong>. É esse. A maioria dos editores de código desenha linhas verticais finas no recuo justamente para ajudar nisso.</p>
+</div>
+
+<hr>
+
+<h2>2. O caixa eletrônico</h2>
+<p>Um exemplo com <code>else</code> nos dois níveis. O saldo da Ana é R$ 200,00:</p>
+
+<pre class="file" data-file="saque.py">saldo = 200.0
+senha = input("Senha: ")
+if senha == "1234":
+    print("Senha correta.")
+    valor = float(input("Valor do saque: R$ "))
+    if valor &lt;= saldo:
+        saldo = saldo - valor
+        print(f"Saque feito. Saldo: R$ {saldo:.2f}")
+    else:
+        print("Saldo insuficiente.")
+else:
+    print("Senha errada.")
+print("Obrigado por usar o caixa.")
+</pre>
+
+<pre class="term">$ python3 saque.py
+Senha: 1234
+Senha correta.
+Valor do saque: R$ 50
+Saque feito. Saldo: R$ 150.00        « senha certa e valor que cabe
+Obrigado por usar o caixa.
+$ python3 saque.py
+Senha: 1234
+Senha correta.
+Valor do saque: R$ 500
+Saldo insuficiente.                  « senha certa, valor alto: else de dentro
+Obrigado por usar o caixa.
+$ python3 saque.py
+Senha: 9999
+Senha errada.                        « else de fora: nem perguntou o valor
+Obrigado por usar o caixa.</pre>
+
+<p>São <strong>três</strong> caminhos possíveis, e o programa faz no máximo <strong>duas</strong> perguntas. Desenhando como uma árvore:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Senha certa?</th><th>Valor cabe no saldo?</th><th>Resultado</th></tr>
+<tr><td>sim</td><td>sim</td><td>Saque feito</td></tr>
+<tr><td>sim</td><td>não</td><td>Saldo insuficiente</td></tr>
+<tr><td>não</td><td>(nem pergunta)</td><td>Senha errada</td></tr>
+</table>
+</div>
+
+<div class="trypy" data-stdin="1234\n80">
+<p class="try-task"><strong>Experimente:</strong> a entrada preparada é a senha <code>1234</code> e o valor <code>80</code>. Rode e confira o saldo. Depois mude o <code>saldo</code> inicial para <code>50.0</code> e rode de novo: agora cai no "Saldo insuficiente". Por fim, troque a senha certa no código por outra e veja o terceiro caminho.</p>
+<pre class="script" data-file="main.py">saldo = 200.0
+senha = input("Senha: ")
+if senha == "1234":
+    print("Senha correta.")
+    valor = float(input("Valor do saque: R$ "))
+    if valor &lt;= saldo:
+        saldo = saldo - valor
+        print(f"Saque feito. Saldo: R$ {saldo:.2f}")
+    else:
+        print("Saldo insuficiente.")
+else:
+    print("Senha errada.")
+print("Obrigado por usar o caixa.")
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Votar no Brasil: um <code>if</code>/<code>else</code> dentro de outro</h2>
+<p>As regras: abaixo de 16 anos, não pode votar. De 16 a 17 e a partir de 70, o voto é facultativo (opcional). De 18 a 69, é obrigatório.</p>
+
+<pre class="file" data-file="voto.py">idade = int(input("Idade: "))
+if idade &gt;= 16:
+    if idade &gt;= 18 and idade &lt; 70:
+        print("Voto obrigatório.")
+    else:
+        print("Voto facultativo.")
+else:
+    print("Ainda não pode votar.")
+</pre>
+
+<pre class="term">$ python3 voto.py
+Idade: 15
+Ainda não pode votar.
+$ python3 voto.py
+Idade: 17
+Voto facultativo.
+$ python3 voto.py
+Idade: 30
+Voto obrigatório.
+$ python3 voto.py
+Idade: 75
+Voto facultativo.</pre>
+
+<p>O <code>if</code> de fora separa quem pode votar de quem não pode. Só para quem pode, o de dentro decide entre obrigatório e facultativo. (Uma escada <code>elif</code> também resolveria; veja <a href="#formas">Formas diferentes</a>.)</p>
+
+<div class="trypy" data-stdin="sim\n15" data-goal="out:Pulseira azul;;src:^\s{4,}if\b">
+<p class="try-task"><strong>Missão:</strong> o programa do show ainda dá a mesma pulseira para todo mundo. Dentro do bloco do <code>if</code> de fora, troque a linha marcada por um <code>if</code>/<code>else</code> aninhado: 18 anos ou mais, <code>Pulseira verde: pode comprar bebida.</code>; menos, <code>Pulseira azul: sem bebida.</code>. A entrada preparada é <code>sim</code> e depois <code>15</code>.</p>
+<pre class="script" data-file="main.py">ingresso = input("Tem ingresso? (sim/não) ")
+if ingresso == "sim":
+    idade = int(input("Idade: "))
+    print("Pulseira verde: pode comprar bebida.")  # troque esta linha
+    print("Pode entrar. Bom show!")
+else:
+    print("Compre o ingresso na bilheteria.")
+</pre>
+<pre class="solucao" data-file="main.py">ingresso = input("Tem ingresso? (sim/não) ")
+if ingresso == "sim":
+    idade = int(input("Idade: "))
+    if idade &gt;= 18:
+        print("Pulseira verde: pode comprar bebida.")
+    else:
+        print("Pulseira azul: sem bebida.")
+    print("Pode entrar. Bom show!")
+else:
+    print("Compre o ingresso na bilheteria.")
+</pre>
+</div>
+
+<hr>
+
+<h2>4. Quando o aninhamento pode virar <code>and</code></h2>
+<p>A loja da Ana dá frete grátis para compras a partir de R$ 100 <strong>e</strong> só para Teresina. Dá para escrever aninhado:</p>
+
+<pre class="file" data-file="frete_aninhado.py">total = 120.0
+cidade = "Teresina"
+if total &gt;= 100:
+    if cidade == "Teresina":
+        print("Frete grátis!")
+</pre>
+
+<p>ou com <code>and</code>, numa condição só:</p>
+
+<pre class="file" data-file="frete_and.py">total = 120.0
+cidade = "Teresina"
+if total &gt;= 100 and cidade == "Teresina":
+    print("Frete grátis!")
+</pre>
+
+<pre class="term">$ python3 frete_aninhado.py
+Frete grátis!
+$ python3 frete_and.py
+Frete grátis!</pre>
+
+<p>Os dois mostram o mesmo. Quando o <code>if</code> de fora <strong>não tem <code>else</code></strong> e o bloco dele <strong>só tem o <code>if</code> de dentro</strong>, os dois juntos são o mesmo que um <code>if</code> com <code>and</code>, e a versão com <code>and</code> é mais curta e mais fácil de ler. Já quando cada nível tem a sua mensagem de "senão" (como no caixa eletrônico, que diz "Senha errada" ou "Saldo insuficiente"), o aninhamento é o jeito natural.</p>
+
+<hr>
+
+<h2>5. A pirâmide de <code>if</code></h2>
+<p>Cada nível empurra o código 4 espaços para a direita. Com três ou quatro níveis, o programa vira uma pirâmide deitada, e fica difícil ver qual <code>else</code> responde a qual pergunta. A Ana fez a validação de um cadastro assim:</p>
+
+<pre class="file" data-file="piramide.py">nome = "Ana"
+idade = 15
+cidade = "Teresina"
+if nome != "":
+    if idade &gt;= 18:
+        if cidade == "Teresina":
+            print("Cadastro aprovado!")
+        else:
+            print("Só atendemos Teresina.")
+    else:
+        print("Precisa ter 18 anos.")
+else:
+    print("Falta o nome.")
+</pre>
+
+<p>Cada mensagem de erro ficou longe da pergunta que a causa: "Falta o nome." está na última linha, a 9 linhas do <code>if nome != ""</code>. Invertendo as perguntas (perguntando pelo <strong>problema</strong>, e não pelo que está certo), a pirâmide vira uma escada <a href="elif.html">elif</a>, toda na mesma coluna:</p>
+
+<pre class="file" data-file="escada.py">nome = "Ana"
+idade = 15
+cidade = "Teresina"
+if nome == "":
+    print("Falta o nome.")
+elif idade &lt; 18:
+    print("Precisa ter 18 anos.")
+elif cidade != "Teresina":
+    print("Só atendemos Teresina.")
+else:
+    print("Cadastro aprovado!")
+</pre>
+
+<pre class="term">$ python3 piramide.py
+Precisa ter 18 anos.
+$ python3 escada.py
+Precisa ter 18 anos.</pre>
+
+<p>Mesmo resultado, e agora cada problema está colado na sua mensagem. Uma boa regra prática: se passou de <strong>dois ou três níveis</strong>, procure um jeito de achatar (com <code>and</code>, com <code>elif</code> ou, mais adiante, separando partes em <a href="funcoes.html">funções</a>).</p>
+
+<hr>
+
+<h2 id="formas">Formas diferentes de escrever a regra do voto</h2>
+
+<pre class="file" data-file="voto_aninhado.py">if idade &gt;= 16:
+    if idade &gt;= 18 and idade &lt; 70:
+        print("Voto obrigatório.")
+    else:
+        print("Voto facultativo.")
+else:
+    print("Ainda não pode votar.")
+</pre>
+
+<pre class="file" data-file="voto_elif.py">if idade &lt; 16:
+    print("Ainda não pode votar.")
+elif 18 &lt;= idade &lt; 70:
+    print("Voto obrigatório.")
+else:
+    print("Voto facultativo.")
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td>Aninhada</td><td>Quando a segunda pergunta <strong>só faz sentido</strong> depois da primeira (a senha antes do valor, o ingresso antes da idade), e principalmente quando a segunda precisa de algo que só a primeira obtém (o <code>input()</code> do valor)</td></tr>
+<tr><td>Escada <code>elif</code></td><td>Quando são faixas ou casos de um mesmo valor. Costuma ficar mais curta e toda na mesma coluna</td></tr>
+<tr><td>Um <code>if</code> com <code>and</code></td><td>Quando as duas condições levam ao mesmo bloco e não há "senão" no meio</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>O <code>else</code> no nível errado (sem mensagem de erro)</strong>
+<p>A Ana queria que o caixa dissesse "Senha errada." quando a senha estivesse errada. Mas recuou o <code>else</code> 4 espaços a mais:</p>
+<pre class="file" data-file="else_errado.py">saldo = 200.0
+senha = "1234"
+valor = 500.0
+if senha == "1234":
+    if valor &lt;= saldo:
+        print("Saque feito.")
+    else:
+        print("Senha errada.")
+</pre>
+<pre class="term">$ python3 else_errado.py
+Senha errada.                        « a senha estava certa!</pre>
+<p>Com 4 espaços, o <code>else</code> ficou na coluna do <code>if valor &lt;= saldo</code>, e virou o "senão" <strong>dele</strong>: a mensagem aparece quando o <strong>valor</strong> não cabe no saldo. E com a senha errada, o programa não mostra nada, porque o <code>if</code> de fora não tem <code>else</code>. O Python não reclama: o programa está bem escrito, só faz outra coisa. <strong>Como consertar:</strong> mova o <code>else</code> para a coluna do <code>if</code> a que ele pertence (a régua da coluna).</p>
+</div>
+
+<div class="trypy" data-goal="out:Senha errada.;;semerro">
+<p class="try-task"><strong>Missão:</strong> aqui a senha está errada, mas o caixa não mostra nada. Conserte o <code>else</code> para que ele pertença ao <code>if</code> da senha. Se quiser, acrescente também o "Saldo insuficiente." no lugar certo.</p>
+<pre class="script" data-file="main.py">saldo = 200.0
+senha = "9999"
+valor = 50.0
+if senha == "1234":
+    if valor &lt;= saldo:
+        print("Saque feito.")
+    else:
+        print("Senha errada.")
+</pre>
+<pre class="solucao" data-file="main.py">saldo = 200.0
+senha = "9999"
+valor = 50.0
+if senha == "1234":
+    if valor &lt;= saldo:
+        print("Saque feito.")
+    else:
+        print("Saldo insuficiente.")
+else:
+    print("Senha errada.")
+</pre>
+</div>
+
+<div class="cenario">
+<strong>Uma variável que só existe num caminho</strong>
+<pre class="file" data-file="nameerror.py">senha = input("Senha: ")
+if senha == "1234":
+    valor = float(input("Valor do saque: R$ "))
+print(f"Você pediu R$ {valor:.2f}")
+</pre>
+<pre class="term">$ python3 nameerror.py
+Senha: 9999
+Traceback (most recent call last):
+  File "/home/ana/nameerror.py", line 4, in &lt;module&gt;
+    print(f"Você pediu R$ {valor:.2f}")
+                           ^^^^^
+NameError: name 'valor' is not defined</pre>
+<ul>
+  <li><code>line 4, in &lt;module&gt;</code>: o erro aconteceu na linha 4, quando o programa já estava rodando.</li>
+  <li><code>^^^^^</code>: embaixo de <code>valor</code>.</li>
+  <li><code>NameError: name 'valor' is not defined</code>: "o nome <code>valor</code> não está definido". A variável é criada dentro do <code>if</code>, na linha 3. Com a senha errada, a linha 3 nunca rodou, e <code>valor</code> não existe quando a linha 4 tenta usá-la.</li>
+</ul>
+<p>Com a senha certa, o mesmo programa funciona. É o tipo de erro que só aparece em <strong>um</strong> dos caminhos, e por isso é bom testar todos. <strong>Como consertar:</strong> use a variável só dentro do bloco em que ela foi criada (recue o <code>print</code>), ou dê um valor a ela antes do <code>if</code> (<code>valor = 0.0</code>).</p>
+</div>
+
+<div class="cenario">
+<strong>O bloco de dentro sem recuo</strong>
+<pre class="file" data-file="interno_sem_recuo.py">senha = "1234"
+valor = 50.0
+if senha == "1234":
+    if valor &lt;= 200:
+    print("Saque feito.")
+</pre>
+<pre class="term">$ python3 interno_sem_recuo.py
+  File "/home/ana/interno_sem_recuo.py", line 5
+    print("Saque feito.")
+    ^^^^^
+IndentationError: expected an indented block after 'if' statement on line 4</pre>
+<p>O <code>if</code> da linha 4 (de dentro) precisa do seu próprio bloco, com 4 espaços <strong>a mais</strong> que ele: 8 espaços. O <code>print</code> ficou com 4, no mesmo nível do <code>if</code>. A mensagem diz exatamente qual <code>if</code> ficou sem bloco: o da linha 4.</p>
+</div>
+
+<div class="cenario">
+<strong>Um <code>else</code> numa coluna que não existe</strong>
+<pre class="file" data-file="else_torto.py">senha = "1234"
+valor = 50.0
+if senha == "1234":
+    if valor &lt;= 200:
+        print("Saque feito.")
+  else:
+        print("Saldo insuficiente.")
+</pre>
+<pre class="term">$ python3 else_torto.py
+  File "/home/ana/else_torto.py", line 6
+    else:
+         ^
+IndentationError: unindent does not match any outer indentation level</pre>
+<p>O <code>else</code> ficou com 2 espaços. Acima dele existem <code>if</code> nas colunas 0 e 4, mas nenhum na coluna 2: "o recuo não bate com nenhum nível de fora". O Python não sabe de qual <code>if</code> ele é. <strong>Como consertar:</strong> ponha o <code>else</code> exatamente na coluna do <code>if</code> dele: 4 espaços para o de dentro, 0 para o de fora.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>if a:</code> com <code>if b:</code> no bloco</td><td>A pergunta <code>b</code> só é feita se <code>a</code> for verdadeira</td></tr>
+<tr><td>+4 espaços por nível</td><td>0 = programa, 4 = dentro do 1º <code>if</code>, 8 = dentro do 2º…</td></tr>
+<tr><td><code>else</code> na coluna de um <code>if</code></td><td>Pertence a esse <code>if</code></td></tr>
+<tr><td><code>if a:</code> → <code>if b:</code>, sem <code>else</code></td><td>O mesmo que <code>if a and b:</code></td></tr>
+<tr><td>Mais de 2 ou 3 níveis</td><td>Procure achatar com <code>and</code> ou <code>elif</code></td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td>Mensagem do "senão" errado, sem erro</td><td><code>else</code> na coluna de outro <code>if</code></td></tr>
+<tr><td><code>NameError: name '…' is not defined</code> só em alguns casos</td><td>A variável é criada dentro de um bloco que nem sempre roda</td></tr>
+<tr><td><code>IndentationError: expected an indented block after 'if' statement on line N</code></td><td>O bloco do <code>if</code> da linha N (muitas vezes o de dentro) não tem os 4 espaços a mais</td></tr>
+<tr><td><code>IndentationError: unindent does not match any outer indentation level</code></td><td>Uma linha (muitas vezes um <code>else</code>) numa coluna em que não há bloco</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Quantos espaços?</h3>
+<p>Um <code>print</code> dentro de um <code>if</code> que está dentro de outro <code>if</code> (que está na margem) fica com quantos espaços de recuo?</p>
+<div class="ex-code">Resposta: <input data-answer="8|oito" aria-label="espaços"> espaços</div>
+</div>
+
+<div class="exercise">
+<h3>2. Achate com <code>and</code></h3>
+<p>Escreva a palavra que transforma os dois <code>if</code> aninhados (sem <code>else</code>) <code>if chovendo:</code> → <code>if tem_guarda_chuva:</code> num <code>if</code> só:</p>
+<div class="ex-code">if chovendo <input data-answer="and" aria-label="operador"> tem_guarda_chuva:</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. O que este programa mostra?</p>
+<pre class="file">ingresso = "sim"
+idade = 15
+if ingresso == "sim":
+    if idade &gt;= 18:
+        print("Verde")
+    else:
+        print("Azul")
+else:
+    print("Bilheteria")
+</pre>
+<label><input type="radio" name="q3"> <code>Verde</code></label>
+<label><input type="radio" name="q3"> <code>Azul</code></label>
+<label><input type="radio" name="q3"> <code>Bilheteria</code></label>
+<label><input type="radio" name="q3"> <code>Azul</code> e <code>Bilheteria</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. No programa do exercício 3, com <code>ingresso = "não"</code> e <code>idade = 20</code>, o que aparece?</p>
+<label><input type="radio" name="q4"> <code>Verde</code></label>
+<label><input type="radio" name="q4"> <code>Verde</code> e <code>Bilheteria</code></label>
+<label><input type="radio" name="q4"> <code>Bilheteria</code></label>
+<label><input type="radio" name="q4"> Nada</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Como o Python sabe a qual <code>if</code> um <code>else</code> pertence?</p>
+<label><input type="radio" name="q5"> Pela coluna: o <code>else</code> pertence ao <code>if</code> de cima que começa na mesma coluna</label>
+<label><input type="radio" name="q5"> Sempre ao <code>if</code> mais próximo, qualquer que seja o recuo</label>
+<label><input type="radio" name="q5"> Sempre ao primeiro <code>if</code> do arquivo</label>
+<label><input type="radio" name="q5"> Pelo número de linhas em branco</label>
+</div>
+
+<h3>Missão final: o caixa que deixava o saldo negativo</h3>
+
+<div class="trypy" data-stdin="1234\n500" data-goal="out:Saldo insuficiente;;src:^\s{4,}if\b">
+<p class="try-task"><strong>Missão:</strong> no caixa da Ana, com a senha certa, qualquer saque é aceito. Com a entrada preparada (senha <code>1234</code>, valor <code>500</code>), ele mostra <code>Saque feito. Saldo: R$ -300.00</code>! Dentro do bloco da senha, acrescente um <code>if</code>/<code>else</code> aninhado: só faça o saque se o valor couber no saldo; senão, mostre <code>Saldo insuficiente.</code></p>
+<pre class="script" data-file="main.py">saldo = 200.0
+senha = input("Senha: ")
+if senha == "1234":
+    valor = float(input("Valor do saque: R$ "))
+    saldo = saldo - valor
+    print(f"Saque feito. Saldo: R$ {saldo:.2f}")
+else:
+    print("Senha errada.")
+</pre>
+<pre class="solucao" data-file="main.py">saldo = 200.0
+senha = input("Senha: ")
+if senha == "1234":
+    valor = float(input("Valor do saque: R$ "))
+    if valor &lt;= saldo:
+        saldo = saldo - valor
+        print(f"Saque feito. Saldo: R$ {saldo:.2f}")
+    else:
+        print("Saldo insuficiente.")
+else:
+    print("Senha errada.")
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Uma condição <strong>aninhada</strong> é um <code>if</code> dentro do bloco de outro: a pergunta de dentro só é feita quando a de fora deu <code>True</code>.</li>
+  <li>Cada nível acrescenta 4 espaços de recuo: 0, 4, 8, 12…</li>
+  <li>Um <code>else</code> pertence ao <code>if</code> de cima que está <strong>na mesma coluna</strong>. Na coluna errada ele muda o sentido do programa, sem erro nenhum.</li>
+  <li>Dois <code>if</code> aninhados sem <code>else</code> são o mesmo que um <code>if</code> com <code>and</code>; vários níveis com mensagens de erro costumam ficar melhores como escada <code>elif</code>.</li>
+  <li>Uma variável criada dentro de um bloco só existe se aquele caminho rodou; usá-la depois pode dar <code>NameError</code> em alguns casos.</li>
+  <li>Prefira no máximo dois ou três níveis: a "pirâmide" de <code>if</code> é difícil de ler.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
