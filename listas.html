@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Listas — guardando vários valores numa variável só | Guia Python</title>
+<meta name="description" content="Listas em Python para quem está começando: como criar uma lista com colchetes e vírgulas, len(), listas vazias, valores repetidos, o operador in, list(), a vírgula esquecida que junta dois textos sem dar erro, o colchete sem fechar e as mensagens reais do Python 3.14, com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Listas</span></h1>
+
+<p class="intro">Até aqui, cada variável guardou <strong>um</strong> valor: um nome, um preço, uma nota. Mas a vida da Ana está cheia de coisas que vêm em grupo: os itens da lista de compras, os alunos da turma, as notas de uma prova. Criar uma variável para cada item (<code>item1</code>, <code>item2</code>, <code>item3</code>…) não dá certo: e se amanhã forem 30 itens? Para isso o Python tem a <strong>lista</strong> (em inglês, <em>list</em>): <strong>uma</strong> variável que guarda <strong>vários</strong> valores, em ordem.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é uma lista e para que ela serve.</li>
+  <li>A criar uma lista com colchetes <code>[ ]</code> e vírgulas, e a mostrá-la com <code>print()</code>.</li>
+  <li>A contar os itens com <code>len()</code> e a reconhecer o tipo <code>list</code>.</li>
+  <li>Listas vazias, listas de números, itens repetidos e listas escritas em várias linhas.</li>
+  <li>A perguntar se um item está na lista com <code>in</code> e <code>not in</code>.</li>
+  <li>A criar listas com <code>list()</code>.</li>
+  <li>Os erros reais: a vírgula esquecida (que não dá erro nenhum!), o colchete sem fechar, o texto sem aspas e a variável chamada <code>list</code>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a lista de compras no papel</h2>
+<p>Pense na lista de compras que a Ana prende na geladeira. É <strong>uma</strong> folha de papel, com um título ("compras") e vários itens escritos um embaixo do outro: arroz, feijão, café, leite. Ela não precisa de uma folha para cada item. E a folha tem algumas características que você vai reconhecer nas listas do Python:</p>
+
+<ul>
+  <li><strong>Os itens têm ordem.</strong> O arroz é o primeiro, o leite é o último. Se a Ana reescrever a folha, a ordem continua a mesma.</li>
+  <li><strong>Dá para contar os itens.</strong> São 4.</li>
+  <li><strong>Um item pode aparecer duas vezes.</strong> Se ela escrever "pão" duas vezes, a folha não reclama.</li>
+  <li><strong>A folha muda.</strong> Dá para riscar um item, acrescentar outro no fim, trocar o "café" por "café sem açúcar". (Isso fica para as próximas aulas: <a href="listas-alterar.html">Alterando</a>, <a href="listas-adicionar.html">Adicionando</a> e <a href="listas-remover.html">Removendo Itens</a>.)</li>
+</ul>
+
+<p>No Python, a folha é a variável, o título é o nome da variável, e os itens ficam entre colchetes, separados por vírgulas.</p>
+
+<hr>
+
+<h2>1. A primeira lista</h2>
+
+<pre class="file" data-file="compras.py">compras = ["arroz", "feijão", "café", "leite"]
+print(compras)
+print(len(compras))
+print(type(compras))
+</pre>
+
+<dl class="anatomy">
+  <dt>compras</dt><dd>O nome da variável, como em qualquer variável (aula <a href="variaveis.html">Variáveis</a>). Para listas, o costume é um nome no <strong>plural</strong>: <code>compras</code>, <code>alunos</code>, <code>notas</code>. Assim, quem lê já sabe que ali dentro há vários valores.</dd>
+  <dt>=</dt><dd>Guarda o que está à direita na variável.</dd>
+  <dt>[</dt><dd>O colchete de abrir: "aqui começa uma lista".</dd>
+  <dt>"arroz", "feijão", "café", "leite"</dt><dd>Os <strong>itens</strong> (também chamados de <strong>elementos</strong>). Cada um é um valor comum, aqui um texto entre aspas. Entre um item e outro vai uma <strong>vírgula</strong>; o espaço depois da vírgula é só para ficar fácil de ler.</dd>
+  <dt>]</dt><dd>O colchete de fechar: "aqui termina a lista".</dd>
+  <dt>len(compras)</dt><dd><code>len</code> vem de <em>length</em>, "comprimento". É a mesma função que conta as letras de um texto (aula <a href="strings.html">Strings</a>); numa lista, ela conta os <strong>itens</strong>.</dd>
+  <dt>type(compras)</dt><dd>Mostra o tipo do valor (aula <a href="type.html">Descobrindo o Tipo</a>).</dd>
+</dl>
+
+<pre class="term">$ python3 compras.py
+['arroz', 'feijão', 'café', 'leite']
+4
+&lt;class 'list'&gt;
+</pre>
+
+<p>Três coisas para reparar na saída:</p>
+<ul>
+  <li>O <code>print</code> mostra a lista <strong>do jeito que se escreve uma lista em Python</strong>: com os colchetes, as vírgulas e as aspas. Repare que as aspas saíram <strong>simples</strong> (<code>'arroz'</code>), embora o programa use aspas duplas. Para o Python, <code>"arroz"</code> e <code>'arroz'</code> são o mesmo texto; ao mostrar uma lista, ele sempre escolhe as simples.</li>
+  <li><code>len(compras)</code> deu <strong>4</strong>: quatro itens. Não importa quantas letras cada item tem; cada item conta como um.</li>
+  <li>O tipo é <code>list</code>, "lista". Ela é um tipo de dado, como <code>int</code>, <code>float</code> e <code>str</code>; a diferença é que ela <strong>guarda outros valores dentro</strong>. Por isso se diz que a lista é uma <strong>coleção</strong>.</li>
+</ul>
+
+<div class="tip">
+<strong>Mostrando a lista "bonita"</strong>
+<p>Os colchetes e as aspas são ótimos para você, que está programando, ver exatamente o que tem na lista. Mas, numa mensagem para alguém ler, ficam estranhos. Dois jeitos de mostrar os itens sem eles:</p>
+<pre class="file" data-file="bonito.py">compras = ["arroz", "feijão", "café", "leite"]
+print(compras)
+print(", ".join(compras))
+for item in compras:
+    print("-", item)
+</pre>
+<pre class="term">$ python3 bonito.py
+['arroz', 'feijão', 'café', 'leite']
+arroz, feijão, café, leite
+- arroz
+- feijão
+- café
+- leite
+</pre>
+<p>O <code>", ".join(compras)</code> junta os itens num texto só, com <code>", "</code> entre eles (é um método de texto: aula <a href="strings-metodos.html">Métodos de Texto</a>; só funciona se todos os itens forem textos). O <code>for</code> passa por cada item, um de cada vez (aula <a href="for.html">for</a>); percorrer listas tem aula própria: <a href="listas-percorrer.html">Percorrendo uma Lista</a>.</p>
+</div>
+
+<div class="trypy" data-goal="out:['banana', 'maçã', 'uva']">
+<p class="try-task"><strong>Missão:</strong> a lista de frutas da Ana está vazia. Coloque dentro dos colchetes, nesta ordem, <code>"banana"</code>, <code>"maçã"</code> e <code>"uva"</code>, e clique em Rodar.</p>
+<pre class="script" data-file="main.py">frutas = []
+print(frutas)
+</pre>
+<pre class="solucao" data-file="main.py">frutas = ["banana", "maçã", "uva"]
+print(frutas)
+</pre>
+</div>
+
+<hr>
+
+<h2>2. Que tipos de lista existem</h2>
+<p>Uma lista pode guardar qualquer tipo de valor. Veja no modo interativo (aula <a href="repl.html">O Modo Interativo</a>):</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; notas = [8.5, 7.0, 9.5]
+&gt;&gt;&gt; notas
+[8.5, 7.0, 9.5]
+&gt;&gt;&gt; vazia = []
+&gt;&gt;&gt; vazia
+[]
+&gt;&gt;&gt; len(vazia)
+0
+&gt;&gt;&gt; ficha = ["Ana", 17, 9.5, True]
+&gt;&gt;&gt; ficha
+['Ana', 17, 9.5, True]
+&gt;&gt;&gt; repetidos = ["pão", "pão", "leite"]
+&gt;&gt;&gt; len(repetidos)
+3
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Lista</th><th>O que mostra</th></tr>
+<tr><td><code>[8.5, 7.0, 9.5]</code></td><td>Uma lista de números: <strong>sem aspas</strong>, como qualquer número. As notas da Ana na prova.</td></tr>
+<tr><td><code>[]</code></td><td>A <strong>lista vazia</strong>: colchetes sem nada dentro. Tem 0 itens. É muito usada como ponto de partida: começa vazia e vai recebendo itens (aula <a href="listas-adicionar.html">Adicionando Itens</a>).</td></tr>
+<tr><td><code>["Ana", 17, 9.5, True]</code></td><td>Uma lista com tipos <strong>misturados</strong>: um texto, um inteiro, um decimal e um booleano. O Python aceita.</td></tr>
+<tr><td><code>["pão", "pão", "leite"]</code></td><td>Itens repetidos são permitidos, e cada um conta: são 3 itens, não 2.</td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>Misturar tipos: pode, mas não é o costume</strong>
+<p>Uma lista como <code>["Ana", 17, 9.5, True]</code> funciona, mas é difícil de usar: para saber o que é cada item, você precisa lembrar a posição de cada um. No dia a dia, uma lista guarda coisas <strong>do mesmo tipo</strong>: todos os itens de compras, todas as notas, todos os nomes. Para guardar a ficha de uma pessoa (nome, idade, nota), existem estruturas melhores, que você vai conhecer nas aulas <a href="tuplas.html">Tuplas</a> e <a href="dicionarios.html">Dicionários</a>.</p>
+</div>
+
+<hr>
+
+<h2>3. Listas compridas: uma linha para cada item</h2>
+<p>Quando a lista tem muitos itens, ou itens compridos, ela não cabe bem numa linha só. O Python deixa você quebrar a lista em várias linhas, um item em cada:</p>
+
+<pre class="file" data-file="turma.py">turma = [
+    "Ana",
+    "Bruno",
+    "Carla",
+    "Davi",
+]
+print(turma)
+print(f"A turma tem {len(turma)} alunos.")
+</pre>
+
+<pre class="term">$ python3 turma.py
+['Ana', 'Bruno', 'Carla', 'Davi']
+A turma tem 4 alunos.
+</pre>
+
+<dl class="anatomy">
+  <dt>turma = [</dt><dd>O colchete fica aberto no fim da primeira linha. Enquanto ele não for fechado, o Python sabe que a lista continua na linha de baixo.</dd>
+  <dt>    "Ana",</dt><dd>Cada item numa linha, com 4 espaços na frente. Aqui os espaços não são obrigatórios (não é um bloco, como o do <code>if</code>), mas deixam claro o que está dentro da lista.</dd>
+  <dt>    "Davi",</dt><dd>Repare na vírgula <strong>depois do último item</strong>. Ela é permitida e é um bom costume em listas de várias linhas: para acrescentar um item no fim, basta escrever uma linha nova, sem precisar lembrar de pôr a vírgula na linha de cima.</dd>
+  <dt>]</dt><dd>O colchete de fechar, sozinho, na altura do começo de <code>turma</code>.</dd>
+  <dt>{len(turma)}</dt><dd>Dentro de uma f-string (aula <a href="f-strings.html">f-strings</a>), o <code>len</code> entra no texto.</dd>
+</dl>
+
+<p>O resultado é exatamente o mesmo que escrever <code>turma = ["Ana", "Bruno", "Carla", "Davi"]</code> numa linha só. A diferença é só para quem lê o código.</p>
+
+<hr>
+
+<h2>4. Perguntando se um item está na lista: <code>in</code></h2>
+<p>A Ana está no mercado e quer saber: "o café está na minha lista?". Em Python, a pergunta se escreve com <code>in</code> ("em", "dentro de"), o mesmo operador da aula <a href="operadores-is-in.html">is e in</a>. A resposta é <code>True</code> (verdadeiro) ou <code>False</code> (falso):</p>
+
+<pre class="term">&gt;&gt;&gt; compras = ["arroz", "feijão", "café", "leite"]
+&gt;&gt;&gt; "café" in compras
+True
+&gt;&gt;&gt; "açúcar" in compras
+False
+&gt;&gt;&gt; "Café" in compras
+False
+&gt;&gt;&gt; "açúcar" not in compras
+True
+</pre>
+
+<ul>
+  <li><code>"café" in compras</code>: o café está lá, <code>True</code>.</li>
+  <li><code>"açúcar" in compras</code>: não está, <code>False</code>.</li>
+  <li><code>"Café" in compras</code>: <code>False</code>! O <code>in</code> procura um item <strong>igual</strong>, letra por letra. <code>"Café"</code>, com C maiúsculo, não é igual a <code>"café"</code>. Acentos e espaços também contam.</li>
+  <li><code>not in</code> é a pergunta ao contrário: "o açúcar <strong>não</strong> está na lista?". Sim, não está: <code>True</code>.</li>
+</ul>
+
+<p>Como a resposta é um booleano, o <code>in</code> combina com o <code>if</code> (aula <a href="if.html">if</a>):</p>
+
+<pre class="file" data-file="mercado.py">compras = ["arroz", "feijão", "café", "leite"]
+if "açúcar" not in compras:
+    print("Não esqueça: o açúcar não está na lista!")
+</pre>
+
+<pre class="term">$ python3 mercado.py
+Não esqueça: o açúcar não está na lista!
+</pre>
+
+<hr>
+
+<h2>5. Duas listas são iguais?</h2>
+<p>O <code>==</code> (aula <a href="operadores-comparacao.html">Comparações</a>) também funciona com listas. Duas listas são iguais quando têm os <strong>mesmos itens, na mesma ordem</strong>:</p>
+
+<pre class="term">&gt;&gt;&gt; [1, 2, 3] == [3, 2, 1]
+False
+&gt;&gt;&gt; [1, 2, 3] == [1, 2, 3]
+True
+</pre>
+
+<p>Os mesmos números em outra ordem dão <code>False</code>: na lista, a ordem faz parte do conteúdo.</p>
+
+<hr>
+
+<h2>6. Criando listas com <code>list()</code></h2>
+<p>Além dos colchetes, existe a função <code>list()</code>. Ela cria uma lista a partir de outra coisa que tenha vários valores dentro, como um texto ou um <code>range</code> (aula <a href="range.html">range()</a>):</p>
+
+<pre class="term">&gt;&gt;&gt; list("Ana")
+['A', 'n', 'a']
+&gt;&gt;&gt; list(range(5))
+[0, 1, 2, 3, 4]
+&gt;&gt;&gt; list()
+[]
+</pre>
+
+<ul>
+  <li><code>list("Ana")</code>: um texto é uma sequência de letras, e o <code>list</code> põe cada letra num item.</li>
+  <li><code>list(range(5))</code>: o <code>range(5)</code> produz os números de 0 a 4, e o <code>list</code> os guarda numa lista.</li>
+  <li><code>list()</code>, sem nada: uma lista vazia, igual a <code>[]</code>.</li>
+</ul>
+
+<hr>
+
+<h2>Formas diferentes de criar uma lista</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Resultado</th><th>Quando usar</th></tr>
+<tr><td><code>compras = ["arroz", "café"]</code></td><td><code>['arroz', 'café']</code></td><td>Quase sempre: quando você já sabe os itens</td></tr>
+<tr><td><code>compras = []</code></td><td><code>[]</code></td><td>Para começar vazia e ir enchendo depois. É a forma mais comum de lista vazia</td></tr>
+<tr><td><code>compras = list()</code></td><td><code>[]</code></td><td>Também cria a lista vazia; funciona, mas <code>[]</code> é mais curto e mais usado</td></tr>
+<tr><td><code>letras = list("Ana")</code></td><td><code>['A', 'n', 'a']</code></td><td>Para transformar outra sequência em lista</td></tr>
+<tr><td>Uma linha para cada item, com vírgula no último</td><td>A mesma lista</td><td>Quando a lista é comprida</td></tr>
+</table>
+</div>
+
+<p>Mais adiante você vai ver mais um jeito, muito poderoso, de criar listas a partir de outras: a <a href="list-comprehension.html">List Comprehension</a>.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>A vírgula esquecida: nenhum erro, e a lista fica errada</strong>
+<p>Este é o erro mais traiçoeiro desta aula, porque o Python <strong>não reclama</strong>. A Ana esqueceu a vírgula entre o arroz e o feijão:</p>
+<pre class="file" data-file="virgula.py">compras = ["arroz" "feijão", "café"]
+print(compras)
+print(len(compras))
+</pre>
+<pre class="term">$ python3 virgula.py
+['arrozfeijão', 'café']
+2
+</pre>
+<p>Em vez de três itens, vieram <strong>dois</strong>, e o primeiro virou <code>'arrozfeijão'</code>. Por quê? Em Python, dois textos escritos lado a lado, sem nada entre eles, são <strong>colados</strong> num texto só: <code>"arroz" "feijão"</code> é o mesmo que <code>"arrozfeijão"</code>. Isso existe para quebrar textos compridos em pedaços, mas, dentro de uma lista, quase sempre é uma vírgula que faltou.</p>
+<p><strong>Como perceber:</strong> o <code>len()</code> deu menos do que você esperava, ou um item saiu grudado no outro. <strong>Como consertar:</strong> ponha a vírgula: <code>["arroz", "feijão", "café"]</code>. Com números, a vírgula esquecida dá erro, e o Python até dá a dica:</p>
+<pre class="term">&gt;&gt;&gt; numeros = [1 2]
+  File "&lt;python-input-0&gt;", line 1
+    numeros = [1 2]
+               ^^^
+SyntaxError: invalid syntax. Perhaps you forgot a comma?
+</pre>
+<p>"Sintaxe inválida. Será que você esqueceu uma vírgula?" Com textos, não há dica nenhuma: eles simplesmente se colam.</p>
+</div>
+
+<div class="cenario">
+<strong>O colchete que não foi fechado</strong>
+<pre class="file" data-file="colchete.py">compras = ["arroz", "feijão", "café"
+print(compras)
+</pre>
+<pre class="term">$ python3 colchete.py
+  File "/home/ana/colchete.py", line 1
+    compras = ["arroz", "feijão", "café"
+              ^
+SyntaxError: '[' was never closed
+</pre>
+<p>Linha por linha:</p>
+<ul>
+  <li><code>File "/home/ana/colchete.py", line 1</code>: o problema está no arquivo <code>colchete.py</code>, na linha 1.</li>
+  <li>A linha de código e, embaixo, o <code>^</code> apontando para o <strong>colchete de abrir</strong>.</li>
+  <li><code>SyntaxError: '[' was never closed</code>: "erro de sintaxe: o <code>[</code> nunca foi fechado". O Python leu o arquivo até o fim procurando o <code>]</code> e não achou.</li>
+</ul>
+<p>Repare que não aparece <code>Traceback</code>: um <code>SyntaxError</code> acontece <strong>antes</strong> de o programa começar, e nenhuma linha roda, nem o <code>print</code>. <strong>Como consertar:</strong> feche o colchete depois do último item: <code>"café"]</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Textos sem aspas</strong>
+<pre class="file" data-file="aspas.py">compras = [arroz, feijão, café]
+print(compras)
+</pre>
+<pre class="term">$ python3 aspas.py
+Traceback (most recent call last):
+  File "/home/ana/aspas.py", line 1, in &lt;module&gt;
+    compras = [arroz, feijão, café]
+               ^^^^^
+NameError: name 'arroz' is not defined
+</pre>
+<p>Sem aspas, <code>arroz</code> não é um texto: é o <strong>nome de uma variável</strong>, e nenhuma variável chamada <code>arroz</code> foi criada. O Python para no primeiro item que não conhece (os <code>^^^^^</code> marcam o <code>arroz</code>) e diz <code>name 'arroz' is not defined</code>, "o nome 'arroz' não está definido". <strong>Como consertar:</strong> textos sempre entre aspas: <code>["arroz", "feijão", "café"]</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Uma variável chamada <code>list</code></strong>
+<p>Parece uma boa ideia chamar a lista de <code>list</code>. Não é:</p>
+<pre class="file" data-file="nome_list.py">list = ["arroz", "feijão"]
+letras = list("Ana")
+print(letras)
+</pre>
+<pre class="term">$ python3 nome_list.py
+Traceback (most recent call last):
+  File "/home/ana/nome_list.py", line 2, in &lt;module&gt;
+    letras = list("Ana")
+TypeError: 'list' object is not callable
+</pre>
+<p>A linha 1 não deu erro: o Python deixou você usar o nome <code>list</code> para a sua variável. Só que, a partir dali, <code>list</code> deixou de ser a função e passou a ser a sua lista de compras. Na linha 2, <code>list("Ana")</code> tenta "chamar" (executar, com os parênteses) a lista de compras, e uma lista não é uma função: <code>'list' object is not callable</code>, "um objeto do tipo lista não pode ser chamado". <strong>Como consertar:</strong> use um nome que diga o que a lista guarda (<code>compras</code>, <code>itens</code>) e nunca <code>list</code>, <code>str</code>, <code>len</code>, <code>print</code>, que são nomes que o Python já usa.</p>
+</div>
+
+<div class="cenario">
+<strong><code>compras.len()</code> no lugar de <code>len(compras)</code></strong>
+<pre class="term">&gt;&gt;&gt; compras = ["arroz", "feijão", "café", "leite"]
+&gt;&gt;&gt; compras.len()
+Traceback (most recent call last):
+  File "&lt;python-input-1&gt;", line 1, in &lt;module&gt;
+    compras.len()
+    ^^^^^^^^^^^
+AttributeError: 'list' object has no attribute 'len'
+</pre>
+<p>"O objeto lista não tem o atributo <code>len</code>". O <code>len</code> é uma <strong>função</strong> que recebe a lista entre parênteses, <code>len(compras)</code>, e não um método escrito depois do ponto. (Listas têm métodos com ponto, como <code>compras.append(…)</code>, que você vai ver nas próximas aulas, mas <code>len</code> não é um deles.) No modo interativo, no lugar do nome do arquivo aparece <code>&lt;python-input-1&gt;</code>: é o que a Ana digitou na sessão (a contagem começa em 0, então o 1 é a segunda linha).</p>
+</div>
+
+<div class="trypy" data-goal="out:3;;semerro">
+<p class="try-task"><strong>Missão:</strong> a Ana escreveu três itens, mas o programa diz que a lista tem 2. Encontre o erro e conserte, para o programa mostrar <strong>3</strong>.</p>
+<pre class="script" data-file="main.py">compras = ["arroz" "feijão", "café"]
+print(compras)
+print(len(compras))
+</pre>
+<pre class="solucao" data-file="main.py">compras = ["arroz", "feijão", "café"]
+print(compras)
+print(len(compras))
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Exemplo de resultado</th></tr>
+<tr><td><code>[a, b, c]</code></td><td>Cria uma lista com os itens <code>a</code>, <code>b</code> e <code>c</code>, nessa ordem</td><td><code>['arroz', 'café']</code></td></tr>
+<tr><td><code>[]</code> ou <code>list()</code></td><td>Cria uma lista vazia</td><td><code>[]</code></td></tr>
+<tr><td><code>list(sequência)</code></td><td>Cria uma lista com os itens de um texto, <code>range</code> etc.</td><td><code>list("Ana")</code> → <code>['A', 'n', 'a']</code></td></tr>
+<tr><td><code>len(lista)</code></td><td>Quantos itens a lista tem</td><td><code>4</code></td></tr>
+<tr><td><code>x in lista</code></td><td><code>True</code> se algum item é igual a <code>x</code></td><td><code>"café" in compras</code> → <code>True</code></td></tr>
+<tr><td><code>x not in lista</code></td><td><code>True</code> se nenhum item é igual a <code>x</code></td><td><code>"açúcar" not in compras</code> → <code>True</code></td></tr>
+<tr><td><code>lista1 == lista2</code></td><td>Mesmos itens, na mesma ordem?</td><td><code>[1, 2] == [2, 1]</code> → <code>False</code></td></tr>
+<tr><td><code>type(lista)</code></td><td>O tipo</td><td><code>&lt;class 'list'&gt;</code></td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td>Dois itens grudados (<code>'arrozfeijão'</code>) e o <code>len</code> menor que o esperado</td><td>Faltou a vírgula entre dois textos</td></tr>
+<tr><td><code>SyntaxError: '[' was never closed</code></td><td>Faltou o <code>]</code> no fim da lista</td></tr>
+<tr><td><code>NameError: name 'arroz' is not defined</code></td><td>Texto sem aspas</td></tr>
+<tr><td><code>TypeError: 'list' object is not callable</code></td><td>Uma variável chamada <code>list</code> tomou o lugar da função</td></tr>
+<tr><td><code>AttributeError: 'list' object has no attribute 'len'</code></td><td>Escreveu <code>lista.len()</code>; o certo é <code>len(lista)</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Os sinais da lista</h3>
+<p>Complete com os sinais que abrem e fecham uma lista:</p>
+<div class="ex-code">notas = <input data-answer="[" aria-label="abre a lista" size="2">7.5, 8.0, 10<input data-answer="]" aria-label="fecha a lista" size="2"></div>
+</div>
+
+<div class="exercise">
+<h3>2. Quantos itens?</h3>
+<p>Quanto vale <code>len(["pão", "pão", "leite", "manteiga"])</code>?</p>
+<div class="ex-code"><input data-answer="4" aria-label="quantidade" size="4"></div>
+</div>
+
+<div class="exercise">
+<h3>3. Está na lista?</h3>
+<p>Com <code>compras = ["arroz", "feijão", "café"]</code>, o que o Python responde para <code>"Arroz" in compras</code>?</p>
+<div class="ex-code"><input data-answer="False" aria-label="resposta" size="8"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. O que mostra <code>print(len(["Ana" "Bruno", "Carla"]))</code>?</p>
+<label><input type="radio" name="q4"> <code>3</code></label>
+<label><input type="radio" name="q4"> Um <code>SyntaxError</code>, porque falta uma vírgula</label>
+<label><input type="radio" name="q4"> <code>2</code>, porque <code>"Ana" "Bruno"</code> vira um texto só, <code>'AnaBruno'</code></label>
+<label><input type="radio" name="q4"> <code>13</code>, o total de letras</label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. Qual destes é o melhor nome para uma lista com os alunos da turma?</p>
+<label><input type="radio" name="q5"> <code>list</code></label>
+<label><input type="radio" name="q5"> <code>alunos</code></label>
+<label><input type="radio" name="q5"> <code>Aluno1</code></label>
+<label><input type="radio" name="q5"> <code>len</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. O que <code>print(["café", "leite"])</code> mostra?</p>
+<label><input type="radio" name="q6"> <code>['café', 'leite']</code></label>
+<label><input type="radio" name="q6"> <code>café leite</code></label>
+<label><input type="radio" name="q6"> <code>["café", "leite"]</code></label>
+<label><input type="radio" name="q6"> <code>café, leite</code></label>
+</div>
+
+<h3>Missão final: a turma da Ana</h3>
+
+<div class="trypy" data-goal="out:A turma tem 5 alunos.;;out:Bruno está na turma? True;;src:\blen\(turma\)">
+<p class="try-task"><strong>Missão:</strong> a professora matriculou mais uma aluna, a <strong>Eva</strong>. Acrescente <code>"Eva"</code> numa linha nova no fim da lista e troque o número escrito à mão (<code>4</code>) por <code>{len(turma)}</code>, para o programa contar sozinho. A saída tem de dizer <code>A turma tem 5 alunos.</code></p>
+<pre class="script" data-file="main.py">turma = [
+    "Ana",
+    "Bruno",
+    "Carla",
+    "Davi",
+]
+print(turma)
+print(f"A turma tem 4 alunos.")
+print("Bruno está na turma?", "Bruno" in turma)
+</pre>
+<pre class="solucao" data-file="main.py">turma = [
+    "Ana",
+    "Bruno",
+    "Carla",
+    "Davi",
+    "Eva",
+]
+print(turma)
+print(f"A turma tem {len(turma)} alunos.")
+print("Bruno está na turma?", "Bruno" in turma)
+</pre>
+</div>
+
+<p>Graças à vírgula depois de <code>"Davi"</code>, acrescentar a Eva foi só escrever uma linha nova. E, com o <code>len</code>, a frase continua certa quando entrar mais alguém.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Uma <strong>lista</strong> guarda vários valores, em ordem, numa variável só: <code>compras = ["arroz", "feijão", "café"]</code>.</li>
+  <li>Colchetes <code>[ ]</code> em volta, <strong>vírgula</strong> entre os itens. A lista vazia é <code>[]</code>.</li>
+  <li><code>len(lista)</code> conta os itens; <code>type(lista)</code> mostra <code>&lt;class 'list'&gt;</code>.</li>
+  <li>Itens podem se repetir e podem ser de qualquer tipo; o costume é uma lista com coisas do mesmo tipo e nome no plural.</li>
+  <li>Listas compridas ficam melhor com um item por linha e uma vírgula também depois do último.</li>
+  <li><code>x in lista</code> e <code>x not in lista</code> perguntam se o item está lá (comparação exata, com maiúsculas e acentos).</li>
+  <li><code>list()</code> cria uma lista a partir de um texto, de um <code>range</code> etc.</li>
+  <li>Vírgula esquecida entre textos <strong>não dá erro</strong>: os dois textos se colam. Desconfie quando o <code>len</code> não bater.</li>
+  <li>Nunca chame uma variável de <code>list</code>: ela esconde a função <code>list()</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
