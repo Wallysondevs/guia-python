@@ -314,6 +314,17 @@ async function testeInterface(pg) {
   P(await terminou("cx-laco-input"), "cx-laco-input: Ctrl+D não terminou o programa");
   t = await texto("cx-laco-input");
   P(/\(sorteado: \d+ \)\nNúmero: x\nIsso não é um número\.\nNúmero: 21\ndobro: 42\nNúmero: tchau\n\[código de saída: 0\]/.test(t), "cx-laco-input: " + JSON.stringify(t));
+  // 13. Rodar outra caixa enquanto uma espera o teclado (o Python é reiniciado e a nova roda)
+  await pg.click(sel("cx-input", ".ts-rodar"));
+  P(await campo("cx-input"), "cx-input: o campo não apareceu (troca de caixa)");
+  await pg.click(sel("cx-ola", ".ts-rodar"));
+  P(await terminou("cx-ola", 30000) && /Olá, Ana!/.test(await texto("cx-ola")), "troca de caixa: cx-ola não rodou depois de interromper o cx-input: " + JSON.stringify(await texto("cx-ola")));
+  P(/\(outro programa foi iniciado nesta página\)\n\[programa interrompido\]/.test(await texto("cx-input")), "troca de caixa: o cx-input não mostra que foi interrompido");
+  await pg.click(sel("cx-input", ".ts-rodar"));
+  await digitar("cx-input", "Bia");
+  await digitar("cx-input", "30");
+  P(await terminou("cx-input") && /Olá, Bia!/.test(await texto("cx-input")), "troca de caixa: o cx-input não voltou a rodar: " + JSON.stringify(await texto("cx-input")));
+
   t = await pg.evaluate(() => PySim._estado().info);
   notas.push("Python " + t.python + " (Pyodide " + t.pyodide + "), JSPI " + (t.jspi ? "sim" : "não") + (semJspi ? " (--semjspi: modo por repetição)" : ""));
   return { problemas, notas };

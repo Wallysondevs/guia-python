@@ -522,9 +522,22 @@
       linhaCmd(linhaComando(arqs[0].nome, args));
       var s = sessao = { texto: "", fila: [], desenho: null, gasto: 0, desde: 0, folga: 0, esperando: false, fim: false, rodando: false };
       btn.textContent = "■ Parar"; btn.disabled = false;
+      function falhou() {
+        if (sessao !== s) return;
+        sessao = null; btn.textContent = "▶ Rodar"; btn.disabled = false;
+        var fs = aoTerminar; aoTerminar = [];
+        fs.forEach(function (f) { try { f({ interrompido: true, motivo: "falha ao carregar", falhas: null }); } catch (e) {} });
+      }
       garantirPython().then(function () {
         if (sessao !== s) return;
-        if (dono && dono !== parar) dono("(outro programa foi iniciado nesta página)");
+        if (dono && dono !== parar) {
+          // outra caixa estava rodando (ou esperando o teclado): ela para e o Python é reiniciado
+          dono("(outro programa foi iniciado nesta página)");
+          if (!worker || !carregado) { garantirPython().then(function () { if (sessao === s) comecar(); }, falhou); return; }
+        }
+        comecar();
+      }, falhou);
+      function comecar() {
         s.rodando = true; dono = parar;
         var stdin = entradaIn ? textoEntrada(entradaIn.value) : null;
         s.term = new Terminal();
@@ -549,12 +562,7 @@
         };
         var req = { arquivos: arqs, args: args, stdin: stdin, modo: window.PYSIM_SEM_JSPI ? "repeticao" : "auto", conferir: arquivosDaMeta(meta) };
         s.id = enviar({ op: "executar", req: req }, s.ouvinte);
-      }, function () {
-        if (sessao !== s) return;
-        sessao = null; btn.textContent = "▶ Rodar"; btn.disabled = false;
-        var fs = aoTerminar; aoTerminar = [];
-        fs.forEach(function (f) { try { f({ interrompido: true, motivo: "falha ao carregar", falhas: null }); } catch (e) {} });
-      });
+      }
     }
     btn.addEventListener("click", rodar);
 
