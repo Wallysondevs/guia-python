@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Variáveis — guardar, usar e trocar valores | Guia Python</title>
+<meta name="description" content="Variáveis em Python para quem nunca programou: a ideia da etiqueta presa ao valor, criar com o sinal de igual, usar em contas, trocar o valor (reatribuição), estoque = estoque - 3, com e sem aspas, o modo interativo, e os erros reais do Python 3.14 (NameError com Did you mean, SyntaxError) explicados em português, com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Variáveis</span></h1>
+
+<p class="intro">Todo programa precisa <strong>guardar coisas</strong> enquanto trabalha: o preço do pão, quantos bolos sobraram na vitrine, o nome de quem fez o pedido. Na aula <a href="input.html">input()</a> você já guardou uma resposta com <code>nome = input(...)</code>. Aquilo era uma <strong>variável</strong>: um nome que o programa usa para lembrar de um valor. Nesta aula você vai entender direito o que ela é, como criar, usar e trocar o valor, e o que o Python responde quando você usa um nome que ele não conhece.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é uma variável: uma <strong>etiqueta</strong> com um nome, presa a um valor.</li>
+  <li>A criar uma variável com o sinal <code>=</code> e a mostrar o valor dela.</li>
+  <li>A usar variáveis em contas e guardar o resultado em outra variável.</li>
+  <li>A <strong>trocar</strong> o valor (reatribuição), inclusive a partir do valor antigo: <code>estoque = estoque - 3</code>.</li>
+  <li>A diferença entre <code>"nome"</code> com aspas e <code>nome</code> sem aspas.</li>
+  <li>Os erros reais: <code>NameError</code> (com a dica "Did you mean") e o <code>=</code> escrito ao contrário.</li>
+</ul>
+</div>
+
+<p>Os programas desta aula foram rodados com o <strong>Python 3.14</strong> na máquina fictícia da Ana (usuária <code>ana</code>, computador <code>notebook</code>), com <code>python3 arquivo.py</code>. Cada caixa "Experimente" roda o mesmo Python de verdade, no seu navegador.</p>
+
+<hr>
+
+<h2>A ideia: uma etiqueta com nome</h2>
+<p>Na vitrine da padaria, cada bandeja tem uma plaquinha: "Pão de queijo", "Sonho", "Bolo de fubá". A atendente não precisa decorar onde está cada coisa: ela procura pela plaquinha. E a plaquinha "Bolo do dia" pode ir para outra bandeja amanhã, quando o bolo do dia for outro: o nome é o mesmo, o que ele indica muda.</p>
+
+<p>Muita gente explica variável como uma <strong>caixa com etiqueta</strong>: a etiqueta é o nome, e o que está dentro é o valor. É uma boa primeira imagem. No Python, a imagem mais fiel é a da <strong>etiqueta presa ao valor</strong>: o valor (o número <code>7.5</code>, o texto <code>"Ana"</code>) existe na memória do computador, e a variável é um nome amarrado a ele. Quando você troca o valor de uma variável, o Python <strong>muda a etiqueta de lugar</strong>, amarrando-a ao valor novo.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Parte</th><th>Nome técnico</th><th>Exemplo</th></tr>
+<tr><td>A plaquinha, a etiqueta</td><td>o <strong>nome</strong> da variável</td><td><code>preco</code>, <code>estoque</code>, <code>nome</code></td></tr>
+<tr><td>O que está preso à etiqueta agora</td><td>o <strong>valor</strong></td><td><code>7.5</code>, <code>10</code>, <code>"Ana"</code></td></tr>
+<tr><td>Prender a etiqueta a um valor</td><td><strong>atribuição</strong></td><td><code>preco = 7.5</code></td></tr>
+</table>
+</div>
+
+<p>O nome "variável" vem daí: o valor preso à etiqueta pode <strong>variar</strong> enquanto o programa roda.</p>
+
+<hr>
+
+<h2>1. Criando uma variável</h2>
+<p>Para criar uma variável, escreva o nome, o sinal <code>=</code> e o valor:</p>
+
+<pre class="file" data-file="preco.py">preco = 7.5
+print(preco)
+print("O pão de forma custa", preco)
+</pre>
+
+<pre class="term">$ python3 preco.py
+7.5
+O pão de forma custa 7.5
+</pre>
+
+<dl class="anatomy">
+  <dt>preco</dt><dd>O <strong>nome</strong> da variável, escolhido por você. Sem acento e em minúsculas, que é o costume (as regras estão na próxima aula, <a href="nomes-variaveis.html">Nomes de Variáveis</a>).</dd>
+  <dt>=</dt><dd>Leia como "<strong>recebe</strong>": <em>preco recebe 7.5</em>. Não é o "igual" da matemática, que afirma que dois lados são iguais; aqui é uma <strong>ordem</strong>: "prenda o nome da esquerda ao valor da direita". (Quem compara se dois valores são iguais é o <code>==</code>, na aula <a href="operadores-comparacao.html">Comparações</a>.)</dd>
+  <dt>7.5</dt><dd>O <strong>valor</strong>. Pode ser um número, um texto entre aspas, o resultado de uma conta, o que o <code>input()</code> devolveu…</dd>
+  <dt>print(preco)</dt><dd>Usa a variável. Onde o Python encontra o nome <code>preco</code>, ele coloca o valor preso a ele, <code>7.5</code>.</dd>
+</dl>
+
+<p>A linha <code>preco = 7.5</code> não mostra nada na tela: ela só guarda. Quem mostra é o <code>print</code>.</p>
+
+<div class="note">
+<strong>Não precisa dizer o tipo</strong>
+<p>Em algumas linguagens, como C e Java, você precisa avisar antes que tipo de valor a variável vai guardar (<code>int idade = 29;</code>). No Python, não: a variável nasce na primeira vez que recebe um valor, e o próprio valor sabe o seu tipo. Os tipos são o assunto da aula <a href="tipos-de-dados.html">Tipos de Dados</a>.</p>
+</div>
+
+<h3>No modo interativo</h3>
+<p>No <code>&gt;&gt;&gt;</code> (aula <a href="repl.html">O Modo Interativo</a>), digitar o nome de uma variável mostra o valor dela, sem precisar de <code>print</code>:</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; preco = 7.5                « a atribuição não mostra nada
+&gt;&gt;&gt; preco
+7.5
+&gt;&gt;&gt; preco * 2
+15.0
+&gt;&gt;&gt; exit()
+</pre>
+
+<hr>
+
+<h2>2. Variáveis em contas</h2>
+<p>Uma variável pode entrar em qualquer lugar onde entraria o valor dela. E o resultado de uma conta pode ser guardado em outra variável:</p>
+
+<pre class="file" data-file="compras.py">preco = 7.5
+quantidade = 3
+total = preco * quantidade
+print("Total:", total)
+</pre>
+
+<pre class="term">$ python3 compras.py
+Total: 22.5
+</pre>
+
+<ol class="passo">
+  <li><code>preco</code> recebe <code>7.5</code>.</li>
+  <li><code>quantidade</code> recebe <code>3</code>.</li>
+  <li>Na linha 3, o Python primeiro resolve o lado <strong>direito</strong> do <code>=</code>: troca os nomes pelos valores, <code>7.5 * 3</code>, e calcula <code>22.5</code>. Só depois prende o nome <code>total</code> a esse resultado.</li>
+  <li>O <code>print</code> mostra o texto e o valor de <code>total</code>.</li>
+</ol>
+
+<p>A vantagem aparece quando o preço muda: você troca <strong>uma</strong> linha (<code>preco = 8.0</code>) e todas as contas que usam <code>preco</code> acompanham. Sem variável, você teria de caçar cada <code>7.5</code> espalhado pelo programa.</p>
+
+<div class="trypy" data-goal="out:Total: 30.0;;src:^quantidade\s*=">
+<p class="try-task"><strong>Missão:</strong> a Ana vai levar <strong>4</strong> pães de forma. Crie uma variável <code>quantidade</code> com o valor 4, numa linha só para ela, e use-a na conta no lugar do <code>3</code>. O total deve dar <code>30.0</code>.</p>
+<pre class="script" data-file="main.py">preco = 7.5
+total = preco * 3
+print("Total:", total)
+</pre>
+<pre class="solucao" data-file="main.py">preco = 7.5
+quantidade = 4
+total = preco * quantidade
+print("Total:", total)
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Trocando o valor (reatribuição)</h2>
+<p>Uma variável que já existe pode receber outro valor a qualquer momento. É a mesma escrita, <code>nome = valor</code>; o valor antigo é esquecido:</p>
+
+<pre class="file" data-file="estoque.py">estoque = 10
+print("Estoque:", estoque)
+estoque = 7
+print("Estoque:", estoque)
+</pre>
+
+<pre class="term">$ python3 estoque.py
+Estoque: 10
+Estoque: 7
+</pre>
+
+<p>O mesmo <code>print</code> mostrou valores diferentes, porque, entre um e outro, a etiqueta <code>estoque</code> foi tirada do 10 e presa ao 7. Isso se chama <strong>reatribuição</strong> ("atribuir de novo"). O programa roda de cima para baixo, e cada linha vê o valor que a variável tem <strong>naquele momento</strong>.</p>
+
+<h3>Usando o valor antigo para calcular o novo</h3>
+<p>Na padaria, a Ana não sabe de cabeça quantos bolos vão sobrar: ela sabe quantos tinha e quantos vendeu. Dá para escrever exatamente isso:</p>
+
+<pre class="file" data-file="vendas.py">estoque = 10
+print("Abrimos com", estoque, "bolos")
+estoque = estoque - 3
+print("Depois da manhã:", estoque, "bolos")
+estoque = estoque + 5
+print("Depois da fornada:", estoque, "bolos")
+</pre>
+
+<pre class="term">$ python3 vendas.py
+Abrimos com 10 bolos
+Depois da manhã: 7 bolos
+Depois da fornada: 12 bolos
+</pre>
+
+<dl class="anatomy">
+  <dt>estoque = estoque - 3</dt><dd>Na matemática, isso seria um absurdo (nenhum número é igual a ele mesmo menos 3). No Python faz todo sentido, porque o <code>=</code> é "recebe" e o lado direito é calculado <strong>primeiro</strong>.</dd>
+  <dt>estoque - 3</dt><dd>Primeiro passo: o Python pega o valor atual, <code>10</code>, e calcula <code>10 - 3</code>, que dá <code>7</code>.</dd>
+  <dt>estoque = …</dt><dd>Segundo passo: a etiqueta <code>estoque</code> passa a ficar presa ao <code>7</code>.</dd>
+</dl>
+
+<p>Esse jeito de atualizar uma variável é tão comum que tem uma forma curta, <code>estoque -= 3</code>, que você vai ver em <a href="operadores-atribuicao.html">Operadores de Atribuição</a>.</p>
+
+<div class="trypy" data-goal="out:Sobraram 6 bolos;;src:estoque\s*=\s*estoque\s*-\s*4">
+<p class="try-task"><strong>Missão:</strong> a padaria abriu com 10 bolos e vendeu 4. Antes do último <code>print</code>, acrescente uma linha que <strong>tire 4 do estoque</strong> a partir do valor atual (<code>estoque = estoque - …</code>). Deve aparecer <code>Sobraram 6 bolos</code>.</p>
+<pre class="script" data-file="main.py">estoque = 10
+print("Abrimos com", estoque, "bolos")
+print("Sobraram", estoque, "bolos")
+</pre>
+<pre class="solucao" data-file="main.py">estoque = 10
+print("Abrimos com", estoque, "bolos")
+estoque = estoque - 4
+print("Sobraram", estoque, "bolos")
+</pre>
+</div>
+
+<h3>Copiar o valor de uma variável para outra</h3>
+<p>Uma variável também pode receber o valor de outra:</p>
+
+<pre class="file" data-file="copia.py">manha = 12
+tarde = manha
+manha = 20
+print("manhã:", manha)
+print("tarde:", tarde)
+</pre>
+
+<pre class="term">$ python3 copia.py
+manhã: 20
+tarde: 12
+</pre>
+
+<p>A linha <code>tarde = manha</code> prende a etiqueta <code>tarde</code> ao mesmo valor que <code>manha</code> tinha <strong>naquele momento</strong>, o 12. Depois, <code>manha = 20</code> muda só a etiqueta <code>manha</code> de lugar; a <code>tarde</code> continua presa ao 12. As duas variáveis não ficam "ligadas" para sempre. (Com listas, que você vai ver mais adiante, essa história tem um detalhe a mais, explicado em <a href="mutabilidade.html">Mutável × Imutável</a>.)</p>
+
+<h3>A variável pode trocar até de tipo</h3>
+
+<pre class="file" data-file="muda-tipo.py">recado = 10
+print(recado)
+recado = "dez pães"
+print(recado)
+</pre>
+
+<pre class="term">$ python3 muda-tipo.py
+10
+dez pães
+</pre>
+
+<p>A etiqueta <code>recado</code> estava presa a um número e passou a estar presa a um texto. O Python deixa. Mas, num programa de verdade, uma variável que muda de tipo no meio do caminho costuma confundir quem lê. Dê a cada variável um papel só.</p>
+
+<hr>
+
+<h2>4. Com aspas é texto, sem aspas é variável</h2>
+<p>Na aula <a href="print.html">print()</a>, a regra era: com aspas é texto, sem aspas é valor. Agora que existem variáveis, ela fica assim:</p>
+
+<pre class="file" data-file="aspas-var.py">nome = "Ana"
+print("nome")
+print(nome)
+</pre>
+
+<pre class="term">$ python3 aspas-var.py
+nome
+Ana
+</pre>
+
+<ul>
+  <li><code>print("nome")</code> mostra o <strong>texto</strong> <code>nome</code>, as quatro letras.</li>
+  <li><code>print(nome)</code> mostra o <strong>valor da variável</strong> <code>nome</code>, que é <code>Ana</code>.</li>
+</ul>
+
+<p>Na primeira linha, <code>"Ana"</code> tem aspas porque é o texto guardado. Já o nome da variável nunca leva aspas.</p>
+
+<hr>
+
+<h2>Formas diferentes de chegar ao mesmo resultado</h2>
+
+<pre class="file" data-file="formas.py">print("Total:", 7.5 * 3)
+
+total = 7.5 * 3
+print("Total:", total)
+
+preco = 7.5
+quantidade = 3
+total = preco * quantidade
+print("Total:", total)
+</pre>
+
+<p>As três partes mostram <code>Total: 22.5</code>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td>A conta direto no <code>print</code></td><td>Uma conta rápida, que você não vai usar de novo</td></tr>
+<tr><td>Uma variável para o resultado</td><td>Quando o resultado vai ser usado mais de uma vez, ou a linha do <code>print</code> ficaria comprida</td></tr>
+<tr><td>Uma variável para cada valor</td><td><strong>O mais legível</strong>: cada número ganha um nome que diz o que ele é. <code>preco * quantidade</code> se explica sozinho; <code>7.5 * 3</code>, não. Prefira este em programas de verdade</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Nome digitado errado: <code>NameError</code> com dica</strong>
+<pre class="file" data-file="digitou-errado.py">quantidade = 3
+print(quantidad)
+</pre>
+<pre class="term">$ python3 digitou-errado.py
+Traceback (most recent call last):
+  File "/home/ana/digitou-errado.py", line 2, in &lt;module&gt;
+    print(quantidad)
+          ^^^^^^^^^
+NameError: name 'quantidad' is not defined. Did you mean: 'quantidade'?
+</pre>
+<dl class="anatomy">
+  <dt>File "/home/ana/digitou-errado.py", line 2</dt><dd>O erro está na linha 2. A linha 1 rodou sem problema.</dd>
+  <dt>^^^^^^^^^</dt><dd>Aponta o nome que o Python não reconheceu.</dd>
+  <dt>NameError: name 'quantidad' is not defined.</dt><dd>"Erro de nome: o nome <code>quantidad</code> não está definido." Ninguém criou uma variável com esse nome, e o Python não adivinha.</dd>
+  <dt>Did you mean: 'quantidade'?</dt><dd>"Você quis dizer <code>quantidade</code>?" O Python procurou, entre os nomes que existem, um bem parecido, e achou. Essa dica é uma das ajudas das versões novas do Python.</dd>
+</dl>
+<p><strong>Como consertar:</strong> escreva o nome exatamente como foi criado.</p>
+</div>
+
+<div class="cenario">
+<strong>Maiúscula e minúscula fazem diferença</strong>
+<pre class="file" data-file="maiusc.py">Preco = 7.5
+print(preco)
+</pre>
+<pre class="term">$ python3 maiusc.py
+Traceback (most recent call last):
+  File "/home/ana/maiusc.py", line 2, in &lt;module&gt;
+    print(preco)
+          ^^^^^
+NameError: name 'preco' is not defined. Did you mean: 'Preco'?
+</pre>
+<p>Para o Python, <code>Preco</code> e <code>preco</code> são duas variáveis diferentes. Foi criada a <code>Preco</code>, com P maiúsculo, e usada a <code>preco</code>, que não existe. <strong>Como consertar:</strong> use sempre minúsculas nos nomes de variáveis, e o problema nem aparece.</p>
+</div>
+
+<div class="cenario">
+<strong>Usar a variável antes de criá-la</strong>
+<pre class="file" data-file="antes.py">print(total)
+total = 25
+</pre>
+<pre class="term">$ python3 antes.py
+Traceback (most recent call last):
+  File "/home/ana/antes.py", line 1, in &lt;module&gt;
+    print(total)
+          ^^^^^
+NameError: name 'total' is not defined
+</pre>
+<p>A variável <code>total</code> existe no arquivo, mas só na linha 2. O Python roda de cima para baixo: quando chegou à linha 1, <code>total</code> ainda não tinha sido criada. Desta vez, sem "Did you mean": não existe nenhum nome parecido. <strong>Como consertar:</strong> crie a variável antes de usá-la.</p>
+</div>
+
+<div class="cenario">
+<strong>O <code>=</code> ao contrário</strong>
+<pre class="file" data-file="invertido.py">10 = estoque
+</pre>
+<pre class="term">$ python3 invertido.py
+  File "/home/ana/invertido.py", line 1
+    10 = estoque
+    ^^
+SyntaxError: cannot assign to literal here. Maybe you meant '==' instead of '='?
+</pre>
+<p>"Não dá para atribuir a um literal aqui. Talvez você quisesse <code>==</code> em vez de <code>=</code>?" Um <strong>literal</strong> é um valor escrito direto no código, como <code>10</code> ou <code>"Ana"</code>. O <code>=</code> sempre prende o nome da <strong>esquerda</strong> ao valor da direita, e <code>10</code> não é um nome. O Python sugere o <code>==</code> porque acha que talvez você quisesse comparar. <strong>Como consertar:</strong> o nome sempre do lado esquerdo, <code>estoque = 10</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>==</code> no lugar de <code>=</code></strong>
+<pre class="file" data-file="igual-igual.py">preco == 7.5
+print(preco)
+</pre>
+<pre class="term">$ python3 igual-igual.py
+Traceback (most recent call last):
+  File "/home/ana/igual-igual.py", line 1, in &lt;module&gt;
+    preco == 7.5
+    ^^^^^
+NameError: name 'preco' is not defined
+</pre>
+<p>O <code>==</code> não cria nada: ele <strong>pergunta</strong> "<code>preco</code> é igual a 7.5?". Para perguntar, o Python precisa do valor de <code>preco</code>, que não existe. <strong>Como consertar:</strong> para guardar, um <code>=</code> só.</p>
+</div>
+
+<div class="cenario">
+<strong>Número guardado como texto</strong>
+<pre class="file" data-file="texto-num.py">preco = "7.5"
+print(preco * 2)
+</pre>
+<pre class="term">$ python3 texto-num.py
+7.57.5
+</pre>
+<p>Sem erro, e um resultado estranho: <code>7.57.5</code>. Com aspas, <code>"7.5"</code> é um texto, e texto vezes 2 é o texto <strong>repetido</strong> duas vezes (aula <a href="strings-juntar.html">Juntar e Repetir Textos</a>). <strong>Como consertar:</strong> números sem aspas, <code>preco = 7.5</code>. (Se o valor veio do <code>input()</code>, converta com <code>float()</code>, como na aula <a href="input.html">input()</a>.)</p>
+</div>
+
+<div class="trypy" data-goal="semerro;;out:Total: 22.5">
+<p class="try-task"><strong>Missão:</strong> o programa para com <code>NameError</code>. Rode, leia a dica do Python e conserte.</p>
+<pre class="script" data-file="main.py">preco = 7.5
+quantidade = 3
+total = preco * qantidade
+print("Total:", total)
+</pre>
+<pre class="solucao" data-file="main.py">preco = 7.5
+quantidade = 3
+total = preco * quantidade
+print("Total:", total)
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>preco = 7.5</code></td><td>Cria a variável <code>preco</code> (ou troca o valor, se já existir). Não mostra nada</td></tr>
+<tr><td><code>print(preco)</code></td><td>Mostra o valor da variável</td></tr>
+<tr><td><code>total = preco * quantidade</code></td><td>Calcula o lado direito e guarda o resultado em <code>total</code></td></tr>
+<tr><td><code>estoque = estoque - 3</code></td><td>Calcula com o valor atual e guarda o resultado na mesma variável</td></tr>
+<tr><td><code>tarde = manha</code></td><td><code>tarde</code> recebe o valor que <code>manha</code> tem agora</td></tr>
+<tr><td><code>"nome"</code> × <code>nome</code></td><td>Com aspas: o texto. Sem aspas: o valor da variável</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>NameError: name 'quantidad' is not defined. Did you mean: 'quantidade'?</code></td><td>Nome digitado errado (ou com maiúscula diferente)</td></tr>
+<tr><td><code>NameError: name 'total' is not defined</code></td><td>Variável usada antes de ser criada, ou nunca criada</td></tr>
+<tr><td><code>SyntaxError: cannot assign to literal here</code></td><td>O valor do lado esquerdo do <code>=</code>: o nome vai à esquerda</td></tr>
+<tr><td><code>NameError</code> numa linha com <code>==</code></td><td><code>==</code> (comparar) no lugar de <code>=</code> (guardar)</td></tr>
+<tr><td><code>7.57.5</code> em vez de <code>15.0</code></td><td>Número guardado entre aspas (é texto)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Crie a variável</h3>
+<p>Complete para que a variável <code>bolos</code> receba o valor 8:</p>
+<div class="ex-code">bolos <input data-answer="=" aria-label="sinal"> 8</div>
+</div>
+
+<div class="exercise">
+<h3>2. Qual é a saída?</h3>
+<pre class="file" data-file="ex2.py">pacotes = 5
+pacotes = pacotes + 2
+print(pacotes)
+</pre>
+<div class="ex-code">Saída: <input data-answer="7" aria-label="saída"></div>
+</div>
+
+<div class="exercise">
+<h3>3. E esta?</h3>
+<pre class="file" data-file="ex3.py">a = 3
+b = a
+a = 10
+print(b)
+</pre>
+<div class="ex-code">Saída: <input data-answer="3" aria-label="saída"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Como se lê <code>preco = 7.5</code>?</p>
+<label><input type="radio" name="q4"> "<code>preco</code> é igual a 7.5?"</label>
+<label><input type="radio" name="q4"> "<code>preco</code> recebe 7.5"</label>
+<label><input type="radio" name="q4"> "Mostre <code>preco</code> e 7.5"</label>
+<label><input type="radio" name="q4"> "7.5 recebe <code>preco</code>"</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. <code>nome = "Ana"</code>. O que mostra <code>print("nome")</code>?</p>
+<label><input type="radio" name="q5"> <code>Ana</code></label>
+<label><input type="radio" name="q5"> <code>"Ana"</code></label>
+<label><input type="radio" name="q5"> <code>NameError</code></label>
+<label><input type="radio" name="q5"> <code>nome</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Qual destas linhas dá <code>SyntaxError</code>?</p>
+<label><input type="radio" name="q6"> <code>3 = quantidade</code></label>
+<label><input type="radio" name="q6"> <code>quantidade = 3</code></label>
+<label><input type="radio" name="q6"> <code>quantidade = quantidade + 3</code></label>
+<label><input type="radio" name="q6"> <code>total = quantidade * 3</code></label>
+</div>
+
+<h3>Missão final: o troco</h3>
+
+<div class="trypy" data-goal="out:Troco: 27.5;;src:^troco\s*=">
+<p class="try-task"><strong>Missão:</strong> a cliente pagou 50 por uma compra de 22.5. Crie uma variável <code>troco</code> com a conta <code>pago - compra</code> e mostre <code>Troco: 27.5</code> usando essa variável.</p>
+<pre class="script" data-file="main.py">pago = 50
+compra = 22.5
+</pre>
+<pre class="solucao" data-file="main.py">pago = 50
+compra = 22.5
+troco = pago - compra
+print("Troco:", troco)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Uma <strong>variável</strong> é um nome (uma etiqueta) preso a um valor. Ela nasce na primeira vez que recebe um valor; não é preciso dizer o tipo.</li>
+  <li><code>nome = valor</code> se lê "nome <strong>recebe</strong> valor". O lado direito é calculado primeiro; o nome fica sempre à esquerda.</li>
+  <li>Uma variável pode receber outro valor a qualquer momento (<strong>reatribuição</strong>); cada linha vê o valor daquele momento.</li>
+  <li><code>estoque = estoque - 3</code> calcula com o valor atual e guarda o resultado na mesma variável.</li>
+  <li><code>tarde = manha</code> copia o valor de agora; mudar <code>manha</code> depois não muda <code>tarde</code>.</li>
+  <li>Com aspas é texto; sem aspas é o nome de uma variável.</li>
+  <li>Nome que não existe (digitado errado, com maiúscula diferente ou usado antes de criar) dá <code>NameError</code>, muitas vezes com a dica "Did you mean".</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
