@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Booleanos — True, False, truthy e falsy | Guia Python</title>
+<meta name="description" content="Booleanos em Python para quem nunca programou: os valores True e False, o tipo bool, as perguntas de sim ou não que viram True ou False, o que é truthy e falsy (zero e vazio são falsos), por que True + True dá 2 e os erros reais: true minúsculo, True = 1 e o texto &quot;True&quot;.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Booleanos (True e False)</span></h1>
+
+<p class="intro">Muitas perguntas que um programa faz têm só duas respostas possíveis: a padaria está aberta? Ainda tem pão? A aluna passou de ano? A senha está certa? Para guardar essas respostas, o Python tem um tipo próprio, o <code>bool</code> (os <strong>booleanos</strong>), com apenas dois valores: <code>True</code> (verdadeiro) e <code>False</code> (falso). Eles parecem simples, e são, mas é com eles que o programa toma decisões. Nesta aula você também vai conhecer uma ideia muito usada em Python: todo valor, até um número ou um texto, pode ser tratado como verdadeiro ou falso.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>Os dois valores booleanos, <code>True</code> e <code>False</code>, e como escrevê-los (com maiúscula!).</li>
+  <li>Que toda comparação (<code>idade &gt;= 18</code>) responde com um booleano.</li>
+  <li>A guardar a resposta de uma pergunta numa variável, como <code>pode_votar</code>.</li>
+  <li>O que é <em>truthy</em> e <em>falsy</em>: por que <code>0</code> e <code>""</code> contam como falso.</li>
+  <li>Por que <code>True + True</code> dá <code>2</code>, e como isso ajuda a contar.</li>
+  <li>A diferença entre o valor <code>True</code> e o texto <code>"True"</code>.</li>
+  <li>Os erros reais: <code>true</code> minúsculo e <code>True = 1</code>.</li>
+</ul>
+</div>
+
+<p>Os programas desta aula rodaram no <strong>Python 3.14</strong> da máquina da Ana (usuária <code>ana</code>, computador <code>notebook</code>), e podem ser repetidos no editor do guia.</p>
+
+<hr>
+
+<h2>A ideia: o interruptor de luz</h2>
+<p>Um interruptor só tem duas posições: <strong>ligado</strong> ou <strong>desligado</strong>. Não existe "meio ligado". A plaquinha na porta da padaria também: ou está virada para "ABERTO", ou para "FECHADO".</p>
+
+<p>Um booleano é isso: um valor que só pode ser <code>True</code> ou <code>False</code>. O nome vem de George Boole, um matemático inglês do século XIX que estudou as contas com "verdadeiro" e "falso", que hoje são a base de todos os computadores.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Valor</th><th>Quer dizer</th><th>Pense em</th></tr>
+<tr><td><code>True</code></td><td>Verdadeiro, sim</td><td>Interruptor ligado, plaquinha "ABERTO"</td></tr>
+<tr><td><code>False</code></td><td>Falso, não</td><td>Interruptor desligado, plaquinha "FECHADO"</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. Os valores <code>True</code> e <code>False</code></h2>
+<p>Você escreve um booleano direto no código, como escreve um número. A Ana anota a situação da padaria:</p>
+
+<pre class="file" data-file="padaria.py">aberta = True
+tem_sonho = False
+print(aberta)
+print(tem_sonho)
+print(type(aberta))
+</pre>
+
+<pre class="term">$ python3 padaria.py
+True
+False
+&lt;class 'bool'&gt;
+</pre>
+
+<dl class="anatomy">
+  <dt>aberta = True</dt><dd>Guarda o valor verdadeiro na variável <code>aberta</code>.</dd>
+  <dt>True</dt><dd>Com <strong>T maiúsculo</strong> e <strong>sem aspas</strong>. Não é um texto, nem um nome de variável: é uma <strong>palavra reservada</strong> do Python, um valor pronto.</dd>
+  <dt>tem_sonho = False</dt><dd>O sonho (o doce) acabou: falso. Também com maiúscula, <code>F</code>.</dd>
+  <dt>&lt;class 'bool'&gt;</dt><dd>O tipo dos booleanos se chama <code>bool</code>.</dd>
+</dl>
+
+<div class="tip">
+<strong>Nomes que soam como pergunta</strong>
+<p>Repare nos nomes: <code>aberta</code>, <code>tem_sonho</code>, <code>pode_votar</code>, <code>esta_pago</code>. Para variáveis booleanas, o costume é escolher um nome que responda bem a "sim" ou "não". Assim, quem lê <code>tem_sonho = False</code> entende na hora: "não tem sonho".</p>
+</div>
+
+<hr>
+
+<h2>2. Perguntas que respondem <code>True</code> ou <code>False</code></h2>
+<p>Na maioria das vezes, você não escreve <code>True</code> ou <code>False</code> à mão: eles <strong>aparecem</strong> como resposta de uma pergunta. Toda comparação é uma pergunta de sim ou não:</p>
+
+<pre class="file" data-file="perguntas.py">idade = 17
+estoque = 0
+print(idade &gt;= 18)
+print(estoque == 0)
+pode_votar = idade &gt;= 16
+print(pode_votar)
+</pre>
+
+<pre class="term">$ python3 perguntas.py
+False
+True
+True
+</pre>
+
+<dl class="anatomy">
+  <dt>idade &gt;= 18</dt><dd>"A idade é maior ou igual a 18?" Com 17, não: <code>False</code>.</dd>
+  <dt>estoque == 0</dt><dd>"O estoque é igual a zero?" (dois sinais de igual: é uma <strong>pergunta</strong>; um só guarda um valor). Sim: <code>True</code>.</dd>
+  <dt>pode_votar = idade &gt;= 16</dt><dd>O Python primeiro responde a pergunta da direita (<code>True</code>) e depois guarda a resposta na variável. No Brasil, o voto é permitido a partir dos 16 anos.</dd>
+</dl>
+
+<p>Todos os sinais de comparação (<code>==</code>, <code>!=</code>, <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code>) estão na aula <a href="operadores-comparacao.html">Comparações</a>, e o jeito de juntar perguntas ("tem pão <strong>e</strong> está aberta?") está em <a href="operadores-logicos.html">and, or e not</a>.</p>
+
+<h3>Para que serve: tomar decisões</h3>
+<p>O booleano é o combustível do <code>if</code> ("se"), que você vai aprender na aula <a href="if.html">if</a>. Só para matar a curiosidade, a ideia é esta:</p>
+
+<pre class="file" data-file="exemplo_if.py">aberta = True
+if aberta:
+    print("Pode entrar!")
+</pre>
+
+<pre class="term">$ python3 exemplo_if.py
+Pode entrar!
+</pre>
+
+<p>"<strong>Se</strong> <code>aberta</code> for verdadeiro, mostre 'Pode entrar!'". Sem booleanos, o programa faria sempre a mesma coisa; com eles, ele escolhe.</p>
+
+<hr>
+
+<h2>3. <em>Truthy</em> e <em>falsy</em>: todo valor tem um lado</h2>
+<p>Aqui vem uma ideia muito usada em Python. Qualquer valor, e não só <code>True</code> e <code>False</code>, pode ser usado onde se espera um "sim" ou "não". Para saber qual dos dois um valor representa, pergunte ao <code>bool()</code> (aula <a href="conversao.html">Conversão de Tipos</a>):</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; bool(0)
+False
+&gt;&gt;&gt; bool(0.0)
+False
+&gt;&gt;&gt; bool("")
+False
+&gt;&gt;&gt; bool([])
+False
+&gt;&gt;&gt; bool(None)
+False
+&gt;&gt;&gt; bool(" ")
+True
+&gt;&gt;&gt; bool(42)
+True
+&gt;&gt;&gt; bool(-0.5)
+True
+&gt;&gt;&gt; bool("Ana")
+True
+&gt;&gt;&gt; bool([0])
+True
+</pre>
+
+<p>A regra é: <strong>o que é "nada" conta como falso; o resto conta como verdadeiro</strong>. Os programadores usam duas palavras em inglês para isso: os valores que contam como verdadeiro são <em>truthy</em> ("verdadeiro-ish", algo como "com cara de verdadeiro"), e os que contam como falso são <em>falsy</em>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Tipo</th><th><em>Falsy</em> (conta como <code>False</code>)</th><th><em>Truthy</em> (conta como <code>True</code>)</th></tr>
+<tr><td>Booleano</td><td><code>False</code></td><td><code>True</code></td></tr>
+<tr><td>Número</td><td><code>0</code> e <code>0.0</code></td><td>Qualquer outro: <code>42</code>, <code>-1</code>, <code>-0.5</code></td></tr>
+<tr><td>Texto</td><td><code>""</code> (vazio)</td><td>Qualquer texto com algo dentro, até <code>" "</code> (um espaço), <code>"0"</code> e <code>"False"</code></td></tr>
+<tr><td>Lista</td><td><code>[]</code> (vazia)</td><td>Qualquer lista com itens, até <code>[0]</code></td></tr>
+<tr><td>O "nada"</td><td><code>None</code> (aula <a href="none.html">O Valor None</a>)</td><td>—</td></tr>
+</table>
+</div>
+
+<p>Repare em três pegadinhas da lista: <code>" "</code>, com um espaço, não está vazio (tem o espaço dentro), então é <em>truthy</em>. <code>[0]</code> é uma lista com um item (o zero), então também é <em>truthy</em>. E números negativos não são "nada": <code>-0.5</code> é <em>truthy</em>.</p>
+
+<h3>Para que serve</h3>
+<p>Para escrever perguntas curtas, como "a pessoa digitou alguma coisa?". Em vez de comparar o texto com <code>""</code>, basta usar o próprio texto:</p>
+
+<pre class="file" data-file="se_nome.py">nome = input("Seu nome: ")
+if nome:
+    print("Olá,", nome)
+else:
+    print("Você não digitou nada.")
+</pre>
+
+<pre class="term">$ python3 se_nome.py
+Seu nome: Ana
+Olá, Ana
+$ python3 se_nome.py
+Seu nome:
+Você não digitou nada.
+</pre>
+
+<p>Na segunda vez, a Ana só apertou Enter. O <code>input()</code> devolveu <code>""</code>, que é <em>falsy</em>, e o programa foi para o <code>else</code> ("senão"). O <code>if</code> e o <code>else</code> têm aulas próprias (<a href="if.html">if</a> e <a href="if-else.html">if e else</a>); por enquanto, guarde a ideia: <strong>texto vazio conta como falso</strong>.</p>
+
+<hr>
+
+<h2>4. Por baixo do pano, <code>True</code> é 1 e <code>False</code> é 0</h2>
+<p>Uma curiosidade que vira truque útil: para o Python, o <code>bool</code> é um tipo especial de inteiro. <code>True</code> vale 1 e <code>False</code> vale 0, e dá até para fazer conta com eles:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; True + True
+2
+&gt;&gt;&gt; True == 1
+True
+&gt;&gt;&gt; False == 0
+True
+&gt;&gt;&gt; True * 10
+10
+</pre>
+
+<p>Para que isso serve? Para <strong>contar</strong> quantas respostas foram "sim". Somando os booleanos, cada <code>True</code> conta 1 e cada <code>False</code> conta 0:</p>
+
+<pre class="file" data-file="aprovados.py">ana_passou = True
+bia_passou = False
+caio_passou = True
+aprovados = ana_passou + bia_passou + caio_passou
+print("Aprovados:", aprovados)
+</pre>
+
+<pre class="term">$ python3 aprovados.py
+Aprovados: 2
+</pre>
+
+<div class="trypy" data-goal="out:Aprovados: 3;;src:\+">
+<p class="try-task"><strong>Missão:</strong> na turma da tarde, Davi, Eva e Fábio passaram de ano. Troque o valor que está errado e faça o programa <strong>somar</strong> os três booleanos, para mostrar <code>Aprovados: 3</code>.</p>
+<pre class="script" data-file="main.py">davi_passou = True
+eva_passou = False
+fabio_passou = True
+aprovados = 0
+print("Aprovados:", aprovados)
+</pre>
+<pre class="solucao" data-file="main.py">davi_passou = True
+eva_passou = True
+fabio_passou = True
+aprovados = davi_passou + eva_passou + fabio_passou
+print("Aprovados:", aprovados)
+</pre>
+</div>
+
+<hr>
+
+<h2>5. O valor <code>True</code> e o texto <code>"True"</code></h2>
+<p>Com aspas, deixa de ser booleano. <code>"True"</code> é um texto de quatro letras, que por acaso formam a palavra "True":</p>
+
+<pre class="file" data-file="texto_true.py">aberta = "True"
+print(aberta)
+print(type(aberta))
+print(aberta == True)
+</pre>
+
+<pre class="term">$ python3 texto_true.py
+True
+&lt;class 'str'&gt;
+False
+</pre>
+
+<p>O <code>print</code> mostra os dois do mesmo jeito, o que engana. Mas o <code>type</code> denuncia: é <code>str</code>. E a pergunta <code>aberta == True</code> responde <code>False</code>: um texto nunca é igual a um booleano.</p>
+
+<p>Esse problema aparece de verdade quando a resposta vem do teclado. O <code>input()</code> sempre devolve texto, e o <code>bool()</code> de qualquer texto não vazio é <code>True</code>, mesmo que a pessoa tenha digitado "n":</p>
+
+<pre class="file" data-file="aberta_input.py">resposta = input("A padaria está aberta? (s/n) ")
+aberta = bool(resposta)
+print("Aberta:", aberta)
+</pre>
+
+<pre class="term">$ python3 aberta_input.py
+A padaria está aberta? (s/n) n
+Aberta: True
+</pre>
+
+<p>A Ana disse "não", e o programa entendeu "sim"! O <code>bool()</code> não lê o que está escrito; ele só vê que o texto <code>"n"</code> não está vazio. O jeito certo é <strong>comparar</strong> a resposta com o texto que quer dizer "sim":</p>
+
+<pre class="file" data-file="aberta_certo.py">resposta = input("A padaria está aberta? (s/n) ")
+aberta = resposta == "s"
+print("Aberta:", aberta)
+</pre>
+
+<pre class="term">$ python3 aberta_certo.py
+A padaria está aberta? (s/n) n
+Aberta: False
+$ python3 aberta_certo.py
+A padaria está aberta? (s/n) s
+Aberta: True
+</pre>
+
+<p><code>resposta == "s"</code> pergunta "a resposta é o texto s?", e a resposta dessa pergunta é o booleano certo.</p>
+
+<hr>
+
+<h2>Formas diferentes de obter um booleano</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Exemplo</th><th>Quando usar</th></tr>
+<tr><td>Escrever o valor</td><td><code>aberta = True</code></td><td>Quando você já sabe a resposta (um valor inicial, uma configuração)</td></tr>
+<tr><td>Uma comparação</td><td><code>pode_votar = idade &gt;= 16</code></td><td>O mais comum: a resposta depende de outro valor</td></tr>
+<tr><td>Comparar um texto</td><td><code>aberta = resposta == "s"</code></td><td>Para transformar uma resposta digitada em booleano</td></tr>
+<tr><td><code>bool(valor)</code></td><td><code>tem_estoque = bool(estoque)</code></td><td>Para saber se o valor é <em>truthy</em>; raro, porque o <code>if</code> já faz isso sozinho</td></tr>
+<tr><td><code>not</code></td><td><code>fechada = not aberta</code></td><td>Para inverter: <code>not True</code> é <code>False</code> (aula <a href="operadores-logicos.html">and, or e not</a>)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong><code>true</code> com letra minúscula: <code>NameError</code></strong>
+<p>Em muitas outras linguagens (JavaScript, Java, C), o verdadeiro se escreve <code>true</code>, com minúscula. No Python, não:</p>
+<pre class="file" data-file="minusculo.py">aberta = true
+print(aberta)
+</pre>
+<pre class="term">$ python3 minusculo.py
+Traceback (most recent call last):
+  File "/home/ana/minusculo.py", line 1, in &lt;module&gt;
+    aberta = true
+             ^^^^
+NameError: name 'true' is not defined. Did you mean: 'True'?
+</pre>
+<dl class="anatomy">
+  <dt>line 1</dt><dd>O erro está na linha 1.</dd>
+  <dt>^^^^</dt><dd>Os chapeuzinhos marcam a palavra <code>true</code>.</dd>
+  <dt>NameError</dt><dd>"Erro de nome": o Python procurou alguma coisa chamada <code>true</code> e não achou. Sem maiúscula, <code>true</code> não é o valor verdadeiro; parece o nome de uma variável que ninguém criou.</dd>
+  <dt>name 'true' is not defined</dt><dd>"O nome 'true' não está definido".</dd>
+  <dt>Did you mean: 'True'?</dt><dd>"Você quis dizer 'True'?". O próprio Python sugere o conserto.</dd>
+</dl>
+<p>Com tudo em maiúsculas, <code>TRUE</code>, acontece o mesmo: <code>NameError: name 'TRUE' is not defined. Did you mean: 'True'?</code>. <strong>Como consertar:</strong> <code>True</code> e <code>False</code>, só a primeira letra maiúscula.</p>
+</div>
+
+<div class="cenario">
+<strong>Tentar guardar algo em <code>True</code>: <code>SyntaxError</code></strong>
+<pre class="file" data-file="atribuir_true.py">True = 1
+</pre>
+<pre class="term">$ python3 atribuir_true.py
+  File "/home/ana/atribuir_true.py", line 1
+    True = 1
+    ^^^^
+SyntaxError: cannot assign to True
+</pre>
+<p>"Não é possível atribuir a <code>True</code>". <code>True</code> e <code>False</code> são palavras reservadas, valores fixos: não dá para usá-los como nome de variável. Como é um erro de escrita (<code>SyntaxError</code>), o programa nem começa; por isso não aparece a palavra <code>Traceback</code>. <strong>Como consertar:</strong> escolha um nome de verdade, como <code>aberta = True</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>"True"</code> entre aspas, ou <code>bool()</code> numa resposta digitada</strong>
+<p>Não dá mensagem de erro: o programa roda e responde errado, como você viu na seção 5. Se um "sim" e um "não" dão o mesmo resultado, desconfie de um texto no lugar do booleano. <strong>Como consertar:</strong> escreva <code>True</code> sem aspas; para respostas digitadas, compare: <code>resposta == "s"</code>.</p>
+</div>
+
+<div class="trypy" data-goal="out:True;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa para com <code>NameError</code>. Conserte o valor booleano.</p>
+<pre class="script" data-file="main.py">tem_pao = true
+print(tem_pao)
+</pre>
+<pre class="solucao" data-file="main.py">tem_pao = True
+print(tem_pao)
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Resultado</th><th>Observação</th></tr>
+<tr><td><code>True</code>, <code>False</code></td><td>tipo <code>bool</code></td><td>Maiúscula na primeira letra, sem aspas</td></tr>
+<tr><td><code>idade &gt;= 18</code></td><td><code>True</code> ou <code>False</code></td><td>Toda comparação devolve um booleano</td></tr>
+<tr><td><code>bool(0)</code>, <code>bool("")</code>, <code>bool([])</code>, <code>bool(None)</code></td><td><code>False</code></td><td>"Nada" é <em>falsy</em></td></tr>
+<tr><td><code>bool(42)</code>, <code>bool("Ana")</code>, <code>bool(" ")</code>, <code>bool("0")</code></td><td><code>True</code></td><td>O resto é <em>truthy</em></td></tr>
+<tr><td><code>True + True</code></td><td><code>2</code></td><td><code>True</code> vale 1, <code>False</code> vale 0</td></tr>
+<tr><td><code>not True</code></td><td><code>False</code></td><td>Inverte</td></tr>
+<tr><td><code>"True" == True</code></td><td><code>False</code></td><td>Texto não é booleano</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>NameError: name 'true' is not defined. Did you mean: 'True'?</code></td><td><code>true</code> ou <code>TRUE</code>: o certo é <code>True</code></td></tr>
+<tr><td><code>SyntaxError: cannot assign to True</code></td><td>Tentou usar <code>True</code> como nome de variável</td></tr>
+<tr><td>"Não" e "sim" dão o mesmo resultado</td><td>Um texto no lugar do booleano, ou <code>bool()</code> numa resposta digitada</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Verdadeiro ou falso?</h3>
+<p>Escreva o que o <code>bool()</code> devolve (<code>True</code> ou <code>False</code>):</p>
+<div class="ex-code">bool(0) → <input data-answer="False" aria-label="bool(0)">
+bool(-3) → <input data-answer="True" aria-label="bool(-3)">
+bool("") → <input data-answer="False" aria-label="bool vazio">
+bool("False") → <input data-answer="True" aria-label="bool do texto False"></div>
+</div>
+
+<div class="exercise">
+<h3>2. A conta dos booleanos</h3>
+<p>Quanto vale a soma?</p>
+<div class="ex-code">True + False + True + True → <input data-answer="3" aria-label="soma"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. Qual linha guarda o valor verdadeiro numa variável?</p>
+<label><input type="radio" name="q3"> <code>aberta = true</code></label>
+<label><input type="radio" name="q3"> <code>aberta = True</code></label>
+<label><input type="radio" name="q3"> <code>aberta = "True"</code></label>
+<label><input type="radio" name="q3"> <code>True = aberta</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">4. A pessoa digitou <code>n</code> em <code>resposta = input("Aberta? (s/n) ")</code>. Quanto vale <code>bool(resposta)</code>?</p>
+<label><input type="radio" name="q4"> <code>False</code>, porque "n" quer dizer não</label>
+<label><input type="radio" name="q4"> Dá erro, porque "n" não é booleano</label>
+<label><input type="radio" name="q4"> <code>"n"</code></label>
+<label><input type="radio" name="q4"> <code>True</code>, porque o texto não está vazio</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Qual destes valores é <em>falsy</em>?</p>
+<label><input type="radio" name="q5"> <code>0.0</code></label>
+<label><input type="radio" name="q5"> <code>" "</code></label>
+<label><input type="radio" name="q5"> <code>[0]</code></label>
+<label><input type="radio" name="q5"> <code>-1</code></label>
+</div>
+
+<h3>Missão final: a plaquinha da padaria</h3>
+
+<div class="trypy" data-stdin="n" data-goal="out:Aberta: False;;semerro">
+<p class="try-task"><strong>Missão:</strong> o editor vai responder <code>n</code> (não), mas o programa mostra <code>Aberta: True</code>. Troque o <code>bool(resposta)</code> por uma comparação que só dá <code>True</code> quando a resposta for <code>"s"</code>.</p>
+<pre class="script" data-file="main.py">resposta = input("A padaria está aberta? (s/n) ")
+aberta = bool(resposta)
+print("Aberta:", aberta)
+</pre>
+<pre class="solucao" data-file="main.py">resposta = input("A padaria está aberta? (s/n) ")
+aberta = resposta == "s"
+print("Aberta:", aberta)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>O tipo <code>bool</code> tem só dois valores: <code>True</code> (verdadeiro) e <code>False</code> (falso), com a primeira letra maiúscula e sem aspas.</li>
+  <li>Toda comparação responde com um booleano: <code>idade &gt;= 18</code> é <code>True</code> ou <code>False</code>. Dá para guardar a resposta: <code>pode_votar = idade &gt;= 16</code>.</li>
+  <li>Todo valor tem um lado: zero, texto vazio, lista vazia e <code>None</code> são <em>falsy</em>; o resto é <em>truthy</em>, até <code>" "</code>, <code>"0"</code> e <code>"False"</code>.</li>
+  <li><code>True</code> vale 1 e <code>False</code> vale 0: somar booleanos conta os "sim".</li>
+  <li><code>"True"</code> com aspas é texto. Para transformar uma resposta digitada em booleano, compare: <code>resposta == "s"</code>, nunca <code>bool(resposta)</code>.</li>
+  <li><code>true</code> minúsculo dá <code>NameError</code> (com a dica <code>Did you mean: 'True'?</code>); <code>True = 1</code> dá <code>SyntaxError</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
