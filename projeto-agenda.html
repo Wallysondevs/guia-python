@@ -1,0 +1,1130 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Projeto: Agenda de Contatos (JSON) | Guia Python</title>
+<meta name="description" content="Projeto passo a passo para quem está começando em Python: uma agenda de contatos no terminal. Versão 1 com uma lista de dicionários, versão 2 com menu (while e input), versão 3 salvando e carregando contatos.json (json.dump com ensure_ascii=False), versão 4 com busca, remoção e tratamento de erros (ValueError, FileNotFoundError, JSONDecodeError), com o programa rodando de verdade e missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Projeto: <span class="hl">Agenda de Contatos</span> (JSON)</h1>
+
+<p class="intro">A Ana quer parar de anotar telefones no caderno. Neste projeto você vai construir com ela uma <strong>agenda de contatos</strong> no terminal: listar, adicionar, buscar e remover contatos. E, o mais importante, <strong>lembrar</strong> de tudo: quando o programa fecha e abre de novo, os contatos continuam lá, guardados num arquivo <code>contatos.json</code>. É o primeiro programa do guia que guarda dados de verdade entre uma execução e outra.</p>
+
+<div class="note">
+<strong>Você vai praticar</strong>
+<ul>
+  <li>Guardar cada contato num <a href="dicionarios.html">dicionário</a> e todos eles numa <a href="listas.html">lista</a>; percorrer com <a href="for.html">for</a> e <a href="enumerate-zip.html">enumerate()</a>.</li>
+  <li>Montar um menu com <a href="while.html">while</a>, <a href="input.html">input()</a>, <a href="elif.html">if / elif / else</a> e <a href="break-continue.html">break</a>.</li>
+  <li>Alinhar as colunas com <a href="f-strings.html">f-strings</a> e limpar o que foi digitado com <a href="strings-metodos.html">strip() e lower()</a>.</li>
+  <li>Organizar o programa em <a href="funcoes.html">funções</a> com <a href="return.html">return</a>.</li>
+  <li>Salvar e carregar com <a href="json.html">JSON</a>, <a href="arquivos.html">open e with</a> e <a href="pathlib.html">pathlib</a>.</li>
+  <li>Tratar os erros com <a href="try-except.html">try e except</a>: número inválido, arquivo que não existe, arquivo estragado.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>O que vamos construir</h2>
+<p>A agenda pronta, no terminal da Ana. <strong>O que vem depois de cada <code>Opção:</code>, <code>Nome:</code>, <code>Telefone:</code> e <code>Buscar:</code> foi digitado por ela</strong>:</p>
+
+<pre class="term" data-cwd="~/projetos/agenda">$ python3 agenda.py
+=== Agenda ===
+2 contato(s) carregado(s) de contatos.json        « os contatos de ontem
+
+1 - Listar  2 - Adicionar  3 - Buscar  4 - Remover  0 - Sair
+Opção: 1
+1. Ana Souza       86 99999-0000
+2. João Conceição  86 98888-7777
+
+1 - Listar  2 - Adicionar  3 - Buscar  4 - Remover  0 - Sair
+Opção: 2
+Nome: Bia Lima
+Telefone: 86 97777-1234
+Bia Lima entrou na agenda.
+
+1 - Listar  2 - Adicionar  3 - Buscar  4 - Remover  0 - Sair
+Opção: 3
+Buscar: bia                                       « minúsculas: acha a Bia mesmo assim
+Bia Lima        86 97777-1234
+
+1 - Listar  2 - Adicionar  3 - Buscar  4 - Remover  0 - Sair
+Opção: 0
+Até logo!</pre>
+
+<p>Quatro versões, uma novidade em cada:</p>
+
+<ol class="passo">
+  <li><a href="#versao1">Os contatos na memória</a> (uma lista de dicionários).</li>
+  <li><a href="#versao2">O menu</a> (<code>while</code>, <code>input</code>, <code>break</code>).</li>
+  <li><a href="#versao3">Salvar e carregar</a> (<code>json.dump</code>, <code>json.load</code>, <code>ensure_ascii=False</code>).</li>
+  <li><a href="#versao4">Buscar, remover e tratar os erros</a> (funções, <code>try</code>/<code>except</code>).</li>
+</ol>
+
+<h3>Antes de começar</h3>
+<p>Crie uma pasta para o projeto e entre nela. O programa vai se chamar <code>agenda.py</code>, e o arquivo dos contatos, <code>contatos.json</code>, vai aparecer na mesma pasta:</p>
+
+<pre class="term">$ mkdir -p projetos/agenda
+$ cd projetos/agenda</pre>
+
+<hr>
+
+<h2 id="versao1">Versão 1 · Os contatos na memória</h2>
+<p>Antes de qualquer menu, a pergunta mais importante: <strong>como guardar um contato?</strong> Um contato tem várias informações (nome, telefone), cada uma com um nome. É exatamente o que um <a href="dicionarios.html">dicionário</a> faz: <code>{"nome": "Ana Souza", "telefone": "86 99999-0000"}</code>. E vários contatos, em ordem, cabem numa <a href="listas.html">lista</a>. Uma lista de dicionários é como um fichário: a lista é a caixa, cada dicionário é uma ficha.</p>
+
+<pre class="file" data-file="agenda.py">contatos = [
+    {"nome": "Ana Souza", "telefone": "86 99999-0000"},
+    {"nome": "Bia Lima", "telefone": "86 98888-7777"},
+    {"nome": "Caio Rocha", "telefone": "11 97777-6666"},
+]
+
+print("=== Agenda ===")
+for contato in contatos:
+    print(f"{contato['nome']:&lt;15} {contato['telefone']}")
+print(f"{len(contatos)} contato(s)")
+</pre>
+
+<dl class="anatomy">
+  <dt>contatos = [ … ]</dt><dd>A lista, com um contato por linha. A vírgula depois do último item é permitida, e é o costume: assim, para acrescentar uma linha, você não precisa mexer na de cima.</dd>
+  <dt>{"nome": …, "telefone": …}</dt><dd>Um dicionário: cada <strong>chave</strong> (<code>"nome"</code>, <code>"telefone"</code>) tem o seu <strong>valor</strong>. O telefone é texto, e não número: tem espaço e traço, e ninguém faz conta com ele.</dd>
+  <dt>for contato in contatos:</dt><dd>Passa por cada ficha da lista; a cada volta, <code>contato</code> é um dicionário.</dd>
+  <dt>contato['nome']</dt><dd>Pega o valor da chave <code>"nome"</code>. Dentro da f-string de aspas duplas, a chave foi escrita com aspas simples (veja a aula <a href="f-strings.html">f-strings</a>).</dd>
+  <dt>:&lt;15</dt><dd>Ocupa 15 caracteres, encostado à esquerda: os telefones ficam alinhados numa coluna.</dd>
+  <dt>len(contatos)</dt><dd>Quantos itens a lista tem: quantos contatos.</dd>
+</dl>
+
+<pre class="term" data-cwd="~/projetos/agenda">$ python3 agenda.py
+=== Agenda ===
+Ana Souza       86 99999-0000
+Bia Lima        86 98888-7777
+Caio Rocha      11 97777-6666
+3 contato(s)</pre>
+
+<h3>Quando dá errado na versão 1</h3>
+<div class="cenario">
+<strong>A chave com letra maiúscula: <code>KeyError</code></strong>
+<pre class="file" data-file="chave.py">contatos = [
+    {"nome": "Ana Souza", "telefone": "86 99999-0000"},
+]
+
+for contato in contatos:
+    print(contato["Nome"])
+</pre>
+<pre class="term" data-cwd="~/projetos/agenda">$ python3 chave.py
+Traceback (most recent call last):
+  File "/home/ana/projetos/agenda/chave.py", line 6, in &lt;module&gt;
+    print(contato["Nome"])
+          ~~~~~~~^^^^^^^^
+KeyError: 'Nome'</pre>
+<p><code>KeyError: 'Nome'</code> = "erro de chave: <code>'Nome'</code>". O dicionário não tem a chave <code>"Nome"</code>, com N maiúsculo; ele tem <code>"nome"</code>. Como nos textos, maiúsculas contam. <strong>Como consertar:</strong> escreva a chave exatamente como ela foi criada: <code>contato["nome"]</code>.</p>
+</div>
+
+<div class="trypy" data-goal="src:\.append\(;;out:Caio Rocha;;out:3 contato(s);;semerro">
+<p class="try-task"><strong>Missão (versão 1):</strong> a agenda só tem a Ana e a Bia. No lugar do comentário, acrescente o Caio Rocha (telefone <code>11 97777-6666</code>) com <code>contatos.append(...)</code> (aula <a href="listas-adicionar.html">Adicionando Itens</a>). O <code>append</code> recebe um dicionário, igual aos de cima.</p>
+<pre class="script" data-file="agenda.py">contatos = [
+    {"nome": "Ana Souza", "telefone": "86 99999-0000"},
+    {"nome": "Bia Lima", "telefone": "86 98888-7777"},
+]
+
+# Acrescente aqui o Caio Rocha (telefone 11 97777-6666)
+
+print("=== Agenda ===")
+for contato in contatos:
+    print(f"{contato['nome']:&lt;15} {contato['telefone']}")
+print(f"{len(contatos)} contato(s)")
+</pre>
+<pre class="solucao" data-file="agenda.py">contatos = [
+    {"nome": "Ana Souza", "telefone": "86 99999-0000"},
+    {"nome": "Bia Lima", "telefone": "86 98888-7777"},
+]
+
+contatos.append({"nome": "Caio Rocha", "telefone": "11 97777-6666"})
+
+print("=== Agenda ===")
+for contato in contatos:
+    print(f"{contato['nome']:&lt;15} {contato['telefone']}")
+print(f"{len(contatos)} contato(s)")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao2">Versão 2 · O menu</h2>
+<p>Ninguém quer editar o programa para acrescentar um contato. A versão 2 começa com a agenda <strong>vazia</strong> e pergunta o que fazer, de novo e de novo, até a Ana escolher sair. É o mesmo esquema de menu da <a href="projeto-calculadora.html">Calculadora</a>: um <code>while True</code> que só termina com <code>break</code>.</p>
+
+<pre class="file" data-file="agenda.py">contatos = []
+
+print("=== Agenda ===")
+while True:
+    print()
+    print("1 - Listar   2 - Adicionar   0 - Sair")
+    opcao = input("Opção: ").strip()
+
+    if opcao == "1":
+        if not contatos:
+            print("A agenda está vazia.")
+        for contato in contatos:
+            print(f"{contato['nome']:&lt;15} {contato['telefone']}")
+    elif opcao == "2":
+        nome = input("Nome: ").strip()
+        telefone = input("Telefone: ").strip()
+        contatos.append({"nome": nome, "telefone": telefone})
+        print(f"{nome} entrou na agenda.")
+    elif opcao == "0":
+        print("Até logo!")
+        break
+    else:
+        print("Opção inválida.")
+</pre>
+
+<dl class="anatomy">
+  <dt>contatos = []</dt><dd>A lista começa vazia: os contatos vão chegar pelo teclado.</dd>
+  <dt>while True:</dt><dd>Repete para sempre… até um <code>break</code>.</dd>
+  <dt>print()</dt><dd>Sem nada dentro, mostra uma linha em branco: separa uma volta do menu da outra.</dd>
+  <dt>input("Opção: ").strip()</dt><dd>Lê o que foi digitado e tira os espaços das pontas (aula <a href="strings-metodos.html">Métodos de Texto</a>).</dd>
+  <dt>if opcao == "1":</dt><dd>A opção é comparada com o <strong>texto</strong> <code>"1"</code>, não com o número 1. O <code>input()</code> devolve texto, e assim não é preciso converter com <code>int()</code>: se a Ana digitar uma letra, cai no <code>else</code>, sem erro.</dd>
+  <dt>if not contatos:</dt><dd>Uma lista vazia conta como "falso" (aula <a href="booleanos.html">Booleanos</a>): "se não há contatos…".</dd>
+  <dt>contatos.append({"nome": nome, "telefone": telefone})</dt><dd>Monta um dicionário novo com o que foi digitado e põe no fim da lista.</dd>
+  <dt>break</dt><dd>Sai do <code>while</code>: o programa termina.</dd>
+  <dt>else:</dt><dd>Qualquer outra coisa digitada: avisa e volta ao menu.</dd>
+</dl>
+
+<pre class="term" data-cwd="~/projetos/agenda">$ python3 agenda.py
+=== Agenda ===
+
+1 - Listar   2 - Adicionar   0 - Sair
+Opção: 1
+A agenda está vazia.
+
+1 - Listar   2 - Adicionar   0 - Sair
+Opção: 2
+Nome: Ana Souza
+Telefone: 86 99999-0000
+Ana Souza entrou na agenda.
+
+1 - Listar   2 - Adicionar   0 - Sair
+Opção: 2
+Nome: Bia Lima
+Telefone: 86 98888-7777
+Bia Lima entrou na agenda.
+
+1 - Listar   2 - Adicionar   0 - Sair
+Opção: 1
+Ana Souza       86 99999-0000
+Bia Lima        86 98888-7777
+
+1 - Listar   2 - Adicionar   0 - Sair
+Opção: 7
+Opção inválida.
+
+1 - Listar   2 - Adicionar   0 - Sair
+Opção: 0
+Até logo!</pre>
+
+<p>Funciona! Agora rode de novo e peça a lista:</p>
+
+<pre class="term" data-cwd="~/projetos/agenda">$ python3 agenda.py
+=== Agenda ===
+
+1 - Listar   2 - Adicionar   0 - Sair
+Opção: 1
+A agenda está vazia.                              « a Ana e a Bia sumiram
+
+1 - Listar   2 - Adicionar   0 - Sair
+Opção: 0
+Até logo!</pre>
+
+<p>A lista <code>contatos</code> vive na <strong>memória</strong> do programa. Quando o programa termina, a memória é liberada, e tudo o que estava nela se perde. É como escrever num quadro branco que alguém apaga toda noite. A versão 3 passa os contatos para o "caderno": um arquivo.</p>
+
+<h3>Quando dá errado na versão 2</h3>
+<div class="cenario">
+<strong>A entrada acabou: <code>EOFError</code></strong>
+<p>Se o <code>input()</code> pede uma linha e não há mais nada para ler, o Python não tem o que devolver. Dá para provocar isso mandando ao programa só uma linha, com um <code>|</code> do terminal, ou apertando <strong>Ctrl+D</strong> no lugar de digitar a opção:</p>
+<pre class="term" data-cwd="~/projetos/agenda">$ printf '1\n' | python3 agenda.py
+=== Agenda ===
+
+1 - Listar   2 - Adicionar   0 - Sair
+Opção: A agenda está vazia.
+
+1 - Listar   2 - Adicionar   0 - Sair
+Opção: Traceback (most recent call last):
+  File "/home/ana/projetos/agenda/agenda.py", line 7, in &lt;module&gt;
+    opcao = input("Opção: ").strip()
+            ~~~~~^^^^^^^^^^^
+EOFError: EOF when reading a line</pre>
+<p>O <code>1</code> foi lido na primeira volta. Na segunda, o <code>input()</code> encontrou o fim da entrada: <code>EOFError: EOF when reading a line</code>, "fim do arquivo (<em>end of file</em>) ao ler uma linha". (O <code>1</code> não aparece depois de <code>Opção:</code> porque ele não foi digitado: veio pelo <code>|</code>.) No uso normal, com a Ana digitando, isso só acontece com Ctrl+D. Um menu sem <code>break</code> termina sempre assim: é o que a missão abaixo mostra.</p>
+</div>
+
+<div class="trypy" data-stdin="2\nAna Souza\n86 99999-0000\n1\n0" data-goal="out:Até logo!;;semerro">
+<p class="try-task"><strong>Missão (versão 2):</strong> a entrada desta missão adiciona a Ana, lista e escolhe <code>0</code>. O programa diz "Até logo!"… e continua pedindo opção, até dar <code>EOFError</code>. Falta uma palavra na opção <code>"0"</code>. Conserte.</p>
+<pre class="script" data-file="agenda.py">contatos = []
+
+print("=== Agenda ===")
+while True:
+    print()
+    print("1 - Listar   2 - Adicionar   0 - Sair")
+    opcao = input("Opção: ").strip()
+
+    if opcao == "1":
+        if not contatos:
+            print("A agenda está vazia.")
+        for contato in contatos:
+            print(f"{contato['nome']:&lt;15} {contato['telefone']}")
+    elif opcao == "2":
+        nome = input("Nome: ").strip()
+        telefone = input("Telefone: ").strip()
+        contatos.append({"nome": nome, "telefone": telefone})
+        print(f"{nome} entrou na agenda.")
+    elif opcao == "0":
+        print("Até logo!")
+    else:
+        print("Opção inválida.")
+</pre>
+<pre class="solucao" data-file="agenda.py">contatos = []
+
+print("=== Agenda ===")
+while True:
+    print()
+    print("1 - Listar   2 - Adicionar   0 - Sair")
+    opcao = input("Opção: ").strip()
+
+    if opcao == "1":
+        if not contatos:
+            print("A agenda está vazia.")
+        for contato in contatos:
+            print(f"{contato['nome']:&lt;15} {contato['telefone']}")
+    elif opcao == "2":
+        nome = input("Nome: ").strip()
+        telefone = input("Telefone: ").strip()
+        contatos.append({"nome": nome, "telefone": telefone})
+        print(f"{nome} entrou na agenda.")
+    elif opcao == "0":
+        print("Até logo!")
+        break
+    else:
+        print("Opção inválida.")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao3">Versão 3 · Salvar e carregar (<code>contatos.json</code>)</h2>
+<p>Para a agenda lembrar dos contatos, o programa precisa fazer duas coisas: <strong>ao começar</strong>, ler os contatos do arquivo; <strong>a cada contato novo</strong>, gravar a lista inteira no arquivo. O formato do arquivo é o <strong>JSON</strong> (aula <a href="json.html">JSON</a>): um texto que se parece muito com listas e dicionários do Python, e que o módulo <code>json</code> converte nos dois sentidos.</p>
+
+<pre class="file" data-file="agenda.py">import json
+from pathlib import Path
+
+ARQUIVO = Path("contatos.json")
+
+
+def carregar():
+    if not ARQUIVO.exists():
+        return []
+    with open(ARQUIVO, encoding="utf-8") as arquivo:
+        return json.load(arquivo)
+
+
+def salvar(contatos):
+    with open(ARQUIVO, "w", encoding="utf-8") as arquivo:
+        json.dump(contatos, arquivo, ensure_ascii=False, indent=2)
+
+
+contatos = carregar()
+print("=== Agenda ===")
+print(f"{len(contatos)} contato(s) carregado(s) de {ARQUIVO}")
+
+while True:
+    print()
+    print("1 - Listar   2 - Adicionar   0 - Sair")
+    opcao = input("Opção: ").strip()
+
+    if opcao == "1":
+        if not contatos:
+            print("A agenda está vazia.")
+        for contato in contatos:
+            print(f"{contato['nome']:&lt;15} {contato['telefone']}")
+    elif opcao == "2":
+        nome = input("Nome: ").strip()
+        telefone = input("Telefone: ").strip()
+        contatos.append({"nome": nome, "telefone": telefone})
+        salvar(contatos)
+        print(f"{nome} entrou na agenda (salvo em {ARQUIVO}).")
+    elif opcao == "0":
+        print("Até logo!")
+        break
+    else:
+        print("Opção inválida.")
+</pre>
+
+<dl class="anatomy">
+  <dt>import json</dt><dd>Traz o módulo que lê e escreve JSON (aula <a href="modulos.html">Módulos e import</a>).</dd>
+  <dt>from pathlib import Path</dt><dd>Traz o <code>Path</code>, que representa um caminho de arquivo (aula <a href="pathlib.html">pathlib</a>).</dd>
+  <dt>ARQUIVO = Path("contatos.json")</dt><dd>O nome do arquivo, numa variável só. O nome em MAIÚSCULAS é o costume para um valor que não muda durante o programa (uma "constante"). Sem pasta no caminho, o arquivo fica na pasta em que você rodou o <code>python3</code>.</dd>
+  <dt>def carregar():</dt><dd>Uma <a href="funcoes.html">função</a> que devolve a lista de contatos.</dd>
+  <dt>if not ARQUIVO.exists(): return []</dt><dd>Na primeira vez, o arquivo ainda não existe: começa com a lista vazia.</dd>
+  <dt>with open(ARQUIVO, encoding="utf-8") as arquivo:</dt><dd>Abre o arquivo para ler, com a codificação UTF-8 (a que guarda acentos), e fecha sozinho no fim do bloco (aula <a href="arquivos.html">Abrindo Arquivos</a>).</dd>
+  <dt>json.load(arquivo)</dt><dd>Lê o texto JSON do arquivo e devolve o valor Python: aqui, uma lista de dicionários.</dd>
+  <dt>open(ARQUIVO, "w", …)</dt><dd>O <code>"w"</code> (de <em>write</em>) abre para escrever, <strong>apagando</strong> o que havia. Tudo bem: a lista inteira vai ser gravada de novo.</dd>
+  <dt>json.dump(contatos, arquivo, …)</dt><dd>Faz o contrário do <code>load</code>: transforma a lista em texto JSON e grava no arquivo.</dd>
+  <dt>ensure_ascii=False</dt><dd>Grava os acentos como eles são: <code>João</code>, e não <code>João</code>. Veja o porquê logo abaixo.</dd>
+  <dt>indent=2</dt><dd>Quebra as linhas e recua 2 espaços por nível: o arquivo fica legível para gente.</dd>
+  <dt>salvar(contatos)</dt><dd>Logo depois de cada <code>append</code>: o arquivo está sempre em dia, mesmo que o programa feche de repente.</dd>
+</dl>
+
+<p>A Ana começa sem arquivo nenhum, adiciona dois contatos e sai:</p>
+
+<pre class="term" data-cwd="~/projetos/agenda">$ python3 agenda.py
+=== Agenda ===
+0 contato(s) carregado(s) de contatos.json
+
+1 - Listar   2 - Adicionar   0 - Sair
+Opção: 2
+Nome: Ana Souza
+Telefone: 86 99999-0000
+Ana Souza entrou na agenda (salvo em contatos.json).
+
+1 - Listar   2 - Adicionar   0 - Sair
+Opção: 2
+Nome: João Conceição
+Telefone: 86 98888-7777
+João Conceição entrou na agenda (salvo em contatos.json).
+
+1 - Listar   2 - Adicionar   0 - Sair
+Opção: 0
+Até logo!</pre>
+
+<p>Agora existe um arquivo na pasta. O <code>cat</code> mostra o que tem dentro:</p>
+
+<pre class="term" data-cwd="~/projetos/agenda">$ cat contatos.json
+[
+  {
+    "nome": "Ana Souza",
+    "telefone": "86 99999-0000"
+  },
+  {
+    "nome": "João Conceição",
+    "telefone": "86 98888-7777"
+  }
+]$ python3 agenda.py                                 « o $ colou no ]: veja abaixo
+=== Agenda ===
+2 contato(s) carregado(s) de contatos.json        « lembrou!
+
+1 - Listar   2 - Adicionar   0 - Sair
+Opção: 1
+Ana Souza       86 99999-0000
+João Conceição  86 98888-7777
+
+1 - Listar   2 - Adicionar   0 - Sair
+Opção: 0
+Até logo!</pre>
+
+<p>O arquivo é a lista de dicionários, escrita como texto: colchetes, chaves, aspas duplas. E, rodando de novo, o programa achou os 2 contatos. Repare num detalhe: o prompt <code>$</code> apareceu grudado no <code>]</code>. O <code>json.dump</code> não põe uma quebra de linha no fim do arquivo, e o <code>cat</code> mostra o arquivo exatamente como ele é. Não faz mal nenhum ao programa.</p>
+
+<h3>Por que <code>ensure_ascii=False</code>?</h3>
+<p>Sem essa opção, o <code>json</code> troca toda letra que não é do inglês (o ASCII) por um código <code>\u</code>, aquele da aula <a href="strings-escape.html">Caracteres de Escape</a>. No modo interativo:</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; import json
+&gt;&gt;&gt; json.dumps({"nome": "João"})
+'{"nome": "Jo\\u00e3o"}'
+&gt;&gt;&gt; json.dumps({"nome": "João"}, ensure_ascii=False)
+'{"nome": "João"}'
+&gt;&gt;&gt; exit()</pre>
+
+<p>(O <code>json.dumps</code>, com <strong>s</strong> de <em>string</em>, devolve o JSON como texto em vez de gravar num arquivo. A barra aparece dobrada porque o modo interativo mostra o texto "como seria escrito no código".) Num arquivo gravado sem a opção, o João fica assim:</p>
+
+<pre class="term" data-cwd="~/projetos/agenda">$ cat teste.json; echo
+[
+  {
+    "nome": "João Conceição",
+    "telefone": "86 98888-7777"
+  }
+]</pre>
+
+<p>Não é um erro: o <code>json.load</code> lê <code>João</code> de volta como <code>João</code>, e o programa funciona igual. Mas o arquivo fica ilegível para quem abre num editor de texto, e uma agenda brasileira tem acento em todo canto. Com <code>ensure_ascii=False</code> (e o <code>encoding="utf-8"</code> no <code>open</code>), o arquivo guarda <code>João Conceição</code>, como se escreve.</p>
+
+<h3>Quando dá errado na versão 3</h3>
+<div class="cenario">
+<strong>Um arquivo estragado: <code>JSONDecodeError</code></strong>
+<p>A Ana abriu o <code>contatos.json</code> num editor para corrigir um telefone e, sem querer, apagou o <code>]</code> do fim:</p>
+<pre class="term" data-cwd="~/projetos/agenda">$ cat contatos.json; echo
+[{"nome": "Ana Souza", "telefone": "86 99999-0000"}
+$ printf '0\n' | python3 agenda.py
+Traceback (most recent call last):
+  File "/home/ana/projetos/agenda/agenda.py", line 19, in &lt;module&gt;
+    contatos = carregar()
+  File "/home/ana/projetos/agenda/agenda.py", line 11, in carregar
+    return json.load(arquivo)
+           ~~~~~~~~~^^^^^^^^^
+  File "/usr/lib/python3.14/json/__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "/usr/lib/python3.14/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/usr/lib/python3.14/json/decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/json/decoder.py", line 361, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ~~~~~~~~~~~~~~^^^^^^^^
+json.decoder.JSONDecodeError: Expecting ',' delimiter: line 1 column 52 (char 51)</pre>
+<p>(O <code>printf '0\n' |</code> só deixa pronto um <code>0</code> para sair do menu, caso o programa chegasse lá. Não chegou.) Um traceback comprido, mas só as duas primeiras partes são do programa da Ana: a linha 19 chamou <code>carregar()</code>, e a linha 11, dentro dela, chamou <code>json.load</code>. O resto (os arquivos em <code>/usr/lib/python3.14/json/</code>) é o caminho por dentro do próprio módulo <code>json</code>, e você pode pular. A última linha é o que importa:</p>
+<dl class="anatomy">
+  <dt>json.decoder.JSONDecodeError:</dt><dd>"Erro ao decodificar o JSON": o texto do arquivo não é um JSON válido.</dd>
+  <dt>Expecting ',' delimiter:</dt><dd>"Esperava o separador <code>,</code>": depois do primeiro contato, o JSON esperava uma vírgula (para vir outro contato) ou o <code>]</code>, e o arquivo acabou.</dd>
+  <dt>line 1 column 52 (char 51)</dt><dd>Onde: linha 1, coluna 52 (o caractere de número 51, contando do zero), logo depois do <code>}</code>.</dd>
+</dl>
+<p><strong>Como consertar:</strong> devolva o <code>]</code> ao fim do arquivo. E a versão 4 vai tratar esse erro com uma mensagem clara, em vez do traceback.</p>
+</div>
+
+<div class="trypy" data-stdin="2\nMaria Conceição\n86 97777-1234\n0" data-goal="arquivo:contatos.json~Maria Conceição;;arquivo:contatos.json~Ana Souza;;semerro">
+<p class="try-task"><strong>Missão (versão 3):</strong> a aba <code>contatos.json</code> já tem a Ana, e a entrada da missão adiciona a Maria Conceição. Mas a função <code>salvar</code> esqueceu uma opção, e o arquivo grava <code>Conceição</code>. Acrescente <code>ensure_ascii=False</code> no <code>json.dump</code>. Depois de rodar, clique na aba <code>contatos.json</code> para ver o arquivo.</p>
+<pre class="script" data-file="agenda.py">import json
+from pathlib import Path
+
+ARQUIVO = Path("contatos.json")
+
+
+def carregar():
+    if not ARQUIVO.exists():
+        return []
+    with open(ARQUIVO, encoding="utf-8") as arquivo:
+        return json.load(arquivo)
+
+
+def salvar(contatos):
+    with open(ARQUIVO, "w", encoding="utf-8") as arquivo:
+        json.dump(contatos, arquivo, indent=2)
+
+
+contatos = carregar()
+print("=== Agenda ===")
+print(f"{len(contatos)} contato(s) carregado(s) de {ARQUIVO}")
+
+while True:
+    print()
+    print("1 - Listar   2 - Adicionar   0 - Sair")
+    opcao = input("Opção: ").strip()
+
+    if opcao == "1":
+        if not contatos:
+            print("A agenda está vazia.")
+        for contato in contatos:
+            print(f"{contato['nome']:&lt;15} {contato['telefone']}")
+    elif opcao == "2":
+        nome = input("Nome: ").strip()
+        telefone = input("Telefone: ").strip()
+        contatos.append({"nome": nome, "telefone": telefone})
+        salvar(contatos)
+        print(f"{nome} entrou na agenda (salvo em {ARQUIVO}).")
+    elif opcao == "0":
+        print("Até logo!")
+        break
+    else:
+        print("Opção inválida.")
+</pre>
+<pre class="script" data-file="contatos.json">[
+  {
+    "nome": "Ana Souza",
+    "telefone": "86 99999-0000"
+  }
+]
+</pre>
+<pre class="solucao" data-file="agenda.py">import json
+from pathlib import Path
+
+ARQUIVO = Path("contatos.json")
+
+
+def carregar():
+    if not ARQUIVO.exists():
+        return []
+    with open(ARQUIVO, encoding="utf-8") as arquivo:
+        return json.load(arquivo)
+
+
+def salvar(contatos):
+    with open(ARQUIVO, "w", encoding="utf-8") as arquivo:
+        json.dump(contatos, arquivo, ensure_ascii=False, indent=2)
+
+
+contatos = carregar()
+print("=== Agenda ===")
+print(f"{len(contatos)} contato(s) carregado(s) de {ARQUIVO}")
+
+while True:
+    print()
+    print("1 - Listar   2 - Adicionar   0 - Sair")
+    opcao = input("Opção: ").strip()
+
+    if opcao == "1":
+        if not contatos:
+            print("A agenda está vazia.")
+        for contato in contatos:
+            print(f"{contato['nome']:&lt;15} {contato['telefone']}")
+    elif opcao == "2":
+        nome = input("Nome: ").strip()
+        telefone = input("Telefone: ").strip()
+        contatos.append({"nome": nome, "telefone": telefone})
+        salvar(contatos)
+        print(f"{nome} entrou na agenda (salvo em {ARQUIVO}).")
+    elif opcao == "0":
+        print("Até logo!")
+        break
+    else:
+        print("Opção inválida.")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao4">Versão 4 · Buscar, remover e tratar os erros</h2>
+<p>A última versão acrescenta as opções <strong>Buscar</strong> e <strong>Remover</strong>, e cuida dos erros que podem acontecer com quem usa o programa: digitar uma letra onde se espera um número, escolher um número que não existe, deixar o nome em branco, o arquivo estragado da versão 3. Como o programa cresceu, cada opção do menu virou uma <strong>função</strong>: o <code>while</code> lá embaixo ficou curto, e cada pedaço pode ser lido sozinho.</p>
+
+<pre class="file" data-file="agenda.py">import json
+import sys
+from pathlib import Path
+
+ARQUIVO = Path("contatos.json")
+
+
+def carregar():
+    try:
+        with open(ARQUIVO, encoding="utf-8") as arquivo:
+            return json.load(arquivo)
+    except FileNotFoundError:
+        return []
+    except json.JSONDecodeError as erro:
+        print(f"O arquivo {ARQUIVO} está com defeito: {erro}")
+        print("Conserte o arquivo (ou renomeie) e rode de novo.")
+        sys.exit(1)
+
+
+def salvar(contatos):
+    with open(ARQUIVO, "w", encoding="utf-8") as arquivo:
+        json.dump(contatos, arquivo, ensure_ascii=False, indent=2)
+
+
+def listar(contatos):
+    if not contatos:
+        print("A agenda está vazia.")
+    for numero, contato in enumerate(contatos, start=1):
+        print(f"{numero}. {contato['nome']:&lt;15} {contato['telefone']}")
+
+
+def adicionar(contatos):
+    nome = input("Nome: ").strip()
+    telefone = input("Telefone: ").strip()
+    if not nome:
+        print("O nome não pode ficar em branco.")
+        return
+    contatos.append({"nome": nome, "telefone": telefone})
+    salvar(contatos)
+    print(f"{nome} entrou na agenda.")
+
+
+def buscar(contatos):
+    termo = input("Buscar: ").strip().lower()
+    achados = [c for c in contatos if termo in c["nome"].lower()]
+    if not achados:
+        print("Ninguém encontrado.")
+    for contato in achados:
+        print(f"{contato['nome']:&lt;15} {contato['telefone']}")
+
+
+def remover(contatos):
+    listar(contatos)
+    try:
+        numero = int(input("Número do contato a remover: "))
+    except ValueError:
+        print("Digite o número que aparece na lista.")
+        return
+    if not 1 &lt;= numero &lt;= len(contatos):
+        print("Não existe contato com esse número.")
+        return
+    contato = contatos.pop(numero - 1)
+    salvar(contatos)
+    print(f"{contato['nome']} saiu da agenda.")
+
+
+contatos = carregar()
+print("=== Agenda ===")
+print(f"{len(contatos)} contato(s) carregado(s) de {ARQUIVO}")
+
+while True:
+    print()
+    print("1 - Listar  2 - Adicionar  3 - Buscar  4 - Remover  0 - Sair")
+    opcao = input("Opção: ").strip()
+
+    if opcao == "1":
+        listar(contatos)
+    elif opcao == "2":
+        adicionar(contatos)
+    elif opcao == "3":
+        buscar(contatos)
+    elif opcao == "4":
+        remover(contatos)
+    elif opcao == "0":
+        print("Até logo!")
+        break
+    else:
+        print("Opção inválida.")
+</pre>
+
+<p>As novidades, função por função:</p>
+
+<dl class="anatomy">
+  <dt>carregar(): try … except FileNotFoundError</dt><dd>Em vez de perguntar antes se o arquivo existe, o programa <strong>tenta</strong> abrir; se não existe, o <code>open</code> dá <code>FileNotFoundError</code> ("arquivo não encontrado"), e o <code>except</code> devolve a lista vazia (aula <a href="try-except.html">try e except</a>).</dd>
+  <dt>except json.JSONDecodeError as erro:</dt><dd>O arquivo estragado da versão 3. O <code>as erro</code> guarda o erro numa variável, e o <code>print</code> mostra a explicação dele (<code>Expecting ',' delimiter…</code>) numa frase só, sem traceback.</dd>
+  <dt>sys.exit(1)</dt><dd>Encerra o programa com o código de saída 1, o sinal de "deu problema" (aula <a href="os-sys.html">os e sys</a>). Por que não começar com a agenda vazia? Porque, no primeiro contato novo, o <code>salvar</code> gravaria a lista vazia por cima do arquivo, e os contatos estragados, que ainda dá para consertar, se perderiam de vez.</dd>
+  <dt>enumerate(contatos, start=1)</dt><dd>Dá o número de cada contato junto com ele, começando do 1 (aula <a href="enumerate-zip.html">enumerate() e zip()</a>). É o número que a Ana digita para remover.</dd>
+  <dt>adicionar(): if not nome: … return</dt><dd>Um texto vazio conta como falso: se o nome ficou em branco, avisa e o <code>return</code> sai da função sem adicionar nada (aula <a href="return.html">return</a>).</dd>
+  <dt>termo in c["nome"].lower()</dt><dd>A busca: o <code>in</code> procura o pedaço em qualquer lugar do nome (aula <a href="operadores-is-in.html">is e in</a>), com os dois lados em minúsculas. <code>"jo"</code> acha João; <code>"bia"</code> acha Bia Lima.</dd>
+  <dt>[c for c in contatos if …]</dt><dd>Uma <a href="list-comprehension.html">list comprehension</a>: a lista dos contatos que passam no teste.</dd>
+  <dt>remover(): int(input(…))</dt><dd>Aqui sim é preciso um número, para achar a posição na lista. Se a Ana digitar <code>abc</code>, o <code>int()</code> dá <code>ValueError</code>, e o <code>except</code> transforma isso num aviso.</dd>
+  <dt>if not 1 &lt;= numero &lt;= len(contatos):</dt><dd>Confere se o número está entre 1 e a quantidade de contatos, com uma <a href="operadores-comparacao.html">comparação encadeada</a>. A seção "Quando dá errado" mostra por que isso é indispensável.</dd>
+  <dt>contatos.pop(numero - 1)</dt><dd>Tira o contato da lista e devolve quem saiu (aula <a href="listas-remover.html">Removendo Itens</a>). O <code>- 1</code> é porque a Ana conta a partir do 1, e os índices começam no 0.</dd>
+</dl>
+
+<p>A Ana testou tudo, de propósito, inclusive os erros:</p>
+
+<pre class="term" data-cwd="~/projetos/agenda">$ python3 agenda.py
+=== Agenda ===
+2 contato(s) carregado(s) de contatos.json
+
+1 - Listar  2 - Adicionar  3 - Buscar  4 - Remover  0 - Sair
+Opção: 3
+Buscar: jo
+João Conceição  86 98888-7777
+
+1 - Listar  2 - Adicionar  3 - Buscar  4 - Remover  0 - Sair
+Opção: 3
+Buscar: Zé
+Ninguém encontrado.
+
+1 - Listar  2 - Adicionar  3 - Buscar  4 - Remover  0 - Sair
+Opção: 2
+Nome:                                             « Enter sem digitar nada
+Telefone:
+O nome não pode ficar em branco.
+
+1 - Listar  2 - Adicionar  3 - Buscar  4 - Remover  0 - Sair
+Opção: 2
+Nome: Bia Lima
+Telefone: 86 97777-1234
+Bia Lima entrou na agenda.
+
+1 - Listar  2 - Adicionar  3 - Buscar  4 - Remover  0 - Sair
+Opção: 1
+1. Ana Souza       86 99999-0000
+2. João Conceição  86 98888-7777
+3. Bia Lima        86 97777-1234
+
+1 - Listar  2 - Adicionar  3 - Buscar  4 - Remover  0 - Sair
+Opção: 4
+1. Ana Souza       86 99999-0000
+2. João Conceição  86 98888-7777
+3. Bia Lima        86 97777-1234
+Número do contato a remover: abc
+Digite o número que aparece na lista.
+
+1 - Listar  2 - Adicionar  3 - Buscar  4 - Remover  0 - Sair
+Opção: 4
+1. Ana Souza       86 99999-0000
+2. João Conceição  86 98888-7777
+3. Bia Lima        86 97777-1234
+Número do contato a remover: 9
+Não existe contato com esse número.
+
+1 - Listar  2 - Adicionar  3 - Buscar  4 - Remover  0 - Sair
+Opção: 4
+1. Ana Souza       86 99999-0000
+2. João Conceição  86 98888-7777
+3. Bia Lima        86 97777-1234
+Número do contato a remover: 1
+Ana Souza saiu da agenda.
+
+1 - Listar  2 - Adicionar  3 - Buscar  4 - Remover  0 - Sair
+Opção: 1
+1. João Conceição  86 98888-7777
+2. Bia Lima        86 97777-1234
+
+1 - Listar  2 - Adicionar  3 - Buscar  4 - Remover  0 - Sair
+Opção: 0
+Até logo!
+$ cat contatos.json; echo
+[
+  {
+    "nome": "João Conceição",
+    "telefone": "86 98888-7777"
+  },
+  {
+    "nome": "Bia Lima",
+    "telefone": "86 97777-1234"
+  }
+]</pre>
+
+<p>E com o arquivo estragado da versão 3, agora o programa explica o problema e para, sem traceback e sem apagar nada:</p>
+
+<pre class="term" data-cwd="~/projetos/agenda">$ python3 agenda.py
+O arquivo contatos.json está com defeito: Expecting ',' delimiter: line 1 column 52 (char 51)
+Conserte o arquivo (ou renomeie) e rode de novo.
+$ echo $?
+1</pre>
+
+<p>O <code>echo $?</code> mostra o código de saída do último programa: o 1 do <code>sys.exit(1)</code>.</p>
+
+<h3>Quando dá errado na versão 4</h3>
+<div class="cenario">
+<strong>Sem o <code>try</code>: <code>ValueError</code></strong>
+<p>Antes de pôr o <code>try</code>, a função <code>remover</code> tinha só <code>numero = int(input("Número do contato a remover: "))</code>. Bastava uma letra:</p>
+<pre class="term" data-cwd="~/projetos/agenda">$ python3 agenda.py
+=== Agenda ===
+2 contato(s) carregado(s) de contatos.json
+
+1 - Listar  2 - Adicionar  3 - Buscar  4 - Remover  0 - Sair
+Opção: 4
+1. João Conceição  86 98888-7777
+2. Bia Lima        86 97777-1234
+Número do contato a remover: abc
+Traceback (most recent call last):
+  File "/home/ana/projetos/agenda/agenda.py", line 79, in &lt;module&gt;
+    remover(contatos)
+    ~~~~~~~^^^^^^^^^^
+  File "/home/ana/projetos/agenda/agenda.py", line 54, in remover
+    numero = int(input("Número do contato a remover: "))
+             ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: invalid literal for int() with base 10: 'abc'</pre>
+<p>O traceback conta o caminho de cima para baixo: a linha 79 (o <code>while</code>) chamou <code>remover</code>, e a linha 54, dentro de <code>remover</code>, falhou. <code>invalid literal for int() with base 10: 'abc'</code> = "valor inválido para o <code>int()</code> na base 10: <code>'abc'</code>": <code>abc</code> não é um número. E o pior: o programa inteiro fechou por causa de uma tecla errada. <strong>Como consertar:</strong> o <code>try</code>/<code>except ValueError</code> da versão 4.</p>
+</div>
+
+<div class="cenario">
+<strong>Sem a conferência do número: o 0 apaga o último</strong>
+<p>Por que conferir <code>1 &lt;= numero &lt;= len(contatos)</code>, se o <code>pop</code> de uma posição que não existe já dá erro (<code>IndexError</code>)? Por causa do zero. Veja o que <code>pop(0 - 1)</code> faz:</p>
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; contatos = ["Ana", "João", "Bia"]
+&gt;&gt;&gt; numero = 0
+&gt;&gt;&gt; contatos.pop(numero - 1)
+'Bia'
+&gt;&gt;&gt; contatos
+['Ana', 'João']
+&gt;&gt;&gt; exit()</pre>
+<p>Nenhum erro, e a Bia foi apagada! <code>0 - 1</code> é <code>-1</code>, e o índice <code>-1</code> é o <strong>último</strong> da lista (os índices negativos contam do fim, como em <a href="strings-fatias.html">Índices e Fatias</a>). Um <code>except IndexError</code> nunca pegaria esse caso, porque não há erro. <strong>Como consertar:</strong> confira a faixa antes do <code>pop</code>, como a versão 4 faz.</p>
+</div>
+
+<div class="trypy" data-stdin="4\nabc\n4\n1\n0" data-goal="out:Digite o número que aparece na lista.;;out:Ana Souza saiu da agenda.;;arquivo:contatos.json~João Conceição;;semerro">
+<p class="try-task"><strong>Missão (versão 4):</strong> a função <code>remover</code> está sem o <code>try</code>, e a entrada desta missão digita <code>abc</code> no número: o programa quebra com <code>ValueError</code>. Proteja o <code>int(input(...))</code> com <code>try</code>/<code>except ValueError</code>, mostrando <code>Digite o número que aparece na lista.</code> e voltando ao menu com <code>return</code>. Em seguida, a entrada remove o contato 1 (a Ana).</p>
+<pre class="script" data-file="agenda.py">import json
+import sys
+from pathlib import Path
+
+ARQUIVO = Path("contatos.json")
+
+
+def carregar():
+    try:
+        with open(ARQUIVO, encoding="utf-8") as arquivo:
+            return json.load(arquivo)
+    except FileNotFoundError:
+        return []
+    except json.JSONDecodeError as erro:
+        print(f"O arquivo {ARQUIVO} está com defeito: {erro}")
+        print("Conserte o arquivo (ou renomeie) e rode de novo.")
+        sys.exit(1)
+
+
+def salvar(contatos):
+    with open(ARQUIVO, "w", encoding="utf-8") as arquivo:
+        json.dump(contatos, arquivo, ensure_ascii=False, indent=2)
+
+
+def listar(contatos):
+    if not contatos:
+        print("A agenda está vazia.")
+    for numero, contato in enumerate(contatos, start=1):
+        print(f"{numero}. {contato['nome']:&lt;15} {contato['telefone']}")
+
+
+def adicionar(contatos):
+    nome = input("Nome: ").strip()
+    telefone = input("Telefone: ").strip()
+    if not nome:
+        print("O nome não pode ficar em branco.")
+        return
+    contatos.append({"nome": nome, "telefone": telefone})
+    salvar(contatos)
+    print(f"{nome} entrou na agenda.")
+
+
+def buscar(contatos):
+    termo = input("Buscar: ").strip().lower()
+    achados = [c for c in contatos if termo in c["nome"].lower()]
+    if not achados:
+        print("Ninguém encontrado.")
+    for contato in achados:
+        print(f"{contato['nome']:&lt;15} {contato['telefone']}")
+
+
+def remover(contatos):
+    listar(contatos)
+    numero = int(input("Número do contato a remover: "))
+    if not 1 &lt;= numero &lt;= len(contatos):
+        print("Não existe contato com esse número.")
+        return
+    contato = contatos.pop(numero - 1)
+    salvar(contatos)
+    print(f"{contato['nome']} saiu da agenda.")
+
+
+contatos = carregar()
+print("=== Agenda ===")
+print(f"{len(contatos)} contato(s) carregado(s) de {ARQUIVO}")
+
+while True:
+    print()
+    print("1 - Listar  2 - Adicionar  3 - Buscar  4 - Remover  0 - Sair")
+    opcao = input("Opção: ").strip()
+
+    if opcao == "1":
+        listar(contatos)
+    elif opcao == "2":
+        adicionar(contatos)
+    elif opcao == "3":
+        buscar(contatos)
+    elif opcao == "4":
+        remover(contatos)
+    elif opcao == "0":
+        print("Até logo!")
+        break
+    else:
+        print("Opção inválida.")
+</pre>
+<pre class="script" data-file="contatos.json">[
+  {
+    "nome": "Ana Souza",
+    "telefone": "86 99999-0000"
+  },
+  {
+    "nome": "João Conceição",
+    "telefone": "86 98888-7777"
+  }
+]
+</pre>
+<pre class="solucao" data-file="agenda.py">import json
+import sys
+from pathlib import Path
+
+ARQUIVO = Path("contatos.json")
+
+
+def carregar():
+    try:
+        with open(ARQUIVO, encoding="utf-8") as arquivo:
+            return json.load(arquivo)
+    except FileNotFoundError:
+        return []
+    except json.JSONDecodeError as erro:
+        print(f"O arquivo {ARQUIVO} está com defeito: {erro}")
+        print("Conserte o arquivo (ou renomeie) e rode de novo.")
+        sys.exit(1)
+
+
+def salvar(contatos):
+    with open(ARQUIVO, "w", encoding="utf-8") as arquivo:
+        json.dump(contatos, arquivo, ensure_ascii=False, indent=2)
+
+
+def listar(contatos):
+    if not contatos:
+        print("A agenda está vazia.")
+    for numero, contato in enumerate(contatos, start=1):
+        print(f"{numero}. {contato['nome']:&lt;15} {contato['telefone']}")
+
+
+def adicionar(contatos):
+    nome = input("Nome: ").strip()
+    telefone = input("Telefone: ").strip()
+    if not nome:
+        print("O nome não pode ficar em branco.")
+        return
+    contatos.append({"nome": nome, "telefone": telefone})
+    salvar(contatos)
+    print(f"{nome} entrou na agenda.")
+
+
+def buscar(contatos):
+    termo = input("Buscar: ").strip().lower()
+    achados = [c for c in contatos if termo in c["nome"].lower()]
+    if not achados:
+        print("Ninguém encontrado.")
+    for contato in achados:
+        print(f"{contato['nome']:&lt;15} {contato['telefone']}")
+
+
+def remover(contatos):
+    listar(contatos)
+    try:
+        numero = int(input("Número do contato a remover: "))
+    except ValueError:
+        print("Digite o número que aparece na lista.")
+        return
+    if not 1 &lt;= numero &lt;= len(contatos):
+        print("Não existe contato com esse número.")
+        return
+    contato = contatos.pop(numero - 1)
+    salvar(contatos)
+    print(f"{contato['nome']} saiu da agenda.")
+
+
+contatos = carregar()
+print("=== Agenda ===")
+print(f"{len(contatos)} contato(s) carregado(s) de {ARQUIVO}")
+
+while True:
+    print()
+    print("1 - Listar  2 - Adicionar  3 - Buscar  4 - Remover  0 - Sair")
+    opcao = input("Opção: ").strip()
+
+    if opcao == "1":
+        listar(contatos)
+    elif opcao == "2":
+        adicionar(contatos)
+    elif opcao == "3":
+        buscar(contatos)
+    elif opcao == "4":
+        remover(contatos)
+    elif opcao == "0":
+        print("Até logo!")
+        break
+    else:
+        print("Opção inválida.")
+</pre>
+</div>
+
+<p>Depois de cumprir a missão, troque a entrada (o campo <strong>Entrada</strong> da caixa) por <code>4</code>, <code>0</code>, <code>0</code> e veja a conferência da faixa em ação.</p>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Tarefa</th><th>Opções</th><th>Qual usar</th></tr>
+<tr><td>Começar sem arquivo</td><td><code>if not ARQUIVO.exists(): return []</code> (versão 3) · <code>try</code> … <code>except FileNotFoundError</code> (versão 4)</td><td>As duas funcionam. O <code>try</code> é o mais comum em Python ("é mais fácil pedir desculpas do que permissão"), e evita a pequena chance de o arquivo sumir entre a pergunta e o <code>open</code></td></tr>
+<tr><td>Guardar os contatos</td><td>Lista de dicionários · um dicionário <code>{nome: telefone}</code></td><td>A lista: cada contato pode ganhar mais campos (email, aniversário), e dois contatos podem ter o mesmo nome</td></tr>
+<tr><td>Ler o menu</td><td>Comparar com <code>"1"</code> · converter com <code>int()</code></td><td>Comparar com o texto: nada de <code>ValueError</code> no menu</td></tr>
+<tr><td>Quando salvar</td><td>A cada mudança · só ao sair (opção 0)</td><td>A cada mudança: se o programa fechar de repente (Ctrl+C, falta de luz), nada se perde</td></tr>
+<tr><td>Escolher quem remover</td><td>Pelo número da lista · pelo nome</td><td>Pelo número: nomes podem se repetir, e ninguém gosta de digitar "João Conceição" inteiro</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="ideias">Ideias para continuar</h2>
+<ul>
+  <li>Um campo <code>"email"</code> em cada contato. Os contatos antigos do arquivo não têm essa chave: use <code>contato.get("email", "")</code> (aula <a href="dicionarios.html">Dicionários</a>) para não dar <code>KeyError</code>.</li>
+  <li>Uma opção <strong>Editar</strong>, que troca o telefone de um contato escolhido pelo número.</li>
+  <li>Listar em ordem alfabética, com <code>sorted(contatos, key=lambda c: c["nome"])</code> (aulas <a href="listas-ordenar.html">Ordenando Listas</a> e <a href="lambda.html">lambda</a>).</li>
+  <li>Avisar quando o nome já existe, antes de adicionar.</li>
+  <li>Confirmar a remoção: <code>Remover Ana Souza? (s/n)</code>.</li>
+</ul>
+
+<hr>
+
+<h2>Referência rápida do projeto</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz no projeto</th></tr>
+<tr><td><code>{"nome": nome, "telefone": telefone}</code></td><td>Um contato (dicionário)</td></tr>
+<tr><td><code>contatos.append(contato)</code></td><td>Põe o contato no fim da lista</td></tr>
+<tr><td><code>contatos.pop(numero - 1)</code></td><td>Tira o contato da posição e devolve quem saiu</td></tr>
+<tr><td><code>json.load(arquivo)</code></td><td>Lê o JSON do arquivo e devolve a lista</td></tr>
+<tr><td><code>json.dump(contatos, arquivo, ensure_ascii=False, indent=2)</code></td><td>Grava a lista no arquivo, com acentos de verdade e recuo de 2 espaços</td></tr>
+<tr><td><code>open(ARQUIVO, "w", encoding="utf-8")</code></td><td>Abre para escrever (apaga o que havia), em UTF-8</td></tr>
+<tr><td><code>except FileNotFoundError</code></td><td>O arquivo ainda não existe: começa vazio</td></tr>
+<tr><td><code>except json.JSONDecodeError</code></td><td>O arquivo está estragado: avisa e sai com <code>sys.exit(1)</code></td></tr>
+<tr><td><code>except ValueError</code></td><td>Digitaram algo que não é número</td></tr>
+<tr><td><code>enumerate(contatos, start=1)</code></td><td>Numera os contatos a partir do 1</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O telefone do contato</h3>
+<p>Complete para mostrar o telefone de um contato:</p>
+<div class="ex-code">print(contato[<input data-answer="&quot;telefone&quot;|'telefone'" aria-label="chave">])</div>
+</div>
+
+<div class="exercise">
+<h3>2. Gravar com acentos</h3>
+<p>Complete a opção que mantém <code>João</code> legível no arquivo:</p>
+<div class="ex-code">json.dump(contatos, arquivo, <input data-answer="ensure_ascii=False" aria-label="opção">, indent=2)</div>
+</div>
+
+<div class="exercise">
+<h3>3. Ler o arquivo</h3>
+<p>Complete a função do módulo <code>json</code> que lê o arquivo aberto:</p>
+<div class="ex-code">contatos = json.<input data-answer="load" aria-label="função">(arquivo)</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Na versão 2, por que os contatos somem quando o programa fecha?</p>
+<label><input type="radio" name="q4"> Porque o <code>break</code> apaga a lista</label>
+<label><input type="radio" name="q4"> Porque a lista fica só na memória, que é liberada quando o programa termina</label>
+<label><input type="radio" name="q4"> Porque faltou o <code>ensure_ascii=False</code></label>
+<label><input type="radio" name="q4"> Porque o <code>input()</code> só guarda o último valor</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. Sem a conferência da faixa, o que <code>contatos.pop(0 - 1)</code> faz?</p>
+<label><input type="radio" name="q5"> Dá <code>IndexError</code></label>
+<label><input type="radio" name="q5"> Remove o primeiro contato</label>
+<label><input type="radio" name="q5"> Remove o <strong>último</strong> contato, sem erro nenhum</label>
+<label><input type="radio" name="q5"> Não faz nada</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. O <code>contatos.json</code> está estragado. Por que a versão 4 sai com <code>sys.exit(1)</code> em vez de começar com a agenda vazia?</p>
+<label><input type="radio" name="q6"> Porque, no primeiro contato novo, a lista vazia seria gravada por cima do arquivo, e os contatos se perderiam</label>
+<label><input type="radio" name="q6"> Porque o <code>json</code> não sabe criar uma lista vazia</label>
+<label><input type="radio" name="q6"> Porque o <code>except</code> não pode ter <code>return</code></label>
+<label><input type="radio" name="q6"> Porque o editor não deixa</label>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Cada contato é um <strong>dicionário</strong>; a agenda é uma <strong>lista</strong> de dicionários.</li>
+  <li>O menu é um <code>while True</code> com <code>input()</code>, <code>if</code>/<code>elif</code>/<code>else</code> e um <code>break</code> para sair. Sem o <code>break</code>, o programa só termina com <code>EOFError</code>.</li>
+  <li>O que está na memória some quando o programa fecha. Para lembrar, <code>json.dump</code> grava a lista no <code>contatos.json</code>, e <code>json.load</code> lê de volta ao começar.</li>
+  <li><code>ensure_ascii=False</code> (com <code>encoding="utf-8"</code>) guarda <code>João Conceição</code> em vez de <code>João Conceição</code>.</li>
+  <li>Os erros de quem usa o programa viram mensagens: <code>FileNotFoundError</code> (começa vazio), <code>JSONDecodeError</code> (avisa e sai sem apagar nada), <code>ValueError</code> (número inválido). E a faixa do número é conferida antes do <code>pop</code>, porque <code>pop(-1)</code> apaga o último sem erro.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
