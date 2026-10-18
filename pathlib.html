@@ -1,0 +1,856 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python pathlib — pastas e caminhos de arquivos | Guia Python</title>
+<meta name="description" content="Pastas e caminhos com pathlib para quem está começando: o objeto Path, juntar pedaços com a barra /, name, stem, suffix e parent, exists, is_file e is_dir, criar pastas com mkdir, ler e gravar com read_text e write_text, listar com iterdir, procurar com glob e rglob, apagar com unlink e rmdir, e os erros reais do Python 3.14.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">pathlib</span></h1>
+
+<p class="intro">Nas aulas anteriores, a Ana abriu, leu e gravou arquivos com <code>open()</code>. Mas os arquivos de verdade não ficam soltos: ficam dentro de <strong>pastas</strong>, que ficam dentro de outras pastas. A lojinha da Ana já tem uma pasta <code>loja</code>, com a lista de produtos, a lista de clientes e uma pasta só para as vendas de cada mês. Para o programa saber <strong>onde</strong> cada arquivo está, criar pastas novas, conferir se um arquivo existe antes de abrir e listar o que há dentro de uma pasta, o Python tem o módulo <code>pathlib</code> (de <em>path</em>, "caminho", e <em>lib</em>, de <em>library</em>, "biblioteca").</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é um <strong>caminho</strong> e como criar um com <code>Path</code>.</li>
+  <li>A juntar pedaços de caminho com a barra <code>/</code>, sem se preocupar com o sistema.</li>
+  <li>A pegar as partes de um caminho: <code>name</code>, <code>stem</code>, <code>suffix</code>, <code>parent</code>.</li>
+  <li>A perguntar se um arquivo ou pasta existe: <code>exists()</code>, <code>is_file()</code>, <code>is_dir()</code>.</li>
+  <li>A criar pastas com <code>mkdir()</code>, e as opções <code>parents</code> e <code>exist_ok</code>.</li>
+  <li>A ler e gravar um arquivo inteiro numa linha: <code>read_text()</code> e <code>write_text()</code>.</li>
+  <li>A listar uma pasta com <code>iterdir()</code> e procurar arquivos com <code>glob()</code> e <code>rglob()</code>.</li>
+  <li>Os erros reais: <code>FileNotFoundError</code>, <code>FileExistsError</code>, <code>IsADirectoryError</code>, a barra entre dois textos e a pasta que não está vazia.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: o endereço de um arquivo</h2>
+<p>Para mandar uma carta para a Ana, você escreve o endereço do mais geral para o mais específico: cidade, bairro, rua, número. O computador faz igual com os arquivos. O arquivo <code>janeiro.txt</code> da lojinha mora assim:</p>
+
+<pre class="term">/home/ana/loja/vendas/janeiro.txt
+</pre>
+
+<p>Lendo da esquerda para a direita: começando da raiz do disco (a primeira <code>/</code>), entre na pasta <code>home</code>, depois na pasta <code>ana</code>, depois em <code>loja</code>, depois em <code>vendas</code>, e lá dentro está o arquivo <code>janeiro.txt</code>. Esse "endereço" se chama <strong>caminho</strong> (em inglês, <em>path</em>). Cada <code>/</code> separa uma pasta da próxima.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Tipo de caminho</th><th>Exemplo</th><th>Quer dizer</th></tr>
+<tr><td><strong>Absoluto</strong> (completo)</td><td><code>/home/ana/loja/produtos.txt</code></td><td>O endereço inteiro, a partir da raiz do disco. Começa com <code>/</code></td></tr>
+<tr><td><strong>Relativo</strong></td><td><code>loja/produtos.txt</code></td><td>"A partir de onde eu estou agora": a pasta <code>loja</code> que está na pasta atual</td></tr>
+</table>
+</div>
+
+<p>Quando você roda <code>python3 programa.py</code> no terminal da Ana, a "pasta atual" é a pasta em que o terminal está (no começo, <code>/home/ana</code>). No editor do guia, é a pasta do programa. Nos exemplos desta aula, quase todos os caminhos são <strong>relativos</strong>: funcionam igual nos dois lugares.</p>
+
+<hr>
+
+<h2>1. O primeiro <code>Path</code></h2>
+<p>Dentro do módulo <code>pathlib</code> mora o <code>Path</code> ("caminho"). Você o traz para o seu programa com <code>from pathlib import Path</code> (a aula <a href="modulos.html">Módulos e import</a> explica essa linha em detalhe) e cria um caminho passando o texto dele:</p>
+
+<pre class="file" data-file="caminho.py">from pathlib import Path
+
+arquivo = Path("compras.txt")
+print(arquivo)
+print(type(arquivo))
+</pre>
+
+<dl class="anatomy">
+  <dt>from pathlib import Path</dt><dd>"Do módulo <code>pathlib</code>, traga o <code>Path</code>." Sem essa linha, o Python não conhece o nome <code>Path</code>.</dd>
+  <dt>Path("compras.txt")</dt><dd>Cria um objeto <strong>caminho</strong> a partir do texto <code>"compras.txt"</code>. Ele ainda não abre nem cria nada: é só o endereço, anotado num papel.</dd>
+  <dt>arquivo = …</dt><dd>Guarda o caminho na variável <code>arquivo</code>, como qualquer outro valor.</dd>
+  <dt>print(arquivo)</dt><dd>Mostra o caminho como texto.</dd>
+</dl>
+
+<pre class="term">$ python3 caminho.py
+compras.txt
+&lt;class 'pathlib.PosixPath'&gt;
+</pre>
+
+<p>O <code>print</code> mostrou o caminho sem aspas, e o <code>type</code> revelou que ele não é um texto (<code>str</code>), e sim um <code>PosixPath</code>: um caminho no estilo do Linux e do macOS (POSIX é o nome do padrão que esses sistemas seguem). No Windows, o mesmo programa mostraria <code>WindowsPath</code>. Você não precisa escolher: escreva sempre <code>Path</code>, e o Python usa o tipo certo para o sistema.</p>
+
+<div class="warning">
+<strong>O caminho não precisa existir</strong>
+<p>Repare que não existe nenhum <code>compras.txt</code> na pasta da Ana, e mesmo assim o programa funcionou. Criar um <code>Path</code> é como anotar um endereço: anotar não constrói a casa. O erro só aparece quando você tenta <strong>usar</strong> o arquivo (ler, por exemplo), como você vai ver em <a href="#errado">Quando dá errado</a>.</p>
+</div>
+
+<hr>
+
+<h2>2. Juntando pedaços com a barra <code>/</code></h2>
+<p>O jeito mais bonito do <code>pathlib</code> é a barra. Entre um <code>Path</code> e um texto, o <code>/</code> não é divisão: é "entre nesta pasta". Assim você monta um caminho pedaço por pedaço:</p>
+
+<pre class="file" data-file="partes.py">from pathlib import Path
+
+pasta = Path("loja")
+arquivo = pasta / "vendas" / "janeiro.txt"
+
+print(arquivo)
+print("Nome:", arquivo.name)
+print("Sem a extensão:", arquivo.stem)
+print("Extensão:", arquivo.suffix)
+print("Pasta onde está:", arquivo.parent)
+print("Partes:", arquivo.parts)
+</pre>
+
+<pre class="term">$ python3 partes.py
+loja/vendas/janeiro.txt
+Nome: janeiro.txt
+Sem a extensão: janeiro
+Extensão: .txt
+Pasta onde está: loja/vendas
+Partes: ('loja', 'vendas', 'janeiro.txt')
+</pre>
+
+<dl class="anatomy">
+  <dt>pasta / "vendas"</dt><dd>Um <code>Path</code> barra um texto dá um <code>Path</code> novo: <code>loja/vendas</code>. Dá para encadear quantas barras quiser.</dd>
+  <dt>.name</dt><dd>O <strong>nome</strong> do último pedaço, com a extensão: <code>janeiro.txt</code>.</dd>
+  <dt>.stem</dt><dd>O nome <strong>sem</strong> a extensão (<em>stem</em> = "talo", a parte principal): <code>janeiro</code>.</dd>
+  <dt>.suffix</dt><dd>A <strong>extensão</strong>, com o ponto (<em>suffix</em> = "sufixo"): <code>.txt</code>.</dd>
+  <dt>.parent</dt><dd>A pasta "mãe", onde o arquivo está (<em>parent</em> = "pai/mãe"): <code>loja/vendas</code>. Também é um <code>Path</code>.</dd>
+  <dt>.parts</dt><dd>Todos os pedaços, numa <a href="tuplas.html">tupla</a>.</dd>
+</dl>
+
+<p>Repare: <code>name</code>, <code>stem</code>, <code>suffix</code> e <code>parent</code> não levam parênteses. Eles não fazem nada no disco; só leem pedaços do próprio endereço. São <strong>atributos</strong>, informações que o objeto já tem.</p>
+
+<div class="tip">
+<strong>Por que não escrever <code>"loja/vendas/janeiro.txt"</code> de uma vez?</strong>
+<p>Funciona no Linux, mas o Windows separa as pastas com a barra invertida (<code>loja\vendas\janeiro.txt</code>). Com <code>Path("loja") / "vendas" / "janeiro.txt"</code>, o Python escreve o separador certo para cada sistema, e o seu programa roda nos dois sem mudar uma letra.</p>
+</div>
+
+<div class="trypy" data-goal="out:loja/vendas/2026/marco.txt;;out:Extensão: .txt;;src:Path\(&quot;loja&quot;\)\s*/">
+<p class="try-task"><strong>Missão:</strong> a Ana guardou as vendas de março no arquivo <code>marco.txt</code>, dentro da pasta <code>2026</code>, que fica dentro de <code>vendas</code>, que fica dentro de <code>loja</code>. Monte esse caminho com barras <code>/</code> a partir de <code>Path("loja")</code> e rode: o programa deve mostrar o caminho e a extensão.</p>
+<pre class="script" data-file="main.py">from pathlib import Path
+
+arquivo = Path("loja")
+
+print(arquivo)
+print("Extensão:", arquivo.suffix)
+</pre>
+<pre class="solucao" data-file="main.py">from pathlib import Path
+
+arquivo = Path("loja") / "vendas" / "2026" / "marco.txt"
+
+print(arquivo)
+print("Extensão:", arquivo.suffix)
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Onde eu estou? <code>cwd()</code>, <code>home()</code> e <code>absolute()</code></h2>
+<p>Três perguntas que o <code>Path</code> responde sobre o computador:</p>
+
+<pre class="file" data-file="onde.py">from pathlib import Path
+
+print("Pasta atual:", Path.cwd())
+print("Pasta pessoal:", Path.home())
+
+arquivo = Path("compras.txt")
+print("Caminho completo:", arquivo.absolute())
+</pre>
+
+<pre class="term">$ python3 onde.py
+Pasta atual: /home/ana
+Pasta pessoal: /home/ana
+Caminho completo: /home/ana/compras.txt
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que responde</th></tr>
+<tr><td><code>Path.cwd()</code></td><td>A pasta atual (<em>current working directory</em>, "pasta de trabalho atual"): de onde partem os caminhos relativos</td></tr>
+<tr><td><code>Path.home()</code></td><td>A pasta pessoal do usuário: <code>/home/ana</code> para a Ana</td></tr>
+<tr><td><code>caminho.absolute()</code></td><td>O caminho relativo transformado em absoluto, grudando a pasta atual na frente</td></tr>
+</table>
+</div>
+
+<p>Esses três dependem do computador: num outro usuário, ou no editor do guia, as respostas são outras. Por isso eles servem para <strong>mostrar</strong> onde as coisas estão, mas um programa que você vai mandar para outras pessoas não deve ter <code>/home/ana</code> escrito dentro dele.</p>
+
+<hr>
+
+<h2>4. Existe? É arquivo? É pasta?</h2>
+<p>Antes de abrir um arquivo, dá para perguntar se ele está lá. As respostas são <a href="booleanos.html">booleanos</a> (<code>True</code> ou <code>False</code>):</p>
+
+<pre class="file" data-file="existe.py">from pathlib import Path
+
+for nome in ["Documentos", "compras.txt", "existe.py"]:
+    caminho = Path(nome)
+    print(nome)
+    print("  existe?", caminho.exists())
+    print("  é arquivo?", caminho.is_file())
+    print("  é pasta?", caminho.is_dir())
+</pre>
+
+<pre class="term">$ python3 existe.py
+Documentos
+  existe? True
+  é arquivo? False
+  é pasta? True
+compras.txt
+  existe? False
+  é arquivo? False
+  é pasta? False
+existe.py
+  existe? True
+  é arquivo? True
+  é pasta? False
+</pre>
+
+<dl class="anatomy">
+  <dt>.exists()</dt><dd>"Existe?" Verdadeiro se houver <strong>qualquer coisa</strong> com esse nome: arquivo ou pasta.</dd>
+  <dt>.is_file()</dt><dd>"É um arquivo?" Falso para pastas e para o que não existe.</dd>
+  <dt>.is_dir()</dt><dd>"É uma pasta?" (<em>dir</em> vem de <em>directory</em>, "diretório", outro nome para pasta.)</dd>
+</dl>
+
+<p>Esses levam parênteses: são <strong>métodos</strong>, ações que vão até o disco olhar. A pasta <code>Documentos</code> existe e é pasta; <code>compras.txt</code> não existe, então as três respostas são <code>False</code>; e o próprio programa <code>existe.py</code> é um arquivo.</p>
+
+<p>O uso mais comum é num <a href="if-else.html"><code>if</code></a>, para não tentar ler o que não está lá:</p>
+
+<pre class="file" data-file="conferir.py">from pathlib import Path
+
+arquivo = Path("loja") / "produtos.txt"
+if arquivo.exists():
+    print(arquivo.read_text(encoding="utf-8"))
+else:
+    print("Ainda não existe a lista de produtos.")
+</pre>
+
+<p>Rodando agora, que a lista ainda não foi criada, e depois da seção 6, quando ela já existir:</p>
+
+<pre class="term">$ python3 conferir.py                   « antes de existir o loja/produtos.txt
+Ainda não existe a lista de produtos.
+$ python3 conferir.py                   « depois
+café
+açúcar
+pão de queijo
+
+</pre>
+
+<hr>
+
+<h2>5. Criando pastas: <code>mkdir()</code></h2>
+<p><code>mkdir</code> vem de <em>make directory</em>, "criar pasta" (o mesmo nome do comando do terminal). A Ana vai criar a pasta da loja e, dentro dela, <code>vendas/2026</code>:</p>
+
+<pre class="file" data-file="pastas.py">from pathlib import Path
+
+loja = Path("loja")
+loja.mkdir()
+print("Criei a pasta", loja)
+
+vendas = loja / "vendas" / "2026"
+vendas.mkdir(parents=True)
+print("Criei a pasta", vendas)
+
+loja.mkdir(exist_ok=True)
+print("A pasta loja já existia, e tudo bem")
+</pre>
+
+<pre class="term">$ python3 pastas.py
+Criei a pasta loja
+Criei a pasta loja/vendas/2026
+A pasta loja já existia, e tudo bem
+$ tree loja                             « o comando tree desenha as pastas
+loja
+└── vendas
+    └── 2026
+
+3 directories, 0 files
+</pre>
+
+<dl class="anatomy">
+  <dt>loja.mkdir()</dt><dd>Cria <strong>uma</strong> pasta. A pasta de cima tem de existir (aqui é a pasta atual, que existe).</dd>
+  <dt>mkdir(parents=True)</dt><dd>Cria também as pastas do meio que faltarem (<em>parents</em> = "os pais"). Sem isso, criar <code>loja/vendas/2026</code> daria erro, porque <code>vendas</code> ainda não existia.</dd>
+  <dt>mkdir(exist_ok=True)</dt><dd>"Tudo bem se já existir" (<em>exist ok</em>). Sem isso, criar uma pasta que já existe dá erro.</dd>
+</dl>
+
+<p>O <code>tree</code> ("árvore") é um programa do terminal que desenha as pastas uma dentro da outra; a última linha (em inglês) conta 3 pastas e nenhum arquivo. E se a Ana rodar o programa <strong>de novo</strong>? A primeira linha, <code>loja.mkdir()</code>, sem <code>exist_ok</code>, tenta criar uma pasta que agora existe:</p>
+
+<pre class="term">$ python3 pastas.py
+Traceback (most recent call last):
+  File "/home/ana/pastas.py", line 4, in &lt;module&gt;
+    loja.mkdir()
+    ~~~~~~~~~~^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 1012, in mkdir
+    os.mkdir(self, mode)
+    ~~~~~~~~^^^^^^^^^^^^
+FileExistsError: [Errno 17] File exists: 'loja'
+</pre>
+
+<p>Leia o traceback de baixo para cima. A última linha é o que aconteceu: <code>FileExistsError</code>, "erro: o arquivo existe", <code>File exists: 'loja'</code>. Para o sistema, uma pasta também é um tipo de "arquivo", por isso a mensagem fala em <em>file</em>. Acima dela há <strong>dois</strong> trechos de código: o primeiro é a linha 4 do programa da Ana (<code>loja.mkdir()</code>); o segundo é de dentro do próprio <code>pathlib</code>, onde o erro de fato estourou. Quando o traceback passa por arquivos do Python (os que começam com <code>/usr/lib/python3.14/</code>), procure a última linha que é <strong>sua</strong>: é ela que você conserta.</p>
+
+<p><strong>A receita que não falha</strong>, e que você vai ver em muitos programas, é juntar as duas opções:</p>
+
+<pre class="file" data-file="receita.py">from pathlib import Path
+
+Path("loja", "vendas", "2026").mkdir(parents=True, exist_ok=True)
+print("Pronto, e sem erro")
+</pre>
+
+<pre class="term">$ python3 receita.py
+Pronto, e sem erro
+$ python3 receita.py                    « de novo: nada de FileExistsError
+Pronto, e sem erro
+</pre>
+
+<p>Cria o que faltar e não reclama do que já existe. (Repare em mais um jeito de montar o caminho: <code>Path("loja", "vendas", "2026")</code>, com os pedaços separados por vírgula, é o mesmo que <code>Path("loja") / "vendas" / "2026"</code>.)</p>
+
+<hr>
+
+<h2>6. Ler e gravar sem <code>open()</code>: <code>read_text()</code> e <code>write_text()</code></h2>
+<p>Para arquivos de texto pequenos, o <code>Path</code> tem dois atalhos que fazem o <code>open</code>, o <code>with</code>, o <code>read</code>/<code>write</code> e o fechamento numa linha só:</p>
+
+<pre class="file" data-file="escrever.py">from pathlib import Path
+
+arquivo = Path("loja") / "produtos.txt"
+arquivo.write_text("café\naçúcar\npão de queijo\n", encoding="utf-8")
+print("Gravei", arquivo)
+
+texto = arquivo.read_text(encoding="utf-8")
+print(texto)
+print("O arquivo tem", len(texto.splitlines()), "linhas")
+</pre>
+
+<pre class="term">$ python3 escrever.py
+Gravei loja/produtos.txt
+café
+açúcar
+pão de queijo
+
+O arquivo tem 3 linhas
+$ cat loja/produtos.txt                 « o cat do terminal mostra o arquivo gravado
+café
+açúcar
+pão de queijo
+</pre>
+
+<dl class="anatomy">
+  <dt>arquivo.write_text(texto, encoding="utf-8")</dt><dd>"Escreva este texto": cria o arquivo (ou <strong>apaga o conteúdo antigo</strong> e escreve por cima, como o modo <code>"w"</code> do <code>open</code>), grava e fecha.</dd>
+  <dt>arquivo.read_text(encoding="utf-8")</dt><dd>"Leia o texto": abre, lê tudo num <code>str</code> só e fecha.</dd>
+  <dt>encoding="utf-8"</dt><dd>A codificação, que diz como os acentos viram bytes. Sempre escreva, como você aprendeu em <a href="arquivos.html">Abrindo Arquivos</a>: assim o "café" chega inteiro em qualquer computador.</dd>
+</dl>
+
+<p>A linha em branco depois de "pão de queijo" é o <code>\n</code> do fim do arquivo somado ao <code>\n</code> do próprio <code>print</code>. O <code>splitlines()</code> quebra o texto nas linhas e o <code>len</code> conta: 3.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Quero…</th><th>Com <code>open</code></th><th>Com <code>Path</code></th></tr>
+<tr><td>Ler tudo de uma vez</td><td><code>with open(p, encoding="utf-8") as f:<br>&nbsp;&nbsp;&nbsp;&nbsp;texto = f.read()</code></td><td><code>texto = p.read_text(encoding="utf-8")</code></td></tr>
+<tr><td>Gravar tudo de uma vez</td><td><code>with open(p, "w", encoding="utf-8") as f:<br>&nbsp;&nbsp;&nbsp;&nbsp;f.write(texto)</code></td><td><code>p.write_text(texto, encoding="utf-8")</code></td></tr>
+<tr><td>Ler linha por linha, acrescentar no fim (<code>"a"</code>), arquivos grandes</td><td><code>with open(p, …) as f:</code></td><td><code>with p.open(…) as f:</code> (o mesmo <code>open</code>, chamado pelo caminho)</td></tr>
+</table>
+</div>
+
+<p>O <code>open()</code> aceita um <code>Path</code> no lugar do texto do nome: <code>open(arquivo, encoding="utf-8")</code> funciona. Tudo o que você aprendeu em <a href="arquivos-ler.html">Lendo Arquivos</a> e <a href="arquivos-escrever.html">Escrevendo Arquivos</a> continua valendo.</p>
+
+<div class="trypy" data-goal="out:arroz;;out:feijão;;src:mkdir;;src:write_text;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa quer gravar a lista de compras em <code>mercado/lista.txt</code>, mas a pasta <code>mercado</code> não existe e ele dá <code>FileNotFoundError</code>. Rode para ver o erro e conserte: crie a pasta antes de gravar.</p>
+<pre class="script" data-file="main.py">from pathlib import Path
+
+pasta = Path("mercado")
+lista = pasta / "lista.txt"
+
+lista.write_text("arroz\nfeijão\n", encoding="utf-8")
+print(lista.read_text(encoding="utf-8"))
+</pre>
+<pre class="solucao" data-file="main.py">from pathlib import Path
+
+pasta = Path("mercado")
+lista = pasta / "lista.txt"
+
+pasta.mkdir(exist_ok=True)
+lista.write_text("arroz\nfeijão\n", encoding="utf-8")
+print(lista.read_text(encoding="utf-8"))
+</pre>
+</div>
+
+<hr>
+
+<h2>7. O que tem dentro da pasta? <code>iterdir()</code></h2>
+<p>A loja da Ana foi crescendo. Ela criou mais alguns arquivos (aqui com o <code>touch</code> do terminal, que cria arquivos vazios) e o <code>tree</code> mostra como ficou:</p>
+
+<pre class="term">$ touch loja/clientes.txt loja/vendas/janeiro.txt loja/vendas/fevereiro.txt loja/vendas/notas.csv loja/vendas/2026/marco.txt
+$ tree loja
+loja
+├── clientes.txt
+├── produtos.txt
+└── vendas
+    ├── 2026
+    │   └── marco.txt
+    ├── fevereiro.txt
+    ├── janeiro.txt
+    └── notas.csv
+
+3 directories, 6 files
+</pre>
+
+<p>Para o programa descobrir o que tem dentro de uma pasta, use <code>iterdir()</code> (de <em>iterate directory</em>, "percorrer a pasta"). Ele entrega um <code>Path</code> para cada coisa que está <strong>diretamente</strong> dentro da pasta:</p>
+
+<pre class="file" data-file="listar.py">from pathlib import Path
+
+loja = Path("loja")
+for item in sorted(loja.iterdir()):
+    if item.is_dir():
+        print("[pasta]  ", item.name)
+    else:
+        print("[arquivo]", item.name)
+</pre>
+
+<pre class="term">$ python3 listar.py
+[arquivo] clientes.txt
+[arquivo] produtos.txt
+[pasta]   vendas
+</pre>
+
+<dl class="anatomy">
+  <dt>loja.iterdir()</dt><dd>Os itens que estão dentro de <code>loja</code>, um por vez, cada um como um <code>Path</code> (<code>loja/clientes.txt</code>, <code>loja/vendas</code>…). Não entra nas subpastas: o que está dentro de <code>vendas</code> não aparece.</dd>
+  <dt>sorted(…)</dt><dd>Coloca em ordem alfabética (aula <a href="listas-ordenar.html">Ordenando Listas</a>).</dd>
+  <dt>item.is_dir()</dt><dd>Separa as pastas dos arquivos.</dd>
+  <dt>item.name</dt><dd>Só o nome, sem o <code>loja/</code> na frente.</dd>
+</dl>
+
+<div class="warning">
+<strong>Sem <code>sorted</code>, a ordem é a do disco</strong>
+<p>O <code>iterdir()</code> entrega os itens na ordem em que o sistema guardou, que <strong>não</strong> é alfabética e pode mudar de um computador para outro. Se a ordem importa (quase sempre importa, para quem lê), passe por <code>sorted()</code>.</p>
+</div>
+
+<hr>
+
+<h2>8. Procurando arquivos: <code>glob()</code> e <code>rglob()</code></h2>
+<p>E se a Ana quiser só os arquivos <code>.txt</code>? O <code>glob</code> procura pelos nomes que combinam com um <strong>molde</strong>, onde o <code>*</code> quer dizer "qualquer coisa" (é o mesmo curinga do terminal: <code>ls *.txt</code>).</p>
+
+<pre class="file" data-file="procurar.py">from pathlib import Path
+
+loja = Path("loja")
+
+print("Os .txt da pasta loja:")
+for arquivo in sorted(loja.glob("*.txt")):
+    print(" ", arquivo)
+
+print("Os .txt em qualquer lugar dentro de loja:")
+for arquivo in sorted(loja.rglob("*.txt")):
+    print(" ", arquivo)
+</pre>
+
+<pre class="term">$ python3 procurar.py
+Os .txt da pasta loja:
+  loja/clientes.txt
+  loja/produtos.txt
+Os .txt em qualquer lugar dentro de loja:
+  loja/clientes.txt
+  loja/produtos.txt
+  loja/vendas/2026/marco.txt
+  loja/vendas/fevereiro.txt
+  loja/vendas/janeiro.txt
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Molde</th><th>Encontra</th></tr>
+<tr><td><code>loja.glob("*.txt")</code></td><td>Os nomes terminados em <code>.txt</code> <strong>direto</strong> em <code>loja</code></td></tr>
+<tr><td><code>loja.glob("*")</code></td><td>Tudo o que está direto em <code>loja</code> (parecido com <code>iterdir()</code>)</td></tr>
+<tr><td><code>loja.glob("vendas/*.csv")</code></td><td>Os <code>.csv</code> dentro de <code>loja/vendas</code></td></tr>
+<tr><td><code>loja.glob("*a*")</code></td><td>Os nomes que têm a letra <code>a</code> em qualquer lugar</td></tr>
+<tr><td><code>loja.glob("vendas/janeiro.???")</code></td><td><code>?</code> é exatamente <strong>um</strong> caractere qualquer: <code>janeiro.txt</code>, <code>janeiro.csv</code>…</td></tr>
+<tr><td><code>loja.rglob("*.txt")</code></td><td>Os <code>.txt</code> em <code>loja</code> <strong>e em todas as subpastas</strong>, até o fundo (<em>r</em> de <em>recursive</em>, "recursivo")</td></tr>
+</table>
+</div>
+
+<p>O <code>notas.csv</code> não apareceu em nenhuma das duas buscas: o molde pedia <code>.txt</code>. E o <code>rglob</code> desceu até <code>vendas/2026/marco.txt</code>, que o <code>glob</code> não enxerga. Como no <code>iterdir</code>, use <code>sorted()</code> para ter uma ordem garantida.</p>
+
+<hr>
+
+<h2>9. Apagando: <code>unlink()</code> e <code>rmdir()</code></h2>
+
+<pre class="file" data-file="apagar.py">from pathlib import Path
+
+rascunho = Path("loja") / "rascunho.txt"
+rascunho.write_text("teste\n", encoding="utf-8")
+print("Existe?", rascunho.exists())
+
+rascunho.unlink()
+print("Depois do unlink, existe?", rascunho.exists())
+
+rascunho.unlink(missing_ok=True)
+print("Apagar de novo, com missing_ok=True, não deu erro")
+
+vazia = Path("loja") / "vazia"
+vazia.mkdir()
+vazia.rmdir()
+print("A pasta vazia foi apagada:", not vazia.exists())
+</pre>
+
+<pre class="term">$ python3 apagar.py
+Existe? True
+Depois do unlink, existe? False
+Apagar de novo, com missing_ok=True, não deu erro
+A pasta vazia foi apagada: True
+</pre>
+
+<dl class="anatomy">
+  <dt>.unlink()</dt><dd>Apaga um <strong>arquivo</strong> (<em>unlink</em> = "desligar", o nome técnico de apagar no Linux). Se o arquivo não existir, dá <code>FileNotFoundError</code>.</dd>
+  <dt>.unlink(missing_ok=True)</dt><dd>"Tudo bem se estiver faltando": não reclama se o arquivo já não existe.</dd>
+  <dt>.rmdir()</dt><dd>Apaga uma <strong>pasta vazia</strong> (<em>remove directory</em>). Com qualquer coisa dentro, ela se recusa.</dd>
+</dl>
+
+<div class="warning">
+<strong>Apagar é para sempre</strong>
+<p>O <code>unlink()</code> não manda o arquivo para a lixeira: ele some de vez, sem pergunta. Antes de rodar um programa que apaga arquivos, confira o caminho com um <code>print</code>. Que o <code>rmdir()</code> só apague pastas vazias é uma proteção a seu favor.</p>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de montar um caminho</h2>
+<p>Antes do <code>pathlib</code> (que existe desde o Python 3.4), os caminhos eram textos comuns, montados com a função <code>os.path.join</code>. Você ainda vai encontrar muito código assim:</p>
+
+<pre class="file" data-file="ospath.py">import os.path
+from pathlib import Path
+
+jeito_antigo = os.path.join("loja", "vendas", "janeiro.txt")
+jeito_novo = Path("loja") / "vendas" / "janeiro.txt"
+
+print(jeito_antigo, type(jeito_antigo))
+print(jeito_novo, type(jeito_novo))
+print(str(jeito_novo) == jeito_antigo)
+</pre>
+
+<pre class="term">$ python3 ospath.py
+loja/vendas/janeiro.txt &lt;class 'str'&gt;
+loja/vendas/janeiro.txt &lt;class 'pathlib.PosixPath'&gt;
+True
+</pre>
+
+<p>O mesmo endereço, só que um é texto e o outro é um <code>Path</code>. O <code>str(caminho)</code> transforma o <code>Path</code> em texto quando alguma função antiga exigir.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>Path("loja") / "vendas" / "janeiro.txt"</code></td><td>O jeito moderno e o do guia. Fácil de ler, funciona em qualquer sistema e já dá acesso a <code>name</code>, <code>exists()</code>, <code>read_text()</code>…</td></tr>
+<tr><td><code>Path("loja", "vendas", "janeiro.txt")</code></td><td>O mesmo caminho; prático quando os pedaços já estão separados</td></tr>
+<tr><td><code>Path("loja/vendas/janeiro.txt")</code></td><td>Funciona; o <code>Path</code> entende a <code>/</code> no texto, até no Windows. Bom para caminhos fixos e curtos</td></tr>
+<tr><td><code>os.path.join("loja", "vendas", "janeiro.txt")</code></td><td>Código antigo. Funciona, mas devolve um texto e não tem os métodos do <code>Path</code></td></tr>
+<tr><td><code>"loja" + "/" + "janeiro.txt"</code></td><td>Evite: é fácil esquecer ou dobrar a barra, e no Windows o separador é outro</td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>Python mais antigo</strong>
+<p>No Python 3.13 (o do Debian 13), o <code>type()</code> de um caminho aparece como <code>&lt;class 'pathlib._local.PosixPath'&gt;</code>, com um <code>_local</code> no meio. É só o lugar onde a classe mora por dentro; o uso é idêntico.</p>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Ler um arquivo que não existe: <code>FileNotFoundError</code></strong>
+<pre class="file" data-file="ler_falta.py">from pathlib import Path
+
+arquivo = Path("loja") / "precos.txt"
+texto = arquivo.read_text(encoding="utf-8")
+print(texto)
+</pre>
+<pre class="term">$ python3 ler_falta.py
+Traceback (most recent call last):
+  File "/home/ana/ler_falta.py", line 4, in &lt;module&gt;
+    texto = arquivo.read_text(encoding="utf-8")
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 788, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 772, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'loja/precos.txt'
+</pre>
+<p>Um traceback comprido, mas só a primeira e a última parte interessam:</p>
+<ul>
+  <li><code>File "/home/ana/ler_falta.py", line 4</code>: o problema começou na <strong>linha 4 do seu programa</strong>, o <code>read_text</code>.</li>
+  <li>As duas partes do meio (<code>/usr/lib/python3.14/pathlib/…</code>) são o caminho que o erro fez <strong>dentro</strong> do <code>pathlib</code>: o <code>read_text</code> chamou o <code>open</code>, que chamou o <code>io.open</code>. Não é ali que você conserta.</li>
+  <li><code>FileNotFoundError: [Errno 2] No such file or directory: 'loja/precos.txt'</code>: "arquivo não encontrado: não existe esse arquivo ou pasta". O <code>[Errno 2]</code> é o número que o sistema dá para esse erro.</li>
+</ul>
+<p><strong>Como consertar:</strong> confira o nome (era <code>produtos.txt</code>?) e a pasta atual; ou pergunte antes com <code>if arquivo.exists():</code>; ou trate o erro com <code>try</code>/<code>except FileNotFoundError</code> (aula <a href="try-except.html">try e except</a>).</p>
+</div>
+
+<div class="cenario">
+<strong>Barra entre dois textos: <code>TypeError</code></strong>
+<pre class="file" data-file="barra_texto.py">caminho = "loja" / "produtos.txt"
+print(caminho)
+</pre>
+<pre class="term">$ python3 barra_texto.py
+Traceback (most recent call last):
+  File "/home/ana/barra_texto.py", line 1, in &lt;module&gt;
+    caminho = "loja" / "produtos.txt"
+              ~~~~~~~^~~~~~~~~~~~~~~~
+TypeError: unsupported operand type(s) for /: 'str' and 'str'
+</pre>
+<p>"Tipos de operando não suportados para <code>/</code>: <code>str</code> e <code>str</code>." O <code>^</code> embaixo aponta para a barra. A barra só vira "entrar na pasta" quando pelo menos um dos lados é um <code>Path</code>; entre dois textos, ela é a divisão, e texto não se divide. <strong>Como consertar:</strong> comece com um <code>Path</code>: <code>Path("loja") / "produtos.txt"</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Texto no lugar de <code>Path</code>: <code>AttributeError</code></strong>
+<pre class="file" data-file="texto_exists.py">arquivo = "loja/produtos.txt"
+print(arquivo.exists())
+</pre>
+<pre class="term">$ python3 texto_exists.py
+Traceback (most recent call last):
+  File "/home/ana/texto_exists.py", line 2, in &lt;module&gt;
+    print(arquivo.exists())
+          ^^^^^^^^^^^^^^
+AttributeError: 'str' object has no attribute 'exists'
+</pre>
+<p>"Objeto <code>str</code> não tem o atributo <code>exists</code>." A variável guarda um texto, e texto não sabe perguntar ao disco nada. <strong>Como consertar:</strong> <code>arquivo = Path("loja/produtos.txt")</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu o <code>import</code>: <code>NameError</code></strong>
+<pre class="file" data-file="sem_import.py">arquivo = Path("compras.txt")
+print(arquivo)
+</pre>
+<pre class="term">$ python3 sem_import.py
+Traceback (most recent call last):
+  File "/home/ana/sem_import.py", line 1, in &lt;module&gt;
+    arquivo = Path("compras.txt")
+              ^^^^
+NameError: name 'Path' is not defined
+</pre>
+<p>"O nome <code>Path</code> não está definido." O <code>Path</code> não vem pronto como o <code>print</code>: ele mora no módulo <code>pathlib</code>. <strong>Como consertar:</strong> <code>from pathlib import Path</code> no começo do programa.</p>
+</div>
+
+<div class="cenario">
+<strong>Ler uma pasta como se fosse arquivo: <code>IsADirectoryError</code></strong>
+<pre class="file" data-file="ler_pasta.py">from pathlib import Path
+
+print(Path("loja").read_text(encoding="utf-8"))
+</pre>
+<pre class="term">$ python3 ler_pasta.py
+Traceback (most recent call last):
+  File "/home/ana/ler_pasta.py", line 3, in &lt;module&gt;
+    print(Path("loja").read_text(encoding="utf-8"))
+          ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 788, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 772, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+IsADirectoryError: [Errno 21] Is a directory: 'loja'
+</pre>
+<p>"É uma pasta: <code>'loja'</code>." Pasta não tem texto para ler; o que ela tem são outros arquivos. <strong>Como consertar:</strong> leia um arquivo de dentro dela (<code>Path("loja") / "produtos.txt"</code>) ou liste o conteúdo com <code>iterdir()</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Apagar uma pasta que não está vazia</strong>
+<pre class="file" data-file="rmdir_cheia.py">from pathlib import Path
+
+Path("loja").rmdir()
+</pre>
+<pre class="term">$ python3 rmdir_cheia.py
+Traceback (most recent call last):
+  File "/home/ana/rmdir_cheia.py", line 3, in &lt;module&gt;
+    Path("loja").rmdir()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 1052, in rmdir
+    os.rmdir(self)
+    ~~~~~~~~^^^^^^
+OSError: [Errno 39] Directory not empty: 'loja'
+</pre>
+<p>"Pasta não está vazia." Desta vez o erro é o <code>OSError</code> genérico, "erro do sistema operacional". <strong>Como consertar:</strong> apague primeiro o que está dentro (com <code>unlink()</code>, arquivo por arquivo) e só então a pasta. Para apagar uma pasta inteira com tudo dentro existe o <code>shutil.rmtree</code>, do módulo <code>shutil</code>; use com muito cuidado, porque ele não pergunta nada.</p>
+</div>
+
+<div class="cenario">
+<strong>Criar uma pasta que já existe: <code>FileExistsError</code></strong>
+<p>Você já viu este na seção 5: rodar <code>Path("loja").mkdir()</code> pela segunda vez dá <code>FileExistsError: [Errno 17] File exists: 'loja'</code>. <strong>Como consertar:</strong> <code>mkdir(exist_ok=True)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Criar uma pasta dentro de outra que não existe: <code>FileNotFoundError</code> no <code>mkdir</code></strong>
+<pre class="file" data-file="sem_parents.py">from pathlib import Path
+
+pasta = Path("arquivo_morto") / "2026"
+pasta.mkdir()
+</pre>
+<pre class="term">$ python3 sem_parents.py
+Traceback (most recent call last):
+  File "/home/ana/sem_parents.py", line 4, in &lt;module&gt;
+    pasta.mkdir()
+    ~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 1012, in mkdir
+    os.mkdir(self, mode)
+    ~~~~~~~~^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'arquivo_morto/2026'
+</pre>
+<p>Parece estranho: "não existe" é justamente o que você quer criar! Mas o que falta é a pasta <strong>de cima</strong>, <code>arquivo_morto</code>: o <code>mkdir()</code> sozinho cria só o último pedaço. <strong>Como consertar:</strong> <code>mkdir(parents=True)</code>.</p>
+</div>
+
+<div class="trypy" data-goal="out:2026;;semerro;;src:parents\s*=\s*True">
+<p class="try-task"><strong>Missão:</strong> o programa quer criar <code>arquivo_morto/2026</code> de uma vez, mas a pasta <code>arquivo_morto</code> ainda não existe. Rode, leia o erro e conserte com a opção certa do <code>mkdir</code>.</p>
+<pre class="script" data-file="main.py">from pathlib import Path
+
+pasta = Path("arquivo_morto") / "2026"
+pasta.mkdir()
+print("Pasta criada:", pasta.name, "é pasta?", pasta.is_dir())
+</pre>
+<pre class="solucao" data-file="main.py">from pathlib import Path
+
+pasta = Path("arquivo_morto") / "2026"
+pasta.mkdir(parents=True)
+print("Pasta criada:", pasta.name, "é pasta?", pasta.is_dir())
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>from pathlib import Path</code></td><td>Traz o <code>Path</code> para o programa</td></tr>
+<tr><td><code>Path("loja")</code></td><td>Cria um caminho (não mexe no disco)</td></tr>
+<tr><td><code>p / "vendas" / "jan.txt"</code></td><td>Junta pedaços: um caminho dentro do outro</td></tr>
+<tr><td><code>p.name</code>, <code>p.stem</code>, <code>p.suffix</code></td><td>Nome com extensão, nome sem extensão, extensão</td></tr>
+<tr><td><code>p.parent</code>, <code>p.parts</code></td><td>A pasta de cima; todos os pedaços numa tupla</td></tr>
+<tr><td><code>Path.cwd()</code>, <code>Path.home()</code>, <code>p.absolute()</code></td><td>Pasta atual; pasta pessoal; caminho completo</td></tr>
+<tr><td><code>p.exists()</code>, <code>p.is_file()</code>, <code>p.is_dir()</code></td><td>Existe? É arquivo? É pasta?</td></tr>
+<tr><td><code>p.mkdir(parents=True, exist_ok=True)</code></td><td>Cria a pasta (e as do meio), sem reclamar se já existir</td></tr>
+<tr><td><code>p.read_text(encoding="utf-8")</code></td><td>Lê o arquivo inteiro num texto</td></tr>
+<tr><td><code>p.write_text(texto, encoding="utf-8")</code></td><td>Grava o texto, apagando o conteúdo antigo</td></tr>
+<tr><td><code>p.open(…)</code></td><td>O mesmo que <code>open(p, …)</code></td></tr>
+<tr><td><code>sorted(p.iterdir())</code></td><td>O que está direto dentro da pasta, em ordem</td></tr>
+<tr><td><code>sorted(p.glob("*.txt"))</code></td><td>Os nomes que combinam com o molde, direto na pasta</td></tr>
+<tr><td><code>sorted(p.rglob("*.txt"))</code></td><td>…na pasta e em todas as subpastas</td></tr>
+<tr><td><code>p.unlink(missing_ok=True)</code></td><td>Apaga o arquivo (para sempre)</td></tr>
+<tr><td><code>p.rmdir()</code></td><td>Apaga a pasta, se estiver vazia</td></tr>
+<tr><td><code>str(p)</code></td><td>O caminho como texto</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>FileNotFoundError: [Errno 2] No such file or directory</code></td><td>Arquivo (ou pasta de cima) não existe: nome errado, pasta atual errada, faltou <code>parents=True</code></td></tr>
+<tr><td><code>FileExistsError: [Errno 17] File exists</code></td><td><code>mkdir()</code> numa pasta que já existe: use <code>exist_ok=True</code></td></tr>
+<tr><td><code>IsADirectoryError: [Errno 21] Is a directory</code></td><td>Tentou ler uma pasta como se fosse arquivo</td></tr>
+<tr><td><code>OSError: [Errno 39] Directory not empty</code></td><td><code>rmdir()</code> numa pasta com coisas dentro</td></tr>
+<tr><td><code>TypeError: unsupported operand type(s) for /: 'str' and 'str'</code></td><td>Barra entre dois textos: comece com <code>Path(…)</code></td></tr>
+<tr><td><code>AttributeError: 'str' object has no attribute 'exists'</code></td><td>A variável é um texto, não um <code>Path</code></td></tr>
+<tr><td><code>NameError: name 'Path' is not defined</code></td><td>Faltou <code>from pathlib import Path</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Juntando os pedaços</h3>
+<p>Complete para montar o caminho <code>loja/clientes.txt</code>:</p>
+<div class="ex-code">arquivo = Path("loja") <input data-answer="/" aria-label="operador"> "clientes.txt"</div>
+</div>
+
+<div class="exercise">
+<h3>2. A extensão</h3>
+<p>Para <code>arquivo = Path("vendas/notas.csv")</code>, o que mostra <code>print(arquivo.suffix)</code>?</p>
+<div class="ex-code"><input data-answer=".csv" aria-label="saída"></div>
+</div>
+
+<div class="exercise">
+<h3>3. Criar sem reclamar</h3>
+<p>Complete para criar <code>loja/vendas/2027</code>, inclusive as pastas do meio, sem erro se já existir:</p>
+<div class="ex-code">Path("loja", "vendas", "2027").mkdir(<input data-answer="parents=True" aria-label="primeira opção">, exist_ok=True)</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. A pasta atual não tem nenhum <code>agenda.txt</code>. O que acontece com <code>p = Path("agenda.txt")</code>?</p>
+<label><input type="radio" name="q4"> Dá <code>FileNotFoundError</code></label>
+<label><input type="radio" name="q4"> Nada de errado: o caminho é criado, e <code>p.exists()</code> responde <code>False</code></label>
+<label><input type="radio" name="q4"> O arquivo <code>agenda.txt</code> é criado vazio</label>
+<label><input type="radio" name="q4"> Dá <code>NameError</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. A pasta <code>loja</code> tem <code>produtos.txt</code> e a subpasta <code>vendas</code>, com <code>janeiro.txt</code>. O que <code>sorted(Path("loja").glob("*.txt"))</code> encontra?</p>
+<label><input type="radio" name="q5"> <code>janeiro.txt</code> e <code>produtos.txt</code></label>
+<label><input type="radio" name="q5"> Nada, porque falta o <code>r</code></label>
+<label><input type="radio" name="q5"> Só <code>loja/produtos.txt</code>; para descer até <code>vendas</code>, seria preciso <code>rglob</code></label>
+<label><input type="radio" name="q5"> <code>loja/produtos.txt</code> e <code>loja/vendas</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Qual linha dá <code>TypeError</code>?</p>
+<label><input type="radio" name="q6"> <code>"loja" / "vendas"</code></label>
+<label><input type="radio" name="q6"> <code>Path("loja") / "vendas"</code></label>
+<label><input type="radio" name="q6"> <code>Path("loja", "vendas")</code></label>
+<label><input type="radio" name="q6"> <code>Path("loja/vendas")</code></label>
+</div>
+
+<h3>Missão final: só os arquivos de texto</h3>
+
+<div class="trypy" data-goal="out:loja/clientes.txt;;out:loja/produtos.txt;;out:2 arquivos .txt;;src:\.glob\(">
+<p class="try-task"><strong>Missão:</strong> o começo do programa monta uma pasta <code>loja</code> com quatro coisas dentro. Do jeito que está, ele lista <strong>tudo</strong>. Troque o <code>iterdir()</code> por um <code>glob</code> que pegue só os <code>.txt</code>, e a última linha deve contar quantos são: <code>2 arquivos .txt</code>.</p>
+<pre class="script" data-file="main.py">from pathlib import Path
+
+# Montando a pasta da loja (não precisa mexer aqui)
+loja = Path("loja")
+(loja / "fotos").mkdir(parents=True, exist_ok=True)
+(loja / "produtos.txt").write_text("café\n", encoding="utf-8")
+(loja / "clientes.txt").write_text("Bia\n", encoding="utf-8")
+(loja / "notas.csv").write_text("nome;nota\n", encoding="utf-8")
+
+# A partir daqui é com você
+achados = sorted(loja.iterdir())
+for arquivo in achados:
+    print(arquivo)
+print(len(achados), "arquivos .txt")
+</pre>
+<pre class="solucao" data-file="main.py">from pathlib import Path
+
+# Montando a pasta da loja (não precisa mexer aqui)
+loja = Path("loja")
+(loja / "fotos").mkdir(parents=True, exist_ok=True)
+(loja / "produtos.txt").write_text("café\n", encoding="utf-8")
+(loja / "clientes.txt").write_text("Bia\n", encoding="utf-8")
+(loja / "notas.csv").write_text("nome;nota\n", encoding="utf-8")
+
+# A partir daqui é com você
+achados = sorted(loja.glob("*.txt"))
+for arquivo in achados:
+    print(arquivo)
+print(len(achados), "arquivos .txt")
+</pre>
+</div>
+
+<p>Repare nos parênteses em <code>(loja / "fotos").mkdir(…)</code>: primeiro a barra monta o caminho, depois o <code>mkdir</code> age sobre ele. Sem os parênteses, o Python tentaria fazer <code>"fotos".mkdir()</code>, e texto não tem <code>mkdir</code>.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Um <strong>caminho</strong> é o endereço de um arquivo ou pasta. <code>from pathlib import Path</code> e <code>Path("loja")</code> criam um, sem mexer no disco.</li>
+  <li>A barra <code>/</code> entre um <code>Path</code> e um texto junta pedaços: <code>Path("loja") / "vendas" / "janeiro.txt"</code>, com o separador certo em qualquer sistema. Entre dois textos, ela dá <code>TypeError</code>.</li>
+  <li><code>name</code>, <code>stem</code>, <code>suffix</code>, <code>parent</code> leem pedaços do endereço (sem parênteses).</li>
+  <li><code>exists()</code>, <code>is_file()</code>, <code>is_dir()</code> perguntam ao disco.</li>
+  <li><code>mkdir(parents=True, exist_ok=True)</code> cria a pasta e as do meio, sem reclamar se já existir.</li>
+  <li><code>read_text()</code> e <code>write_text()</code> leem e gravam o arquivo inteiro numa linha; sempre com <code>encoding="utf-8"</code>.</li>
+  <li><code>iterdir()</code> lista a pasta; <code>glob("*.txt")</code> procura direto nela; <code>rglob</code> desce às subpastas. Use <code>sorted()</code> para ter ordem.</li>
+  <li><code>unlink()</code> apaga um arquivo para sempre; <code>rmdir()</code> só apaga pasta vazia.</li>
+  <li>No traceback, procure a última linha que é <strong>do seu programa</strong>; as de <code>/usr/lib/python3.14/</code> são de dentro do Python.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
