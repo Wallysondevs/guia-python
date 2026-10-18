@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python for — repetindo para cada letra ou item | Guia Python</title>
+<meta name="description" content="O laço for do Python para quem nunca programou: passar por cada letra de um texto e por cada item de uma lista, contar letras, somar preços e notas, o que vale a variável depois do laço, a lista vazia, for × while, e os erros reais do Python 3.14 (TypeError: 'int' object is not iterable e outros).">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">for</span></h1>
+
+<p class="intro">Na aula <a href="while.html">while</a>, você repetiu um bloco <strong>enquanto</strong> uma condição era verdadeira, e cuidou de tudo à mão: criar o contador, testar, somar 1. Muitas vezes, porém, o que você quer é mais simples: fazer alguma coisa <strong>com cada</strong> letra de um texto, ou <strong>com cada</strong> item de uma lista de compras. Para isso existe o <code>for</code> (em inglês, "para"): <strong>para cada</strong> item, faça isto.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>Como se escreve um <code>for</code>: a variável, o <code>in</code>, o que vai ser percorrido, os dois-pontos e o bloco.</li>
+  <li>A percorrer um <strong>texto</strong>, letra por letra, e a contar letras com um <code>if</code> dentro do laço.</li>
+  <li>O mínimo de <strong>listas</strong> para percorrê-las: a lista de compras, as notas da turma.</li>
+  <li>A <strong>somar</strong> durante o laço e a calcular uma média.</li>
+  <li>O que acontece com a variável depois do laço, e com uma lista vazia.</li>
+  <li>Quando usar <code>for</code> e quando usar <code>while</code>, e os erros reais mais comuns.</li>
+</ul>
+</div>
+
+<p>Todos os programas desta aula rodaram no <strong>Python 3.14</strong> da máquina da Ana (usuária <code>ana</code>, computador <code>notebook</code>), com <code>python3 arquivo.py</code>. Você pode rodar cada um no editor do guia.</p>
+
+<hr>
+
+<h2>A ideia: "para cada item da lista, ponha no carrinho"</h2>
+<p>A Ana vai ao mercado com uma lista de compras: pão, leite, café, manteiga. No mercado, ela não pensa "vou repetir 4 vezes". Ela pensa: <em>"para cada item da lista, pego o item e ponho no carrinho"</em>. Ela começa pelo primeiro, vai até o último, e para quando a lista acaba. Ninguém precisa contar nada.</p>
+<p>O <code>for</code> funciona assim:</p>
+<ol class="passo">
+  <li>Pega o <strong>primeiro</strong> item e dá a ele um nome (por exemplo, <code>item</code>).</li>
+  <li>Roda o bloco com esse item.</li>
+  <li>Pega o <strong>próximo</strong> item, guarda no mesmo nome, roda o bloco de novo.</li>
+  <li>Quando <strong>não há mais itens</strong>, sai do laço.</li>
+</ol>
+<p>A diferença para o <code>while</code>: lá, você escrevia uma <strong>condição</strong> e cuidava do contador. No <code>for</code>, você diz <strong>o que percorrer</strong>, e o Python cuida do resto: começa, avança e para sozinho.</p>
+
+<hr>
+
+<h2>1. O primeiro <code>for</code>: as letras de um texto</h2>
+<p>Um texto (uma <a href="strings.html">string</a>) é uma sequência de letras. O <code>for</code> passa por elas, uma de cada vez:</p>
+
+<pre class="file" data-file="letras.py">for letra in "Ana":
+    print(letra)
+print("Acabaram as letras.")
+</pre>
+
+<dl class="anatomy">
+  <dt>for</dt><dd>A palavra-chave do laço: "para".</dd>
+  <dt>letra</dt><dd>A <strong>variável do laço</strong>. A cada volta, ela recebe o próximo item. O nome é você quem escolhe; <code>letra</code> deixa claro o que ela guarda. Você não precisa criá-la antes: o <code>for</code> cria.</dd>
+  <dt>in</dt><dd>"Em", "dentro de". Lê-se a linha inteira assim: "para cada <code>letra</code> <strong>em</strong> <code>"Ana"</code>".</dd>
+  <dt>"Ana"</dt><dd>O que vai ser <strong>percorrido</strong>. Aqui, um texto de 3 letras: o laço vai dar 3 voltas.</dd>
+  <dt>:</dt><dd>Os dois-pontos, como no <code>if</code> e no <code>while</code>: "agora vem o bloco".</dd>
+  <dt>print(letra)</dt><dd>O corpo do laço, indentado com 4 espaços. Roda uma vez para cada letra.</dd>
+  <dt>print("Acabaram as letras.")</dt><dd>Na margem esquerda: fora do laço, roda uma vez só, no fim.</dd>
+</dl>
+
+<pre class="term">$ python3 letras.py
+A
+n
+a
+Acabaram as letras.</pre>
+
+<h3>Passo a passo</h3>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Volta</th><th>Valor de <code>letra</code></th><th>O que aparece</th></tr>
+<tr><td>1ª</td><td><code>"A"</code></td><td><code>A</code></td></tr>
+<tr><td>2ª</td><td><code>"n"</code></td><td><code>n</code></td></tr>
+<tr><td>3ª</td><td><code>"a"</code></td><td><code>a</code></td></tr>
+<tr><td>—</td><td>acabaram as letras</td><td>o laço termina; vem <code>Acabaram as letras.</code></td></tr>
+</table>
+</div>
+
+<p>Repare no que <strong>não</strong> existe aqui: nenhum contador, nenhuma condição, nenhum <code>+= 1</code>. O <code>for</code> sabe sozinho onde começar, como avançar e quando parar. Por isso é muito mais difícil escrever um laço infinito com ele.</p>
+
+<h3>Soletrando numa linha só</h3>
+<p>Com o <code>end</code> do <code>print</code> (aula <a href="print-sep-end.html">As Opções sep e end</a>), as letras ficam na mesma linha, separadas por um tracinho:</p>
+
+<pre class="file" data-file="soletrar.py">nome = "Padaria"
+for letra in nome:
+    print(letra, end="-")
+print()
+</pre>
+
+<pre class="term">$ python3 soletrar.py
+P-a-d-a-r-i-a-</pre>
+
+<p>O texto pode estar numa variável (<code>nome</code>): o <code>for</code> percorre o valor dela. O <code>print()</code> vazio no fim, fora do laço, só pula a linha. (Sim, sobrou um tracinho depois do último <code>a</code>; a aula de <a href="strings-metodos.html">Métodos de Texto</a> mostra um jeito de juntar letras sem sobras.)</p>
+
+<div class="trypy" data-goal="out:L*u*a*n*a*;;src:\bfor\b">
+<p class="try-task"><strong>Missão:</strong> troque o nome para <code>"Luana"</code> e o separador para um asterisco (<code>"*"</code>). A saída deve ser <code>L*u*a*n*a*</code>.</p>
+<pre class="script" data-file="main.py">nome = "Padaria"
+for letra in nome:
+    print(letra, end="-")
+print()
+</pre>
+<pre class="solucao" data-file="main.py">nome = "Luana"
+for letra in nome:
+    print(letra, end="*")
+print()
+</pre>
+</div>
+
+<hr>
+
+<h2>2. Um <code>if</code> dentro do <code>for</code>: contar letras</h2>
+<p>Dentro do bloco do <code>for</code> pode ir qualquer coisa, inclusive um <a href="if.html">if</a>. Quantas letras <code>a</code> tem a palavra <code>banana</code>?</p>
+
+<pre class="file" data-file="contar_a.py">palavra = "banana"
+quantos = 0
+for letra in palavra:
+    if letra == "a":
+        quantos += 1
+print(f"A palavra {palavra} tem {quantos} letras a.")
+</pre>
+
+<pre class="term">$ python3 contar_a.py
+A palavra banana tem 3 letras a.</pre>
+
+<dl class="anatomy">
+  <dt>quantos = 0</dt><dd>Um contador, criado <strong>antes</strong> do laço. Ele não conta as voltas (são 6), e sim só as letras que interessam.</dd>
+  <dt>if letra == "a":</dt><dd>Em cada volta, pergunta se a letra da vez é um <code>a</code>. Repare na indentação: o <code>if</code> está 4 espaços para dentro (faz parte do <code>for</code>)…</dd>
+  <dt>quantos += 1</dt><dd>…e esta linha está <strong>8</strong> espaços para dentro: faz parte do <code>if</code>. Só roda quando a letra é <code>a</code>.</dd>
+</dl>
+
+<p>Atenção: a comparação diferencia maiúsculas de minúsculas. Para o Python, <code>"A" == "a"</code> é <code>False</code>:</p>
+
+<pre class="file" data-file="maiusc.py">for letra in "Aa":
+    print(letra, letra == "a")
+</pre>
+
+<pre class="term">$ python3 maiusc.py
+A False
+a True</pre>
+
+<hr>
+
+<h2>3. Percorrendo uma lista</h2>
+<p>Uma <strong>lista</strong> guarda vários valores numa variável só. Ela tem aula própria logo adiante (<a href="listas.html">Listas</a>); por enquanto, basta saber escrever uma:</p>
+
+<pre class="file" data-file="compras_lista.py">compras = ["pão", "leite", "café", "manteiga"]
+for item in compras:
+    print(f"- {item}")
+print(f"São {len(compras)} itens.")
+</pre>
+
+<dl class="anatomy">
+  <dt>[ … ]</dt><dd>Os <strong>colchetes</strong> abrem e fecham a lista.</dd>
+  <dt>"pão", "leite", …</dt><dd>Os itens, separados por <strong>vírgula</strong>. Aqui são textos, mas podem ser números.</dd>
+  <dt>for item in compras:</dt><dd>"Para cada <code>item</code> em <code>compras</code>." A cada volta, <code>item</code> recebe o próximo item da lista, <strong>na ordem</strong> em que estão escritos.</dd>
+  <dt>len(compras)</dt><dd>O tamanho da lista: quantos itens ela tem (a mesma função <code>len()</code> que mede o tamanho de um texto).</dd>
+</dl>
+
+<pre class="term">$ python3 compras_lista.py
+- pão
+- leite
+- café
+- manteiga
+São 4 itens.</pre>
+
+<div class="tip">
+<strong>Um costume que ajuda a ler: plural e singular</strong>
+<p>Dê à lista um nome no <strong>plural</strong> (<code>compras</code>, <code>notas</code>, <code>alunos</code>) e à variável do laço o mesmo nome no <strong>singular</strong> (<code>item</code>, <code>nota</code>, <code>aluno</code>). Aí a linha se lê como uma frase: <code>for nota in notas</code>, "para cada nota nas notas". Os nomes vão sem acento (<code>preco</code>, não <code>preço</code>): o Python aceitaria o acento, mas não é o costume.</p>
+</div>
+
+<h3>Somando durante o laço: a média da turma</h3>
+<p>A técnica do <strong>acumulador</strong>, que você viu no <code>while</code>, funciona igual no <code>for</code>: uma variável começa em 0 antes do laço e recebe mais um pouco a cada volta.</p>
+
+<pre class="file" data-file="media.py">notas = [7.5, 8.0, 6.5, 9.0]
+soma = 0
+for nota in notas:
+    soma += nota
+media = soma / len(notas)
+print(f"Soma: {soma}")
+print(f"Média: {media}")
+</pre>
+
+<pre class="term">$ python3 media.py
+Soma: 31.0
+Média: 7.75</pre>
+
+<p>A soma passou por 0 → 7.5 → 15.5 → 22.0 → 31.0. A média é a soma dividida pela quantidade de notas: 31.0 / 4 = 7.75. Repare que a conta da média fica <strong>fora</strong> do laço: ela só pode ser feita depois de todas as notas somadas.</p>
+
+<div class="trypy" data-goal="out:Total: R$ 20.65;;src:\bfor\b">
+<p class="try-task"><strong>Missão:</strong> a compra da Ana na padaria custou R$ 4,50, R$ 12,90 e R$ 3,25. O programa mostra cada preço, mas o total sai zerado. Mude o bloco do <code>for</code> para <strong>somar</strong> cada preço no <code>total</code> (com <code>+=</code>). A saída deve terminar com <code>Total: R$ 20.65</code>.</p>
+<pre class="script" data-file="main.py">precos = [4.50, 12.90, 3.25]
+total = 0
+for preco in precos:
+    print(preco)
+print(f"Total: R$ {total:.2f}")
+</pre>
+<pre class="solucao" data-file="main.py">precos = [4.50, 12.90, 3.25]
+total = 0
+for preco in precos:
+    total += preco
+print(f"Total: R$ {total:.2f}")
+</pre>
+</div>
+
+<hr>
+
+<h2>4. Dois detalhes que vale saber</h2>
+
+<h3>A variável continua existindo depois do laço</h3>
+<pre class="file" data-file="depois.py">for letra in "sol":
+    print(letra)
+print(f"Depois do laço, letra vale {letra}")
+</pre>
+
+<pre class="term">$ python3 depois.py
+s
+o
+l
+Depois do laço, letra vale l</pre>
+
+<p>Quando o laço termina, a variável fica com o <strong>último</strong> valor que recebeu: <code>l</code>, a última letra. Dá para usar esse valor, mas não conte muito com isso: fica mais claro usar a variável do laço só dentro dele.</p>
+
+<h3>Lista vazia: zero voltas</h3>
+<pre class="file" data-file="vazia.py">pendentes = []
+for tarefa in pendentes:
+    print(f"Falta: {tarefa}")
+print("Fim da lista de tarefas.")
+</pre>
+
+<pre class="term">$ python3 vazia.py
+Fim da lista de tarefas.</pre>
+
+<p><code>[]</code> é uma lista sem nenhum item. Não há nada para percorrer, então o bloco não roda nenhuma vez, e o programa segue. Não é erro: é a Ana sem tarefas pendentes. O mesmo vale para um texto vazio, <code>""</code>.</p>
+
+<hr>
+
+<h2>5. E para contar de 1 a 10?</h2>
+<p>O <code>for</code> percorre <strong>sequências</strong>: textos, listas e outras. Um número sozinho, como <code>10</code>, não é uma sequência (veja o erro em <a href="#errado">Quando dá errado</a>). Para contar, o Python tem a função <code>range()</code> ("faixa"), que fabrica a sequência de números para o <code>for</code> percorrer:</p>
+
+<pre class="file" data-file="contador_for.py">for contador in range(1, 6):
+    print(f"Volta {contador}")
+</pre>
+
+<pre class="term">$ python3 contador_for.py
+Volta 1
+Volta 2
+Volta 3
+Volta 4
+Volta 5</pre>
+
+<p>É o mesmo resultado do primeiro <code>while</code> da aula anterior, em duas linhas. Por que <code>range(1, 6)</code> para ir até 5? Essa é a próxima aula: <a href="range.html">range()</a>.</p>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+<p>Mostrar cada item de uma lista dá para fazer com <code>while</code>, usando um contador como <strong>posição</strong> na lista (o <code>compras[i]</code> pega o item da posição <code>i</code>, contando do zero, como nos <a href="strings-fatias.html">índices de texto</a>):</p>
+
+<pre class="file" data-file="while_indice.py">compras = ["pão", "leite", "café"]
+i = 0
+while i &lt; len(compras):
+    print(f"- {compras[i]}")
+    i += 1
+</pre>
+
+<p>…ou com <code>for</code>, direto nos itens:</p>
+
+<pre class="file" data-file="for_direto.py">compras = ["pão", "leite", "café"]
+for item in compras:
+    print(f"- {item}")
+</pre>
+
+<p>Os dois mostram exatamente a mesma coisa:</p>
+
+<pre class="term">$ python3 while_indice.py
+- pão
+- leite
+- café
+$ python3 for_direto.py
+- pão
+- leite
+- café</pre>
+
+<p>A versão com <code>for</code> tem menos peças para dar errado: não tem contador para esquecer de somar, nem condição para errar por um (<code>&lt;</code> ou <code>&lt;=</code>?). Quem programa em Python prefere o <code>for</code> sempre que o trabalho é "passar por cada item".</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Situação</th><th>Qual usar</th></tr>
+<tr><td>Fazer algo com cada letra de um texto ou cada item de uma lista</td><td><code>for item in sequencia:</code></td></tr>
+<tr><td>Repetir um número conhecido de vezes (contar de 1 a 10)</td><td><code>for numero in range(…):</code> (aula <a href="range.html">range()</a>)</td></tr>
+<tr><td>Repetir sem saber quantas vezes: até a meta, até digitar 0, até a resposta ser válida</td><td><code>while condição:</code> (aula <a href="while.html">while</a>)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Esqueceu o <code>in</code></strong>
+<pre class="file" data-file="sem_in.py">for letra "Ana":
+    print(letra)
+</pre>
+<pre class="term">$ python3 sem_in.py
+  File "/home/ana/sem_in.py", line 1
+    for letra "Ana":
+              ^^^^^
+SyntaxError: invalid syntax</pre>
+<p>"Erro de sintaxe: sintaxe inválida". Aqui o Python não dá dica do que faltou, mas os <code>^^^^^</code> apontam o lugar: logo depois da variável ele esperava o <code>in</code> e encontrou o texto <code>"Ana"</code>. <strong>Como consertar:</strong> <code>for letra in "Ana":</code>. Todo <code>for</code> tem as quatro partes: <code>for</code>, a variável, <code>in</code> e o que percorrer.</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu os dois-pontos</strong>
+<pre class="file" data-file="for_dois_pontos.py">for letra in "Ana"
+    print(letra)
+</pre>
+<pre class="term">$ python3 for_dois_pontos.py
+  File "/home/ana/for_dois_pontos.py", line 1
+    for letra in "Ana"
+                      ^
+SyntaxError: expected ':'</pre>
+<p>"Era esperado <code>:</code>", e o <code>^</code> mostra onde. <strong>Como consertar:</strong> <code>for letra in "Ana":</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Tentou percorrer um número</strong>
+<pre class="file" data-file="numero.py">for numero in 10:
+    print(numero)
+</pre>
+<pre class="term">$ python3 numero.py
+Traceback (most recent call last):
+  File "/home/ana/numero.py", line 1, in &lt;module&gt;
+    for numero in 10:
+                  ^^
+TypeError: 'int' object is not iterable</pre>
+<p>"Erro de tipo: um objeto <code>int</code> (número inteiro) não é <strong>iterável</strong>". <strong>Iterável</strong> é o nome técnico de "coisa que dá para percorrer item por item": textos e listas são; um número, não. O 10 é um valor só; o Python não sabe que você queria "de 1 a 10" ou "de 0 a 9". <strong>Como consertar:</strong> use <code>range()</code>: <code>for numero in range(1, 11):</code> (aula <a href="range.html">range()</a>).</p>
+</div>
+
+<div class="cenario">
+<strong>Usou a lista no lugar do item (plural × singular)</strong>
+<pre class="file" data-file="plural.py">notas = [7.5, 8.0, 6.5, 9.0]
+soma = 0
+for nota in notas:
+    soma += notas
+print(f"Soma: {soma}")
+</pre>
+<pre class="term">$ python3 plural.py
+Traceback (most recent call last):
+  File "/home/ana/plural.py", line 4, in &lt;module&gt;
+    soma += notas
+TypeError: unsupported operand type(s) for +=: 'int' and 'list'</pre>
+<p>"Erro de tipo: tipos de operando não suportados para <code>+=</code>: <code>int</code> e <code>list</code>". Na linha 4, o programa tentou somar ao número <code>soma</code> a <strong>lista inteira</strong> <code>notas</code>, com <strong>s</strong>, e não a nota da vez. Uma letra de diferença. <strong>Como consertar:</strong> <code>soma += nota</code>, no singular.</p>
+</div>
+
+<div class="cenario">
+<strong>O <code>print</code> ficou dentro do laço</strong>
+<p>Este não dá mensagem de erro; dá uma saída estranha:</p>
+<pre class="file" data-file="dentro.py">precos = [4.50, 12.90, 3.25]
+total = 0
+for preco in precos:
+    total += preco
+    print(f"Total: R$ {total:.2f}")
+</pre>
+<pre class="term">$ python3 dentro.py
+Total: R$ 4.50
+Total: R$ 17.40
+Total: R$ 20.65</pre>
+<p>O <code>print</code> tem 4 espaços na frente, então faz parte do laço e roda a cada volta, mostrando a soma pela metade. <strong>Como consertar:</strong> tire a indentação do <code>print</code>, para ele rodar uma vez só, depois do laço. (Às vezes é exatamente isso que se quer, um "subtotal" a cada item. A indentação decide.)</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu uma vírgula na lista</strong>
+<pre class="file" data-file="virgula.py">compras = ["pão", "leite" "café"]
+for item in compras:
+    print(f"- {item}")
+</pre>
+<pre class="term">$ python3 virgula.py
+- pão
+- leitecafé</pre>
+<p>Nenhum erro, mas o leite e o café viraram um item só. Quando dois textos ficam lado a lado sem nada entre eles, o Python os <strong>junta</strong> num texto só (aula <a href="strings-juntar.html">Juntar e Repetir Textos</a>). A lista ficou com 2 itens em vez de 3. <strong>Como consertar:</strong> ponha a vírgula: <code>["pão", "leite", "café"]</code>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>for letra in "texto":</code></td><td>Roda o bloco uma vez para cada letra</td></tr>
+<tr><td><code>for item in lista:</code></td><td>Roda o bloco uma vez para cada item, na ordem da lista</td></tr>
+<tr><td><code>["pão", "leite"]</code></td><td>Uma lista: itens entre colchetes, separados por vírgula</td></tr>
+<tr><td><code>[]</code></td><td>Lista vazia: o <code>for</code> dá zero voltas</td></tr>
+<tr><td><code>len(lista)</code></td><td>Quantos itens a lista tem</td></tr>
+<tr><td><code>total += item</code> dentro do laço</td><td>Acumular (somar) a cada volta</td></tr>
+<tr><td><code>if …:</code> dentro do laço</td><td>Fazer algo só com alguns itens (contar, escolher)</td></tr>
+<tr><td><code>for numero in range(1, 6):</code></td><td>Contar de 1 a 5 (aula <a href="range.html">range()</a>)</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>SyntaxError: invalid syntax</code> na linha do <code>for</code></td><td>Faltou o <code>in</code></td></tr>
+<tr><td><code>SyntaxError: expected ':'</code></td><td>Faltaram os dois-pontos</td></tr>
+<tr><td><code>TypeError: 'int' object is not iterable</code></td><td>Tentou percorrer um número: use <code>range()</code></td></tr>
+<tr><td><code>TypeError: unsupported operand type(s) for +=: 'int' and 'list'</code></td><td>Usou a lista (plural) no lugar do item (singular)</td></tr>
+<tr><td>O resultado aparece repetido, pela metade</td><td>O <code>print</code> ficou indentado, dentro do laço</td></tr>
+<tr><td>Dois itens grudados (<code>leitecafé</code>)</td><td>Faltou uma vírgula entre os textos da lista</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Complete o laço</h3>
+<p>Complete para mostrar cada fruta da lista:</p>
+<div class="ex-code">frutas = ["maçã", "banana", "uva"]<br><input data-answer="for" aria-label="palavra-chave"> fruta <input data-answer="in" aria-label="palavra-chave"> frutas:<br>&nbsp;&nbsp;&nbsp;&nbsp;print(fruta)</div>
+</div>
+
+<div class="exercise">
+<h3>2. Quantas voltas?</h3>
+<p>Quantas voltas dá o laço <code>for letra in "Python":</code>? Responda com um número.</p>
+<div class="ex-code">São <input data-answer="6" aria-label="número de voltas"> voltas.</div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">3. O que este programa mostra? <code>soma = 0</code> / <code>for n in [2, 3, 5]:</code> / <code>&nbsp;&nbsp;&nbsp;&nbsp;soma += n</code> / <code>print(soma)</code></p>
+<label><input type="radio" name="q3"> <code>2</code>, <code>5</code> e <code>10</code>, um por linha</label>
+<label><input type="radio" name="q3"> <code>5</code></label>
+<label><input type="radio" name="q3"> <code>10</code></label>
+<label><input type="radio" name="q3"> <code>[2, 3, 5]</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Por que <code>for numero in 10:</code> dá <code>TypeError: 'int' object is not iterable</code>?</p>
+<label><input type="radio" name="q4"> Porque faltaram os dois-pontos</label>
+<label><input type="radio" name="q4"> Porque um número não é uma sequência que dê para percorrer; para contar, use <code>range()</code></label>
+<label><input type="radio" name="q4"> Porque a variável <code>numero</code> não foi criada antes</label>
+<label><input type="radio" name="q4"> Porque o <code>for</code> só funciona com textos</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Depois de <code>for letra in "pão":</code> terminar, quanto vale <code>letra</code>?</p>
+<label><input type="radio" name="q5"> <code>"o"</code>, a última letra</label>
+<label><input type="radio" name="q5"> <code>"p"</code>, a primeira letra</label>
+<label><input type="radio" name="q5"> <code>"pão"</code></label>
+<label><input type="radio" name="q5"> A variável deixa de existir</label>
+</div>
+
+<h3>Missão final: as letras da mágica</h3>
+
+<div class="trypy" data-goal="out:aparece 5 vezes;;src:\bfor\b">
+<p class="try-task"><strong>Missão:</strong> quantas vezes a letra <code>a</code> aparece em <code>abracadabra</code>? Escreva um <code>for</code> no lugar do comentário que percorra a palavra e some 1 em <code>quantos</code> a cada letra <code>a</code>.</p>
+<pre class="script" data-file="main.py">palavra = "abracadabra"
+quantos = 0
+# escreva o for aqui
+
+print(f"A letra a aparece {quantos} vezes.")
+</pre>
+<pre class="solucao" data-file="main.py">palavra = "abracadabra"
+quantos = 0
+for letra in palavra:
+    if letra == "a":
+        quantos += 1
+print(f"A letra a aparece {quantos} vezes.")
+</pre>
+</div>
+
+<p>No lab, saiu <code>A letra a aparece 5 vezes.</code> Depois, troque a letra procurada por <code>"b"</code> e por <code>"r"</code>.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>for item in sequencia:</code> ("para cada item em…") roda o bloco uma vez para cada item, do primeiro ao último, e para sozinho.</li>
+  <li>Dá para percorrer um <strong>texto</strong> (letra por letra) e uma <strong>lista</strong> (item por item). Uma lista se escreve entre colchetes, com os itens separados por vírgula.</li>
+  <li>A variável do laço é criada pelo próprio <code>for</code>; depois do laço, ela fica com o último valor.</li>
+  <li>Acumuladores e contadores funcionam igual ao <code>while</code>: crie antes do laço, atualize dentro, use o resultado depois.</li>
+  <li>Sequência vazia: zero voltas, sem erro. Número sozinho não se percorre: para contar, use <a href="range.html">range()</a>.</li>
+  <li>Prefira o <code>for</code> para "passar por cada item"; deixe o <code>while</code> para quando não se sabe quantas voltas vão ser.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
