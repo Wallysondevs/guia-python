@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Operadores de Atribuição — =, +=, -=, *= e companhia | Guia Python</title>
+<meta name="description" content="Os operadores de atribuição do Python para quem nunca programou: o = que guarda um valor, x = x + 1, os atalhos +=, -=, *=, /=, //=, %= e **=, o += com textos, por que o Python não tem ++ (e o ++contador que não faz nada) e os erros reais: NameError, =+ trocado e + = separado.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Operadores de Atribuição (+=)</span></h1>
+
+<p class="intro">Um programa vive atualizando valores: o estoque diminui a cada venda, o total do caixa aumenta a cada cliente, o preço sobe com o reajuste. Para mudar o valor de uma variável a partir do valor que ela já tem, você escreve <code>estoque = estoque - 3</code>. É tão comum que o Python tem um atalho: <code>estoque -= 3</code>. Nesta aula você vai entender o <code>=</code> de verdade (ele não é o "igual" da Matemática), conhecer os atalhos <code>+=</code>, <code>-=</code>, <code>*=</code> e companhia, e descobrir por que o <code>contador++</code> de outras linguagens não existe no Python.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que o <code>=</code> faz: guardar, e não comparar.</li>
+  <li>Por que <code>estoque = estoque - 3</code> faz sentido no Python (e não na Matemática).</li>
+  <li>Os atalhos: <code>+=</code>, <code>-=</code>, <code>*=</code>, <code>/=</code>, <code>//=</code>, <code>%=</code> e <code>**=</code>.</li>
+  <li>A acumular um total começando do zero.</li>
+  <li>Que o <code>+=</code> também junta textos.</li>
+  <li>Que o Python não tem <code>++</code> nem <code>--</code>, e o perigo do <code>++contador</code>.</li>
+  <li>Os erros reais: <code>+=</code> numa variável que não existe, <code>=+</code> trocado, <code>+ =</code> separado.</li>
+</ul>
+</div>
+
+<p>Os programas desta aula rodaram no <strong>Python 3.14</strong> da máquina da Ana (usuária <code>ana</code>, computador <code>notebook</code>), e podem ser repetidos no editor do guia.</p>
+
+<hr>
+
+<h2>A ideia: o quadro do estoque</h2>
+<p>Na parede da padaria há um quadro branco com o estoque do dia: "Pães: 20". Quando um cliente leva 3, a Ana não escreve uma conta no quadro; ela <strong>lê</strong> o número que está lá (20), faz a conta de cabeça (20 − 3 = 17), <strong>apaga</strong> o 20 e escreve 17 no lugar.</p>
+
+<p>Uma variável é esse quadro, e o <code>=</code> é o gesto de apagar e escrever. Ler, calcular, guardar de volta: é isso que fazem todos os operadores desta aula.</p>
+
+<hr>
+
+<h2>1. O <code>=</code> guarda, não compara</h2>
+<p>Na Matemática, <code>x = x - 3</code> é um absurdo: nenhum número é igual a ele mesmo menos 3. No Python, o <code>=</code> não quer dizer "é igual". Ele é uma <strong>ordem</strong>: "calcule o que está à direita e guarde na variável da esquerda". Por isso ele se chama operador de <strong>atribuição</strong> (atribuir = dar um valor a alguém).</p>
+
+<pre class="file" data-file="estoque_menos.py">estoque = 20
+print("Antes:", estoque)
+estoque = estoque - 3
+print("Depois:", estoque)
+</pre>
+
+<pre class="term">$ python3 estoque_menos.py
+Antes: 20
+Depois: 17
+</pre>
+
+<p>O que acontece na linha 3, passo a passo:</p>
+<ol class="passo">
+  <li>O Python olha só o lado <strong>direito</strong>: <code>estoque - 3</code>.</li>
+  <li>Lê o valor atual de <code>estoque</code>: 20.</li>
+  <li>Faz a conta: 20 − 3 = 17.</li>
+  <li>Só agora olha o lado esquerdo e guarda o 17 em <code>estoque</code>. O 20 é "apagado".</li>
+</ol>
+
+<p>A ordem é sempre essa: <strong>primeiro a direita, depois a esquerda</strong>. Para <strong>perguntar</strong> se dois valores são iguais existe outro sinal, o <code>==</code>, com dois iguais (aula <a href="operadores-comparacao.html">Comparações</a>).</p>
+
+<hr>
+
+<h2>2. O atalho: <code>+=</code> e <code>-=</code></h2>
+<p>Escrever o nome da variável duas vezes, <code>estoque = estoque - 3</code>, cansa e abre espaço para erro de digitação. O atalho junta o operador com o <code>=</code>:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita longa</th><th>Atalho</th><th>Lê-se</th></tr>
+<tr><td><code>estoque = estoque - 3</code></td><td><code>estoque -= 3</code></td><td>"tire 3 do estoque"</td></tr>
+<tr><td><code>total = total + 4.5</code></td><td><code>total += 4.5</code></td><td>"some 4,5 ao total"</td></tr>
+</table>
+</div>
+
+<p>O caso mais comum de todos é o <strong>acumulador</strong>: uma variável que começa em zero e vai somando. O caixa da padaria, venda por venda:</p>
+
+<pre class="file" data-file="caixa.py">total = 0
+total += 4.5
+print(total)
+total += 12.0
+print(total)
+total += 0.75
+print("Total do dia:", total)
+</pre>
+
+<pre class="term">$ python3 caixa.py
+4.5
+16.5
+Total do dia: 17.25
+</pre>
+
+<dl class="anatomy">
+  <dt>total = 0</dt><dd>O caixa abre zerado. Esse começo é <strong>obrigatório</strong>: o <code>+=</code> precisa ler o valor que já existe. Você vai ver o erro em <a href="#errado">Quando dá errado</a>.</dd>
+  <dt>total += 4.5</dt><dd>Primeira venda: 0 + 4,5 = 4,5.</dd>
+  <dt>total += 12.0</dt><dd>Segunda venda: 4,5 + 12 = 16,5.</dd>
+  <dt>total += 0.75</dt><dd>Terceira venda: 16,5 + 0,75 = 17,25.</dd>
+</dl>
+
+<p>O <code>+=</code> e o operador <code>+</code> não têm espaço entre os dois sinais: é <code>+=</code> grudado. Em volta dele, um espaço de cada lado, como em qualquer operador.</p>
+
+<div class="trypy" data-goal="out:Total: 13.5;;src:\+=">
+<p class="try-task"><strong>Missão:</strong> o caixa começa zerado e teve três vendas: R$ 4,50, R$ 6,00 e R$ 3,00. Some as três ao <code>total</code> usando <code>+=</code>, uma linha para cada venda.</p>
+<pre class="script" data-file="main.py">total = 0
+print("Total:", total)
+</pre>
+<pre class="solucao" data-file="main.py">total = 0
+total += 4.5
+total += 6.0
+total += 3.0
+print("Total:", total)
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Todos os atalhos</h2>
+<p>Cada operador aritmético (aula <a href="operadores-aritmeticos.html">Operadores Aritméticos</a>) tem o seu atalho. Neste programa, a mesma variável passa por todos eles, um depois do outro:</p>
+
+<pre class="file" data-file="todos.py">x = 10
+x += 5
+print("+=", x)
+x -= 3
+print("-=", x)
+x *= 2
+print("*=", x)
+x /= 4
+print("/=", x)
+x //= 2
+print("//=", x)
+x %= 2
+print("%=", x)
+y = 3
+y **= 4
+print("**=", y)
+</pre>
+
+<pre class="term">$ python3 todos.py
++= 15
+-= 12
+*= 24
+/= 6.0
+//= 3.0
+%= 1.0
+**= 81
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Atalho</th><th>É o mesmo que</th><th>No programa</th></tr>
+<tr><td><code>x += 5</code></td><td><code>x = x + 5</code></td><td>10 + 5 = 15</td></tr>
+<tr><td><code>x -= 3</code></td><td><code>x = x - 3</code></td><td>15 − 3 = 12</td></tr>
+<tr><td><code>x *= 2</code></td><td><code>x = x * 2</code></td><td>12 × 2 = 24</td></tr>
+<tr><td><code>x /= 4</code></td><td><code>x = x / 4</code></td><td>24 ÷ 4 = 6.0 (a divisão <code>/</code> sempre dá <code>float</code>)</td></tr>
+<tr><td><code>x //= 2</code></td><td><code>x = x // 2</code></td><td>6.0 // 2 = 3.0 (continua <code>float</code>)</td></tr>
+<tr><td><code>x %= 2</code></td><td><code>x = x % 2</code></td><td>o resto de 3.0 ÷ 2 = 1.0</td></tr>
+<tr><td><code>y **= 4</code></td><td><code>y = y ** 4</code></td><td>3⁴ = 81</td></tr>
+</table>
+</div>
+
+<p>Repare que, depois do <code>/=</code>, o <code>x</code> virou <code>float</code> e nunca mais voltou a ser <code>int</code>: os atalhos seguem as mesmas regras dos operadores. Isso pega muita gente de surpresa:</p>
+
+<pre class="file" data-file="metade.py">paes = 12
+paes /= 2
+print(paes)
+print(type(paes))
+</pre>
+
+<pre class="term">$ python3 metade.py
+6.0
+&lt;class 'float'&gt;
+</pre>
+
+<p>Para continuar com um inteiro, use <code>paes //= 2</code>.</p>
+
+<h3>O reajuste de preço com <code>*=</code></h3>
+<p>Um aumento de 10% é multiplicar por 1,10. Com o atalho:</p>
+
+<pre class="file" data-file="aumento.py">preco = 20.0
+preco *= 1.10
+print(preco)
+</pre>
+
+<pre class="term">$ python3 aumento.py
+22.0
+</pre>
+
+<hr>
+
+<h2>4. O <code>+=</code> com textos</h2>
+<p>Como o <code>+</code> junta textos, o <code>+=</code> acrescenta um pedaço ao fim de um texto:</p>
+
+<pre class="file" data-file="texto_mais.py">mensagem = "Bom dia"
+mensagem += ", Ana"
+mensagem += "!"
+print(mensagem)
+</pre>
+
+<pre class="term">$ python3 texto_mais.py
+Bom dia, Ana!
+</pre>
+
+<p>O <code>*=</code> também funciona com texto (repete), como o <code>*</code>. Mais sobre isso na aula <a href="strings-juntar.html">Juntar e Repetir Textos</a>.</p>
+
+<hr>
+
+<h2>5. O Python não tem <code>++</code></h2>
+<p>Em C, Java e JavaScript, <code>contador++</code> soma 1 a uma variável. O Python não tem esse operador, de propósito: <code>contador += 1</code> já é curto e não deixa dúvida. Veja o que acontece quando alguém acostumado com outra linguagem tenta:</p>
+
+<pre class="file" data-file="mais_mais.py">contador = 0
+contador++
+print(contador)
+</pre>
+
+<pre class="term">$ python3 mais_mais.py
+  File "/home/ana/mais_mais.py", line 2
+    contador++
+              ^
+SyntaxError: invalid syntax
+</pre>
+
+<p>Pelo menos, aqui, o Python reclama. Pior é com os sinais <strong>antes</strong> do nome:</p>
+
+<pre class="file" data-file="mais_mais2.py">contador = 0
+++contador
+print(contador)
+</pre>
+
+<pre class="term">$ python3 mais_mais2.py
+0
+</pre>
+
+<p><strong>Nenhum erro, e o contador continua zero.</strong> Para o Python, <code>++contador</code> é <code>+(+contador)</code>: o sinal de "mais" duas vezes, como em "mais mais 5", que continua sendo 5. A linha calcula um valor, não guarda em lugar nenhum, e segue em frente. O mesmo vale para <code>--contador</code> (menos com menos dá mais). <strong>Para somar 1, escreva <code>contador += 1</code>.</strong></p>
+
+<hr>
+
+<h2>Formas diferentes de atualizar uma variável</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>estoque -= 3</code></td><td><strong>O costume</strong>: curto e claro, sempre que a variável é atualizada a partir dela mesma</td></tr>
+<tr><td><code>estoque = estoque - 3</code></td><td>Funciona igual. Útil enquanto você se acostuma, ou quando a conta é mais complicada que um operador só</td></tr>
+<tr><td><code>novo_estoque = estoque - 3</code></td><td>Quando você quer <strong>manter</strong> o valor antigo (para comparar, mostrar o "antes"…)</td></tr>
+<tr><td><code>estoque += 3 * 10</code></td><td>O lado direito pode ser uma conta inteira: ela é feita primeiro (3 × 10 = 30) e só então somada</td></tr>
+<tr><td><code>contador += 1</code></td><td>Contar de um em um. No Python, nunca <code>contador++</code></td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>Mais dois jeitos de atribuir</strong>
+<p>O <code>=</code> tem outras formas que você vai encontrar: <code>a = b = 0</code> guarda o mesmo valor em duas variáveis, e <code>nome, idade = "Ana", 30</code> guarda dois valores de uma vez (aula <a href="atribuicao-multipla.html">Atribuição Múltipla</a>). Existe ainda o <code>:=</code>, apelidado de "operador morsa" (o sinal lembra os olhos e as presas de uma morsa), que guarda um valor no meio de uma expressão; ele é mais avançado e só aparece em casos especiais.</p>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong><code>+=</code> numa variável que não existe: <code>NameError</code></strong>
+<p>A Ana esqueceu de abrir o caixa com zero:</p>
+<pre class="file" data-file="sem_inicio.py">total += 4.5
+print(total)
+</pre>
+<pre class="term">$ python3 sem_inicio.py
+Traceback (most recent call last):
+  File "/home/ana/sem_inicio.py", line 1, in &lt;module&gt;
+    total += 4.5
+    ^^^^^
+NameError: name 'total' is not defined
+</pre>
+<dl class="anatomy">
+  <dt>line 1</dt><dd>O erro está na linha 1.</dd>
+  <dt>^^^^^</dt><dd>Os chapeuzinhos marcam o <code>total</code>.</dd>
+  <dt>NameError: name 'total' is not defined</dt><dd>"Erro de nome: o nome 'total' não está definido". O <code>+=</code> é "leia o valor atual e some 4,5", mas não há valor atual para ler: a variável ainda não existe.</dd>
+</dl>
+<p><strong>Como consertar:</strong> dê um valor inicial antes do primeiro <code>+=</code>: <code>total = 0</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>=+</code> no lugar de <code>+=</code>: não dá erro, mas não soma</strong>
+<pre class="file" data-file="invertido.py">total = 10
+total =+ 5
+print(total)
+</pre>
+<pre class="term">$ python3 invertido.py
+5
+</pre>
+<p>Esperava 15, veio 5, e sem nenhum aviso. Com os sinais trocados, o Python leu <code>total = +5</code>: "guarde o número mais cinco". O 10 foi apagado. É um erro silencioso, difícil de achar. <strong>Como consertar:</strong> o sinal da conta vem <strong>antes</strong> do igual: <code>+=</code>, <code>-=</code>. (Uma dica para lembrar: é a mesma ordem da fala, "mais igual".)</p>
+</div>
+
+<div class="cenario">
+<strong>Espaço no meio: <code>+ =</code></strong>
+<pre class="file" data-file="espaco.py">total = 10
+total + = 5
+</pre>
+<pre class="term">$ python3 espaco.py
+  File "/home/ana/espaco.py", line 2
+    total + = 5
+            ^
+SyntaxError: invalid syntax
+</pre>
+<p>Os dois sinais formam um operador só e precisam ficar grudados. Separados, o Python vê um <code>+</code> sem nada à direita e, logo depois, um <code>=</code> perdido; o chapeuzinho aponta o <code>=</code>. <strong>Como consertar:</strong> <code>total += 5</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Somar um número a um texto: <code>TypeError</code></strong>
+<pre class="file" data-file="texto_num.py">mensagem = "Pedido número "
+mensagem += 7
+print(mensagem)
+</pre>
+<pre class="term">$ python3 texto_num.py
+Traceback (most recent call last):
+  File "/home/ana/texto_num.py", line 2, in &lt;module&gt;
+    mensagem += 7
+TypeError: can only concatenate str (not "int") to str
+</pre>
+<p>A mesma mensagem do <code>"texto" + 7</code>: só dá para juntar texto com texto. <strong>Como consertar:</strong> <code>mensagem += str(7)</code> (aula <a href="conversao.html">Conversão de Tipos</a>).</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Operador</th><th>Exemplo</th><th>É o mesmo que</th></tr>
+<tr><td><code>=</code></td><td><code>x = 5</code></td><td>Guarda 5 em <code>x</code></td></tr>
+<tr><td><code>+=</code></td><td><code>x += 5</code></td><td><code>x = x + 5</code></td></tr>
+<tr><td><code>-=</code></td><td><code>x -= 5</code></td><td><code>x = x - 5</code></td></tr>
+<tr><td><code>*=</code></td><td><code>x *= 5</code></td><td><code>x = x * 5</code></td></tr>
+<tr><td><code>/=</code></td><td><code>x /= 5</code></td><td><code>x = x / 5</code> (vira <code>float</code>)</td></tr>
+<tr><td><code>//=</code></td><td><code>x //= 5</code></td><td><code>x = x // 5</code></td></tr>
+<tr><td><code>%=</code></td><td><code>x %= 5</code></td><td><code>x = x % 5</code></td></tr>
+<tr><td><code>**=</code></td><td><code>x **= 5</code></td><td><code>x = x ** 5</code></td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>NameError: name 'total' is not defined</code> num <code>+=</code></td><td>Faltou o valor inicial (<code>total = 0</code>)</td></tr>
+<tr><td>O valor foi trocado em vez de somado, sem erro</td><td><code>=+</code> no lugar de <code>+=</code></td></tr>
+<tr><td><code>SyntaxError: invalid syntax</code> em <code>x++</code> ou <code>x + = 1</code></td><td>Não existe <code>++</code>; e o <code>+=</code> vai grudado</td></tr>
+<tr><td>O contador não sai do zero, sem erro</td><td><code>++contador</code> não faz nada: use <code>contador += 1</code></td></tr>
+<tr><td>Um inteiro virou <code>6.0</code></td><td>Usou <code>/=</code>; para inteiro, <code>//=</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Qual o valor final?</h3>
+<p>Escreva o valor de <code>n</code> depois de cada linha (cada linha continua da anterior, começando com <code>n = 4</code>):</p>
+<div class="ex-code">n += 6   → <input data-answer="10" aria-label="depois de n += 6">
+n *= 3   → <input data-answer="30" aria-label="depois de n *= 3">
+n -= 5   → <input data-answer="25" aria-label="depois de n -= 5">
+n //= 2  → <input data-answer="12" aria-label="depois de n //= 2"></div>
+</div>
+
+<div class="exercise">
+<h3>2. Somar um</h3>
+<p>Complete a forma Python de somar 1 ao contador:</p>
+<div class="ex-code">contador <input data-answer="+=" aria-label="operador"> 1</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. O que <code>estoque = estoque - 3</code> faz?</p>
+<label><input type="radio" name="q3"> Pergunta se o estoque é igual a ele mesmo menos 3</label>
+<label><input type="radio" name="q3"> Calcula o estoque atual menos 3 e guarda o resultado em <code>estoque</code></label>
+<label><input type="radio" name="q3"> Dá erro, porque a variável aparece dos dois lados</label>
+<label><input type="radio" name="q3"> Cria uma variável nova chamada <code>estoque - 3</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Depois de <code>pontos = 10</code> e <code>pontos =+ 2</code>, quanto vale <code>pontos</code>?</p>
+<label><input type="radio" name="q4"> <code>12</code></label>
+<label><input type="radio" name="q4"> <code>8</code></label>
+<label><input type="radio" name="q4"> <code>2</code></label>
+<label><input type="radio" name="q4"> Dá <code>SyntaxError</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. Depois de <code>x = 9</code> e <code>x /= 3</code>, o que <code>print(x)</code> mostra?</p>
+<label><input type="radio" name="q5"> <code>3</code></label>
+<label><input type="radio" name="q5"> <code>27</code></label>
+<label><input type="radio" name="q5"> <code>0</code></label>
+<label><input type="radio" name="q5"> <code>3.0</code></label>
+</div>
+
+<h3>Missão final: o estoque do dia</h3>
+
+<div class="trypy" data-goal="out:Estoque: 68;;src:-=;;src:\+=">
+<p class="try-task"><strong>Missão:</strong> a padaria abriu com 50 pães. Pela manhã, vendeu 12 (use <code>-=</code>). À tarde, chegaram 3 caixas de 10 pães (use <code>+=</code> com a conta <code>3 * 10</code>). Atualize o estoque antes do <code>print</code>.</p>
+<pre class="script" data-file="main.py">estoque = 50
+print("Estoque:", estoque)
+</pre>
+<pre class="solucao" data-file="main.py">estoque = 50
+estoque -= 12
+estoque += 3 * 10
+print("Estoque:", estoque)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>O <code>=</code> <strong>guarda</strong>: calcula o lado direito e põe o resultado na variável da esquerda. Para comparar, é <code>==</code>.</li>
+  <li><code>estoque = estoque - 3</code> lê o valor atual, faz a conta e guarda o novo valor no lugar.</li>
+  <li>Os atalhos juntam o operador com o igual: <code>+=</code>, <code>-=</code>, <code>*=</code>, <code>/=</code>, <code>//=</code>, <code>%=</code>, <code>**=</code>. <code>x += 5</code> é o mesmo que <code>x = x + 5</code>.</li>
+  <li>Um acumulador precisa começar com um valor: <code>total = 0</code>, senão o <code>+=</code> dá <code>NameError</code>.</li>
+  <li><code>/=</code> transforma o valor em <code>float</code>, como o <code>/</code>.</li>
+  <li><code>+=</code> também acrescenta texto ao fim de um texto.</li>
+  <li>Não existe <code>++</code>: <code>contador++</code> dá <code>SyntaxError</code>, e <code>++contador</code> não faz nada, sem avisar. Use <code>contador += 1</code>.</li>
+  <li>Cuidado com <code>=+</code> (troca o valor em vez de somar) e com <code>+ =</code> separado (<code>SyntaxError</code>).</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
