@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Números — int e float, do zero | Guia Python</title>
+<meta name="description" content="Números em Python para quem nunca programou: inteiros (int) sem limite de tamanho, números com casas decimais (float), o ponto no lugar da vírgula, o sublinhado em 1_000_000, a notação científica 1.5e3, por que 0.1 + 0.2 dá 0.30000000000000004 e os erros reais do Python 3.14.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Números (int e float)</span></h1>
+
+<p class="intro">Quase todo programa faz conta: quantos pães sobraram na padaria, quanto custa o pedido, qual a média da turma. Para isso, o Python tem dois tipos de número que você vai usar o tempo todo: o <code>int</code>, para os números <strong>inteiros</strong> (3, 0, -5, 1250000), e o <code>float</code>, para os números <strong>com casas decimais</strong> (0.75, 25.9, -3.5). Nesta aula você vai ver como escrever cada um, por que o Python usa <strong>ponto</strong> e não vírgula, como ele lida com números gigantes e por que <code>0.1 + 0.2</code> não dá exatamente <code>0.3</code>.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A diferença entre <code>int</code> (inteiro) e <code>float</code> (com casas decimais), e como o Python decide qual é qual.</li>
+  <li>Que o <code>int</code> do Python não tem limite de tamanho.</li>
+  <li>A escrever números grandes com sublinhado: <code>1_000_000</code>.</li>
+  <li>Por que a casa decimal é separada por <strong>ponto</strong>, e o que acontece se você usar vírgula.</li>
+  <li>Por que <code>0.1 + 0.2</code> dá <code>0.30000000000000004</code>, e como lidar com isso.</li>
+  <li>A notação científica: <code>1.5e3</code> e <code>2e-3</code>.</li>
+  <li>Os erros reais: zero à esquerda, número grande demais para mostrar, <code>float</code> que estoura.</li>
+</ul>
+</div>
+
+<p>Os programas desta aula rodaram no <strong>Python 3.14</strong> da máquina da Ana (usuária <code>ana</code>, computador <code>notebook</code>, Ubuntu 26.04), na pasta pessoal dela. Todos podem ser repetidos no editor do guia, que roda Python de verdade no navegador.</p>
+
+<hr>
+
+<h2>A ideia: contar e medir</h2>
+<p>Pense na padaria do bairro. Algumas coisas ali a gente <strong>conta</strong>: 12 pães, 3 bolos, 40 clientes. Ninguém compra "dois pães e meio". Outras coisas a gente <strong>mede</strong>: 2,5 kg de farinha, 0,75 real por pão, 1,8 litro de leite. Essas quase sempre têm uma parte depois da vírgula.</p>
+
+<p>O Python separa os números do mesmo jeito:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Tipo</th><th>Nome em inglês</th><th>Serve para</th><th>Exemplos</th></tr>
+<tr><td><code>int</code></td><td><em>integer</em>, "inteiro"</td><td>Contar: quantidades, idades, anos, posições</td><td><code>12</code>, <code>0</code>, <code>-5</code>, <code>2026</code></td></tr>
+<tr><td><code>float</code></td><td><em>floating point</em>, "ponto flutuante"</td><td>Medir: preços, pesos, médias, temperaturas</td><td><code>0.75</code>, <code>25.9</code>, <code>-3.5</code>, <code>2.0</code></td></tr>
+</table>
+</div>
+
+<p>O nome "ponto flutuante" vem do jeito como o computador guarda esses números por dentro: o ponto decimal pode "flutuar" para a esquerda ou para a direita, o que permite guardar tanto <code>0.000002</code> quanto <code>2500000.0</code>. Você não precisa saber os detalhes; basta lembrar que <code>float</code> é o número com casas decimais.</p>
+
+<p>E como o Python sabe qual é qual? Pela <strong>escrita</strong>: número sem ponto é <code>int</code>; número com ponto é <code>float</code>. Você não precisa avisar o tipo em lugar nenhum.</p>
+
+<hr>
+
+<h2>1. Números inteiros: <code>int</code></h2>
+<p>Para ter um inteiro, escreva os algarismos, sem aspas e sem ponto. A Ana anota o estoque da padaria:</p>
+
+<pre class="file" data-file="estoque.py">paes = 12
+bolos = 3
+print(paes)
+print(paes + bolos)
+print(type(paes))
+</pre>
+
+<dl class="anatomy">
+  <dt>paes = 12</dt><dd>Guarda o número 12 na variável <code>paes</code> (veja a aula <a href="variaveis.html">Variáveis</a>). Sem aspas: é um <strong>número</strong>, e não o texto "12".</dd>
+  <dt>paes + bolos</dt><dd>Uma conta: o Python soma os dois valores e entrega o resultado, 15.</dd>
+  <dt>type(paes)</dt><dd>"Tipo": pergunta ao Python o tipo do valor (aula <a href="type.html">Descobrindo o Tipo</a>).</dd>
+</dl>
+
+<pre class="term">$ python3 estoque.py
+12
+15
+&lt;class 'int'&gt;
+</pre>
+
+<p>O <code>&lt;class 'int'&gt;</code> confirma: 12 é um <code>int</code>. Inteiros também podem ser <strong>negativos</strong> (com o sinal de menos na frente, colado) ou <strong>zero</strong>:</p>
+
+<pre class="file" data-file="temperatura.py">temperatura = -5
+saldo = 0
+print(temperatura)
+print(saldo)
+print(type(temperatura))
+</pre>
+
+<pre class="term">$ python3 temperatura.py
+-5
+0
+&lt;class 'int'&gt;
+</pre>
+
+<h3>O <code>int</code> do Python não tem limite</h3>
+<p>Em muitas linguagens, o inteiro tem um tamanho máximo, e passar dele dá resultado errado. No Python, não: o <code>int</code> cresce o quanto for preciso, enquanto houver memória no computador.</p>
+
+<p>Conta a lenda que o inventor do xadrez pediu ao rei, como recompensa, 1 grão de arroz na primeira casa do tabuleiro, 2 na segunda, 4 na terceira, sempre dobrando, até a casa 64. Quanto arroz é isso? O <code>**</code> é a potência ("elevado a"); ele tem explicação completa na aula <a href="operadores-aritmeticos.html">Operadores Aritméticos</a>.</p>
+
+<pre class="file" data-file="xadrez.py"># grãos de arroz na última casa do tabuleiro de xadrez
+ultima_casa = 2 ** 63
+print(ultima_casa)
+total = 2 ** 64 - 1
+print(total)
+print(type(total))
+</pre>
+
+<pre class="term">$ python3 xadrez.py
+9223372036854775808
+18446744073709551615
+&lt;class 'int'&gt;
+</pre>
+
+<p>Mais de 18 quintilhões de grãos, calculados sem erro nenhum, e o resultado continua sendo um <code>int</code> comum. Dá para ir muito além: <code>2 ** 1000</code> é um número de <strong>302 algarismos</strong>, e o Python calcula na hora. (Existe um limite só para <strong>mostrar</strong> números com milhares de algarismos; você vai vê-lo em <a href="#errado">Quando dá errado</a>.)</p>
+
+<hr>
+
+<h2>2. Números grandes com sublinhado: <code>1_000_000</code></h2>
+<p>Quantos zeros tem <code>10000000</code>? Você teve de contar, não teve? Na escrita do dia a dia, a gente separa os milhares com ponto: 10.000.000. No Python, o ponto já tem outro uso (a casa decimal), então a separação é feita com o <strong>sublinhado</strong> <code>_</code>:</p>
+
+<pre class="file" data-file="vendas.py">vendas_do_ano = 1_250_000
+meta = 2_000_000
+print(vendas_do_ano)
+print(meta - vendas_do_ano)
+</pre>
+
+<pre class="term">$ python3 vendas.py
+1250000
+750000
+</pre>
+
+<p>Repare: o sublinhado serve só para <strong>você</strong> ler o código. Para o Python, <code>1_250_000</code> e <code>1250000</code> são exatamente o mesmo número, e o <code>print</code> mostra sem os sublinhados. As regras são poucas:</p>
+<ul>
+  <li>O sublinhado fica <strong>entre algarismos</strong>: <code>1_000</code> vale; <code>_1000</code> não é um número (é um nome de variável!) e <code>1000_</code> dá erro.</li>
+  <li>Um sublinhado por vez: <code>1__000</code>, com dois seguidos, dá erro.</li>
+  <li>O costume é separar de três em três, como os milhares, mas o Python não confere isso.</li>
+</ul>
+
+<div class="trypy" data-goal="src:2_500_000;;out:2500000">
+<p class="try-task"><strong>Missão:</strong> a padaria tem 2500000 gramas de farinha no depósito. Reescreva o número <strong>com sublinhados</strong>, separando os milhares, para ficar fácil de ler. O valor mostrado tem de continuar o mesmo.</p>
+<pre class="script" data-file="main.py">farinha_em_gramas = 2500000
+print(farinha_em_gramas)
+</pre>
+<pre class="solucao" data-file="main.py">farinha_em_gramas = 2_500_000
+print(farinha_em_gramas)
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Números com casas decimais: <code>float</code></h2>
+<p>Para ter um <code>float</code>, escreva o número com um <strong>ponto</strong> separando a parte inteira da parte decimal:</p>
+
+<pre class="file" data-file="precos.py">preco_pao = 0.75
+preco_bolo = 25.90
+print(preco_pao)
+print(preco_bolo)
+print(type(preco_bolo))
+</pre>
+
+<pre class="term">$ python3 precos.py
+0.75
+25.9
+&lt;class 'float'&gt;
+</pre>
+
+<p>Duas coisas para reparar:</p>
+<ul>
+  <li><strong>Ponto, nunca vírgula.</strong> O Python foi criado com a escrita dos números em inglês, em que a casa decimal é separada por ponto: <code>25.90</code>. A vírgula, no Python, tem outro significado (ela separa valores), e trocar um pelo outro dá um resultado bem estranho. Você vai ver em <a href="#errado">Quando dá errado</a>.</li>
+  <li><strong>O zero do fim some.</strong> Você escreveu <code>25.90</code>, e o Python mostrou <code>25.9</code>. Para ele, os dois são o mesmo número, e ele sempre mostra a forma mais curta. Para mostrar um preço com duas casas (<code>25.90</code>), use as <a href="f-strings.html">f-strings</a>: <code>f"{preco_bolo:.2f}"</code>.</li>
+</ul>
+
+<h3>Quando o resultado vira <code>float</code></h3>
+<p>Basta um <code>float</code> na conta para o resultado ser <code>float</code>. E a divisão com <code>/</code> <strong>sempre</strong> dá <code>float</code>, mesmo quando a conta é exata:</p>
+
+<pre class="file" data-file="mistura.py">print(10 / 2)
+print(3 + 0.5)
+print(2 * 1.5)
+print(4.0)
+print(type(10 / 2))
+</pre>
+
+<pre class="term">$ python3 mistura.py
+5.0
+3.5
+3.0
+4.0
+&lt;class 'float'&gt;
+</pre>
+
+<dl class="anatomy">
+  <dt>10 / 2 → 5.0</dt><dd>A divisão com uma barra sempre devolve <code>float</code>, por isso aparece <code>5.0</code>, e não <code>5</code>. (Existe a divisão que devolve inteiro, a <code>//</code>, na aula <a href="operadores-aritmeticos.html">Operadores Aritméticos</a>.)</dd>
+  <dt>3 + 0.5 → 3.5</dt><dd>Inteiro com <code>float</code>: o resultado é <code>float</code>. O Python "promove" o 3 para 3.0 antes de somar.</dd>
+  <dt>2 * 1.5 → 3.0</dt><dd>O resultado é redondo, mas continua <code>float</code>: por isso o <code>.0</code>.</dd>
+  <dt>4.0</dt><dd>Um número redondo escrito com ponto é <code>float</code>. O <code>.0</code> é o jeito de o Python mostrar "isto é um <code>float</code>, não um <code>int</code>".</dd>
+</dl>
+
+<hr>
+
+<h2>4. O mistério do <code>0.1 + 0.2</code></h2>
+<p>Abra o modo interativo do Python (aula <a href="repl.html">O Modo Interativo</a>) e faça uma conta que uma criança faz de cabeça:</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; 0.1 + 0.2
+0.30000000000000004
+&gt;&gt;&gt; 0.1 + 0.2 == 0.3
+False
+&gt;&gt;&gt; 1.1 * 3
+3.3000000000000003
+&gt;&gt;&gt; 0.5 + 0.25
+0.75
+</pre>
+
+<p>Não é defeito do Python, nem do seu computador. O <code>==</code> pergunta "é igual?" (aula <a href="operadores-comparacao.html">Comparações</a>), e o Python respondeu <code>False</code>: para ele, <code>0.1 + 0.2</code> <strong>não é</strong> igual a <code>0.3</code>. O motivo é o jeito como o computador guarda os <code>float</code>.</p>
+
+<h3>Por que isso acontece</h3>
+<p>Tente escrever <strong>um terço</strong> com casas decimais: 0,333333… Por mais "3" que você escreva, nunca fica exato; em algum momento você para e arredonda. O computador tem o mesmo problema, só que com outros números: ele guarda os <code>float</code> em <strong>binário</strong> (só com 0 e 1), e em binário o número <code>0.1</code> é uma dízima sem fim, como o um terço para nós. Ele guarda uma aproximação muito boa (cerca de 16 algarismos certos), mas não exata. Quando você soma duas aproximações, o errinho às vezes aparece lá no 17º algarismo.</p>
+
+<p>Repare que <code>0.5 + 0.25</code> deu <code>0.75</code> exato: metades, quartos e oitavos são "redondos" em binário. Já décimos e centésimos, os números do dinheiro, quase nunca são.</p>
+
+<h3>Como lidar com isso</h3>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Situação</th><th>O que fazer</th><th>Exemplo</th></tr>
+<tr><td>Mostrar o resultado</td><td>Arredonde na hora de mostrar</td><td><code>round(0.1 + 0.2, 2)</code> dá <code>0.3</code>; ou <code>f"{total:.2f}"</code></td></tr>
+<tr><td>Comparar dois <code>float</code></td><td>Não use <code>==</code>; veja se a diferença é pequenininha</td><td><code>math.isclose(0.1 + 0.2, 0.3)</code> (aula <a href="math.html">O Módulo math</a>)</td></tr>
+<tr><td>Dinheiro de verdade (um caixa, um banco)</td><td>Guarde os valores em <strong>centavos</strong>, como <code>int</code>, ou use o módulo <code>decimal</code></td><td><code>preco_em_centavos = 2590</code></td></tr>
+</table>
+</div>
+
+<pre class="term">&gt;&gt;&gt; round(0.1 + 0.2, 2)
+0.3
+</pre>
+
+<p>O <code>round(numero, casas)</code> ("arredondar") devolve o número arredondado para a quantidade de casas que você pedir. Ele tem um detalhe curioso com os números terminados em 5, que você vai ver na aula <a href="conversao.html">Conversão de Tipos</a>.</p>
+
+<div class="trypy" data-goal="outre:^0\.3\n$;;src:round">
+<p class="try-task"><strong>Missão:</strong> o programa mostra <code>0.30000000000000004</code>. Use o <code>round</code> para mostrar a soma arredondada para <strong>2 casas</strong>, ou seja, só <code>0.3</code>.</p>
+<pre class="script" data-file="main.py">print(0.1 + 0.2)
+</pre>
+<pre class="solucao" data-file="main.py">print(round(0.1 + 0.2, 2))
+</pre>
+</div>
+
+<hr>
+
+<h2>5. Notação científica: <code>1.5e3</code></h2>
+<p>Na escola, você talvez tenha visto números escritos como 1,5 × 10³ (que é 1500). O Python tem um jeito curto de escrever isso: a letra <code>e</code> (de "expoente") quer dizer "vezes 10 elevado a".</p>
+
+<pre class="term">&gt;&gt;&gt; 1.5e3
+1500.0
+&gt;&gt;&gt; 2e-3
+0.002
+&gt;&gt;&gt; 1e6
+1000000.0
+&gt;&gt;&gt; type(1e6)
+&lt;class 'float'&gt;
+</pre>
+
+<dl class="anatomy">
+  <dt>1.5e3</dt><dd>1,5 × 10³ = 1,5 × 1000 = 1500. O expoente positivo anda com a vírgula para a <strong>direita</strong>.</dd>
+  <dt>2e-3</dt><dd>2 × 10⁻³ = 2 ÷ 1000 = 0,002. O expoente negativo anda para a <strong>esquerda</strong>.</dd>
+  <dt>1e6</dt><dd>1 × 10⁶, um milhão. Atenção: o resultado é <code>1000000.0</code>, um <code>float</code>. Escrito com <code>e</code>, o número é <strong>sempre</strong> <code>float</code>, mesmo que seja redondo.</dd>
+</dl>
+
+<p>Você mesmo raramente vai escrever assim, mas o Python escreve: quando um <code>float</code> fica muito pequeno ou muito grande, ele passa a mostrá-lo em notação científica.</p>
+
+<pre class="term">&gt;&gt;&gt; 0.1 ** 10
+1.0000000000000006e-10
+&gt;&gt;&gt; 1e16
+1e+16
+&gt;&gt;&gt; 2.5e-4 * 2
+0.0005
+</pre>
+
+<p><code>1.0000000000000006e-10</code> quer dizer 0,0000000001 (com o errinho do fim, que você já conhece). <code>1e+16</code> é 1 seguido de 16 zeros: o <code>+</code> só deixa claro que o expoente é positivo. Se aparecer um <code>e</code> no meio de um resultado seu, não se assuste: é só um número muito grande ou muito pequeno.</p>
+
+<h3>O <code>float</code> tem limites, o <code>int</code> não</h3>
+<p>O <code>int</code> cresce à vontade; o <code>float</code>, não. Ele guarda só uns 16 algarismos certos e tem um tamanho máximo (perto de 1,8 × 10³⁰⁸). Veja a diferença com o mesmo número escrito dos dois jeitos:</p>
+
+<pre class="term">&gt;&gt;&gt; 9007199254740993
+9007199254740993
+&gt;&gt;&gt; 9007199254740993.0
+9007199254740992.0
+&gt;&gt;&gt; 1e308 * 10
+inf
+</pre>
+
+<p>Como <code>int</code>, o número ficou exato. Como <code>float</code>, o último algarismo virou 2: não coube. E passando do máximo, o <code>float</code> vira <code>inf</code> (de <em>infinity</em>, "infinito"). Moral: para <strong>contar</strong> coisas, use sempre <code>int</code>.</p>
+
+<hr>
+
+<h2>6. Um terceiro tipo: <code>complex</code> (só para conhecer)</h2>
+<p>O Python tem ainda um tipo de número que você provavelmente nunca vai usar fora de Matemática e Engenharia: os <strong>números complexos</strong>, com uma parte "imaginária" marcada pela letra <code>j</code>.</p>
+
+<pre class="term">&gt;&gt;&gt; 3 + 2j
+(3+2j)
+&gt;&gt;&gt; type(3 + 2j)
+&lt;class 'complex'&gt;
+</pre>
+
+<p>Fica só o registro de que ele existe: se um dia aparecer um <code>j</code> colado num número, é um <code>complex</code>. Neste guia, os números são <code>int</code> e <code>float</code>.</p>
+
+<hr>
+
+<h2>Formas diferentes de escrever o mesmo número</h2>
+<p>O mesmo valor pode ser escrito de vários jeitos. Às vezes o tipo muda junto:</p>
+
+<pre class="term">&gt;&gt;&gt; 1000000
+1000000
+&gt;&gt;&gt; 1_000_000
+1000000
+&gt;&gt;&gt; 10 ** 6
+1000000
+&gt;&gt;&gt; 1e6
+1000000.0
+&gt;&gt;&gt; .5
+0.5
+&gt;&gt;&gt; 5.
+5.0
+&gt;&gt;&gt; 5e-1
+0.5
+&gt;&gt;&gt; 1 / 2
+0.5
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Tipo</th><th>Quando usar</th></tr>
+<tr><td><code>1000000</code></td><td><code>int</code></td><td>Números pequenos (até uns 4 algarismos), em que não há o que confundir</td></tr>
+<tr><td><code>1_000_000</code></td><td><code>int</code></td><td><strong>Números grandes</strong>: o costume recomendado, fácil de ler</td></tr>
+<tr><td><code>10 ** 6</code></td><td><code>int</code></td><td>Quando a potência é o que importa (um milhão = 10⁶)</td></tr>
+<tr><td><code>1e6</code></td><td><code>float</code></td><td>Contas de ciência; evite para contar, porque vira <code>float</code></td></tr>
+<tr><td><code>0.5</code></td><td><code>float</code></td><td>Sempre: é a forma clara</td></tr>
+<tr><td><code>.5</code> e <code>5.</code></td><td><code>float</code></td><td>Funcionam, mas o ponto "solto" passa despercebido. Prefira <code>0.5</code> e <code>5.0</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Vírgula no lugar do ponto: não dá erro, mas o resultado sai estranho</strong>
+<p>É o erro mais comum de quem escreve números no Brasil. A Ana anotou o preço do pão de queijo com vírgula:</p>
+<pre class="file" data-file="virgula.py">preco = 4,50
+print(preco)
+print(preco * 2)
+print(type(preco))
+</pre>
+<pre class="term">$ python3 virgula.py
+(4, 50)
+(4, 50, 4, 50)
+&lt;class 'tuple'&gt;
+</pre>
+<p>Nenhuma mensagem de erro, e mesmo assim tudo errado. Para o Python, a vírgula <strong>separa valores</strong>. Então <code>4,50</code> não é "quatro e cinquenta": são <strong>dois números</strong>, o 4 e o 50, guardados juntos num pacote chamado <strong>tupla</strong> (<code>tuple</code>, que tem aula própria: <a href="tuplas.html">Tuplas</a>). Os parênteses em <code>(4, 50)</code> mostram isso. E o <code>* 2</code> não dobrou o preço: repetiu o pacote, <code>(4, 50, 4, 50)</code>.</p>
+<p><strong>Como consertar:</strong> casa decimal com <strong>ponto</strong>: <code>preco = 4.50</code>. Se um número seu aparecer entre parênteses, desconfie de uma vírgula.</p>
+</div>
+
+<div class="cenario">
+<strong>Zero à esquerda: <code>SyntaxError</code></strong>
+<p>O CEP de São Paulo começa com zero. A Ana tentou guardar o começo dele como número:</p>
+<pre class="file" data-file="cep.py">cep = 01310
+print(cep)
+</pre>
+<pre class="term">$ python3 cep.py
+  File "/home/ana/cep.py", line 1
+    cep = 01310
+          ^
+SyntaxError: leading zeros in decimal integer literals are not permitted; use an 0o prefix for octal integers
+</pre>
+<p>Linha por linha:</p>
+<dl class="anatomy">
+  <dt>File "/home/ana/cep.py", line 1</dt><dd>O arquivo e a linha do problema: a linha 1.</dd>
+  <dt>cep = 01310</dt><dd>A linha, copiada do seu código.</dd>
+  <dt>^</dt><dd>O "chapeuzinho" aponta para onde o Python se perdeu: o zero do começo.</dd>
+  <dt>SyntaxError</dt><dd>"Erro de sintaxe": o código não está escrito de um jeito que o Python entenda. O programa nem começou a rodar; por isso não aparece a palavra <code>Traceback</code>.</dd>
+  <dt>leading zeros in decimal integer literals are not permitted</dt><dd>"Zeros à esquerda em números inteiros decimais não são permitidos".</dd>
+  <dt>use an 0o prefix for octal integers</dt><dd>"Use o prefixo 0o para números octais". O octal é um jeito de escrever números na base 8, que você pode ignorar. A dica está ali porque, em versões antigas do Python, um zero na frente queria dizer "octal".</dd>
+</dl>
+<p><strong>Como consertar:</strong> CEP, telefone, CPF e números de documento <strong>não são números de conta</strong>: ninguém soma dois CEPs. Guarde-os como <strong>texto</strong>, entre aspas, e o zero fica: <code>cep = "01310-100"</code> (aula <a href="strings.html">Strings</a>).</p>
+</div>
+
+<div class="cenario">
+<strong>Dois sublinhados seguidos: <code>invalid decimal literal</code></strong>
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; 1_000__000
+  File "&lt;python-input-0&gt;", line 1
+    1_000__000
+         ^
+SyntaxError: invalid decimal literal
+</pre>
+<p>"Número decimal inválido". O <code>-q</code> ("quieto") só abre o modo interativo sem a mensagem de boas-vindas. O <code>&lt;python-input-0&gt;</code> no lugar do nome do arquivo quer dizer que o código foi digitado no modo interativo (é a primeira linha da sessão; a contagem começa do zero). O chapeuzinho aponta o sublinhado que sobrou. Com <code>1000_</code>, sublinhado no fim, a mensagem é a mesma. <strong>Como consertar:</strong> um sublinhado só, entre algarismos: <code>1_000_000</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Um <code>int</code> grande demais para mostrar: <code>ValueError</code></strong>
+<p>O <code>int</code> não tem limite, mas <strong>transformar</strong> um <code>int</code> enorme em texto (que é o que o <code>print</code> faz) tem. É uma proteção: mostrar um número de milhões de algarismos poderia travar o programa.</p>
+<pre class="file" data-file="gigante.py">numero = 10 ** 5000
+print(numero)
+</pre>
+<pre class="term">$ python3 gigante.py
+Traceback (most recent call last):
+  File "/home/ana/gigante.py", line 2, in &lt;module&gt;
+    print(numero)
+    ~~~~~^^^^^^^^
+ValueError: Exceeds the limit (4300 digits) for integer string conversion; use sys.set_int_max_str_digits() to increase the limit
+</pre>
+<dl class="anatomy">
+  <dt>Traceback (most recent call last)</dt><dd>"Rastro (a chamada mais recente por último)": o programa começou a rodar e parou no meio por causa de um erro. Leia de baixo para cima.</dd>
+  <dt>line 2, in &lt;module&gt;</dt><dd>Linha 2, no corpo principal do programa (<code>&lt;module&gt;</code>).</dd>
+  <dt>~~~~~^^^^^^^^</dt><dd>Os tils e chapeuzinhos marcam o pedaço da linha que falhou: a chamada <code>print(numero)</code>. Repare que a linha 1, a conta, passou sem problema.</dd>
+  <dt>ValueError: Exceeds the limit (4300 digits) for integer string conversion</dt><dd>"Erro de valor: passa do limite (4300 algarismos) para converter um inteiro em texto". <code>10 ** 5000</code> tem 5001 algarismos.</dd>
+  <dt>use sys.set_int_max_str_digits() to increase the limit</dt><dd>"Use <code>sys.set_int_max_str_digits()</code> para aumentar o limite": se você realmente precisa, dá para mudar.</dd>
+</dl>
+<p>Na prática, você só esbarra nisso de propósito. Fica o aviso: a conta funciona; o que tem limite é a hora de mostrar.</p>
+</div>
+
+<div class="cenario">
+<strong>Um <code>float</code> grande demais: <code>OverflowError</code></strong>
+<pre class="file" data-file="estouro.py">print(2 ** 10000 &gt; 0)
+print(2.0 ** 10000)
+</pre>
+<pre class="term">$ python3 estouro.py
+True
+Traceback (most recent call last):
+  File "/home/ana/estouro.py", line 2, in &lt;module&gt;
+    print(2.0 ** 10000)
+          ~~~~^^~~~~~~
+OverflowError: (34, 'Numerical result out of range')
+</pre>
+<p>A linha 1 calcula <code>2 ** 10000</code> como <code>int</code> e confere que é maior que zero: <code>True</code>, sem problema. A linha 2 faz a mesma conta com <code>2.0</code>, um <code>float</code>, e o resultado passa do máximo do <code>float</code>. <code>OverflowError</code> quer dizer "erro de transbordamento", e <code>Numerical result out of range</code>, "resultado numérico fora do intervalo" (o 34 é o código desse erro no sistema). <strong>Como consertar:</strong> para números inteiros enormes, use <code>int</code>.</p>
+</div>
+
+<div class="trypy" data-goal="out:51.8;;semerro">
+<p class="try-task"><strong>Missão:</strong> a Ana quer o preço de 2 bolos de R$ 25,90, mas o programa mostra <code>(25, 90, 25, 90)</code>. Conserte o preço para o Python fazer a conta certa.</p>
+<pre class="script" data-file="main.py">preco_bolo = 25,90
+quantidade = 2
+total = preco_bolo * quantidade
+print(total)
+</pre>
+<pre class="solucao" data-file="main.py">preco_bolo = 25.90
+quantidade = 2
+total = preco_bolo * quantidade
+print(total)
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Tipo</th><th>O que é</th></tr>
+<tr><td><code>12</code>, <code>-5</code>, <code>0</code></td><td><code>int</code></td><td>Inteiro: sem ponto, sem aspas. Sem limite de tamanho</td></tr>
+<tr><td><code>1_250_000</code></td><td><code>int</code></td><td>O sublinhado separa os milhares, só para facilitar a leitura</td></tr>
+<tr><td><code>0.75</code>, <code>25.9</code>, <code>4.0</code></td><td><code>float</code></td><td>Com casas decimais: separadas por <strong>ponto</strong></td></tr>
+<tr><td><code>1.5e3</code>, <code>2e-3</code></td><td><code>float</code></td><td>Notação científica: 1,5 × 10³ e 2 × 10⁻³</td></tr>
+<tr><td><code>10 / 2</code></td><td><code>float</code></td><td>A divisão com <code>/</code> sempre dá <code>float</code>: <code>5.0</code></td></tr>
+<tr><td><code>3 + 0.5</code></td><td><code>float</code></td><td><code>int</code> com <code>float</code> dá <code>float</code></td></tr>
+<tr><td><code>round(x, 2)</code></td><td><code>float</code></td><td>Arredonda <code>x</code> para 2 casas</td></tr>
+<tr><td><code>3 + 2j</code></td><td><code>complex</code></td><td>Número complexo (só para conhecer)</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td>O número aparece entre parênteses: <code>(4, 50)</code></td><td>Vírgula no lugar do ponto: <code>4,50</code> virou uma tupla</td></tr>
+<tr><td><code>SyntaxError: leading zeros in decimal integer literals are not permitted</code></td><td>Número inteiro com zero na frente: se é CEP ou telefone, guarde como texto</td></tr>
+<tr><td><code>SyntaxError: invalid decimal literal</code></td><td>Sublinhado duplo, no começo ou no fim do número (ou uma letra colada nele)</td></tr>
+<tr><td><code>0.30000000000000004</code></td><td>Não é erro: é a aproximação do <code>float</code>. Arredonde para mostrar</td></tr>
+<tr><td><code>ValueError: Exceeds the limit (4300 digits)…</code></td><td>Tentou mostrar um <code>int</code> com mais de 4300 algarismos</td></tr>
+<tr><td><code>OverflowError: (34, 'Numerical result out of range')</code></td><td>Uma conta com <code>float</code> passou do máximo; use <code>int</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O tipo do número</h3>
+<p>Qual é o tipo (<code>int</code> ou <code>float</code>) de cada valor?</p>
+<div class="ex-code">type(2026) → &lt;class '<input data-answer="int" aria-label="tipo de 2026">'&gt;
+type(2026.0) → &lt;class '<input data-answer="float" aria-label="tipo de 2026.0">'&gt;
+type(8 / 4) → &lt;class '<input data-answer="float" aria-label="tipo de 8 / 4">'&gt;</div>
+</div>
+
+<div class="exercise">
+<h3>2. Um milhão e meio</h3>
+<p>Escreva o número um milhão e quinhentos mil como <code>int</code>, separando os milhares do jeito recomendado:</p>
+<div class="ex-code">clientes = <input data-answer="1_500_000" aria-label="número"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. O que <code>print(1.5e2)</code> mostra?</p>
+<label><input type="radio" name="q3"> <code>1.5e2</code></label>
+<label><input type="radio" name="q3"> <code>150.0</code></label>
+<label><input type="radio" name="q3"> <code>150</code></label>
+<label><input type="radio" name="q3"> <code>1.52</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. A Ana escreveu <code>peso = 2,5</code> e o <code>print(peso)</code> mostrou <code>(2, 5)</code>. Por quê?</p>
+<label><input type="radio" name="q4"> O Python arredondou o número</label>
+<label><input type="radio" name="q4"> O <code>print</code> sempre mostra parênteses</label>
+<label><input type="radio" name="q4"> A vírgula separa valores: virou um pacote com o 2 e o 5. O certo é <code>2.5</code></label>
+<label><input type="radio" name="q4"> Faltaram aspas</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Por que <code>0.1 + 0.2 == 0.3</code> dá <code>False</code>?</p>
+<label><input type="radio" name="q5"> Porque o <code>float</code> guarda uma aproximação de 0.1 e 0.2 em binário, e a soma sai com um errinho no fim</label>
+<label><input type="radio" name="q5"> Porque o Python soma errado</label>
+<label><input type="radio" name="q5"> Porque faltou escrever <code>0.10</code> e <code>0.20</code></label>
+<label><input type="radio" name="q5"> Porque <code>==</code> só funciona com textos</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. Como guardar o telefone <code>086 99999-0000</code> num programa?</p>
+<label><input type="radio" name="q6"> <code>telefone = 08699999000</code></label>
+<label><input type="radio" name="q6"> <code>telefone = 086_99999_0000</code></label>
+<label><input type="radio" name="q6"> <code>telefone = 86999990000.0</code></label>
+<label><input type="radio" name="q6"> <code>telefone = "086 99999-0000"</code></label>
+</div>
+
+<h3>Missão final: a conta do café da manhã</h3>
+
+<div class="trypy" data-goal="out:7.5;;semerro;;src:0\.75">
+<p class="try-task"><strong>Missão:</strong> cada pão custa R$ 0,75 e a Ana comprou 10. O programa está com o preço errado (vírgula) e ainda não faz a conta. Escreva o preço do jeito certo e mostre o total da compra: <code>preco_pao</code> vezes <code>quantidade</code>.</p>
+<pre class="script" data-file="main.py">preco_pao = 0,75
+quantidade = 10
+print(preco_pao)
+</pre>
+<pre class="solucao" data-file="main.py">preco_pao = 0.75
+quantidade = 10
+print(preco_pao * quantidade)
+</pre>
+</div>
+
+<p>Deu <code>7.5</code>: R$ 7,50. O zero do fim sumiu, como você já viu; para mostrar <code>7.50</code>, use as <a href="f-strings.html">f-strings</a>.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>int</code> é o número <strong>inteiro</strong> (para contar); <code>float</code> é o número <strong>com casas decimais</strong> (para medir). O Python decide pelo jeito de escrever: com ponto é <code>float</code>.</li>
+  <li>O <code>int</code> do Python não tem limite de tamanho: <code>2 ** 64 - 1</code> sai exato.</li>
+  <li>Números grandes ficam legíveis com sublinhado: <code>1_250_000</code>. O Python ignora os sublinhados.</li>
+  <li>A casa decimal é separada por <strong>ponto</strong>. Com vírgula, <code>4,50</code> vira um pacote de dois números, sem erro nenhum.</li>
+  <li>A divisão com <code>/</code> sempre dá <code>float</code>, e misturar <code>int</code> com <code>float</code> dá <code>float</code>.</li>
+  <li><code>0.1 + 0.2</code> dá <code>0.30000000000000004</code>: o <code>float</code> é uma aproximação. Arredonde para mostrar; não compare <code>float</code> com <code>==</code>; para dinheiro de verdade, use centavos em <code>int</code>.</li>
+  <li><code>1.5e3</code> é notação científica (1500.0), e é sempre <code>float</code>.</li>
+  <li>CEP, telefone e documentos são texto, não número: o zero à esquerda dá <code>SyntaxError</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
