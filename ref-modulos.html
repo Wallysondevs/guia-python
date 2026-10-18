@@ -235,7 +235,7 @@
 <tr><th>Módulo</th><th>No Ubuntu da Ana</th><th>No editor do guia</th></tr>
 <tr><td><code>tkinter</code>, <code>turtle</code> (janelas e desenho)</td><td>Fazem parte da biblioteca padrão, mas o Ubuntu os separa num pacote à parte: sem ele, <code>import turtle</code> termina em <code>ImportError: No module named 'tkinter', please install the python3-tk package</code></td><td><code>ModuleNotFoundError</code>: não existem no navegador</td></tr>
 <tr><td><code>subprocess</code>, <code>threading</code></td><td>Funcionam</td><td>Importam, mas dão erro ao usar: <code>OSError: [Errno 138] emscripten does not support processes.</code> e <code>RuntimeError: can't start new thread</code></td></tr>
-<tr><td><code>urllib.request</code> (internet)</td><td>Funciona, se houver conexão</td><td>Sem rede: <code>URLError: &lt;urlopen error [Errno 23] Host is unreachable&gt;</code></td></tr>
+<tr><td><code>urllib.request</code> (internet)</td><td>Funciona, se houver conexão</td><td>Sem rede: com um endereço <code>https://…</code>, o <code>urlopen</code> termina em <code>RuntimeError: TLS not supported in this environment</code></td></tr>
 <tr><td><code>venv</code>, <code>readline</code>, <code>curses</code></td><td>Funcionam</td><td><code>ModuleNotFoundError</code></td></tr>
 </table>
 </div>
