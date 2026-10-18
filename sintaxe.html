@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Sintaxe e Indentação — as regras de escrita do Python | Guia Python</title>
+<meta name="description" content="As regras de escrita do Python para quem está começando: uma instrução por linha, maiúsculas e minúsculas fazem diferença, os dois-pontos que abrem um bloco, a indentação de 4 espaços que define o bloco, espaços dentro da linha, linhas longas entre parênteses, palavras reservadas, e os erros reais IndentationError, TabError e SyntaxError (expected ':', Did you mean 'if'?) explicados.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Sintaxe e Indentação</span></h1>
+
+<p class="intro">Toda língua tem gramática: em português, a frase "bolo a fez Ana o" tem as palavras certas na ordem errada, e ninguém entende. Nas linguagens de programação, a gramática se chama <strong>sintaxe</strong>, e o computador é muito mais exigente que uma pessoa: um sinal fora do lugar e ele para. A boa notícia é que a sintaxe do Python é pequena. Nesta aula você vai conhecer as regras que valem para todo programa: uma instrução por linha, maiúsculas que importam, os dois-pontos e, a mais famosa de todas, a <strong>indentação</strong> (o recuo no começo da linha), que no Python não é enfeite: ela faz parte do programa.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é sintaxe, e que o Python lê o arquivo uma linha (uma instrução) de cada vez.</li>
+  <li>Que <strong>maiúsculas e minúsculas</strong> são diferentes: <code>nome</code>, <code>Nome</code> e <code>NOME</code> são três coisas.</li>
+  <li>O que é um <strong>bloco</strong>: os <strong>dois-pontos</strong> (<code>:</code>) que o abrem e a <strong>indentação</strong> que diz o que está dentro dele.</li>
+  <li>Por que usar <strong>4 espaços</strong>, e nunca misturar com <kbd>Tab</kbd>.</li>
+  <li>Onde os espaços não importam, como quebrar uma linha longa e quais são as palavras reservadas.</li>
+  <li>Os erros reais: <code>IndentationError</code>, <code>TabError</code>, <code>SyntaxError: expected ':'</code> e as dicas novas do Python 3.14.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a lista de tarefas com sub-itens</h2>
+<p>A Ana anota as tarefas do sábado num caderno. Algumas tarefas têm sub-tarefas, e ela escreve essas um pouco mais para a direita, para mostrar que pertencem à tarefa de cima:</p>
+
+<pre class="file" data-file="caderno da Ana">Ir à feira:
+    comprar tomate
+    comprar banana
+Passar na padaria:
+    pegar o pão
+Arrumar a casa
+</pre>
+
+<p>Ninguém precisou explicar: "comprar tomate" e "comprar banana" fazem parte de "Ir à feira", porque estão recuadas embaixo dela. "Arrumar a casa", de volta à margem, já é outra tarefa. Os dois-pontos no fim de "Ir à feira:" avisam: "vem uma lista aí embaixo".</p>
+
+<p>O Python usa <strong>exatamente</strong> essa ideia. Os dois-pontos abrem um <strong>bloco</strong>, e as linhas recuadas embaixo deles formam o bloco. Muitas outras linguagens usam chaves <code>{ }</code> para isso e deixam o recuo como enfeite. O Python não tem chaves: o recuo é a regra.</p>
+
+<hr>
+
+<h2>1. Uma instrução por linha</h2>
+<p>Num programa Python, cada linha é, normalmente, uma <strong>instrução</strong>: uma ordem completa, como "mostre isto" ou "guarde aquilo". O fim da linha é o fim da instrução, sem ponto e vírgula. O Python lê as linhas de cima para baixo, uma de cada vez, como você viu em <a href="executar.html">Rodando um Programa</a>.</p>
+
+<p>Linhas em branco não contam: o Python pula. Use-as para separar partes do programa, como parágrafos num texto.</p>
+
+<div class="tip">
+<strong>Dá para pôr duas instruções numa linha, mas não faça</strong>
+<p>O ponto e vírgula separa instruções na mesma linha: <code>print("um"); print("dois")</code> funciona (você vai ver na seção 6). Mas o costume em Python é uma instrução por linha, que é mais fácil de ler. O <a href="introducao.html">Zen do Python</a> diz: "a legibilidade conta".</p>
+</div>
+
+<hr>
+
+<h2>2. Maiúsculas e minúsculas são diferentes</h2>
+<p>Para o Python, <code>a</code> e <code>A</code> são letras diferentes, como <code>a</code> e <code>b</code>. Isso vale para tudo: nomes de variáveis, de funções, palavras da linguagem. A Ana guardou o nome numa variável e, na hora de mostrar, escreveu com maiúscula:</p>
+
+<pre class="file" data-file="s1.py">nome = "Ana"
+print(Nome)
+</pre>
+
+<pre class="term" data-cwd="~/python">$ python3 s1.py
+Traceback (most recent call last):
+  File "/home/ana/python/s1.py", line 2, in &lt;module&gt;
+    print(Nome)
+          ^^^^
+NameError: name 'Nome' is not defined. Did you mean: 'nome'?</pre>
+
+<p><code>nome</code> existe; <code>Nome</code>, não. O Python percebeu a semelhança e sugeriu: "você quis dizer <code>nome</code>?". O mesmo acontece com as palavras que já vêm na linguagem. "Verdadeiro" em Python é <code>True</code>, com T maiúsculo:</p>
+
+<pre class="file" data-file="s2.py">aberto = true
+print(aberto)
+</pre>
+
+<pre class="term" data-cwd="~/python">$ python3 s2.py
+Traceback (most recent call last):
+  File "/home/ana/python/s2.py", line 1, in &lt;module&gt;
+    aberto = true
+             ^^^^
+NameError: name 'true' is not defined. Did you mean: 'True'?</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Certo</th><th>Errado</th><th>Por quê</th></tr>
+<tr><td><code>print</code></td><td><code>Print</code>, <code>PRINT</code></td><td>As funções do Python são em minúsculas</td></tr>
+<tr><td><code>if</code>, <code>for</code>, <code>while</code></td><td><code>If</code>, <code>For</code>, <code>While</code></td><td>As palavras da linguagem também</td></tr>
+<tr><td><code>True</code>, <code>False</code>, <code>None</code></td><td><code>true</code>, <code>false</code>, <code>none</code></td><td>Essas três são as exceções: começam com maiúscula</td></tr>
+<tr><td><code>nome</code> sempre igual</td><td><code>nome</code> num lugar, <code>Nome</code> em outro</td><td>Uma variável tem um nome só, letra por letra</td></tr>
+</table>
+</div>
+
+<p>O costume em Python é escrever os nomes das suas variáveis em <strong>minúsculas</strong>, com sublinhado entre as palavras: <code>preco_do_pao</code>, <code>nome_do_cliente</code>. Assim você nunca precisa lembrar onde havia maiúscula. A aula <a href="nomes-variaveis.html">Nomes de Variáveis</a> traz todas as regras.</p>
+
+<hr>
+
+<h2>3. Os dois-pontos e o bloco</h2>
+<p>Agora o assunto principal. Para ver um bloco funcionando, você precisa de uma instrução que tenha um. A mais simples é o <code>if</code> ("se"), que executa um bloco <strong>só se</strong> uma condição for verdadeira. Ele tem aula própria (<a href="if.html">if</a>); aqui ele só serve de exemplo. Este programa confere se a pessoa já pode votar:</p>
+
+<pre class="file" data-file="voto.py">idade = 20
+if idade &gt;= 18:
+    print("Pode votar.")
+    print("Não esqueça o título de eleitor.")
+print("Fim da consulta.")
+</pre>
+
+<dl class="anatomy">
+  <dt>idade = 20</dt><dd>Guarda o número 20 na variável <code>idade</code>.</dd>
+  <dt>if idade &gt;= 18</dt><dd>"Se a idade for maior ou igual a 18". O <code>&gt;=</code> é o "maior ou igual" (aula <a href="operadores-comparacao.html">Comparações</a>).</dd>
+  <dt>:</dt><dd>Os <strong>dois-pontos</strong>: "aí vem o bloco". Toda linha que abre um bloco termina com eles (<code>if</code>, <code>else</code>, <code>for</code>, <code>while</code>, <code>def</code>…).</dd>
+  <dt>    print("Pode votar.")</dt><dd>Recuada <strong>4 espaços</strong>: está <strong>dentro</strong> do bloco do <code>if</code>. Só roda se a condição for verdadeira.</dd>
+  <dt>    print("Não esqueça…")</dt><dd>Com o mesmo recuo: também dentro do bloco.</dd>
+  <dt>print("Fim da consulta.")</dt><dd>De volta à margem: o bloco acabou. Esta linha está <strong>fora</strong> do <code>if</code>, e roda sempre.</dd>
+</dl>
+
+<pre class="term" data-cwd="~/python">$ python3 voto.py
+Pode votar.
+Não esqueça o título de eleitor.
+Fim da consulta.</pre>
+
+<p>Com 20 anos, a condição é verdadeira, e as três linhas aparecem. Agora a Ana trocou a primeira linha para <code>idade = 15</code>:</p>
+
+<pre class="term" data-cwd="~/python">$ python3 voto15.py
+Fim da consulta.                                   « o bloco inteiro foi pulado</pre>
+
+<p>Com 15, a condição é falsa: o Python pulou <strong>o bloco inteiro</strong> (as duas linhas recuadas) e continuou na primeira linha de volta à margem. É assim que ele sabe onde o bloco acaba: quando o recuo volta.</p>
+
+<div class="trypy" data-goal="out:Pode votar.;;semerro">
+<p class="try-task"><strong>Missão:</strong> a Ana esqueceu o recuo, e o programa dá erro. Rode para ver a mensagem. Depois, coloque 4 espaços no começo da linha do <code>print</code>, para ela entrar no bloco do <code>if</code>, e rode de novo.</p>
+<pre class="script" data-file="main.py">idade = 20
+if idade &gt;= 18:
+print("Pode votar.")
+</pre>
+<pre class="solucao" data-file="main.py">idade = 20
+if idade &gt;= 18:
+    print("Pode votar.")
+</pre>
+</div>
+
+<hr>
+
+<h2>4. A indentação muda o que o programa faz</h2>
+<p>Como o recuo é a regra, mover uma linha para a direita ou para a esquerda muda o significado do programa, <strong>sem dar erro nenhum</strong>. Compare com o <code>voto.py</code>: aqui, o "Fim da consulta." também foi recuado, e a idade é 15:</p>
+
+<pre class="file" data-file="s9.py">idade = 15
+if idade &gt;= 18:
+    print("Pode votar.")
+    print("Não esqueça o título de eleitor.")
+    print("Fim da consulta.")
+</pre>
+
+<pre class="term" data-cwd="~/python">$ python3 s9.py
+$                                                  « nada: até o "Fim" ficou dentro do if</pre>
+
+<p>O programa não mostrou nada. Para o Python, as três linhas fazem parte do bloco do <code>if</code>, e o bloco inteiro foi pulado. Não houve erro, porque o programa está "gramaticalmente" certo; só não faz o que a Ana queria. Por isso, olhe sempre o recuo com atenção: ele diz <strong>a qual bloco cada linha pertence</strong>.</p>
+
+<div class="trypy" data-goal="out:Fim da consulta.;;semerro">
+<p class="try-task"><strong>Missão:</strong> com 15 anos, o programa não mostra nada. Faça o <code>Fim da consulta.</code> aparecer <strong>sempre</strong>, seja qual for a idade: tire o recuo só da última linha, para ela sair do bloco do <code>if</code>.</p>
+<pre class="script" data-file="main.py">idade = 15
+if idade &gt;= 18:
+    print("Pode votar.")
+    print("Não esqueça o título de eleitor.")
+    print("Fim da consulta.")
+</pre>
+<pre class="solucao" data-file="main.py">idade = 15
+if idade &gt;= 18:
+    print("Pode votar.")
+    print("Não esqueça o título de eleitor.")
+print("Fim da consulta.")
+</pre>
+</div>
+
+<hr>
+
+<h2>5. Quatro espaços, e nada de misturar com Tab</h2>
+<p>O Python aceita qualquer quantidade de espaços como recuo, desde que todas as linhas do mesmo bloco tenham <strong>a mesma</strong>. Mas o costume, seguido por praticamente todo programa Python do mundo, é <strong>4 espaços por nível</strong>. Ele está escrito no guia de estilo oficial da linguagem, a <strong>PEP 8</strong>. Siga o costume: o seu código fica igual ao de todo mundo, e você evita os erros da próxima seção.</p>
+
+<p>A tecla <kbd>Tab</kbd> é outra história. Ela insere um caractere especial, a <strong>tabulação</strong>, que aparece na tela como um "pulo" para a direita, mas não é a mesma coisa que espaços. Se uma linha do bloco usar espaços e outra usar <kbd>Tab</kbd>, as duas podem parecer iguais na tela e ainda assim ser diferentes para o Python. Por isso:</p>
+
+<ul>
+  <li>Configure o seu editor para que a tecla <kbd>Tab</kbd> insira <strong>4 espaços</strong>. Os editores feitos para programar (Thonny, VS Code, IDLE) já fazem isso nos arquivos <code>.py</code>.</li>
+  <li>No modo interativo do Python 3.14, o recuo vem sozinho depois dos dois-pontos, já com 4 espaços (aula <a href="repl.html">O Modo Interativo</a>).</li>
+  <li>Cuidado ao copiar código de sites e documentos: ele pode vir com tabulações.</li>
+</ul>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Nível</th><th>Recuo</th><th>Exemplo</th></tr>
+<tr><td>Fora de qualquer bloco</td><td>0 espaços</td><td><code>if idade &gt;= 18:</code></td></tr>
+<tr><td>Dentro de um bloco</td><td>4 espaços</td><td><code>    print("Pode votar.")</code></td></tr>
+<tr><td>Um bloco dentro de outro</td><td>8 espaços</td><td>Você vai ver na aula <a href="condicoes-aninhadas.html">Condições Aninhadas</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>6. Onde os espaços não importam</h2>
+<p>O recuo no <strong>começo</strong> da linha é sagrado. Já os espaços <strong>no meio</strong> da linha, entre os nomes e os sinais, o Python ignora:</p>
+
+<pre class="file" data-file="espacos.py">print(2 + 3)
+print(2+3)
+print( 2   +   3 )
+print("um"); print("dois")
+</pre>
+
+<pre class="term" data-cwd="~/python">$ python3 espacos.py
+5
+5
+5
+um
+dois</pre>
+
+<p>As três primeiras linhas dão o mesmo resultado. Mas a primeira é a que o guia de estilo (a PEP 8) recomenda: um espaço de cada lado do sinal, nenhum espaço logo depois de abrir ou antes de fechar o parêntese. A quarta linha mostra o ponto e vírgula juntando duas instruções; funciona, mas evite. (Dentro das aspas, claro, todo espaço conta: <code>"Ana"</code> e <code>" Ana"</code> são textos diferentes.)</p>
+
+<h3>Linhas longas</h3>
+<p>Quando uma instrução fica comprida demais, você pode quebrá-la em várias linhas <strong>enquanto um parêntese estiver aberto</strong>. O Python só considera a instrução terminada quando o parêntese fecha, e o recuo das linhas de continuação é livre (o costume é alinhar com o que está em cima):</p>
+
+<pre class="file" data-file="longa.py">total = (10 * 0.75
+         + 6.50
+         + 2 * 3.50)
+print("Total:", total)
+print("Padaria Pão Quente,",
+      "a melhor do bairro!")
+</pre>
+
+<pre class="term" data-cwd="~/python">$ python3 longa.py
+Total: 21.0
+Padaria Pão Quente, a melhor do bairro!</pre>
+
+<p>O mesmo vale para colchetes <code>[ ]</code> e chaves <code>{ }</code>, que você vai conhecer nas listas e nos dicionários. A PEP 8 sugere linhas de no máximo 79 caracteres, mas o importante é que o código caiba na tela sem rolar para o lado.</p>
+
+<hr>
+
+<h2>7. Palavras reservadas</h2>
+<p>Algumas palavras são da própria linguagem e não podem ser usadas como nomes de variáveis. O Python lista todas elas no módulo <code>keyword</code>:</p>
+
+<pre class="term">$ python3 -c 'import keyword; print(keyword.kwlist)'
+['False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await', 'break', 'class', 'continue', 'def', 'del', 'elif', 'else', 'except', 'finally', 'for', 'from', 'global', 'if', 'import', 'in', 'is', 'lambda', 'nonlocal', 'not', 'or', 'pass', 'raise', 'return', 'try', 'while', 'with', 'yield']
+$ python3 -c 'import keyword; print(len(keyword.kwlist))'
+35</pre>
+
+<p>São 35. Você não precisa decorar: ao longo do guia, cada uma ganha a sua aula. Repare que todas são em minúsculas, menos <code>True</code>, <code>False</code> e <code>None</code>. Se você tentar usar uma delas como nome, o Python reclama. A Ana quis guardar a turma da filha numa variável chamada <code>class</code> ("turma", em inglês):</p>
+
+<pre class="file" data-file="s11.py">class = "3º ano"
+print(class)
+</pre>
+
+<pre class="term" data-cwd="~/python">$ python3 s11.py
+  File "/home/ana/python/s11.py", line 1
+    class = "3º ano"
+          ^
+SyntaxError: invalid syntax</pre>
+
+<p><code>class</code> é a palavra que cria classes (aula <a href="classes.html">Classes e Objetos</a>), e depois dela o Python esperava o nome de uma classe, não um <code>=</code>. Use um nome em português, que nunca vai bater com uma palavra reservada: <code>turma = "3º ano"</code>.</p>
+
+<div class="note">
+<strong>As palavras "quase reservadas"</strong>
+<p>Existem ainda quatro <em>soft keywords</em> ("palavras reservadas leves"): <code>_</code>, <code>case</code>, <code>match</code> e <code>type</code>. Elas só são especiais em certos lugares (como o <a href="match.html">match e case</a>) e, fora deles, podem ser nomes. Mesmo assim, evite usá-las como nomes de variáveis.</p>
+<pre class="term">$ python3 -c 'import keyword; print(keyword.softkwlist)'
+['_', 'case', 'match', 'type']</pre>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de escrever o mesmo bloco</h2>
+<p>O Python aceita outras quantidades de espaço no recuo, e até um bloco de uma linha só, colado nos dois-pontos. Os três programas abaixo fazem a mesma coisa:</p>
+
+<pre class="file" data-file="forma1.py">if idade &gt;= 18:
+    print("Pode votar.")
+</pre>
+
+<pre class="file" data-file="forma2.py">if idade &gt;= 18:
+  print("Pode votar.")
+</pre>
+
+<pre class="file" data-file="forma3.py">if idade &gt;= 18: print("Pode votar.")
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td>4 espaços</td><td><strong>Sempre.</strong> É a recomendação da PEP 8 e o que todo mundo espera ler</td></tr>
+<tr><td>2 espaços (ou outro número)</td><td>Funciona, se for igual em todo o bloco. Evite: foge do costume, e misturar com código de outras pessoas vira confusão</td></tr>
+<tr><td>Na mesma linha dos dois-pontos</td><td>Funciona para um bloco de uma linha só, mas a PEP 8 desaconselha: fica mais difícil de ler e de acrescentar linhas depois</td></tr>
+<tr><td><kbd>Tab</kbd> (a tabulação)</td><td>Não. Configure o editor para trocar o <kbd>Tab</kbd> por 4 espaços</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Quando dá errado</h2>
+<p>Os erros de sintaxe e de indentação têm uma coisa em comum: o Python os descobre <strong>antes</strong> de rodar o programa, ao ler o arquivo inteiro. Por isso nenhuma linha roda, e a mensagem não começa com <code>Traceback</code> (veja a aula <a href="primeiro-programa.html">Seu Primeiro Programa</a>).</p>
+
+<div class="cenario">
+<strong>Esqueceu os dois-pontos</strong>
+<pre class="file" data-file="s4.py">idade = 20
+if idade &gt;= 18
+    print("Pode votar.")
+</pre>
+<pre class="term" data-cwd="~/python">$ python3 s4.py
+  File "/home/ana/python/s4.py", line 2
+    if idade &gt;= 18
+                  ^
+SyntaxError: expected ':'</pre>
+<p><strong>O que aconteceu:</strong> "esperava <code>:</code>". O <code>^</code> aponta para o fim da linha 2, exatamente onde os dois-pontos deveriam estar. <strong>Como resolver:</strong> <code>if idade &gt;= 18:</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu o recuo do bloco</strong>
+<pre class="file" data-file="s5.py">idade = 20
+if idade &gt;= 18:
+print("Pode votar.")
+</pre>
+<pre class="term" data-cwd="~/python">$ python3 s5.py
+  File "/home/ana/python/s5.py", line 3
+    print("Pode votar.")
+    ^^^^^
+IndentationError: expected an indented block after 'if' statement on line 2</pre>
+<p><strong>O que aconteceu:</strong> <code>IndentationError</code> é o "erro de indentação". A mensagem diz: "esperava um bloco indentado depois da instrução <code>if</code> da linha 2". Os dois-pontos prometeram um bloco, e a linha seguinte veio sem recuo. <strong>Como resolver:</strong> 4 espaços antes do <code>print</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Recuo onde não tem bloco</strong>
+<pre class="file" data-file="s6.py">print("Bom dia!")
+    print("Tudo bem?")
+</pre>
+<pre class="term" data-cwd="~/python">$ python3 s6.py
+  File "/home/ana/python/s6.py", line 2
+    print("Tudo bem?")
+IndentationError: unexpected indent</pre>
+<p><strong>O que aconteceu:</strong> "indentação inesperada". A segunda linha está recuada, mas nenhuma linha com dois-pontos abriu um bloco antes dela. Acontece muito ao colar código copiado de outro lugar, que vem com espaços na frente. <strong>Como resolver:</strong> tire o recuo; as duas linhas ficam na margem.</p>
+</div>
+
+<div class="cenario">
+<strong>Recuo "torto": nem dentro, nem fora</strong>
+<pre class="file" data-file="s7.py">idade = 20
+if idade &gt;= 18:
+    print("Pode votar.")
+  print("Não esqueça o título de eleitor.")
+</pre>
+<pre class="term" data-cwd="~/python">$ python3 s7.py
+  File "/home/ana/python/s7.py", line 4
+    print("Não esqueça o título de eleitor.")
+                                             ^
+IndentationError: unindent does not match any outer indentation level</pre>
+<p><strong>O que aconteceu:</strong> a linha 4 tem 2 espaços: menos que o bloco (4) e mais que a margem (0). Como o recuo diminuiu, o Python entendeu que o bloco acabou e tentou voltar a um nível anterior, mas não existe nenhum nível de 2 espaços. A mensagem diz: "o recuo diminuído não corresponde a nenhum nível de indentação de fora". <strong>Como resolver:</strong> decida onde a linha deve ficar: com 4 espaços (dentro do bloco) ou com 0 (fora).</p>
+</div>
+
+<div class="cenario">
+<strong>Espaços e Tab misturados: <code>TabError</code></strong>
+<p>A Ana escreveu a terceira linha com 4 espaços e a quarta com a tecla <kbd>Tab</kbd>. No editor dela, as duas pareciam alinhadas:</p>
+<pre class="file" data-file="s8.py">idade = 20
+if idade &gt;= 18:
+    print("Pode votar.")
+	print("Não esqueça o título de eleitor.")
+</pre>
+<pre class="term" data-cwd="~/python">$ python3 s8.py
+  File "/home/ana/python/s8.py", line 4
+    	print("Não esqueça o título de eleitor.")
+    ^
+TabError: inconsistent use of tabs and spaces in indentation</pre>
+<p><strong>O que aconteceu:</strong> "uso inconsistente de tabulações e espaços na indentação". O Python não sabe quantos espaços uma tabulação "vale" (cada editor mostra de um jeito), então se recusa a adivinhar se a linha 4 está no mesmo bloco da linha 3. É o Zen do Python: "diante da ambiguidade, recuse a tentação de adivinhar".</p>
+<p><strong>Como resolver:</strong> apague o recuo da linha e digite 4 espaços. Para não acontecer de novo, configure o editor para inserir espaços quando você aperta <kbd>Tab</kbd>. Muitos editores têm uma opção para mostrar os espaços e as tabulações como pontinhos e setas; ela ajuda a achar o culpado.</p>
+</div>
+
+<div class="cenario">
+<strong><code>If</code> com maiúscula, ou digitado errado <span class="versao">3.14</span></strong>
+<pre class="term" data-cwd="~/python">$ python3 s3.py
+  File "/home/ana/python/s3.py", line 2
+    If idade &gt;= 18:
+    ^^
+SyntaxError: invalid syntax. Did you mean 'if'?
+$ python3 s10.py
+  File "/home/ana/python/s10.py", line 2
+    iff idade &gt;= 18:
+    ^^^
+SyntaxError: invalid syntax. Did you mean 'if'?</pre>
+<p><strong>O que aconteceu:</strong> em <code>s3.py</code> a Ana escreveu <code>If</code> e, em <code>s10.py</code>, <code>iff</code>. Nenhum dos dois é uma palavra do Python, então a linha não faz sentido ("sintaxe inválida"). A dica "você quis dizer <code>if</code>?" é uma novidade do <strong>Python 3.14</strong>: ele agora reconhece palavras reservadas digitadas errado. Num Python mais antigo, a mensagem para no <code>invalid syntax</code>, sem a dica. <strong>Como resolver:</strong> <code>if</code>, em minúsculas.</p>
+</div>
+
+<h3>Missão final: o aviso da padaria</h3>
+
+<div class="trypy" data-goal="out:A padaria está aberta.;;out:Pão quentinho saindo agora!;;out:Até logo!;;semerro">
+<p class="try-task"><strong>Missão:</strong> este programa tem <strong>três</strong> erros: os dois-pontos esquecidos, um recuo a mais e uma palavra com a maiúscula errada. Conserte um de cada vez, lendo a mensagem, até aparecerem as três linhas: <code>A padaria está aberta.</code>, <code>Pão quentinho saindo agora!</code> e <code>Até logo!</code>.</p>
+<pre class="script" data-file="main.py">aberta = true
+if aberta
+    print("A padaria está aberta.")
+      print("Pão quentinho saindo agora!")
+print("Até logo!")
+</pre>
+<pre class="solucao" data-file="main.py">aberta = True
+if aberta:
+    print("A padaria está aberta.")
+    print("Pão quentinho saindo agora!")
+print("Até logo!")
+</pre>
+</div>
+
+<p>Repare na ordem em que as mensagens aparecem: primeiro <code>SyntaxError: expected ':'</code> (linha 2), depois <code>IndentationError: unexpected indent</code> (linha 4: 6 espaços num bloco de 4) e, só quando a sintaxe estiver toda certa, o <code>NameError</code> do <code>true</code> (linha 1). O <code>NameError</code> vem por último, mesmo estando na primeira linha, porque ele só aparece quando o programa <strong>roda</strong>, e o programa só roda depois que o Python consegue ler o arquivo inteiro.</p>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Regra</th><th>Exemplo</th></tr>
+<tr><td>Uma instrução por linha, sem ponto e vírgula</td><td><code>print("Olá")</code></td></tr>
+<tr><td>Maiúsculas importam</td><td><code>nome</code> ≠ <code>Nome</code>; <code>True</code>, e não <code>true</code></td></tr>
+<tr><td>Linha que abre um bloco termina com <code>:</code></td><td><code>if idade &gt;= 18:</code></td></tr>
+<tr><td>O bloco é recuado 4 espaços</td><td><code>    print("Pode votar.")</code></td></tr>
+<tr><td>O bloco acaba quando o recuo volta</td><td><code>print("Fim da consulta.")</code> na margem</td></tr>
+<tr><td>Espaços no meio da linha são livres (o costume: um de cada lado do sinal)</td><td><code>2 + 3</code></td></tr>
+<tr><td>Linha longa: quebre dentro de parênteses</td><td><code>total = (10 * 0.75</code> ⏎ <code>+ 6.50)</code></td></tr>
+<tr><td>Palavras reservadas não viram nomes</td><td><code>class</code>, <code>if</code>, <code>for</code>… (<code>keyword.kwlist</code>)</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>SyntaxError: expected ':'</code></td><td>Faltaram os dois-pontos no fim da linha</td></tr>
+<tr><td><code>IndentationError: expected an indented block after 'if' statement on line N</code></td><td>A linha depois dos dois-pontos não foi recuada</td></tr>
+<tr><td><code>IndentationError: unexpected indent</code></td><td>Recuo numa linha que não está em bloco nenhum (às vezes, espaços que vieram ao colar)</td></tr>
+<tr><td><code>IndentationError: unindent does not match any outer indentation level</code></td><td>Recuo de tamanho diferente dos níveis que existem (ex.: 2 espaços num bloco de 4)</td></tr>
+<tr><td><code>TabError: inconsistent use of tabs and spaces in indentation</code></td><td>Tab e espaços misturados no mesmo bloco</td></tr>
+<tr><td><code>SyntaxError: invalid syntax. Did you mean 'if'?</code></td><td>Palavra reservada com maiúscula ou digitada errado</td></tr>
+<tr><td><code>NameError: name 'true' is not defined. Did you mean: 'True'?</code></td><td>Maiúscula esquecida (ou trocada) num nome</td></tr>
+<tr><td>Nenhum erro, mas o resultado está errado</td><td>Uma linha dentro do bloco que deveria estar fora (ou o contrário): confira o recuo</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O sinal que abre o bloco</h3>
+<p>Complete o que falta no fim da linha:</p>
+<div class="ex-code">if idade &gt;= 18<input data-answer=":" aria-label="sinal"></div>
+</div>
+
+<div class="exercise">
+<h3>2. O recuo recomendado</h3>
+<p>Quantos espaços a PEP 8 recomenda para cada nível de indentação?</p>
+<div class="ex-code"><input data-answer="4|quatro" aria-label="número"> espaços</div>
+</div>
+
+<div class="exercise">
+<h3>3. Verdadeiro</h3>
+<p>Complete com o jeito certo de escrever "verdadeiro" em Python:</p>
+<div class="ex-code">aberta = <input data-answer="True" aria-label="valor"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. No programa abaixo, com <code>idade = 15</code>, o que aparece na tela?</p>
+<pre class="file" data-file="exercicio.py">idade = 15
+if idade &gt;= 18:
+    print("A")
+    print("B")
+print("C")
+</pre>
+<label><input type="radio" name="q4"> <code>A</code>, <code>B</code> e <code>C</code></label>
+<label><input type="radio" name="q4"> Nada</label>
+<label><input type="radio" name="q4"> Só <code>C</code></label>
+<label><input type="radio" name="q4"> <code>B</code> e <code>C</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. A mensagem foi <code>IndentationError: unexpected indent</code>. O que provavelmente aconteceu?</p>
+<label><input type="radio" name="q5"> Faltaram os dois-pontos.</label>
+<label><input type="radio" name="q5"> Uma linha foi recuada sem estar dentro de nenhum bloco.</label>
+<label><input type="radio" name="q5"> O <code>print</code> foi escrito com maiúscula.</label>
+<label><input type="radio" name="q5"> O arquivo não termina em <code>.py</code>.</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. Por que o Python dá <code>TabError</code> quando um bloco mistura Tab e espaços?</p>
+<label><input type="radio" name="q6"> Porque a tecla Tab é proibida em Python.</label>
+<label><input type="radio" name="q6"> Porque espaços deixam o programa mais lento.</label>
+<label><input type="radio" name="q6"> Porque o Tab só funciona no Windows.</label>
+<label><input type="radio" name="q6"> Porque não dá para saber quantos espaços um Tab vale, e o Python se recusa a adivinhar se as linhas estão no mesmo bloco.</label>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Sintaxe é a gramática da linguagem. No Python: uma instrução por linha, sem ponto e vírgula; linhas em branco não contam.</li>
+  <li><strong>Maiúsculas importam</strong>: <code>nome</code> ≠ <code>Nome</code>, <code>print</code> ≠ <code>Print</code>. Só <code>True</code>, <code>False</code> e <code>None</code> começam com maiúscula.</li>
+  <li>Os <strong>dois-pontos</strong> abrem um bloco; as linhas <strong>recuadas</strong> embaixo deles formam o bloco; o bloco acaba quando o recuo volta.</li>
+  <li>O recuo muda o significado do programa, às vezes sem erro nenhum: confira a qual bloco cada linha pertence.</li>
+  <li>Use sempre <strong>4 espaços</strong> (a PEP 8) e nunca misture com Tab.</li>
+  <li>Espaços no meio da linha são livres; linhas longas se quebram dentro de parênteses; as 35 palavras reservadas não podem virar nomes.</li>
+  <li>Erros de sintaxe e de indentação (<code>SyntaxError</code>, <code>IndentationError</code>, <code>TabError</code>) impedem o programa inteiro de rodar. O Python 3.14 sugere a palavra certa quando você digita uma palavra reservada errado.</li>
+  <li>Próximo passo: deixar recados para quem lê o código, em <a href="comentarios.html">Comentários</a>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
