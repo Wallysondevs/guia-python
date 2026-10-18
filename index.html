@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tutorial Python — aprenda a programar do zero, como numa escola | Guia Python</title>
+<meta name="description" content="Curso de Python do zero ao avançado, em português, para quem nunca programou: print, variáveis, if, for, listas, dicionários, funções, arquivos, classes e muito mais, com o Python 3.14 de verdade rodando no seu navegador, missões, projetos e exercícios. Saídas e mensagens de erro conferidas no Python real.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="hero">
+<h1>Tutorial Python</h1>
+<p>Aprenda a <strong>programar do zero</strong> com Python, como numa escola: cada comando é explicado pedaço por pedaço, você vê o que o programa responde de verdade e pratica num editor aqui mesmo na página. Quem roda os seus programas é o <strong>Python 3.14</strong>, funcionando <strong>dentro do seu navegador</strong>. Você não precisa instalar nada para começar, em qualquer sistema: Windows, macOS, Linux ou até um Chromebook.</p>
+<a class="btn btn-lg" href="introducao.html">Comece pelo Nível 1 &#10095;</a>
+</div>
+
+<div class="pager"></div>
+
+<h2>Experimente agora</h2>
+<p>A caixa abaixo é o editor <strong>Experimente</strong> do guia. Em cima fica o programa; clique em <strong>▶ Rodar</strong> e o que ele escreve aparece embaixo, num terminal. Na primeira vez, o editor baixa o Python (uns 6 MB) e leva alguns segundos; depois, é na hora. Pode mexer à vontade: nada que você fizer aqui estraga o guia.</p>
+
+<div class="trypy" data-goal="out:Comprar: manteiga;;out:Total de itens: 4">
+<p class="try-task"><strong>Missão:</strong> rode o programa como está e veja a lista de compras da Ana. Depois, ela lembrou que acabou a manteiga: acrescente <code>"manteiga"</code> na lista da primeira linha (depois de <code>"café"</code>, com uma vírgula antes) e rode de novo.</p>
+<pre class="script" data-file="main.py">compras = ["pão", "leite", "café"]
+for item in compras:
+    print("Comprar:", item)
+print(f"Total de itens: {len(compras)}")
+</pre>
+<pre class="solucao" data-file="main.py">compras = ["pão", "leite", "café", "manteiga"]
+for item in compras:
+    print("Comprar:", item)
+print(f"Total de itens: {len(compras)}")
+</pre>
+</div>
+
+<p>O que aconteceu: você escreveu um <strong>programa</strong>, uma lista de instruções que o computador segue na ordem. Lido em voz alta, ele diz: "a lista de compras é pão, leite, café e manteiga; <strong>para cada</strong> item da lista, escreva 'Comprar:' e o item; no fim, escreva quantos itens a lista tem". O Python seguiu as instruções e escreveu uma linha por item. Você não precisou mudar o resto do programa: ele se adaptou sozinho à lista maior. Essa língua de instruções é o <strong>Python</strong>, e é isso que este guia ensina.</p>
+
+<p>Se você esqueceu de fechar as aspas, viu uma mensagem em vermelho, em inglês: <code>SyntaxError: unterminated string literal (detected at line 1)</code> ("texto sem fim, encontrado na linha 1"). O Python não adivinha: ele diz exatamente onde não entendeu. E se esqueceu a <strong>vírgula</strong>, o Python não reclama, mas junta os dois textos num só: aparece <code>Comprar: cafémanteiga</code> e o total continua 3. Errar e ler o que o computador responde é metade do aprendizado: todas as aulas mostram os erros mais comuns, com a mensagem real e o jeito de consertar.</p>
+
+<h3>Um programa que conversa</h3>
+<p>Programas também podem <strong>perguntar</strong>. Rode a caixa, digite o seu nome no terminal dela (no campo que aparece depois da pergunta) e tecle <kbd>Enter</kbd>:</p>
+
+<div class="trypy" data-digitar="Ana">
+<pre class="script" data-file="main.py">nome = input("Qual é o seu nome? ")
+print(f"Olá, {nome}! Bem-vinda ao Python.")
+print(f"O seu nome tem {len(nome)} letras.")
+</pre>
+</div>
+
+<hr>
+
+<h2>O que é este guia</h2>
+<p>Um programa é uma receita que o computador segue. O <strong>Python</strong> é uma das línguas mais usadas no mundo para escrever essas receitas, e uma das mais fáceis de ler: muitas linhas parecem frases em inglês. Com ele se fazem sites, planilhas automáticas, análise de dados, inteligência artificial, jogos e pequenos programas do dia a dia.</p>
+
+<p>Quem aprende Python consegue:</p>
+<ul>
+  <li>fazer o computador repetir tarefas chatas: renomear cem arquivos, somar uma planilha, conferir uma lista;</li>
+  <li>tomar decisões no programa: "se a nota for maior que 7, aprovado; senão, recuperação";</li>
+  <li>guardar e organizar informações em listas e dicionários: o estoque da lojinha, a agenda de contatos;</li>
+  <li>ler e gravar arquivos de texto, planilhas CSV e JSON;</li>
+  <li>escrever programas grandes, divididos em funções, módulos e classes;</li>
+  <li>dar os próximos passos em análise de dados, sites ou automação, porque é o mesmo Python.</li>
+</ul>
+
+<p>O guia é para quem <strong>nunca programou</strong>. Ele começa do zero absoluto (o que é um programa? como se roda um?) e vai até classes, geradores, decoradores, <code>asyncio</code> e testes. Cada aula ensina <strong>um assunto só</strong>, com calma. O Python das aulas é o <strong>3.14</strong>, o do Ubuntu 26.04 e o do editor; quando algo mudou de uma versão para outra, uma nota avisa.</p>
+
+<hr>
+
+<h2>Como as aulas funcionam</h2>
+<p>Nenhum código aparece "seco". Toda aula segue o mesmo caminho:</p>
+<ol class="passo">
+  <li><strong>A ideia primeiro.</strong> Antes do código, você entende o problema que ele resolve, com uma comparação do dia a dia: uma receita de bolo, uma caixa com etiqueta, uma lista de compras.</li>
+  <li><strong>Anatomia.</strong> Cada parte de um comando novo é separada e explicada.</li>
+  <li><strong>A saída real.</strong> Depois de cada exemplo, o que o Python respondeu de verdade, no terminal. Nenhuma saída foi inventada.</li>
+  <li><strong>Experimente.</strong> Pelo menos duas caixas por aula para você mudar o código e rodar, muitas com uma <strong>missão</strong> que confere sozinha se você acertou.</li>
+  <li><strong>Várias formas de fazer.</strong> Quase sempre há mais de um jeito de escrever a mesma coisa, e uma tabela "qual usar" mostra quando escolher cada um.</li>
+  <li><strong>Quando dá errado.</strong> O código com erro e a mensagem real do Python (o <em>traceback</em>), traduzida e explicada linha por linha.</li>
+  <li><strong>Exercícios e resumo.</strong> Perguntas com correção na hora e uma lista curta do que levar da aula.</li>
+</ol>
+
+<h3>Exemplo: a anatomia de um programa</h3>
+<p>Veja como as aulas desmontam um programa. Primeiro o código, num arquivo chamado <code>compras.py</code>:</p>
+
+<pre class="file" data-file="compras.py">compras = ["pão", "leite", "café"]
+for item in compras:
+    print("Comprar:", item)
+print(f"Total de itens: {len(compras)}")
+</pre>
+
+<p>Agora cada parte:</p>
+
+<dl class="anatomy">
+  <dt>compras = [...]</dt><dd>Uma <strong>variável</strong>: um nome (<code>compras</code>) que guarda um valor. Aqui o valor é uma <strong>lista</strong> de três textos, entre colchetes (aulas <a href="variaveis.html">Variáveis</a> e <a href="listas.html">Listas</a>).</dd>
+  <dt>for item in compras:</dt><dd>"Para cada item em compras": repete o bloco de baixo uma vez para cada elemento da lista. Os dois-pontos no fim abrem o bloco (aula <a href="for.html">for</a>).</dd>
+  <dt>    print("Comprar:", item)</dt><dd>O bloco que se repete. Os <strong>4 espaços</strong> no começo dizem ao Python que esta linha está "dentro" do <code>for</code> (aula <a href="sintaxe.html">Sintaxe e Indentação</a>).</dd>
+  <dt>print(f"…{len(compras)}")</dt><dd>Sem recuo: roda uma vez só, depois do laço. O <code>len</code> conta os itens, e o <code>f</code> antes das aspas deixa pôr valores no meio do texto entre chaves (aula <a href="f-strings.html">f-strings</a>).</dd>
+</dl>
+
+<h3>Exemplo: o terminal</h3>
+<p>Além do editor, as aulas mostram o <strong>terminal</strong> da máquina das aulas: um computador chamado <code>notebook</code>, da usuária <code>ana</code>. Lá, o programa fica no arquivo <code>compras.py</code>, e quem o roda é o comando <code>python3</code>:</p>
+
+<pre class="term">$ python3 compras.py
+Comprar: pão
+Comprar: leite
+Comprar: café
+Total de itens: 3
+</pre>
+
+<p>A resposta é a mesma do editor, porque o Python é o mesmo nos dois lugares. A aula <a href="simulador.html">O Editor do Guia</a> mostra tudo o que as caixas Experimente sabem fazer e o que muda no terminal, e <a href="instalar.html">Instalar o Python</a> ensina a pôr o Python no seu computador.</p>
+
+<hr>
+
+<h2>Escolha sua trilha</h2>
+<p>O guia tem três níveis, uma seção de projetos e uma de referência. Os níveis foram pensados para serem feitos em ordem: cada aula usa o que as anteriores ensinaram.</p>
+<div class="trilhas">
+  <div class="trilha n1">
+    <h3>Nível 1 · Iniciante</h3>
+    <p>Python do zero.</p>
+    <ul>
+      <li><a href="introducao.html">Começando</a>: o que é Python, instalar, rodar um programa, o modo interativo e o editor do guia</li>
+      <li><a href="print.html">Saída e entrada</a>: <code>print()</code> e <code>input()</code></li>
+      <li><a href="variaveis.html">Variáveis e tipos</a>: números, textos, <code>True</code>/<code>False</code>, <code>None</code> e conversões</li>
+      <li><a href="operadores-aritmeticos.html">Operadores</a> e <a href="strings.html">textos</a>: contas, comparações, fatias, métodos e f-strings</li>
+      <li><a href="if.html">Decisões</a> e <a href="while.html">repetições</a>: <code>if</code>, <code>elif</code>, <code>match</code>, <code>while</code>, <code>for</code> e <code>range()</code></li>
+    </ul>
+    <a class="btn" href="introducao.html">Começar &#10095;</a>
+  </div>
+  <div class="trilha n2">
+    <h3>Nível 2 · Intermediário</h3>
+    <p>Coleções, funções e arquivos.</p>
+    <ul>
+      <li><a href="listas.html">Listas</a>, <a href="tuplas.html">tuplas, conjuntos e dicionários</a></li>
+      <li><a href="funcoes.html">Funções</a>: <code>def</code>, parâmetros, <code>return</code>, escopo, <code>lambda</code> e recursão</li>
+      <li><a href="erros.html">Erros e exceções</a>: ler um traceback, <code>try</code>/<code>except</code> e <code>raise</code></li>
+      <li><a href="arquivos.html">Arquivos</a>: ler e escrever, pastas, CSV e JSON</li>
+      <li><a href="modulos.html">Módulos</a>: <code>import</code>, <code>math</code>, <code>random</code>, <code>datetime</code>, <code>pip</code> e <code>venv</code></li>
+    </ul>
+    <a class="btn" href="listas.html">Começar &#10095;</a>
+  </div>
+  <div class="trilha n3">
+    <h3>Nível 3 · Avançado</h3>
+    <p>Python de gente grande.</p>
+    <ul>
+      <li><a href="classes.html">Orientação a objetos</a>: classes, herança, <code>@property</code>, dataclasses e <code>Enum</code></li>
+      <li><a href="iteradores.html">Recursos poderosos</a>: iteradores, geradores, decoradores, <code>collections</code>, <code>re</code> e <code>asyncio</code></li>
+      <li><a href="argparse.html">Ferramentas do dia a dia</a>: linha de comando, <code>os</code>/<code>sys</code>, <code>logging</code>, <code>sqlite3</code>, testes e depuração</li>
+      <li><a href="mutabilidade.html">O Python por dentro</a>: mutável × imutável, cópias e as novidades do 3.14</li>
+    </ul>
+    <a class="btn" href="classes.html">Começar &#10095;</a>
+  </div>
+  <div class="trilha proj">
+    <h3>Projetos</h3>
+    <p>Programas completos, construídos passo a passo.</p>
+    <ul>
+      <li><a href="projeto-calculadora.html">Calculadora</a>, <a href="projeto-adivinhacao.html">jogo de adivinhação</a> e <a href="projeto-forca.html">jogo da forca</a></li>
+      <li><a href="projeto-tarefas.html">Lista de tarefas</a> e <a href="projeto-agenda.html">agenda de contatos (JSON)</a></li>
+      <li><a href="projeto-notas.html">Notas da turma (CSV)</a> e <a href="projeto-banco.html">conta bancária (classes)</a></li>
+      <li><a href="projeto-palavras.html">Contador de palavras</a> e <a href="projeto-estoque.html">estoque com SQLite</a></li>
+    </ul>
+    <a class="btn" href="projeto-calculadora.html">Ver projetos &#10095;</a>
+  </div>
+  <div class="trilha ref">
+    <h3>Referência</h3>
+    <p>Consulta rápida para quando você já sabe o que procura.</p>
+    <ul>
+      <li><a href="ref-funcoes-embutidas.html">Funções embutidas</a> e <a href="ref-palavras-chave.html">palavras-chave</a></li>
+      <li>Métodos de <a href="ref-metodos-string.html">texto</a>, <a href="ref-metodos-lista.html">lista</a>, <a href="ref-metodos-dicionario.html">dicionário</a> e <a href="ref-metodos-conjunto.html">conjunto</a></li>
+      <li><a href="ref-operadores.html">Operadores</a> e <a href="ref-formatacao.html">formatação</a></li>
+      <li><a href="ref-excecoes.html">Exceções</a> e <a href="ref-modulos.html">módulos da biblioteca padrão</a></li>
+    </ul>
+    <a class="btn" href="ref-funcoes-embutidas.html">Consultar &#10095;</a>
+  </div>
+</div>
+
+<hr>
+
+<h2>Como estudar</h2>
+<p>Programar se aprende programando, como quem aprende a cozinhar cozinhando. Para cada aula, siga estes quatro passos:</p>
+<ol class="passo">
+  <li><strong>Leia com calma.</strong> Leia a ideia, a anatomia e a saída. Não pule a parte "Quando dá errado": quem entende a mensagem de erro conserta o problema em segundos.</li>
+  <li><strong>Mexa nos exemplos.</strong> Em toda caixa Experimente, mude um número, troque um texto, apague um pedaço de propósito e veja o que o Python responde. Não tem como estragar nada: cada Rodar começa do zero.</li>
+  <li><strong>Faça as missões.</strong> As caixas com <strong>Missão</strong> conferem sozinhas se você acertou. Tente de verdade antes de abrir a solução; se abrir, digite a solução você mesmo em vez de só olhar.</li>
+  <li><strong>Repita no seu computador.</strong> Quando chegar à aula <a href="instalar.html">Instalar o Python</a>, instale-o e refaça os programas no terminal. Algumas coisas (instalar pacotes com <code>pip</code>, rodar outros programas, guardar arquivos de verdade) só existem lá.</li>
+</ol>
+
+<div class="tip">
+<strong>A regra de ouro</strong>
+<p>Ler não basta: digite cada programa. Copiar e colar ensina pouco; digitar faz você reparar em cada aspa, cada dois-pontos e cada espaço do recuo. Comece pela aula <a href="introducao.html">O que é Python</a> e, antes de ir longe, dê uma olhada em <a href="simulador.html">O Editor do Guia</a>.</p>
+</div>
+
+<hr>
+
+<h2>Como ler este guia</h2>
+<div class="table-wrap">
+<table class="ref">
+<thead><tr><th>Elemento</th><th>O que significa</th></tr></thead>
+<tbody>
+<tr><td>Caixa com <code>compras.py</code> no canto</td><td>Um programa para ler. O nome no canto é o nome do arquivo (programas em Python terminam em <code>.py</code>).</td></tr>
+<tr><td>Caixa <strong>Experimente</strong></td><td>Um programa para você mudar e rodar, com o Python de verdade. As com <strong>Missão</strong> conferem a sua resposta.</td></tr>
+<tr><td>Caixa <strong>Quando dá errado</strong></td><td>Um programa com um erro colocado de propósito, com a mensagem real do Python e a explicação.</td></tr>
+<tr><td><code>ana@notebook:~$</code></td><td>O prompt do terminal: usuária <code>ana</code>, no computador <code>notebook</code>, na pasta pessoal (<code>~</code>). O que vem depois é o comando digitado.</td></tr>
+<tr><td><code>&gt;&gt;&gt;</code></td><td>O prompt do modo interativo do Python: ele espera uma linha de Python e responde na hora (aula <a href="repl.html">O Modo Interativo</a>).</td></tr>
+<tr><td>Linhas sem prompt</td><td>A resposta do computador.</td></tr>
+<tr><td><span class="t-a">← etiqueta</span></td><td>Uma explicação do guia sobre aquela linha. Não aparece no terminal real.</td></tr>
+<tr><td><span class="versao">3.14</span></td><td>Algo que só existe a partir do Python 3.14 (a lista completa está em <a href="novidades.html">Novidades do Python 3.14 e 3.15</a>).</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="note">
+<strong>Versão de referência: Python 3.14</strong>
+<p>O guia ensina o <strong>Python 3.14</strong>. As saídas de terminal foram colhidas no Python <strong>3.14.4</strong> de um Ubuntu 26.04 em português do Brasil; o editor das aulas é o <strong>CPython 3.14.2</strong> compilado para rodar no navegador (WebAssembly, pelo projeto Pyodide). Os dois são o mesmo Python: a linguagem, as mensagens de erro e as respostas são as mesmas. As mensagens de erro saem em inglês, exatamente como o Python as escreve, e as aulas as explicam em português. Se o seu computador tem uma versão mais antiga (o Debian 13, por exemplo, traz o 3.13), quase tudo funciona igual; as diferenças aparecem em notas.</p>
+</div>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
