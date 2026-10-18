@@ -1,0 +1,1244 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Projeto Lista de Tarefas — menu, listas de dicionários e arquivo passo a passo | Guia Python</title>
+<meta name="description" content="Projeto passo a passo: uma lista de tarefas de terminal em Python. Um menu com while e match, tarefas numeradas com enumerate, cada tarefa num dicionário com título e situação, concluir e remover pelo número, validação do número escolhido e, no fim, as tarefas guardadas num arquivo de texto para não sumirem quando o programa fecha. Quatro versões com sessões reais no Python 3.14 e missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Projeto <span class="hl">Lista de Tarefas</span></h1>
+
+<p class="intro">A Ana vive esquecendo coisas: comprar pão, pagar a conta de luz, levar o Rex ao veterinário. Neste projeto, ela ganha um programa de tarefas no terminal, com um <strong>menu</strong>: adicionar, ver, concluir, remover e sair. É o primeiro projeto do guia que <strong>guarda dados</strong>: primeiro numa lista, enquanto o programa está aberto, e no fim num arquivo, para as tarefas continuarem lá amanhã.</p>
+
+<div class="note">
+<strong>Você vai praticar</strong>
+<ul>
+  <li>Um menu que se repete, com <a href="while.html">while True</a> e <a href="match.html">match e case</a>.</li>
+  <li><a href="listas.html">Listas</a>: <a href="listas-adicionar.html">append()</a>, <a href="listas-remover.html">pop()</a>, <a href="listas-acessar.html">índices</a> e o índice <code>-1</code>.</li>
+  <li>Numerar os itens com <a href="enumerate-zip.html">enumerate()</a>.</li>
+  <li>Guardar cada tarefa num <a href="dicionarios.html">dicionário</a> (<code>{"titulo": …, "feita": …}</code>) e mudar um valor dele (<a href="dicionarios-alterar.html">alterando chaves</a>).</li>
+  <li>Validar o número escolhido com <code>isdigit()</code> e uma <a href="funcoes.html">função</a> que devolve a posição ou <a href="none.html">None</a>.</li>
+  <li><a href="arquivos-escrever.html">Escrever</a> e <a href="arquivos-ler.html">ler</a> um arquivo de texto, e tratar o <code>FileNotFoundError</code> com <a href="try-except.html">try e except</a>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>O que vamos construir</h2>
+<p>A lista pronta, no terminal da Ana. Ela abre o programa, cadastra três tarefas, conclui uma e sai. <strong>O que vem depois de <code>Escolha:</code>, <code>Nova tarefa:</code> e <code>Número da tarefa:</code> foi digitado por ela.</strong> Depois, o <code>cat</code> mostra o arquivo que o programa gravou:</p>
+
+<pre class="term" data-cwd="~/projetos/tarefas"></pre>
+
+<p>No dia seguinte, a Ana abre o programa de novo, e as tarefas estão lá:</p>
+
+<pre class="term" data-cwd="~/projetos/tarefas"></pre>
+
+<p>Quatro versões:</p>
+
+<ol class="passo">
+  <li><a href="#versao1">O menu e a lista</a> (<code>while True</code>, <code>match</code>, <code>append</code>, <code>enumerate</code>).</li>
+  <li><a href="#versao2">Concluir e remover</a> (dicionários, <code>pop</code>).</li>
+  <li><a href="#versao3">Funções e número validado</a> (<code>def</code>, <code>isdigit</code>, <code>None</code>).</li>
+  <li><a href="#versao4">Guardar num arquivo</a> (<code>open</code> com <code>"w"</code>, <code>FileNotFoundError</code>).</li>
+</ol>
+
+<h3>Antes de começar</h3>
+<p>Este projeto usa o <code>while True</code> com <code>match</code> da <a href="projeto-calculadora.html">Calculadora</a>. Crie a pasta; o arquivo vai se chamar <code>tarefas.py</code>:</p>
+
+<pre class="term">$ mkdir -p projetos/tarefas
+$ cd projetos/tarefas</pre>
+
+<hr>
+
+<h2 id="versao1">Versão 1 · O menu e a lista</h2>
+<p>Todo programa de menu tem o mesmo esqueleto: um laço que <strong>mostra as opções, lê a escolha e faz o que foi pedido</strong>, até a pessoa escolher sair. As tarefas ficam numa lista de textos.</p>
+
+<pre class="file" data-file="tarefas.py">tarefas = []
+
+print("=== Lista de Tarefas da Ana ===")
+while True:
+    print()
+    print("1 - Adicionar tarefa")
+    print("2 - Ver tarefas")
+    print("0 - Sair")
+    opcao = input("Escolha: ").strip()
+
+    match opcao:
+        case "1":
+            titulo = input("Nova tarefa: ").strip()
+            tarefas.append(titulo)
+            print(f"Tarefa adicionada: {titulo}")
+        case "2":
+            if not tarefas:
+                print("Nenhuma tarefa ainda.")
+            for numero, titulo in enumerate(tarefas, start=1):
+                print(f"{numero}. {titulo}")
+        case "0":
+            print("Até mais!")
+            break
+        case _:
+            print("Opção inválida.")
+</pre>
+
+<dl class="anatomy">
+  <dt>tarefas = []</dt><dd>A lista começa vazia, <strong>fora</strong> do laço. Se ficasse dentro, seria esvaziada a cada volta do menu.</dd>
+  <dt>print()</dt><dd>Um <code>print</code> sem nada escreve uma linha em branco: separa cada menu do anterior.</dd>
+  <dt>opcao = input("Escolha: ").strip()</dt><dd>A opção fica como <strong>texto</strong> (<code>"1"</code>, <code>"2"</code>…), sem <code>int()</code>. Assim, se a pessoa digitar <code>x</code>, não há erro: cai no <code>case _</code>.</dd>
+  <dt>tarefas.append(titulo)</dt><dd>Acrescenta a tarefa no fim da lista (veja <a href="listas-adicionar.html">Adicionando Itens</a>).</dd>
+  <dt>if not tarefas:</dt><dd>Uma lista vazia conta como falso: "se não há tarefas".</dd>
+  <dt>for numero, titulo in enumerate(tarefas, start=1):</dt><dd><code>enumerate</code> ("enumerar") entrega, a cada volta, um par: o número e o item. O <code>start=1</code> faz a contagem começar em 1, como as pessoas contam (veja abaixo).</dd>
+  <dt>case "0": … break</dt><dd>A única saída do laço.</dd>
+</dl>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; tarefas = ["Comprar pão", "Pagar a luz"]
+&gt;&gt;&gt; list(enumerate(tarefas, start=1))
+[(1, 'Comprar pão'), (2, 'Pagar a luz')]
+&gt;&gt;&gt; list(enumerate(tarefas))
+[(0, 'Comprar pão'), (1, 'Pagar a luz')]
+&gt;&gt;&gt; exit()</pre>
+
+<p>Sem o <code>start=1</code>, a contagem começaria em 0, que é como o Python numera as posições de uma lista (o primeiro item está na posição 0). Para mostrar à Ana, 1 é melhor. Guarde essa diferença: ela vai importar na versão 2.</p>
+
+<pre class="term" data-cwd="~/projetos/tarefas"></pre>
+
+<div class="trypy" data-stdin="1\nComprar pão\n1\nPagar a conta de luz\n2\n0" data-goal="out:1. Comprar pão;;out:2. Pagar a conta de luz;;semerro">
+<p class="try-task"><strong>Missão (versão 1):</strong> a opção 2 mostra a lista "crua", com colchetes e aspas: <code>['Comprar pão', 'Pagar a conta de luz']</code>. Troque o <code>print(tarefas)</code> por um <code>for</code> com <code>enumerate(tarefas, start=1)</code> que mostre <code>1. Comprar pão</code>, <code>2. Pagar a conta de luz</code>. A entrada da missão cadastra as duas tarefas, escolhe 2 e sai.</p>
+<pre class="script" data-file="tarefas.py">tarefas = []
+
+print("=== Lista de Tarefas da Ana ===")
+while True:
+    print()
+    print("1 - Adicionar tarefa")
+    print("2 - Ver tarefas")
+    print("0 - Sair")
+    opcao = input("Escolha: ").strip()
+
+    match opcao:
+        case "1":
+            titulo = input("Nova tarefa: ").strip()
+            tarefas.append(titulo)
+            print(f"Tarefa adicionada: {titulo}")
+        case "2":
+            print(tarefas)
+        case "0":
+            print("Até mais!")
+            break
+        case _:
+            print("Opção inválida.")
+</pre>
+<pre class="solucao" data-file="tarefas.py">tarefas = []
+
+print("=== Lista de Tarefas da Ana ===")
+while True:
+    print()
+    print("1 - Adicionar tarefa")
+    print("2 - Ver tarefas")
+    print("0 - Sair")
+    opcao = input("Escolha: ").strip()
+
+    match opcao:
+        case "1":
+            titulo = input("Nova tarefa: ").strip()
+            tarefas.append(titulo)
+            print(f"Tarefa adicionada: {titulo}")
+        case "2":
+            if not tarefas:
+                print("Nenhuma tarefa ainda.")
+            for numero, titulo in enumerate(tarefas, start=1):
+                print(f"{numero}. {titulo}")
+        case "0":
+            print("Até mais!")
+            break
+        case _:
+            print("Opção inválida.")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao2">Versão 2 · Concluir e remover</h2>
+<p>Uma tarefa agora tem <strong>duas</strong> informações: o título e se já foi feita. Um texto só não basta; cada tarefa vira um <a href="dicionarios.html">dicionário</a> com duas chaves, e a lista passa a ser uma lista de dicionários:</p>
+
+<pre class="file" data-file="exemplo.py">tarefas = [
+    {"titulo": "Pagar a conta de luz", "feita": True},
+    {"titulo": "Levar o Rex ao veterinário", "feita": False},
+]
+</pre>
+
+<pre class="file" data-file="tarefas.py">tarefas = []
+
+print("=== Lista de Tarefas da Ana ===")
+while True:
+    print()
+    print("1 - Adicionar tarefa")
+    print("2 - Ver tarefas")
+    print("3 - Concluir tarefa")
+    print("4 - Remover tarefa")
+    print("0 - Sair")
+    opcao = input("Escolha: ").strip()
+
+    match opcao:
+        case "1":
+            titulo = input("Nova tarefa: ").strip()
+            tarefas.append({"titulo": titulo, "feita": False})
+            print(f"Tarefa adicionada: {titulo}")
+        case "2":
+            if not tarefas:
+                print("Nenhuma tarefa ainda.")
+            for numero, tarefa in enumerate(tarefas, start=1):
+                marca = "x" if tarefa["feita"] else " "
+                print(f"{numero}. [{marca}] {tarefa['titulo']}")
+        case "3":
+            numero = int(input("Número da tarefa: "))
+            tarefa = tarefas[numero - 1]
+            tarefa["feita"] = True
+            print(f"Concluída: {tarefa['titulo']}")
+        case "4":
+            numero = int(input("Número da tarefa: "))
+            tarefa = tarefas.pop(numero - 1)
+            print(f"Removida: {tarefa['titulo']}")
+        case "0":
+            print("Até mais!")
+            break
+        case _:
+            print("Opção inválida.")
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Linha</th><th>O que faz</th></tr>
+<tr><td><code>{"titulo": titulo, "feita": False}</code></td><td>A tarefa nova: o título digitado e <code>"feita"</code> valendo <code>False</code> (ainda não foi feita).</td></tr>
+<tr><td><code>marca = "x" if tarefa["feita"] else " "</code></td><td>Um <a href="if-ternario.html">if em uma linha</a>: <code>"x"</code> para as feitas, espaço para as outras. Vira <code>[x]</code> ou <code>[ ]</code>.</td></tr>
+<tr><td><code>f"{numero}. [{marca}] {tarefa['titulo']}"</code></td><td>Dentro da f-string, a chave vai com aspas <strong>simples</strong> (<code>'titulo'</code>), porque a f-string já usa as duplas. (Desde o Python 3.12 dá para repetir as aspas duplas lá dentro, mas aspas diferentes funcionam em qualquer versão e são mais fáceis de ler.)</td></tr>
+<tr><td><code>numero = int(input("Número da tarefa: "))</code></td><td>Aqui é preciso um número de verdade, para achar a tarefa na lista.</td></tr>
+<tr><td><code>tarefas[numero - 1]</code></td><td>A Ana conta a partir de 1; a lista, a partir de 0. A tarefa 2 da tela está na posição 1 da lista: por isso o <code>- 1</code>.</td></tr>
+<tr><td><code>tarefa["feita"] = True</code></td><td>Muda o valor da chave <code>"feita"</code> <strong>dentro</strong> do dicionário que está na lista. Não é preciso "devolver" a tarefa para a lista: a variável <code>tarefa</code> e a lista apontam para o mesmo dicionário (veja <a href="mutabilidade.html">Mutável × Imutável</a>).</td></tr>
+<tr><td><code>tarefas.pop(numero - 1)</code></td><td>Tira da lista o item daquela posição e o <strong>devolve</strong>, para o programa poder dizer qual foi removido (veja <a href="listas-remover.html">Removendo Itens</a>).</td></tr>
+</table>
+</div>
+
+<pre class="term" data-cwd="~/projetos/tarefas"></pre>
+
+<p>Repare na última listagem: depois de remover a tarefa 1 (Comprar pão), as outras <strong>subiram</strong> uma posição. A conta de luz, que era a 2, virou a 1. Os números da tela são só a posição atual na lista.</p>
+
+<h3>Quando dá errado na versão 2</h3>
+
+<div class="cenario">
+<strong>Um número que não existe: <code>IndexError</code></strong>
+<pre class="term" data-cwd="~/projetos/tarefas"></pre>
+<p>Só existe a tarefa 1, e a Ana pediu a 5. <code>IndexError: list index out of range</code> = "erro de índice: a posição está fora da lista". A lista tem uma posição só (a 0), e o programa pediu a posição 4 (<code>5 - 1</code>). O sublinhado aponta o <code>tarefas[numero - 1]</code>, na linha 26. Com <code>pop</code>, a mensagem seria parecida: <code>IndexError: pop index out of range</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O número 0 conclui a tarefa errada, sem erro nenhum</strong>
+<pre class="term" data-cwd="~/projetos/tarefas"></pre>
+<p>Este é o pior tipo de defeito: o programa não reclamou, mas fez a coisa errada. A Ana digitou <code>0</code> e a <strong>última</strong> tarefa (a conta de luz) foi concluída. O motivo: <code>0 - 1</code> é <code>-1</code>, e, numa lista, o índice <code>-1</code> é válido: quer dizer "o último item" (o <code>-2</code> é o penúltimo, e assim por diante; veja <a href="listas-acessar.html">Acessando Itens</a>). Logo depois, o <code>dois</code> por extenso derrubou o programa com o <code>ValueError</code> que você já conhece da <a href="projeto-calculadora.html">Calculadora</a>. A versão 3 cuida dos três casos.</p>
+</div>
+
+<div class="trypy" data-stdin="1\nComprar pão\n1\nPagar a conta de luz\n3\n2\n2\n0" data-goal="out:2. [x] Pagar a conta de luz;;out:1. [ ] Comprar pão;;semerro">
+<p class="try-task"><strong>Missão (versão 2):</strong> o menu oferece "3 - Concluir tarefa", mas o <code>match</code> não tem o <code>case "3"</code>, e a opção cai em "Opção inválida.". Escreva o caso: leia o número com <code>int(input("Número da tarefa: "))</code>, pegue a tarefa em <code>tarefas[numero - 1]</code>, ponha <code>True</code> na chave <code>"feita"</code> e mostre <code>Concluída: …</code>. A entrada da missão cadastra duas tarefas, conclui a 2 e lista.</p>
+<pre class="script" data-file="tarefas.py">tarefas = []
+
+print("=== Lista de Tarefas da Ana ===")
+while True:
+    print()
+    print("1 - Adicionar tarefa")
+    print("2 - Ver tarefas")
+    print("3 - Concluir tarefa")
+    print("4 - Remover tarefa")
+    print("0 - Sair")
+    opcao = input("Escolha: ").strip()
+
+    match opcao:
+        case "1":
+            titulo = input("Nova tarefa: ").strip()
+            tarefas.append({"titulo": titulo, "feita": False})
+            print(f"Tarefa adicionada: {titulo}")
+        case "2":
+            if not tarefas:
+                print("Nenhuma tarefa ainda.")
+            for numero, tarefa in enumerate(tarefas, start=1):
+                marca = "x" if tarefa["feita"] else " "
+                print(f"{numero}. [{marca}] {tarefa['titulo']}")
+        case "4":
+            numero = int(input("Número da tarefa: "))
+            tarefa = tarefas.pop(numero - 1)
+            print(f"Removida: {tarefa['titulo']}")
+        case "0":
+            print("Até mais!")
+            break
+        case _:
+            print("Opção inválida.")
+</pre>
+<pre class="solucao" data-file="tarefas.py">tarefas = []
+
+print("=== Lista de Tarefas da Ana ===")
+while True:
+    print()
+    print("1 - Adicionar tarefa")
+    print("2 - Ver tarefas")
+    print("3 - Concluir tarefa")
+    print("4 - Remover tarefa")
+    print("0 - Sair")
+    opcao = input("Escolha: ").strip()
+
+    match opcao:
+        case "1":
+            titulo = input("Nova tarefa: ").strip()
+            tarefas.append({"titulo": titulo, "feita": False})
+            print(f"Tarefa adicionada: {titulo}")
+        case "2":
+            if not tarefas:
+                print("Nenhuma tarefa ainda.")
+            for numero, tarefa in enumerate(tarefas, start=1):
+                marca = "x" if tarefa["feita"] else " "
+                print(f"{numero}. [{marca}] {tarefa['titulo']}")
+        case "3":
+            numero = int(input("Número da tarefa: "))
+            tarefa = tarefas[numero - 1]
+            tarefa["feita"] = True
+            print(f"Concluída: {tarefa['titulo']}")
+        case "4":
+            numero = int(input("Número da tarefa: "))
+            tarefa = tarefas.pop(numero - 1)
+            print(f"Removida: {tarefa['titulo']}")
+        case "0":
+            print("Até mais!")
+            break
+        case _:
+            print("Opção inválida.")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao3">Versão 3 · Funções e número validado</h2>
+<p>O <code>match</code> estava ficando enorme. Na versão 3, cada pedaço com nome próprio vira uma função: <code>mostrar_menu</code>, <code>listar</code> e, a mais importante, <code>escolher_tarefa</code>, que pergunta o número e só devolve uma posição se ela existir. Concluir e remover usam a mesma função, então a validação é escrita uma vez só. E o título vazio (só <kbd>Enter</kbd>) passa a ser recusado.</p>
+
+<pre class="file" data-file="tarefas.py">def mostrar_menu():
+    print()
+    print("1 - Adicionar tarefa")
+    print("2 - Ver tarefas")
+    print("3 - Concluir tarefa")
+    print("4 - Remover tarefa")
+    print("0 - Sair")
+
+
+def listar(tarefas):
+    """Mostra as tarefas numeradas a partir de 1, com [x] nas feitas."""
+    if not tarefas:
+        print("Nenhuma tarefa ainda.")
+    for numero, tarefa in enumerate(tarefas, start=1):
+        marca = "x" if tarefa["feita"] else " "
+        print(f"{numero}. [{marca}] {tarefa['titulo']}")
+
+
+def escolher_tarefa(tarefas):
+    """Pergunta o número de uma tarefa e devolve a posição dela na lista (ou None)."""
+    if not tarefas:
+        print("Nenhuma tarefa ainda.")
+        return None
+    texto = input("Número da tarefa: ").strip()
+    if not texto.isdigit():
+        print(f'"{texto}" não é um número.')
+        return None
+    numero = int(texto)
+    if not 1 &lt;= numero &lt;= len(tarefas):
+        print(f"Não existe a tarefa {numero}. Escolha de 1 a {len(tarefas)}.")
+        return None
+    return numero - 1
+
+
+tarefas = []
+
+print("=== Lista de Tarefas da Ana ===")
+while True:
+    mostrar_menu()
+    opcao = input("Escolha: ").strip()
+
+    match opcao:
+        case "1":
+            titulo = input("Nova tarefa: ").strip()
+            if titulo:
+                tarefas.append({"titulo": titulo, "feita": False})
+                print(f"Tarefa adicionada: {titulo}")
+            else:
+                print("A tarefa precisa de um nome.")
+        case "2":
+            listar(tarefas)
+        case "3":
+            posicao = escolher_tarefa(tarefas)
+            if posicao is not None:
+                tarefas[posicao]["feita"] = True
+                print(f"Concluída: {tarefas[posicao]['titulo']}")
+        case "4":
+            posicao = escolher_tarefa(tarefas)
+            if posicao is not None:
+                tarefa = tarefas.pop(posicao)
+                print(f"Removida: {tarefa['titulo']}")
+        case "0":
+            print("Até mais!")
+            break
+        case _:
+            print("Opção inválida.")
+</pre>
+
+<dl class="anatomy">
+  <dt>def escolher_tarefa(tarefas):</dt><dd>Recebe a lista e devolve a <strong>posição</strong> da tarefa escolhida (de 0 em diante), ou <code>None</code> quando não dá.</dd>
+  <dt>if not tarefas: … return None</dt><dd>Lista vazia: nem pergunta.</dd>
+  <dt>if not texto.isdigit():</dt><dd><code>isdigit()</code> ("é dígito?") dá <code>True</code> só se o texto tiver apenas algarismos. Recusa <code>"dois"</code>, <code>""</code> e também <code>"-1"</code> (o sinal de menos não é algarismo).</dd>
+  <dt>if not 1 &lt;= numero &lt;= len(tarefas):</dt><dd>O número tem de estar entre 1 e a quantidade de tarefas. É aqui que o <code>0</code> e o <code>5</code> são barrados.</dd>
+  <dt>return numero - 1</dt><dd>A conversão "número da tela → posição na lista" agora mora num lugar só.</dd>
+  <dt>if posicao is not None:</dt><dd>No programa principal: só conclui ou remove se veio uma posição. Atenção: <code>if posicao:</code> estaria <strong>errado</strong>, porque a posição 0 (a primeira tarefa) conta como falso. Para <code>None</code>, use sempre <code>is</code>/<code>is not</code>.</dd>
+  <dt>if titulo:</dt><dd>Texto vazio conta como falso: recusa o título vazio.</dd>
+</dl>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; "12".isdigit()
+True
+&gt;&gt;&gt; "-1".isdigit()
+False
+&gt;&gt;&gt; " 3".isdigit()
+False
+&gt;&gt;&gt; exit()</pre>
+
+<p>O espaço também conta: <code>" 3".isdigit()</code> é <code>False</code>. Por isso o <code>texto</code> passa pelo <code>strip()</code> antes do teste.</p>
+
+<pre class="term" data-cwd="~/projetos/tarefas"></pre>
+
+<div class="cenario">
+<strong>Chave com o nome errado: <code>KeyError</code></strong>
+<p>Com dicionários, um erro de digitação no nome da chave não passa despercebido:</p>
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; tarefa = {"titulo": "Comprar pão", "feita": False}
+&gt;&gt;&gt; tarefa["titlo"]
+Traceback (most recent call last):
+  File "&lt;python-input-1&gt;", line 1, in &lt;module&gt;
+    tarefa["titlo"]
+    ~~~~~~^^^^^^^^^
+KeyError: 'titlo'
+&gt;&gt;&gt; exit()</pre>
+<p><code>KeyError: 'titlo'</code> = "erro de chave: não existe a chave <code>'titlo'</code>". (No modo interativo, o "arquivo" se chama <code>&lt;python-input-1&gt;</code>: é a segunda entrada digitada nessa sessão, contando a partir de 0.) <strong>Como consertar:</strong> confira o nome da chave, letra por letra. Num programa grande, o mesmo erro aparece com o nome do arquivo e a linha.</p>
+</div>
+
+<div class="trypy" data-stdin="1\nComprar pão\n3\n5\n3\n0\n3\n1\n2\n0" data-goal="out:Não existe a tarefa 5. Escolha de 1 a 1.;;out:Não existe a tarefa 0. Escolha de 1 a 1.;;out:1. [x] Comprar pão;;semerro">
+<p class="try-task"><strong>Missão (versão 3):</strong> a função <code>escolher_tarefa</code> ainda não valida nada, e o <code>5</code> da entrada derruba o programa com <code>IndexError</code>. Escreva o corpo dela como na versão 3: lista vazia, <code>isdigit()</code> e o teste <code>1 &lt;= numero &lt;= len(tarefas)</code> com a mensagem <code>Não existe a tarefa 5. Escolha de 1 a 1.</code> A entrada da missão cadastra uma tarefa, tenta concluir a 5, depois a 0, depois a 1, e lista.</p>
+<pre class="script" data-file="tarefas.py">def mostrar_menu():
+    print()
+    print("1 - Adicionar tarefa")
+    print("2 - Ver tarefas")
+    print("3 - Concluir tarefa")
+    print("4 - Remover tarefa")
+    print("0 - Sair")
+
+
+def listar(tarefas):
+    """Mostra as tarefas numeradas a partir de 1, com [x] nas feitas."""
+    if not tarefas:
+        print("Nenhuma tarefa ainda.")
+    for numero, tarefa in enumerate(tarefas, start=1):
+        marca = "x" if tarefa["feita"] else " "
+        print(f"{numero}. [{marca}] {tarefa['titulo']}")
+
+
+def escolher_tarefa(tarefas):
+    """Pergunta o número de uma tarefa e devolve a posição dela na lista (ou None)."""
+    return int(input("Número da tarefa: ")) - 1
+
+
+tarefas = []
+
+print("=== Lista de Tarefas da Ana ===")
+while True:
+    mostrar_menu()
+    opcao = input("Escolha: ").strip()
+
+    match opcao:
+        case "1":
+            titulo = input("Nova tarefa: ").strip()
+            if titulo:
+                tarefas.append({"titulo": titulo, "feita": False})
+                print(f"Tarefa adicionada: {titulo}")
+            else:
+                print("A tarefa precisa de um nome.")
+        case "2":
+            listar(tarefas)
+        case "3":
+            posicao = escolher_tarefa(tarefas)
+            if posicao is not None:
+                tarefas[posicao]["feita"] = True
+                print(f"Concluída: {tarefas[posicao]['titulo']}")
+        case "4":
+            posicao = escolher_tarefa(tarefas)
+            if posicao is not None:
+                tarefa = tarefas.pop(posicao)
+                print(f"Removida: {tarefa['titulo']}")
+        case "0":
+            print("Até mais!")
+            break
+        case _:
+            print("Opção inválida.")
+</pre>
+<pre class="solucao" data-file="tarefas.py">def mostrar_menu():
+    print()
+    print("1 - Adicionar tarefa")
+    print("2 - Ver tarefas")
+    print("3 - Concluir tarefa")
+    print("4 - Remover tarefa")
+    print("0 - Sair")
+
+
+def listar(tarefas):
+    """Mostra as tarefas numeradas a partir de 1, com [x] nas feitas."""
+    if not tarefas:
+        print("Nenhuma tarefa ainda.")
+    for numero, tarefa in enumerate(tarefas, start=1):
+        marca = "x" if tarefa["feita"] else " "
+        print(f"{numero}. [{marca}] {tarefa['titulo']}")
+
+
+def escolher_tarefa(tarefas):
+    """Pergunta o número de uma tarefa e devolve a posição dela na lista (ou None)."""
+    if not tarefas:
+        print("Nenhuma tarefa ainda.")
+        return None
+    texto = input("Número da tarefa: ").strip()
+    if not texto.isdigit():
+        print(f'"{texto}" não é um número.')
+        return None
+    numero = int(texto)
+    if not 1 &lt;= numero &lt;= len(tarefas):
+        print(f"Não existe a tarefa {numero}. Escolha de 1 a {len(tarefas)}.")
+        return None
+    return numero - 1
+
+
+tarefas = []
+
+print("=== Lista de Tarefas da Ana ===")
+while True:
+    mostrar_menu()
+    opcao = input("Escolha: ").strip()
+
+    match opcao:
+        case "1":
+            titulo = input("Nova tarefa: ").strip()
+            if titulo:
+                tarefas.append({"titulo": titulo, "feita": False})
+                print(f"Tarefa adicionada: {titulo}")
+            else:
+                print("A tarefa precisa de um nome.")
+        case "2":
+            listar(tarefas)
+        case "3":
+            posicao = escolher_tarefa(tarefas)
+            if posicao is not None:
+                tarefas[posicao]["feita"] = True
+                print(f"Concluída: {tarefas[posicao]['titulo']}")
+        case "4":
+            posicao = escolher_tarefa(tarefas)
+            if posicao is not None:
+                tarefa = tarefas.pop(posicao)
+                print(f"Removida: {tarefa['titulo']}")
+        case "0":
+            print("Até mais!")
+            break
+        case _:
+            print("Opção inválida.")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao4">Versão 4 · Guardar num arquivo</h2>
+<p>Até a versão 3, tudo o que a Ana cadastra some quando o programa fecha: a lista vive na memória do computador só enquanto o programa roda. Para as tarefas sobreviverem, a versão 4 as grava num arquivo de texto, <code>tarefas.txt</code>, uma por linha, no mesmo formato da tela:</p>
+
+<pre class="file" data-file="tarefas.txt">[ ] Comprar pão
+[x] Pagar a conta de luz
+[ ] Levar o Rex ao veterinário
+</pre>
+
+<p>Duas funções novas: <code>carregar()</code>, que lê o arquivo quando o programa abre, e <code>salvar(tarefas)</code>, chamada depois de cada mudança (adicionar, concluir, remover). O resto é a versão 3.</p>
+
+<pre class="file" data-file="tarefas.py">ARQUIVO = "tarefas.txt"
+
+
+def carregar():
+    """Lê as tarefas do arquivo. Se ele ainda não existe, começa com a lista vazia."""
+    tarefas = []
+    try:
+        with open(ARQUIVO, encoding="utf-8") as arquivo:
+            for linha in arquivo:
+                linha = linha.rstrip("\n")
+                if linha.startswith("[x] "):
+                    tarefas.append({"titulo": linha[4:], "feita": True})
+                elif linha.startswith("[ ] "):
+                    tarefas.append({"titulo": linha[4:], "feita": False})
+    except FileNotFoundError:
+        pass  # primeira vez: ainda não há arquivo
+    return tarefas
+
+
+def salvar(tarefas):
+    """Grava todas as tarefas no arquivo, uma por linha."""
+    with open(ARQUIVO, "w", encoding="utf-8") as arquivo:
+        for tarefa in tarefas:
+            marca = "x" if tarefa["feita"] else " "
+            arquivo.write(f"[{marca}] {tarefa['titulo']}\n")
+
+
+def mostrar_menu():
+    print()
+    print("1 - Adicionar tarefa")
+    print("2 - Ver tarefas")
+    print("3 - Concluir tarefa")
+    print("4 - Remover tarefa")
+    print("0 - Sair")
+
+
+def listar(tarefas):
+    """Mostra as tarefas numeradas a partir de 1, com [x] nas feitas."""
+    if not tarefas:
+        print("Nenhuma tarefa ainda.")
+    for numero, tarefa in enumerate(tarefas, start=1):
+        marca = "x" if tarefa["feita"] else " "
+        print(f"{numero}. [{marca}] {tarefa['titulo']}")
+
+
+def escolher_tarefa(tarefas):
+    """Pergunta o número de uma tarefa e devolve a posição dela na lista (ou None)."""
+    if not tarefas:
+        print("Nenhuma tarefa ainda.")
+        return None
+    texto = input("Número da tarefa: ").strip()
+    if not texto.isdigit():
+        print(f'"{texto}" não é um número.')
+        return None
+    numero = int(texto)
+    if not 1 &lt;= numero &lt;= len(tarefas):
+        print(f"Não existe a tarefa {numero}. Escolha de 1 a {len(tarefas)}.")
+        return None
+    return numero - 1
+
+
+print("=== Lista de Tarefas da Ana ===")
+tarefas = carregar()
+print(f"{len(tarefas)} tarefa(s) carregada(s) de {ARQUIVO}.")
+while True:
+    mostrar_menu()
+    opcao = input("Escolha: ").strip()
+
+    match opcao:
+        case "1":
+            titulo = input("Nova tarefa: ").strip()
+            if titulo:
+                tarefas.append({"titulo": titulo, "feita": False})
+                print(f"Tarefa adicionada: {titulo}")
+                salvar(tarefas)
+            else:
+                print("A tarefa precisa de um nome.")
+        case "2":
+            listar(tarefas)
+        case "3":
+            posicao = escolher_tarefa(tarefas)
+            if posicao is not None:
+                tarefas[posicao]["feita"] = True
+                print(f"Concluída: {tarefas[posicao]['titulo']}")
+                salvar(tarefas)
+        case "4":
+            posicao = escolher_tarefa(tarefas)
+            if posicao is not None:
+                tarefa = tarefas.pop(posicao)
+                print(f"Removida: {tarefa['titulo']}")
+                salvar(tarefas)
+        case "0":
+            print("Até mais!")
+            break
+        case _:
+            print("Opção inválida.")
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Peça</th><th>O que faz</th></tr>
+<tr><td><code>open(ARQUIVO, "w", encoding="utf-8")</code></td><td>Abre para <strong>escrever</strong> (<code>"w"</code>, de <em>write</em>). Atenção: o <code>"w"</code> <strong>apaga</strong> o que havia no arquivo e começa do zero. Aqui é o que queremos: a cada <code>salvar</code>, o arquivo recebe a lista inteira, atualizada (veja <a href="arquivos-escrever.html">Escrevendo Arquivos</a>).</td></tr>
+<tr><td><code>arquivo.write(f"[{marca}] …\n")</code></td><td>Escreve uma linha. O <code>write</code> não pula linha sozinho, como o <code>print</code>: o <code>\n</code> no fim é obrigatório.</td></tr>
+<tr><td><code>with open(ARQUIVO, encoding="utf-8") as arquivo:</code></td><td>Sem o <code>"w"</code>, abre para <strong>ler</strong> (o padrão). O <code>with</code> fecha o arquivo no fim do bloco.</td></tr>
+<tr><td><code>linha.rstrip("\n")</code></td><td>Tira só o <code>\n</code> do fim da linha (o <code>r</code> é de <em>right</em>, "direita"). Um <code>strip()</code> comum também tiraria espaços que façam parte do título.</td></tr>
+<tr><td><code>linha.startswith("[x] ")</code></td><td>"Começa com?": decide se a tarefa estava feita.</td></tr>
+<tr><td><code>linha[4:]</code></td><td>Uma <a href="strings-fatias.html">fatia</a>: tudo a partir da posição 4, ou seja, o texto depois de <code>[x] </code> (quatro caracteres: colchete, x, colchete, espaço).</td></tr>
+<tr><td><code>except FileNotFoundError: pass</code></td><td>Na primeira vez, o arquivo ainda não existe, e o <code>open</code> daria <code>FileNotFoundError</code>. Aqui isso não é um problema: começa com a lista vazia. O <code>pass</code> ("passar") é a instrução que não faz nada.</td></tr>
+</table>
+</div>
+
+<p>As duas sessões do começo da página são desta versão: na primeira, o programa diz <code>0 tarefa(s) carregada(s)</code> (o arquivo ainda não existia) e, ao sair, o <code>tarefas.txt</code> já tem as três tarefas; na segunda, ele carrega as três, e a remoção também vai para o arquivo.</p>
+
+<div class="tip">
+<strong>Por que salvar depois de cada mudança, e não só ao sair?</strong>
+<p>Se o programa fosse interrompido no meio (um <kbd>Ctrl</kbd>+<kbd>C</kbd>, um erro, a bateria do notebook), tudo o que a Ana fez desde que abriu o programa se perderia. Salvando a cada mudança, o arquivo está sempre em dia. Com poucas tarefas, regravar o arquivo inteiro é instantâneo.</p>
+</div>
+
+<h3>Quando dá errado na versão 4</h3>
+
+<div class="cenario">
+<strong><code>"a"</code> no lugar de <code>"w"</code>: as tarefas se duplicam</strong>
+<p>O modo <code>"a"</code> (de <em>append</em>, "acrescentar") escreve no <strong>fim</strong> do arquivo, sem apagar o que já havia. Parece mais seguro, mas olhe o que acontece com a função <code>salvar</code>, que grava a lista inteira:</p>
+<pre class="term" data-cwd="~/projetos/tarefas"></pre>
+<p>O arquivo tinha 2 tarefas; o programa carregou as 2, a Ana acrescentou uma, e o <code>salvar</code> escreveu as 3 <strong>depois</strong> das 2 que já estavam lá: 5 linhas, com repetições. Na próxima vez, seriam 5 carregadas, e o arquivo cresceria a cada mudança. Não há traceback, porque para o Python está tudo certo. <strong>Como consertar:</strong> quando a função grava a lista inteira, use <code>"w"</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Esquecer o modo: <code>io.UnsupportedOperation: not writable</code></strong>
+<pre class="term" data-cwd="~/projetos/tarefas"></pre>
+<p>Sem o <code>"w"</code>, o <code>open</code> abriu o arquivo só para leitura, e o <code>write</code> falhou: <code>io.UnsupportedOperation: not writable</code> = "operação não suportada: (o arquivo) não aceita escrita". O traceback tem dois trechos: o programa principal chamou <code>salvar</code> na linha 75, e dentro dela o <code>write</code> da linha 25 deu o erro. (Repare que o programa chegou a dizer "Tarefa adicionada", mas não conseguiu gravar.) <strong>Como consertar:</strong> <code>open(ARQUIVO, "w", encoding="utf-8")</code>.</p>
+</div>
+
+<div class="trypy" data-stdin="1\nComprar pão\n1\nPagar a conta de luz\n3\n1\n0" data-goal="arquivo:tarefas.txt~[x] Comprar pão;;arquivo:tarefas.txt~[ ] Pagar a conta de luz;;semerro">
+<p class="try-task"><strong>Missão (versão 4, salvar):</strong> a função <code>salvar</code> ainda não faz nada, e o <code>tarefas.txt</code> nunca é criado. Escreva o corpo dela: abra o arquivo com <code>"w"</code> e <code>encoding="utf-8"</code> e, para cada tarefa, grave <code>[x] título</code> ou <code>[ ] título</code> com <code>\n</code> no fim. A entrada da missão cadastra duas tarefas e conclui a primeira; a missão confere o arquivo <code>tarefas.txt</code> depois que o programa termina.</p>
+<pre class="script" data-file="tarefas.py">ARQUIVO = "tarefas.txt"
+
+
+def carregar():
+    """Lê as tarefas do arquivo. Se ele ainda não existe, começa com a lista vazia."""
+    tarefas = []
+    try:
+        with open(ARQUIVO, encoding="utf-8") as arquivo:
+            for linha in arquivo:
+                linha = linha.rstrip("\n")
+                if linha.startswith("[x] "):
+                    tarefas.append({"titulo": linha[4:], "feita": True})
+                elif linha.startswith("[ ] "):
+                    tarefas.append({"titulo": linha[4:], "feita": False})
+    except FileNotFoundError:
+        pass  # primeira vez: ainda não há arquivo
+    return tarefas
+
+
+def salvar(tarefas):
+    """Grava todas as tarefas no arquivo, uma por linha."""
+    pass  # escreva aqui: abra o arquivo com "w" e grave uma linha por tarefa
+
+
+def mostrar_menu():
+    print()
+    print("1 - Adicionar tarefa")
+    print("2 - Ver tarefas")
+    print("3 - Concluir tarefa")
+    print("4 - Remover tarefa")
+    print("0 - Sair")
+
+
+def listar(tarefas):
+    """Mostra as tarefas numeradas a partir de 1, com [x] nas feitas."""
+    if not tarefas:
+        print("Nenhuma tarefa ainda.")
+    for numero, tarefa in enumerate(tarefas, start=1):
+        marca = "x" if tarefa["feita"] else " "
+        print(f"{numero}. [{marca}] {tarefa['titulo']}")
+
+
+def escolher_tarefa(tarefas):
+    """Pergunta o número de uma tarefa e devolve a posição dela na lista (ou None)."""
+    if not tarefas:
+        print("Nenhuma tarefa ainda.")
+        return None
+    texto = input("Número da tarefa: ").strip()
+    if not texto.isdigit():
+        print(f'"{texto}" não é um número.')
+        return None
+    numero = int(texto)
+    if not 1 &lt;= numero &lt;= len(tarefas):
+        print(f"Não existe a tarefa {numero}. Escolha de 1 a {len(tarefas)}.")
+        return None
+    return numero - 1
+
+
+print("=== Lista de Tarefas da Ana ===")
+tarefas = carregar()
+print(f"{len(tarefas)} tarefa(s) carregada(s) de {ARQUIVO}.")
+while True:
+    mostrar_menu()
+    opcao = input("Escolha: ").strip()
+
+    match opcao:
+        case "1":
+            titulo = input("Nova tarefa: ").strip()
+            if titulo:
+                tarefas.append({"titulo": titulo, "feita": False})
+                print(f"Tarefa adicionada: {titulo}")
+                salvar(tarefas)
+            else:
+                print("A tarefa precisa de um nome.")
+        case "2":
+            listar(tarefas)
+        case "3":
+            posicao = escolher_tarefa(tarefas)
+            if posicao is not None:
+                tarefas[posicao]["feita"] = True
+                print(f"Concluída: {tarefas[posicao]['titulo']}")
+                salvar(tarefas)
+        case "4":
+            posicao = escolher_tarefa(tarefas)
+            if posicao is not None:
+                tarefa = tarefas.pop(posicao)
+                print(f"Removida: {tarefa['titulo']}")
+                salvar(tarefas)
+        case "0":
+            print("Até mais!")
+            break
+        case _:
+            print("Opção inválida.")
+</pre>
+<pre class="solucao" data-file="tarefas.py">ARQUIVO = "tarefas.txt"
+
+
+def carregar():
+    """Lê as tarefas do arquivo. Se ele ainda não existe, começa com a lista vazia."""
+    tarefas = []
+    try:
+        with open(ARQUIVO, encoding="utf-8") as arquivo:
+            for linha in arquivo:
+                linha = linha.rstrip("\n")
+                if linha.startswith("[x] "):
+                    tarefas.append({"titulo": linha[4:], "feita": True})
+                elif linha.startswith("[ ] "):
+                    tarefas.append({"titulo": linha[4:], "feita": False})
+    except FileNotFoundError:
+        pass  # primeira vez: ainda não há arquivo
+    return tarefas
+
+
+def salvar(tarefas):
+    """Grava todas as tarefas no arquivo, uma por linha."""
+    with open(ARQUIVO, "w", encoding="utf-8") as arquivo:
+        for tarefa in tarefas:
+            marca = "x" if tarefa["feita"] else " "
+            arquivo.write(f"[{marca}] {tarefa['titulo']}\n")
+
+
+def mostrar_menu():
+    print()
+    print("1 - Adicionar tarefa")
+    print("2 - Ver tarefas")
+    print("3 - Concluir tarefa")
+    print("4 - Remover tarefa")
+    print("0 - Sair")
+
+
+def listar(tarefas):
+    """Mostra as tarefas numeradas a partir de 1, com [x] nas feitas."""
+    if not tarefas:
+        print("Nenhuma tarefa ainda.")
+    for numero, tarefa in enumerate(tarefas, start=1):
+        marca = "x" if tarefa["feita"] else " "
+        print(f"{numero}. [{marca}] {tarefa['titulo']}")
+
+
+def escolher_tarefa(tarefas):
+    """Pergunta o número de uma tarefa e devolve a posição dela na lista (ou None)."""
+    if not tarefas:
+        print("Nenhuma tarefa ainda.")
+        return None
+    texto = input("Número da tarefa: ").strip()
+    if not texto.isdigit():
+        print(f'"{texto}" não é um número.')
+        return None
+    numero = int(texto)
+    if not 1 &lt;= numero &lt;= len(tarefas):
+        print(f"Não existe a tarefa {numero}. Escolha de 1 a {len(tarefas)}.")
+        return None
+    return numero - 1
+
+
+print("=== Lista de Tarefas da Ana ===")
+tarefas = carregar()
+print(f"{len(tarefas)} tarefa(s) carregada(s) de {ARQUIVO}.")
+while True:
+    mostrar_menu()
+    opcao = input("Escolha: ").strip()
+
+    match opcao:
+        case "1":
+            titulo = input("Nova tarefa: ").strip()
+            if titulo:
+                tarefas.append({"titulo": titulo, "feita": False})
+                print(f"Tarefa adicionada: {titulo}")
+                salvar(tarefas)
+            else:
+                print("A tarefa precisa de um nome.")
+        case "2":
+            listar(tarefas)
+        case "3":
+            posicao = escolher_tarefa(tarefas)
+            if posicao is not None:
+                tarefas[posicao]["feita"] = True
+                print(f"Concluída: {tarefas[posicao]['titulo']}")
+                salvar(tarefas)
+        case "4":
+            posicao = escolher_tarefa(tarefas)
+            if posicao is not None:
+                tarefa = tarefas.pop(posicao)
+                print(f"Removida: {tarefa['titulo']}")
+                salvar(tarefas)
+        case "0":
+            print("Até mais!")
+            break
+        case _:
+            print("Opção inválida.")
+</pre>
+</div>
+
+<p>Na caixa abaixo, o <code>tarefas.txt</code> já existe, numa aba ao lado do programa: é o arquivo que a Ana deixou ontem.</p>
+
+<div class="trypy" data-stdin="2\n0" data-goal="out:2 tarefa(s) carregada(s);;out:1. [x] Pagar a conta de luz;;out:2. [ ] Levar o Rex ao veterinário;;semerro">
+<p class="try-task"><strong>Missão (versão 4, carregar):</strong> agora o contrário: a função <code>carregar</code> não lê o arquivo, e o programa diz <code>0 tarefa(s) carregada(s)</code> mesmo com o <code>tarefas.txt</code> da aba. Escreva a leitura como na versão 4 (com <code>try</code>, <code>with open</code>, <code>startswith</code> e <code>linha[4:]</code>, e o <code>except FileNotFoundError</code>). A entrada da missão só lista e sai.</p>
+<pre class="script" data-file="tarefas.py">ARQUIVO = "tarefas.txt"
+
+
+def carregar():
+    """Lê as tarefas do arquivo. Se ele ainda não existe, começa com a lista vazia."""
+    tarefas = []
+    # escreva aqui: leia o arquivo e acrescente cada tarefa na lista
+    return tarefas
+
+
+def salvar(tarefas):
+    """Grava todas as tarefas no arquivo, uma por linha."""
+    with open(ARQUIVO, "w", encoding="utf-8") as arquivo:
+        for tarefa in tarefas:
+            marca = "x" if tarefa["feita"] else " "
+            arquivo.write(f"[{marca}] {tarefa['titulo']}\n")
+
+
+def mostrar_menu():
+    print()
+    print("1 - Adicionar tarefa")
+    print("2 - Ver tarefas")
+    print("3 - Concluir tarefa")
+    print("4 - Remover tarefa")
+    print("0 - Sair")
+
+
+def listar(tarefas):
+    """Mostra as tarefas numeradas a partir de 1, com [x] nas feitas."""
+    if not tarefas:
+        print("Nenhuma tarefa ainda.")
+    for numero, tarefa in enumerate(tarefas, start=1):
+        marca = "x" if tarefa["feita"] else " "
+        print(f"{numero}. [{marca}] {tarefa['titulo']}")
+
+
+def escolher_tarefa(tarefas):
+    """Pergunta o número de uma tarefa e devolve a posição dela na lista (ou None)."""
+    if not tarefas:
+        print("Nenhuma tarefa ainda.")
+        return None
+    texto = input("Número da tarefa: ").strip()
+    if not texto.isdigit():
+        print(f'"{texto}" não é um número.')
+        return None
+    numero = int(texto)
+    if not 1 &lt;= numero &lt;= len(tarefas):
+        print(f"Não existe a tarefa {numero}. Escolha de 1 a {len(tarefas)}.")
+        return None
+    return numero - 1
+
+
+print("=== Lista de Tarefas da Ana ===")
+tarefas = carregar()
+print(f"{len(tarefas)} tarefa(s) carregada(s) de {ARQUIVO}.")
+while True:
+    mostrar_menu()
+    opcao = input("Escolha: ").strip()
+
+    match opcao:
+        case "1":
+            titulo = input("Nova tarefa: ").strip()
+            if titulo:
+                tarefas.append({"titulo": titulo, "feita": False})
+                print(f"Tarefa adicionada: {titulo}")
+                salvar(tarefas)
+            else:
+                print("A tarefa precisa de um nome.")
+        case "2":
+            listar(tarefas)
+        case "3":
+            posicao = escolher_tarefa(tarefas)
+            if posicao is not None:
+                tarefas[posicao]["feita"] = True
+                print(f"Concluída: {tarefas[posicao]['titulo']}")
+                salvar(tarefas)
+        case "4":
+            posicao = escolher_tarefa(tarefas)
+            if posicao is not None:
+                tarefa = tarefas.pop(posicao)
+                print(f"Removida: {tarefa['titulo']}")
+                salvar(tarefas)
+        case "0":
+            print("Até mais!")
+            break
+        case _:
+            print("Opção inválida.")
+</pre>
+<pre class="script" data-file="tarefas.txt">[x] Pagar a conta de luz
+[ ] Levar o Rex ao veterinário
+</pre>
+<pre class="solucao" data-file="tarefas.py">ARQUIVO = "tarefas.txt"
+
+
+def carregar():
+    """Lê as tarefas do arquivo. Se ele ainda não existe, começa com a lista vazia."""
+    tarefas = []
+    try:
+        with open(ARQUIVO, encoding="utf-8") as arquivo:
+            for linha in arquivo:
+                linha = linha.rstrip("\n")
+                if linha.startswith("[x] "):
+                    tarefas.append({"titulo": linha[4:], "feita": True})
+                elif linha.startswith("[ ] "):
+                    tarefas.append({"titulo": linha[4:], "feita": False})
+    except FileNotFoundError:
+        pass  # primeira vez: ainda não há arquivo
+    return tarefas
+
+
+def salvar(tarefas):
+    """Grava todas as tarefas no arquivo, uma por linha."""
+    with open(ARQUIVO, "w", encoding="utf-8") as arquivo:
+        for tarefa in tarefas:
+            marca = "x" if tarefa["feita"] else " "
+            arquivo.write(f"[{marca}] {tarefa['titulo']}\n")
+
+
+def mostrar_menu():
+    print()
+    print("1 - Adicionar tarefa")
+    print("2 - Ver tarefas")
+    print("3 - Concluir tarefa")
+    print("4 - Remover tarefa")
+    print("0 - Sair")
+
+
+def listar(tarefas):
+    """Mostra as tarefas numeradas a partir de 1, com [x] nas feitas."""
+    if not tarefas:
+        print("Nenhuma tarefa ainda.")
+    for numero, tarefa in enumerate(tarefas, start=1):
+        marca = "x" if tarefa["feita"] else " "
+        print(f"{numero}. [{marca}] {tarefa['titulo']}")
+
+
+def escolher_tarefa(tarefas):
+    """Pergunta o número de uma tarefa e devolve a posição dela na lista (ou None)."""
+    if not tarefas:
+        print("Nenhuma tarefa ainda.")
+        return None
+    texto = input("Número da tarefa: ").strip()
+    if not texto.isdigit():
+        print(f'"{texto}" não é um número.')
+        return None
+    numero = int(texto)
+    if not 1 &lt;= numero &lt;= len(tarefas):
+        print(f"Não existe a tarefa {numero}. Escolha de 1 a {len(tarefas)}.")
+        return None
+    return numero - 1
+
+
+print("=== Lista de Tarefas da Ana ===")
+tarefas = carregar()
+print(f"{len(tarefas)} tarefa(s) carregada(s) de {ARQUIVO}.")
+while True:
+    mostrar_menu()
+    opcao = input("Escolha: ").strip()
+
+    match opcao:
+        case "1":
+            titulo = input("Nova tarefa: ").strip()
+            if titulo:
+                tarefas.append({"titulo": titulo, "feita": False})
+                print(f"Tarefa adicionada: {titulo}")
+                salvar(tarefas)
+            else:
+                print("A tarefa precisa de um nome.")
+        case "2":
+            listar(tarefas)
+        case "3":
+            posicao = escolher_tarefa(tarefas)
+            if posicao is not None:
+                tarefas[posicao]["feita"] = True
+                print(f"Concluída: {tarefas[posicao]['titulo']}")
+                salvar(tarefas)
+        case "4":
+            posicao = escolher_tarefa(tarefas)
+            if posicao is not None:
+                tarefa = tarefas.pop(posicao)
+                print(f"Removida: {tarefa['titulo']}")
+                salvar(tarefas)
+        case "0":
+            print("Até mais!")
+            break
+        case _:
+            print("Opção inválida.")
+</pre>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de fazer</h2>
+
+<h3>Validar o número: <code>isdigit()</code> ou <code>try</code>/<code>except</code></h3>
+<p>A versão 3 testou o texto antes de converter. A <a href="projeto-calculadora.html">Calculadora</a> fez o contrário: tentou converter e tratou o erro. As duas funcionam aqui:</p>
+
+<pre class="file" data-file="com_try.py">try:
+    numero = int(texto)
+except ValueError:
+    print(f'"{texto}" não é um número.')
+    return None
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>texto.isdigit()</code> antes do <code>int()</code></td><td>Números inteiros sem sinal, como o número de uma tarefa. Fácil de ler: "se não for só algarismos…".</td></tr>
+<tr><td><code>try: int(texto)</code> / <code>except ValueError</code></td><td>Quando o número pode ter sinal ou casas decimais (<code>"-3"</code>, <code>"2.5"</code> com <code>float</code>). É o jeito mais comum em Python: "tente, e trate se der errado".</td></tr>
+</table>
+</div>
+
+<h3>Onde guardar as tarefas</h3>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td>Texto, uma linha por item (<code>[x] Comprar pão</code>)</td><td>Dados simples. Dá para abrir e editar o arquivo à mão. Foi a escolha deste projeto.</td></tr>
+<tr><td><a href="csv.html">CSV</a></td><td>Várias colunas por item (título, data, prioridade), e o arquivo abre numa planilha.</td></tr>
+<tr><td><a href="json.html">JSON</a></td><td>Grava listas e dicionários do Python quase como estão, sem você inventar um formato. É o que o próximo projeto, a <a href="projeto-agenda.html">Agenda de Contatos</a>, usa.</td></tr>
+<tr><td><a href="sqlite3.html">Banco de dados (sqlite3)</a></td><td>Muitos dados, buscas e mudanças frequentes.</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Ideias para continuar</h2>
+<ul>
+  <li>Uma opção "5 - Ver só as pendentes", com um <code>for</code> que pule as feitas (ou uma <a href="list-comprehension.html">list comprehension</a>).</li>
+  <li>Editar o título de uma tarefa (use <code>escolher_tarefa</code> de novo).</li>
+  <li>Mostrar no fim da listagem quantas faltam: <code>3 tarefa(s), 1 feita(s)</code>.</li>
+  <li>Um título com <code>[x] </code> no começo confunde o <code>carregar</code>? Experimente cadastrar a tarefa <code>[x] teste</code> e abrir o programa de novo.</li>
+</ul>
+
+<hr>
+
+<h2>Referência rápida do projeto</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Para que serviu</th></tr>
+<tr><td><code>while True:</code> + <code>match opcao:</code></td><td>O menu que se repete até a opção de sair</td></tr>
+<tr><td><code>tarefas.append(item)</code></td><td>Acrescentar no fim da lista</td></tr>
+<tr><td><code>enumerate(tarefas, start=1)</code></td><td>Numerar a partir de 1 ao percorrer</td></tr>
+<tr><td><code>{"titulo": t, "feita": False}</code></td><td>Uma tarefa com duas informações</td></tr>
+<tr><td><code>tarefas[numero - 1]["feita"] = True</code></td><td>Concluir: número da tela → posição da lista; mudar a chave</td></tr>
+<tr><td><code>tarefas.pop(posicao)</code></td><td>Remover e receber o item removido</td></tr>
+<tr><td><code>texto.isdigit()</code>, <code>1 &lt;= numero &lt;= len(tarefas)</code></td><td>Validar o número escolhido</td></tr>
+<tr><td><code>if posicao is not None:</code></td><td>Conferir se a função devolveu uma posição (a 0 também é válida)</td></tr>
+<tr><td><code>open(nome, "w", encoding="utf-8")</code> + <code>write(… + "\n")</code></td><td>Gravar o arquivo do zero</td></tr>
+<tr><td><code>try: open(nome) … except FileNotFoundError:</code></td><td>Ler o arquivo, se ele existir</td></tr>
+<tr><td><code>linha.rstrip("\n")</code>, <code>linha.startswith("[x] ")</code>, <code>linha[4:]</code></td><td>Desmontar cada linha do arquivo</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>IndexError: list index out of range</code></td><td>Número de tarefa maior que a lista: valide antes</td></tr>
+<tr><td>O 0 conclui (ou remove) a última tarefa</td><td><code>0 - 1</code> é <code>-1</code>, o último item: exija <code>numero &gt;= 1</code></td></tr>
+<tr><td><code>ValueError: invalid literal for int() …</code></td><td>Texto que não é número no <code>int()</code></td></tr>
+<tr><td><code>KeyError: 'titlo'</code></td><td>Nome da chave do dicionário escrito errado</td></tr>
+<tr><td>A primeira tarefa nunca é concluída</td><td><code>if posicao:</code> no lugar de <code>if posicao is not None:</code> (a posição 0 conta como falso)</td></tr>
+<tr><td>As tarefas se repetem no arquivo</td><td>Modo <code>"a"</code> numa função que grava a lista inteira: use <code>"w"</code></td></tr>
+<tr><td><code>io.UnsupportedOperation: not writable</code></td><td><code>open</code> sem o <code>"w"</code></td></tr>
+<tr><td>As tarefas somem ao fechar o programa</td><td>Faltou chamar <code>salvar</code> (ou ele grava num arquivo e o <code>carregar</code> lê outro)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Numerar a partir de 1</h3>
+<p>Complete:</p>
+<div class="ex-code">for numero, tarefa in enumerate(tarefas, <input data-answer="start=1" aria-label="argumento">):</div>
+</div>
+
+<div class="exercise">
+<h3>2. Remover e receber</h3>
+<p>Complete o método que tira a tarefa da posição <code>posicao</code> e a devolve:</p>
+<div class="ex-code">tarefa = tarefas.<input data-answer="pop" aria-label="método">(posicao)</div>
+</div>
+
+<div class="exercise">
+<h3>3. O modo de escrita</h3>
+<p>Complete o modo que apaga o arquivo e escreve do zero:</p>
+<div class="ex-code">with open("tarefas.txt", "<input data-answer="w" aria-label="modo">", encoding="utf-8") as arquivo:</div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Na versão 2, a Ana digitou <code>0</code> como número da tarefa. O que aconteceu?</p>
+<label><input type="radio" name="q4"> <code>IndexError</code></label>
+<label><input type="radio" name="q4"> A primeira tarefa foi concluída</label>
+<label><input type="radio" name="q4"> A última tarefa foi concluída, porque <code>tarefas[-1]</code> é o último item</label>
+<label><input type="radio" name="q4"> Nada: o 0 é ignorado</label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. Por que o programa principal da versão 3 usa <code>if posicao is not None:</code> e não <code>if posicao:</code>?</p>
+<label><input type="radio" name="q5"> Porque <code>is not</code> é mais rápido</label>
+<label><input type="radio" name="q5"> Porque a posição 0 (a primeira tarefa) conta como falso, e seria ignorada</label>
+<label><input type="radio" name="q5"> Porque <code>None</code> conta como verdadeiro</label>
+<label><input type="radio" name="q5"> Tanto faz, as duas formas são iguais</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Na primeira vez que a versão 4 roda, o <code>tarefas.txt</code> não existe. O que acontece?</p>
+<label><input type="radio" name="q6"> O <code>open</code> dá <code>FileNotFoundError</code>, o <code>except</code> pega o erro e o programa começa com a lista vazia</label>
+<label><input type="radio" name="q6"> O programa para com <code>FileNotFoundError</code></label>
+<label><input type="radio" name="q6"> O <code>open</code> de leitura cria o arquivo vazio</label>
+<label><input type="radio" name="q6"> O Python pergunta se deve criar o arquivo</label>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Um programa de menu é um <code>while True</code> que mostra as opções, lê a escolha (como texto) e usa <code>match</code>; o <code>break</code> só no "sair".</li>
+  <li>A lista fica <strong>fora</strong> do laço. <code>append</code> acrescenta, <code>pop(posição)</code> remove e devolve.</li>
+  <li>A tela conta a partir de 1, a lista a partir de 0: <code>enumerate(…, start=1)</code> para mostrar, <code>numero - 1</code> para achar.</li>
+  <li>O índice <code>-1</code> é válido (o último item): um 0 digitado vira <code>-1</code> e erra calado. Valide com <code>1 &lt;= numero &lt;= len(lista)</code>.</li>
+  <li>Um item com várias informações vira um dicionário; mudar a chave muda o item que está na lista.</li>
+  <li>Para os dados sobreviverem, grave num arquivo: <code>"w"</code> regrava tudo, <code>"a"</code> acrescenta no fim. Leia com <code>try</code> e trate o <code>FileNotFoundError</code> da primeira vez.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
