@@ -1,0 +1,801 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Projeto Contador de Palavras — arquivo, limpeza, dicionário e Counter passo a passo | Guia Python</title>
+<meta name="description" content="Projeto passo a passo: um contador de palavras em Python que lê um texto de um arquivo .txt, tira a pontuação, passa tudo para minúsculas, conta cada palavra com um dicionário e depois com collections.Counter, mostra as 10 mais usadas com barras e ignora as palavras comuns. Versões com sessões reais no Python 3.14 e missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Projeto <span class="hl">Contador de Palavras</span></h1>
+
+<p class="intro">A Ana escreveu uma crônica sobre um dia na padaria para o jornalzinho do bairro e ficou curiosa: qual palavra ela mais repetiu? Contar à mão, num texto de 150 palavras, já cansa; num livro, seria impossível. Neste projeto você escreve um programa que lê o texto de um arquivo, separa as palavras, conta quantas vezes cada uma aparece e mostra as 10 mais usadas, com uma barrinha para cada. No caminho aparecem os problemas de verdade: a vírgula grudada na palavra, o "O" maiúsculo que não é igual ao "o", as palavras pequenas que enchem a contagem.</p>
+
+<div class="note">
+<strong>Você vai praticar</strong>
+<ul>
+  <li>Ler um arquivo de texto com <a href="arquivos.html">open e with</a> (aula <a href="arquivos-ler.html">Lendo Arquivos</a>).</li>
+  <li>Separar e limpar o texto com <a href="strings-metodos.html">split(), lower() e replace()</a>.</li>
+  <li>Contar com um <a href="dicionarios.html">dicionário</a> e o método <code>get</code>, e depois com o <code>Counter</code> do <a href="collections.html">módulo collections</a>.</li>
+  <li>Ordenar pelo número de vezes com <a href="listas-ordenar.html">sorted()</a> e uma <a href="lambda.html">lambda</a> no <code>key</code>.</li>
+  <li>Filtrar palavras com <a href="list-comprehension.html">list comprehension</a> e um <a href="conjuntos.html">conjunto</a>.</li>
+  <li>Alinhar a saída com <a href="f-strings.html">f-strings</a> e organizar o programa em <a href="funcoes.html">funções</a>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2 id="construir">O que vamos construir</h2>
+<p>Este é o resultado final, no computador da Ana, contando a crônica do arquivo <code>cronica.txt</code>:</p>
+
+<pre class="term">$ python3 contador.py
+Palavras: 148, sem as comuns: 88
+As 10 mais usadas:
+pão          9 #########
+café         5 #####
+forno        3 ###
+padaria      2 ##
+quente       2 ##
+seis         2 ##
+cheiro       2 ##
+rua          2 ##
+pede         2 ##
+dez          2 ##</pre>
+
+<p>"Pão" ganhou com folga, e "café" vem em segundo. Faz sentido para uma crônica de padaria. Vamos chegar lá em quatro versões, cada uma acrescentando uma coisa só:</p>
+
+<ol class="passo">
+  <li><a href="#versao1">Ler o arquivo e separar as palavras</a> (<code>open</code>, <code>read</code>, <code>split</code>).</li>
+  <li><a href="#versao2">Limpar: minúsculas e sem pontuação</a> (<code>lower</code>, <code>replace</code>).</li>
+  <li><a href="#versao3">Contar com um dicionário e ordenar</a> (<code>get</code>, <code>sorted</code>, <code>lambda</code>).</li>
+  <li><a href="#versao4">Counter, palavras comuns e barras</a> (<code>Counter</code>, <code>most_common</code>, conjunto).</li>
+</ol>
+
+<h3>Antes de começar: o texto</h3>
+<p>No seu computador, salve o texto abaixo num arquivo chamado <code>cronica.txt</code>, na mesma pasta do programa (com o <code>nano</code>, por exemplo, ou num editor de texto). Nas caixas <strong>Experimente</strong> desta página, ele já vem pronto numa <strong>aba</strong> ao lado do programa: clique na aba <code>cronica.txt</code> para ver (e mudar) o texto. Se você mudar o texto, as contagens mudam, e a missão pode deixar de bater.</p>
+
+<pre class="file" data-file="cronica.txt">A Padaria Pão Quente abre às seis. Antes do sol, o pão já está no forno, e o cheiro de pão quente chega à rua inteira.
+Dona Rosa é a primeira cliente: pede dez pães, um café e "o de sempre". O café da padaria é forte; o pão, macio.
+Depois vem o Seu Joaquim. Ele pede café, pão de queijo e conversa. Conversa sobre o tempo, sobre o time, sobre o preço do café!
+— O pão subiu? — pergunta ele.
+— O pão não, Seu Joaquim. Subiu o café — responde a Ana, rindo.
+Às dez, o bolo de milho sai do forno. Quem passa na rua sente o cheiro e entra. O bolo acaba antes do almoço; o pão, antes do jantar.
+No fim do dia, a Ana fecha o caixa, conta o pão que sobrou e anota tudo no caderno... Amanhã, às seis, o forno acende de novo.
+</pre>
+
+<hr>
+
+<h2 id="versao1">Versão 1 · Ler o arquivo e separar as palavras</h2>
+
+<pre class="file" data-file="contador.py">with open("cronica.txt", encoding="utf-8") as arquivo:
+    texto = arquivo.read()
+
+palavras = texto.split()
+print(f"Caracteres: {len(texto)}")
+print(f"Palavras: {len(palavras)}")
+print(palavras[:12])
+</pre>
+
+<dl class="anatomy">
+  <dt>with open("cronica.txt", encoding="utf-8") as arquivo:</dt><dd>Abre o arquivo para leitura. O <code>with</code> fecha o arquivo sozinho no fim do bloco. O <code>encoding="utf-8"</code> diz como as letras estão gravadas, para os acentos virem certos (veja <a href="#errado">Quando dá errado</a>).</dd>
+  <dt>texto = arquivo.read()</dt><dd>Lê o arquivo inteiro de uma vez, como um texto só, com as quebras de linha dentro (<code>\n</code>).</dd>
+  <dt>texto.split()</dt><dd>Corta o texto nos espaços e nas quebras de linha e devolve uma lista com os pedaços.</dd>
+  <dt>palavras[:12]</dt><dd>As 12 primeiras, para dar uma olhada (aula <a href="strings-fatias.html">Índices e Fatias</a>, que vale também para listas).</dd>
+</dl>
+
+<pre class="term">$ python3 contador.py
+Caracteres: 716
+Palavras: 152
+['A', 'Padaria', 'Pão', 'Quente', 'abre', 'às', 'seis.', 'Antes', 'do', 'sol,', 'o', 'pão']</pre>
+
+<p>152 palavras. Mas olhe a lista: <code>'seis.'</code> veio com o ponto, <code>'sol,'</code> com a vírgula, e há <code>'Pão'</code> e <code>'pão'</code>. Para o Python, <code>'pão'</code>, <code>'Pão'</code> e <code>'pão,'</code> são três textos diferentes, e contariam separado. É o que a versão 2 resolve.</p>
+
+<div class="trypy" data-goal="out:Palavras: 152;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa só mostra quantos caracteres o texto tem. Separe as palavras com <code>split()</code> e mostre também <code>Palavras: …</code> com a quantidade.</p>
+<pre class="script" data-file="contador.py">with open("cronica.txt", encoding="utf-8") as arquivo:
+    texto = arquivo.read()
+
+print(f"Caracteres: {len(texto)}")
+</pre>
+<pre class="script" data-file="cronica.txt">A Padaria Pão Quente abre às seis. Antes do sol, o pão já está no forno, e o cheiro de pão quente chega à rua inteira.
+Dona Rosa é a primeira cliente: pede dez pães, um café e "o de sempre". O café da padaria é forte; o pão, macio.
+Depois vem o Seu Joaquim. Ele pede café, pão de queijo e conversa. Conversa sobre o tempo, sobre o time, sobre o preço do café!
+— O pão subiu? — pergunta ele.
+— O pão não, Seu Joaquim. Subiu o café — responde a Ana, rindo.
+Às dez, o bolo de milho sai do forno. Quem passa na rua sente o cheiro e entra. O bolo acaba antes do almoço; o pão, antes do jantar.
+No fim do dia, a Ana fecha o caixa, conta o pão que sobrou e anota tudo no caderno... Amanhã, às seis, o forno acende de novo.
+</pre>
+<pre class="solucao" data-file="contador.py">with open("cronica.txt", encoding="utf-8") as arquivo:
+    texto = arquivo.read()
+
+palavras = texto.split()
+print(f"Caracteres: {len(texto)}")
+print(f"Palavras: {len(palavras)}")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao2">Versão 2 · Limpar: minúsculas e sem pontuação</h2>
+<p>Duas limpezas, antes de separar: tudo em minúsculas, para <code>"Pão"</code> e <code>"pão"</code> virarem a mesma palavra; e cada sinal de pontuação trocado por um espaço, para a vírgula desgrudar da palavra. No fim, o programa confere se sobrou alguma "palavra" com algo que não é letra.</p>
+
+<pre class="file" data-file="contador.py">PONTUACAO = '.,;:!?"—'
+
+with open("cronica.txt", encoding="utf-8") as arquivo:
+    texto = arquivo.read()
+
+texto = texto.lower()
+for sinal in PONTUACAO:
+    texto = texto.replace(sinal, " ")
+
+palavras = texto.split()
+print(f"Palavras: {len(palavras)}")
+print(palavras[:12])
+com_sinais = [p for p in palavras if not p.isalpha()]
+print(f"Palavras com sinais: {com_sinais}")
+</pre>
+
+<dl class="anatomy">
+  <dt>PONTUACAO = '.,;:!?"—'</dt><dd>Os sinais que aparecem na crônica, num texto só. O último é o travessão dos diálogos (<code>—</code>), que é diferente do hífen (<code>-</code>). O texto está entre aspas simples porque tem uma aspa dupla dentro.</dd>
+  <dt>texto.lower()</dt><dd>Devolve o texto em minúsculas. Funciona com acentos: <code>"PÃO"</code> vira <code>"pão"</code>.</dd>
+  <dt>for sinal in PONTUACAO:</dt><dd>Um texto também pode ser percorrido com <code>for</code>, letra por letra (aqui, sinal por sinal).</dd>
+  <dt>texto.replace(sinal, " ")</dt><dd>Troca cada ocorrência do sinal por um espaço. Por que espaço, e não nada? Porque em <code>"seis.Antes"</code> (sem espaço depois do ponto) as duas palavras grudariam. O <code>split()</code> depois ignora os espaços a mais.</dd>
+  <dt>[p for p in palavras if not p.isalpha()]</dt><dd>As palavras que <strong>não</strong> são feitas só de letras. <code>isalpha()</code> aceita letras acentuadas: <code>"pão".isalpha()</code> é <code>True</code>.</dd>
+</dl>
+
+<pre class="term">$ python3 contador.py
+Palavras: 148
+['a', 'padaria', 'pão', 'quente', 'abre', 'às', 'seis', 'antes', 'do', 'sol', 'o', 'pão']
+Palavras com sinais: []</pre>
+
+<p>Agora são 148: os quatro travessões soltos, que o <code>split()</code> contava como "palavras", sumiram. E a lista de palavras com sinais está vazia: a limpeza pegou tudo. Veja o que acontece quando a lista de sinais esquece o <code>!</code> e o <code>—</code>:</p>
+
+<pre class="term">$ python3 contador.py
+Palavras: 152
+['a', 'padaria', 'pão', 'quente', 'abre', 'às', 'seis', 'antes', 'do', 'sol', 'o', 'pão']
+Palavras com sinais: ['café!', '—', '—', '—', '—']</pre>
+
+<p>O <code>'café!'</code> contaria separado do <code>'café'</code>, e os travessões virariam "palavras". A conferência no fim do programa serve justamente para pegar isso.</p>
+
+<div class="note">
+<strong>E o <code>string.punctuation</code>?</strong>
+<p>O módulo <code>string</code> tem uma lista pronta de sinais:</p>
+<pre class="file" data-file="pontuacao.py">import string
+
+print(string.punctuation)
+</pre>
+<pre class="term">$ python3 pontuacao.py
+!"#$%&amp;'()*+,-./:;&lt;=&gt;?@[\]^_`{|}~</pre>
+<p>Só que são apenas os sinais do teclado americano: o travessão <code>—</code>, as reticências <code>…</code> e as aspas curvas <code>“ ”</code> não estão lá. E ela tem o hífen e o apóstrofo, que em português às vezes fazem parte da palavra (<code>guarda-chuva</code>, <code>d'água</code>). Por isso o projeto usa a sua própria lista, com os sinais que o texto tem.</p>
+</div>
+
+<div class="trypy" data-goal="out:Palavras com sinais: [];;semerro">
+<p class="try-task"><strong>Missão:</strong> a lista <code>PONTUACAO</code> esqueceu dois sinais, e sobraram "palavras" com sinais. Rode, veja quais são, e acrescente os sinais que faltam até a lista ficar vazia. (Dica: copie o travessão de dentro do próprio texto, na aba <code>cronica.txt</code>.)</p>
+<pre class="script" data-file="contador.py">PONTUACAO = '.,;:?"'
+
+with open("cronica.txt", encoding="utf-8") as arquivo:
+    texto = arquivo.read()
+
+texto = texto.lower()
+for sinal in PONTUACAO:
+    texto = texto.replace(sinal, " ")
+
+palavras = texto.split()
+print(f"Palavras: {len(palavras)}")
+print(palavras[:12])
+com_sinais = [p for p in palavras if not p.isalpha()]
+print(f"Palavras com sinais: {com_sinais}")
+</pre>
+<pre class="script" data-file="cronica.txt">A Padaria Pão Quente abre às seis. Antes do sol, o pão já está no forno, e o cheiro de pão quente chega à rua inteira.
+Dona Rosa é a primeira cliente: pede dez pães, um café e "o de sempre". O café da padaria é forte; o pão, macio.
+Depois vem o Seu Joaquim. Ele pede café, pão de queijo e conversa. Conversa sobre o tempo, sobre o time, sobre o preço do café!
+— O pão subiu? — pergunta ele.
+— O pão não, Seu Joaquim. Subiu o café — responde a Ana, rindo.
+Às dez, o bolo de milho sai do forno. Quem passa na rua sente o cheiro e entra. O bolo acaba antes do almoço; o pão, antes do jantar.
+No fim do dia, a Ana fecha o caixa, conta o pão que sobrou e anota tudo no caderno... Amanhã, às seis, o forno acende de novo.
+</pre>
+<pre class="solucao" data-file="contador.py">PONTUACAO = '.,;:!?"—'
+
+with open("cronica.txt", encoding="utf-8") as arquivo:
+    texto = arquivo.read()
+
+texto = texto.lower()
+for sinal in PONTUACAO:
+    texto = texto.replace(sinal, " ")
+
+palavras = texto.split()
+print(f"Palavras: {len(palavras)}")
+print(palavras[:12])
+com_sinais = [p for p in palavras if not p.isalpha()]
+print(f"Palavras com sinais: {com_sinais}")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao3">Versão 3 · Contar com um dicionário e ordenar</h2>
+<p>Agora, a contagem. A ideia é a de uma folha com duas colunas, palavra e quantidade: para cada palavra do texto, a Ana procura a linha dela na folha e soma 1; se ainda não tem linha, cria uma com 1. Um dicionário é exatamente essa folha.</p>
+
+<pre class="file" data-file="contador.py">PONTUACAO = '.,;:!?"—'
+
+with open("cronica.txt", encoding="utf-8") as arquivo:
+    texto = arquivo.read()
+
+texto = texto.lower()
+for sinal in PONTUACAO:
+    texto = texto.replace(sinal, " ")
+palavras = texto.split()
+
+contagem = {}
+for palavra in palavras:
+    contagem[palavra] = contagem.get(palavra, 0) + 1
+
+print(f"Palavras: {len(palavras)}, diferentes: {len(contagem)}")
+mais_usadas = sorted(contagem.items(), key=lambda par: par[1], reverse=True)
+for palavra, vezes in mais_usadas[:10]:
+    print(f"{palavra:&lt;10} {vezes:&gt;3}")
+</pre>
+
+<dl class="anatomy">
+  <dt>contagem = {}</dt><dd>A folha começa vazia: um dicionário sem nenhuma chave.</dd>
+  <dt>contagem.get(palavra, 0)</dt><dd>O número que já está anotado para a palavra, ou <strong>0</strong> se ela ainda não apareceu (aula <a href="dicionarios.html">Dicionários</a>). É o que evita o <code>KeyError</code> (veja <a href="#errado">Quando dá errado</a>).</dd>
+  <dt>contagem[palavra] = … + 1</dt><dd>Anota o número novo, criando a chave na primeira vez.</dd>
+  <dt>len(contagem)</dt><dd>Quantas chaves o dicionário tem, ou seja, quantas palavras <strong>diferentes</strong>.</dd>
+  <dt>contagem.items()</dt><dd>Os pares (palavra, vezes), como tuplas.</dd>
+  <dt>key=lambda par: par[1]</dt><dd>Ordena os pares pelo item 1 de cada um, o número de vezes (aula <a href="lambda.html">lambda</a>).</dd>
+  <dt>reverse=True</dt><dd>Do maior para o menor.</dd>
+  <dt>mais_usadas[:10]</dt><dd>Só os 10 primeiros pares.</dd>
+  <dt>{palavra:&lt;10} {vezes:&gt;3}</dt><dd>A palavra à esquerda em 10 posições e o número à direita em 3: as colunas ficam retas.</dd>
+</dl>
+
+<pre class="term">$ python3 contador.py
+Palavras: 148, diferentes: 77
+o           19
+pão          9
+do           6
+e            5
+de           5
+café         5
+a            4
+às           3
+antes        3
+no           3</pre>
+
+<p>Das 148 palavras, 77 são diferentes. A campeã é <code>o</code>, com 19, seguida de <code>pão</code>, com 9. Quando duas palavras empatam (<code>e</code>, <code>de</code> e <code>café</code>, com 5), o <code>sorted</code> as deixa na ordem em que apareceram pela primeira vez no dicionário, que é a ordem do texto.</p>
+
+<p>Repare que <code>pães</code> conta separado de <code>pão</code>: para o programa, são textos diferentes. Juntar plural e singular é bem mais difícil, e fica fora deste projeto.</p>
+
+<div class="cenario">
+<strong>E sem o <code>lower()</code>?</strong>
+<p>Tirando a linha <code>texto = texto.lower()</code>, as maiúsculas do começo das frases separam as contagens:</p>
+<pre class="term">$ python3 contador.py
+Palavras: 148, diferentes: 88
+o           15
+pão          8
+do           6
+e            5
+de           5
+café         5
+O            4
+forno        3
+a            3
+sobre        3</pre>
+<p>São 88 "palavras diferentes" em vez de 77: <code>o</code> (15) e <code>O</code> (4) contaram separado, e o <code>Pão</code> do nome da padaria saiu do <code>pão</code> (8 em vez de 9). Somando, 15 + 4 dá os 19 da versão com <code>lower()</code>.</p>
+</div>
+
+<div class="trypy" data-goal="outre:diferentes: 77\no +19\npão +9\n;;semerro">
+<p class="try-task"><strong>Missão:</strong> o <code>sorted</code> está sem critério, e a lista sai em ordem alfabética (<code>a</code>, <code>abre</code>, <code>acaba</code>…). Acrescente o <code>key</code> com uma <code>lambda</code> que pega o número de vezes, e o <code>reverse=True</code>, para aparecerem as 10 mais usadas.</p>
+<pre class="script" data-file="contador.py">PONTUACAO = '.,;:!?"—'
+
+with open("cronica.txt", encoding="utf-8") as arquivo:
+    texto = arquivo.read()
+
+texto = texto.lower()
+for sinal in PONTUACAO:
+    texto = texto.replace(sinal, " ")
+palavras = texto.split()
+
+contagem = {}
+for palavra in palavras:
+    contagem[palavra] = contagem.get(palavra, 0) + 1
+
+print(f"Palavras: {len(palavras)}, diferentes: {len(contagem)}")
+mais_usadas = sorted(contagem.items())
+for palavra, vezes in mais_usadas[:10]:
+    print(f"{palavra:&lt;10} {vezes:&gt;3}")
+</pre>
+<pre class="script" data-file="cronica.txt">A Padaria Pão Quente abre às seis. Antes do sol, o pão já está no forno, e o cheiro de pão quente chega à rua inteira.
+Dona Rosa é a primeira cliente: pede dez pães, um café e "o de sempre". O café da padaria é forte; o pão, macio.
+Depois vem o Seu Joaquim. Ele pede café, pão de queijo e conversa. Conversa sobre o tempo, sobre o time, sobre o preço do café!
+— O pão subiu? — pergunta ele.
+— O pão não, Seu Joaquim. Subiu o café — responde a Ana, rindo.
+Às dez, o bolo de milho sai do forno. Quem passa na rua sente o cheiro e entra. O bolo acaba antes do almoço; o pão, antes do jantar.
+No fim do dia, a Ana fecha o caixa, conta o pão que sobrou e anota tudo no caderno... Amanhã, às seis, o forno acende de novo.
+</pre>
+<pre class="solucao" data-file="contador.py">PONTUACAO = '.,;:!?"—'
+
+with open("cronica.txt", encoding="utf-8") as arquivo:
+    texto = arquivo.read()
+
+texto = texto.lower()
+for sinal in PONTUACAO:
+    texto = texto.replace(sinal, " ")
+palavras = texto.split()
+
+contagem = {}
+for palavra in palavras:
+    contagem[palavra] = contagem.get(palavra, 0) + 1
+
+print(f"Palavras: {len(palavras)}, diferentes: {len(contagem)}")
+mais_usadas = sorted(contagem.items(), key=lambda par: par[1], reverse=True)
+for palavra, vezes in mais_usadas[:10]:
+    print(f"{palavra:&lt;10} {vezes:&gt;3}")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao4">Versão 4 · Counter, palavras comuns e barras</h2>
+<p>A versão 3 funciona, mas o pódio é das palavras pequenas: <code>o</code>, <code>do</code>, <code>e</code>, <code>de</code>. Elas aparecem em qualquer texto e não dizem nada sobre ele. A versão final ignora essas palavras, troca a contagem manual pelo <code>Counter</code>, que já faz isso pronto, e desenha uma barra para cada palavra.</p>
+
+<pre class="file" data-file="contador.py">from collections import Counter
+
+PONTUACAO = '.,;:!?"—'
+IGNORAR = {
+    "a", "o", "as", "os", "e", "é", "de", "do", "da", "no", "na",
+    "à", "às", "um", "uma", "que", "ele", "sobre", "antes",
+}
+
+
+def ler_palavras(nome_arquivo):
+    with open(nome_arquivo, encoding="utf-8") as arquivo:
+        texto = arquivo.read().lower()
+    for sinal in PONTUACAO:
+        texto = texto.replace(sinal, " ")
+    return texto.split()
+
+
+palavras = ler_palavras("cronica.txt")
+importantes = [p for p in palavras if p not in IGNORAR]
+contagem = Counter(importantes)
+
+print(f"Palavras: {len(palavras)}, sem as comuns: {len(importantes)}")
+print("As 10 mais usadas:")
+for palavra, vezes in contagem.most_common(10):
+    print(f"{palavra:&lt;10} {vezes:&gt;3} {'#' * vezes}")
+</pre>
+
+<dl class="anatomy">
+  <dt>from collections import Counter</dt><dd>Traz o <code>Counter</code> ("contador") do módulo <code>collections</code>, que vem com o Python (aula <a href="collections.html">O Módulo collections</a>).</dd>
+  <dt>IGNORAR = {…}</dt><dd>Um <strong>conjunto</strong> com as palavras comuns (aula <a href="conjuntos.html">Conjuntos</a>). Perguntar <code>p not in IGNORAR</code> num conjunto é rápido, mesmo com milhares de palavras. A lista foi escolhida olhando a saída da versão 3; para outro texto, você ajustaria.</dd>
+  <dt>def ler_palavras(nome_arquivo): … return texto.split()</dt><dd>A leitura e a limpeza das versões 1 e 2, agora numa função que devolve a lista pronta.</dd>
+  <dt>[p for p in palavras if p not in IGNORAR]</dt><dd>Uma lista nova, só com as palavras que interessam (aula <a href="list-comprehension.html">List Comprehension</a>).</dd>
+  <dt>Counter(importantes)</dt><dd>Conta tudo de uma vez: é um dicionário palavra → vezes, igual ao da versão 3.</dd>
+  <dt>contagem.most_common(10)</dt><dd>"As mais comuns": os 10 pares com mais vezes, já em ordem. Faz o trabalho do <code>sorted</code> com <code>lambda</code> e da fatia <code>[:10]</code>.</dd>
+  <dt>'#' * vezes</dt><dd>Repete o <code>#</code> tantas vezes quanto a palavra apareceu: a barra (aula <a href="strings-juntar.html">Juntar e Repetir Textos</a>). Dentro da f-string, o <code>'#'</code> usa aspas simples porque a f-string usa aspas duplas.</dd>
+</dl>
+
+<pre class="term">$ python3 contador.py
+Palavras: 148, sem as comuns: 88
+As 10 mais usadas:
+pão          9 #########
+café         5 #####
+forno        3 ###
+padaria      2 ##
+quente       2 ##
+seis         2 ##
+cheiro       2 ##
+rua          2 ##
+pede         2 ##
+dez          2 ##</pre>
+
+<p>Tirando as palavras comuns, sobraram 88 das 148, e o pódio agora conta a história do texto: pão, café, forno. A partir do quarto lugar, há várias palavras empatadas com 2; o <code>most_common</code> as mostra na ordem em que apareceram primeiro no texto.</p>
+
+<div class="trypy" data-goal="src:\bmax\(;;out:Mais longa: primeira (8 letras);;semerro">
+<p class="try-task"><strong>Missão:</strong> no fim do programa, mostre também a palavra mais longa (sem as comuns), no formato <code>Mais longa: primeira (8 letras)</code>. Dica: <code>max(contagem, key=len)</code> devolve a chave com mais letras; num empate, a primeira que apareceu.</p>
+<pre class="script" data-file="contador.py">from collections import Counter
+
+PONTUACAO = '.,;:!?"—'
+IGNORAR = {
+    "a", "o", "as", "os", "e", "é", "de", "do", "da", "no", "na",
+    "à", "às", "um", "uma", "que", "ele", "sobre", "antes",
+}
+
+
+def ler_palavras(nome_arquivo):
+    with open(nome_arquivo, encoding="utf-8") as arquivo:
+        texto = arquivo.read().lower()
+    for sinal in PONTUACAO:
+        texto = texto.replace(sinal, " ")
+    return texto.split()
+
+
+palavras = ler_palavras("cronica.txt")
+importantes = [p for p in palavras if p not in IGNORAR]
+contagem = Counter(importantes)
+
+print(f"Palavras: {len(palavras)}, sem as comuns: {len(importantes)}")
+print("As 10 mais usadas:")
+for palavra, vezes in contagem.most_common(10):
+    print(f"{palavra:&lt;10} {vezes:&gt;3} {'#' * vezes}")
+</pre>
+<pre class="script" data-file="cronica.txt">A Padaria Pão Quente abre às seis. Antes do sol, o pão já está no forno, e o cheiro de pão quente chega à rua inteira.
+Dona Rosa é a primeira cliente: pede dez pães, um café e "o de sempre". O café da padaria é forte; o pão, macio.
+Depois vem o Seu Joaquim. Ele pede café, pão de queijo e conversa. Conversa sobre o tempo, sobre o time, sobre o preço do café!
+— O pão subiu? — pergunta ele.
+— O pão não, Seu Joaquim. Subiu o café — responde a Ana, rindo.
+Às dez, o bolo de milho sai do forno. Quem passa na rua sente o cheiro e entra. O bolo acaba antes do almoço; o pão, antes do jantar.
+No fim do dia, a Ana fecha o caixa, conta o pão que sobrou e anota tudo no caderno... Amanhã, às seis, o forno acende de novo.
+</pre>
+<pre class="solucao" data-file="contador.py">from collections import Counter
+
+PONTUACAO = '.,;:!?"—'
+IGNORAR = {
+    "a", "o", "as", "os", "e", "é", "de", "do", "da", "no", "na",
+    "à", "às", "um", "uma", "que", "ele", "sobre", "antes",
+}
+
+
+def ler_palavras(nome_arquivo):
+    with open(nome_arquivo, encoding="utf-8") as arquivo:
+        texto = arquivo.read().lower()
+    for sinal in PONTUACAO:
+        texto = texto.replace(sinal, " ")
+    return texto.split()
+
+
+palavras = ler_palavras("cronica.txt")
+importantes = [p for p in palavras if p not in IGNORAR]
+contagem = Counter(importantes)
+
+print(f"Palavras: {len(palavras)}, sem as comuns: {len(importantes)}")
+print("As 10 mais usadas:")
+for palavra, vezes in contagem.most_common(10):
+    print(f"{palavra:&lt;10} {vezes:&gt;3} {'#' * vezes}")
+
+mais_longa = max(contagem, key=len)
+print(f"Mais longa: {mais_longa} ({len(mais_longa)} letras)")
+</pre>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de limpar e de contar</h2>
+
+<h3>Limpar a pontuação</h3>
+<p>Três jeitos que dão as mesmas 148 palavras com esta crônica:</p>
+
+<pre class="file" data-file="limpar.py">import re
+
+PONTUACAO = '.,;:!?"—'
+
+with open("cronica.txt", encoding="utf-8") as arquivo:
+    texto = arquivo.read().lower()
+
+limpo1 = texto
+for sinal in PONTUACAO:
+    limpo1 = limpo1.replace(sinal, " ")
+
+tabela = str.maketrans(PONTUACAO, " " * len(PONTUACAO))
+limpo2 = texto.translate(tabela)
+
+palavras3 = re.findall(r"\w+", texto)
+
+print(len(limpo1.split()), len(limpo2.split()), len(palavras3))
+print(limpo1.split() == limpo2.split() == palavras3)
+</pre>
+
+<pre class="term">$ python3 limpar.py
+148 148 148
+True</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>for sinal in PONTUACAO: texto = texto.replace(sinal, " ")</code></td><td>A mais fácil de ler, e a do projeto. Para textos do tamanho de uma crônica, a velocidade não importa</td></tr>
+<tr><td><code>str.maketrans</code> + <code>translate</code></td><td>Troca todos os sinais numa passada só, com uma "tabela de troca". Mais rápida para textos enormes</td></tr>
+<tr><td><code>re.findall(r"\w+", texto)</code></td><td>Em vez de tirar o que <strong>não</strong> é palavra, pega o que <strong>é</strong>: sequências de letras e algarismos, com acento. Curta e poderosa, mas exige saber expressões regulares (aula <a href="regex.html">Expressões Regulares</a>)</td></tr>
+</table>
+</div>
+
+<h3>Contar</h3>
+
+<pre class="file" data-file="contar.py">from collections import Counter
+
+palavras = ["o", "pão", "o", "café", "pão", "o"]
+
+contagem1 = {}
+for palavra in palavras:
+    contagem1[palavra] = contagem1.get(palavra, 0) + 1
+
+contagem2 = Counter(palavras)
+
+print(contagem1)
+print(contagem2)
+print(contagem2.most_common(2))
+print(contagem1.get("bolo", 0), contagem2["bolo"])
+</pre>
+
+<pre class="term">$ python3 contar.py
+{'o': 3, 'pão': 2, 'café': 1}
+Counter({'o': 3, 'pão': 2, 'café': 1})
+[('o', 3), ('pão', 2)]
+0 0</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td>Dicionário com <code>get(palavra, 0) + 1</code></td><td>Para entender como a contagem funciona, e quando não dá para importar nada</td></tr>
+<tr><td>Dicionário com <code>if palavra in contagem: … else: …</code></td><td>Faz o mesmo, em mais linhas. Comum em código antigo</td></tr>
+<tr><td><code>Counter(lista)</code></td><td>Nos programas de verdade. Conta numa linha, tem o <code>most_common</code> e devolve 0 para uma palavra que não apareceu (veja o desafio)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>O arquivo não está lá (ou o nome está errado)</strong>
+<pre class="file" data-file="nome_errado.py">with open("cronicas.txt", encoding="utf-8") as arquivo:
+    texto = arquivo.read()
+</pre>
+<pre class="term">$ python3 nome_errado.py
+Traceback (most recent call last):
+  File "/home/ana/nome_errado.py", line 1, in &lt;module&gt;
+    with open("cronicas.txt", encoding="utf-8") as arquivo:
+         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'cronicas.txt'</pre>
+<p>"Arquivo não encontrado: não existe o arquivo ou a pasta <code>'cronicas.txt'</code>". O arquivo se chama <code>cronica.txt</code>, sem o <code>s</code>. O mesmo erro aparece quando o nome está certo, mas você rodou o programa de <strong>outra pasta</strong>: o <code>open</code> procura o arquivo na pasta onde o terminal está. <strong>Como consertar:</strong> confira o nome com <code>ls</code> e rode o programa da pasta onde estão os dois arquivos.</p>
+</div>
+
+<div class="cenario">
+<strong>Somar 1 numa chave que ainda não existe</strong>
+<pre class="file" data-file="keyerror.py">palavras = ["o", "pão", "o", "café"]
+contagem = {}
+for palavra in palavras:
+    contagem[palavra] += 1
+print(contagem)
+</pre>
+<pre class="term">$ python3 keyerror.py
+Traceback (most recent call last):
+  File "/home/ana/keyerror.py", line 4, in &lt;module&gt;
+    contagem[palavra] += 1
+    ~~~~~~~~^^^^^^^^^
+KeyError: 'o'</pre>
+<p><code>KeyError: 'o'</code>: "erro de chave". O <code>+= 1</code> precisa ler o valor atual antes de somar, e na primeira vez que o <code>o</code> aparece não há valor nenhum para ler. <strong>Como consertar:</strong> <code>contagem[palavra] = contagem.get(palavra, 0) + 1</code>, ou o <code>if palavra in contagem</code>, ou o <code>Counter</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>split(" ")</code> no lugar de <code>split()</code></strong>
+<pre class="file" data-file="split_espaco.py">texto = "o pão  quente\nchega"
+print(texto.split())
+print(texto.split(" "))
+</pre>
+<pre class="term">$ python3 split_espaco.py
+['o', 'pão', 'quente', 'chega']
+['o', 'pão', '', 'quente\nchega']</pre>
+<p>Sem nada nos parênteses, o <code>split()</code> corta em <strong>qualquer</strong> espaço em branco (espaço, quebra de linha, tabulação) e junta os repetidos. Com <code>" "</code>, ele corta só no espaço, um por um: os dois espaços seguidos geram uma "palavra" vazia (<code>''</code>), e a quebra de linha deixa <code>'quente\nchega'</code> grudado. Seria a palavra "vazia" mais contada da crônica. <strong>Como consertar:</strong> <code>split()</code>, sem argumento.</p>
+</div>
+
+<div class="cenario">
+<strong>O arquivo foi gravado em outra codificação</strong>
+<p>Arquivos antigos, de programas do Windows, às vezes não estão em UTF-8, e sim em Latin-1. A Ana gravou um assim, de propósito, para ver o que acontece:</p>
+<pre class="file" data-file="latin1_criar.py">with open("antigo.txt", "w", encoding="latin-1") as arquivo:
+    arquivo.write("Pão de queijo e café\n")
+</pre>
+<pre class="file" data-file="latin1_ler.py">with open("antigo.txt", encoding="utf-8") as arquivo:
+    texto = arquivo.read()
+print(texto)
+</pre>
+<pre class="term">$ python3 latin1_criar.py
+$ python3 latin1_ler.py
+Traceback (most recent call last):
+  File "/home/ana/latin1_ler.py", line 2, in &lt;module&gt;
+    texto = arquivo.read()
+  File "&lt;frozen codecs&gt;", line 325, in decode
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe3 in position 1: invalid continuation byte</pre>
+<p>"O decodificador UTF-8 não consegue entender o byte <code>0xe3</code> na posição 1". A posição 1 é o <code>ã</code> de "Pão": em Latin-1 ele é gravado como um byte só (<code>0xe3</code>), que não forma uma letra válida em UTF-8. O trecho <code>&lt;frozen codecs&gt;</code> é código de dentro do próprio Python; o que importa é a linha 2 do seu programa, o <code>read()</code>. <strong>Como consertar:</strong> abra com a codificação certa, <code>encoding="latin-1"</code>:</p>
+<pre class="file" data-file="latin1_ok.py">with open("antigo.txt", encoding="latin-1") as arquivo:
+    texto = arquivo.read()
+print(texto)
+</pre>
+<pre class="term">$ python3 latin1_ok.py
+Pão de queijo e café
+</pre>
+<p>(A linha em branco no fim é o <code>\n</code> do arquivo mais a quebra de linha do próprio <code>print</code>.) Por isso o projeto sempre escreve o <code>encoding="utf-8"</code>: deixa claro o que o programa espera, em vez de depender da configuração do computador.</p>
+</div>
+
+<div class="cenario">
+<strong>Esquecer as limpezas</strong>
+<p>Não dá erro: dá uma contagem errada. Sem o <code>lower()</code>, <code>O</code> e <code>o</code> contam separado (o quadro da versão 3); sem a pontuação certa, <code>café!</code> e <code>café</code> também (a conferência da versão 2). Sempre que uma contagem parecer baixa demais, olhe a lista de palavras antes de contar.</p>
+</div>
+
+<hr>
+
+<h2>Desafio extra: perguntar por uma palavra</h2>
+<p>A Ana quer digitar uma palavra e saber quantas vezes ela aparece. Com o <code>Counter</code> fica fácil, porque ele responde <strong>0</strong> para uma palavra que não está no texto, em vez de dar <code>KeyError</code> como um dicionário comum:</p>
+
+<pre class="file" data-file="contador.py">from collections import Counter
+
+PONTUACAO = '.,;:!?"—'
+
+
+def ler_palavras(nome_arquivo):
+    with open(nome_arquivo, encoding="utf-8") as arquivo:
+        texto = arquivo.read().lower()
+    for sinal in PONTUACAO:
+        texto = texto.replace(sinal, " ")
+    return texto.split()
+
+
+contagem = Counter(ler_palavras("cronica.txt"))
+procurada = input("Qual palavra? ").strip().lower()
+print(f"{procurada}: {contagem[procurada]} vez(es)")
+</pre>
+
+<pre class="term">$ python3 contador.py
+Qual palavra? café
+café: 5 vez(es)
+$ python3 contador.py
+Qual palavra?   Pão                                « com espaços e maiúscula
+pão: 9 vez(es)
+$ python3 contador.py
+Qual palavra? biscoito
+biscoito: 0 vez(es)</pre>
+
+<p>O <code>.strip().lower()</code> limpa o que foi digitado do mesmo jeito que o texto foi limpo. Sem ele, <code>Pão</code> não seria encontrado, porque todas as chaves estão em minúsculas.</p>
+
+<div class="trypy" data-stdin="Pão" data-goal="out:pão: 9 vez(es);;semerro">
+<p class="try-task"><strong>Missão:</strong> a caixa vai digitar <code>Pão</code>, com P maiúsculo, e o programa responde <code>Pão: 0 vez(es)</code>. Limpe o que foi digitado para que a resposta seja <code>pão: 9 vez(es)</code>.</p>
+<pre class="script" data-file="contador.py">from collections import Counter
+
+PONTUACAO = '.,;:!?"—'
+
+
+def ler_palavras(nome_arquivo):
+    with open(nome_arquivo, encoding="utf-8") as arquivo:
+        texto = arquivo.read().lower()
+    for sinal in PONTUACAO:
+        texto = texto.replace(sinal, " ")
+    return texto.split()
+
+
+contagem = Counter(ler_palavras("cronica.txt"))
+procurada = input("Qual palavra? ")
+print(f"{procurada}: {contagem[procurada]} vez(es)")
+</pre>
+<pre class="script" data-file="cronica.txt">A Padaria Pão Quente abre às seis. Antes do sol, o pão já está no forno, e o cheiro de pão quente chega à rua inteira.
+Dona Rosa é a primeira cliente: pede dez pães, um café e "o de sempre". O café da padaria é forte; o pão, macio.
+Depois vem o Seu Joaquim. Ele pede café, pão de queijo e conversa. Conversa sobre o tempo, sobre o time, sobre o preço do café!
+— O pão subiu? — pergunta ele.
+— O pão não, Seu Joaquim. Subiu o café — responde a Ana, rindo.
+Às dez, o bolo de milho sai do forno. Quem passa na rua sente o cheiro e entra. O bolo acaba antes do almoço; o pão, antes do jantar.
+No fim do dia, a Ana fecha o caixa, conta o pão que sobrou e anota tudo no caderno... Amanhã, às seis, o forno acende de novo.
+</pre>
+<pre class="solucao" data-file="contador.py">from collections import Counter
+
+PONTUACAO = '.,;:!?"—'
+
+
+def ler_palavras(nome_arquivo):
+    with open(nome_arquivo, encoding="utf-8") as arquivo:
+        texto = arquivo.read().lower()
+    for sinal in PONTUACAO:
+        texto = texto.replace(sinal, " ")
+    return texto.split()
+
+
+contagem = Counter(ler_palavras("cronica.txt"))
+procurada = input("Qual palavra? ").strip().lower()
+print(f"{procurada}: {contagem[procurada]} vez(es)")
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida do projeto</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Para que serviu</th></tr>
+<tr><td><code>with open(nome, encoding="utf-8") as arquivo:</code> + <code>arquivo.read()</code></td><td>Ler o arquivo inteiro como um texto só</td></tr>
+<tr><td><code>texto.lower()</code></td><td>Tudo em minúsculas, para <code>Pão</code> e <code>pão</code> contarem juntos</td></tr>
+<tr><td><code>texto.replace(sinal, " ")</code></td><td>Desgrudar a pontuação das palavras</td></tr>
+<tr><td><code>texto.split()</code></td><td>Separar as palavras (em qualquer espaço em branco)</td></tr>
+<tr><td><code>contagem.get(p, 0) + 1</code></td><td>Contar num dicionário sem <code>KeyError</code></td></tr>
+<tr><td><code>sorted(d.items(), key=lambda par: par[1], reverse=True)</code></td><td>Ordenar os pares pelo número de vezes</td></tr>
+<tr><td><code>Counter(lista)</code> / <code>.most_common(10)</code></td><td>Contar numa linha / as 10 mais usadas</td></tr>
+<tr><td><code>[p for p in palavras if p not in IGNORAR]</code></td><td>Tirar as palavras comuns</td></tr>
+<tr><td><code>f"{palavra:&lt;10} {vezes:&gt;3} {'#' * vezes}"</code></td><td>Colunas alinhadas e a barra</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>FileNotFoundError: … 'cronica.txt'</code></td><td>Nome errado, ou o programa rodou de outra pasta</td></tr>
+<tr><td><code>KeyError: 'o'</code></td><td><code>contagem[p] += 1</code> sem a chave existir: use <code>get</code> ou <code>Counter</code></td></tr>
+<tr><td><code>UnicodeDecodeError: 'utf-8' codec can't decode byte …</code></td><td>O arquivo não está em UTF-8: tente <code>encoding="latin-1"</code></td></tr>
+<tr><td><code>O</code> e <code>o</code> contados separado</td><td>Faltou o <code>lower()</code></td></tr>
+<tr><td><code>café!</code> e <code>café</code> contados separado</td><td>Faltou um sinal na lista de pontuação</td></tr>
+<tr><td>Uma "palavra" vazia (<code>''</code>) na contagem</td><td><code>split(" ")</code> no lugar de <code>split()</code></td></tr>
+<tr><td>O pódio é <code>o</code>, <code>de</code>, <code>e</code></td><td>Faltou ignorar as palavras comuns</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Separar as palavras</h3>
+<p>Complete o método que corta o texto nos espaços:</p>
+<div class="ex-code">palavras = texto.<input data-answer="split()" aria-label="método">
+</div>
+</div>
+
+<div class="exercise">
+<h3>2. Contar sem KeyError</h3>
+<p>Complete o valor reserva do <code>get</code>:</p>
+<div class="ex-code">contagem[palavra] = contagem.get(palavra, <input data-answer="0" aria-label="valor reserva">) + 1</div>
+</div>
+
+<div class="exercise">
+<h3>3. As cinco mais</h3>
+<p>Complete para pegar as 5 palavras mais usadas de um <code>Counter</code>:</p>
+<div class="ex-code">contagem.<input data-answer="most_common(5)" aria-label="método"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Por que a pontuação é trocada por um <strong>espaço</strong>, e não apagada?</p>
+<label><input type="radio" name="q4"> Porque o <code>replace</code> não aceita texto vazio</label>
+<label><input type="radio" name="q4"> Para o texto ficar do mesmo tamanho</label>
+<label><input type="radio" name="q4"> Para duas palavras separadas só por um sinal, como <code>seis.Antes</code>, não grudarem</label>
+<label><input type="radio" name="q4"> Porque o <code>split()</code> precisa de dois espaços</label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. Sem o <code>lower()</code>, a crônica deu 88 palavras diferentes; com ele, 77. Por quê?</p>
+<label><input type="radio" name="q5"> O <code>lower()</code> apaga palavras repetidas</label>
+<label><input type="radio" name="q5"> Palavras como <code>O</code> e <code>o</code>, ou <code>Pão</code> e <code>pão</code>, deixaram de contar como diferentes</label>
+<label><input type="radio" name="q5"> O <code>lower()</code> tira a pontuação</label>
+<label><input type="radio" name="q5"> O <code>lower()</code> ignora as palavras comuns</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. Com <code>contagem = Counter(palavras)</code>, o que dá <code>contagem["biscoito"]</code>, se "biscoito" não aparece no texto?</p>
+<label><input type="radio" name="q6"> <code>KeyError: 'biscoito'</code></label>
+<label><input type="radio" name="q6"> <code>None</code></label>
+<label><input type="radio" name="q6"> <code>1</code></label>
+<label><input type="radio" name="q6"> <code>0</code></label>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Leia o arquivo com <code>with open(…, encoding="utf-8")</code> e <code>read()</code>; separe as palavras com <code>split()</code>, sem argumento.</li>
+  <li>Antes de contar, limpe: <code>lower()</code> para as maiúsculas, <code>replace</code> (por espaço) para a pontuação. Confira o resultado: palavra com sinal, ou vazia, é sinal de limpeza incompleta.</li>
+  <li>Um dicionário conta com <code>contagem.get(p, 0) + 1</code>; ordene os pares com <code>sorted(…, key=lambda par: par[1], reverse=True)</code>.</li>
+  <li>O <code>Counter</code> faz tudo isso numa linha, tem o <code>most_common(n)</code> e devolve 0 para o que não apareceu.</li>
+  <li>Palavras comuns (<code>o</code>, <code>de</code>, <code>e</code>) enchem o pódio: guarde-as num conjunto e filtre com uma list comprehension.</li>
+  <li><code>FileNotFoundError</code> é nome ou pasta errada; <code>UnicodeDecodeError</code> é arquivo em outra codificação; <code>KeyError</code> é chave que ainda não existe.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
