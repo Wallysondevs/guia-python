@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Expressões Regulares (re) — procurar padrões em textos | Guia Python</title>
+<meta name="description" content="Expressões regulares em Python para quem está começando: o módulo re, search, findall, sub, fullmatch e split, os símbolos \d \w \s . [ ] + * ? {n}, por que escrever r&quot;&quot;, grupos e grupos com nome, padrões de CPF, CEP, telefone e email brasileiros, guloso × preguiçoso e os erros reais do Python 3.14.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Expressões Regulares (re)</span></h1>
+
+<p class="intro">Os métodos de texto da aula <a href="strings-metodos.html">Métodos de Texto</a> procuram um texto <strong>exato</strong>: <code>"pão" in recado</code>, <code>recado.replace("pão", "bolo")</code>. Mas e para achar "qualquer telefone", "qualquer CPF", "qualquer email" num texto? Você não sabe <strong>qual</strong> número procurar, só o <strong>formato</strong> dele. Para isso existem as <strong>expressões regulares</strong> (em inglês, <em>regular expressions</em>, ou <em>regex</em>): uma mini-linguagem para descrever padrões, como "dois dígitos entre parênteses, um espaço, quatro ou cinco dígitos, um hífen, quatro dígitos". Em Python, elas moram no módulo <code>re</code>.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A procurar com <code>re.search</code> e a ler o resultado (o objeto <code>Match</code>, ou <code>None</code>).</li>
+  <li>Os símbolos principais: <code>\d</code>, <code>\w</code>, <code>\s</code>, <code>.</code>, <code>[ ]</code>, <code>+</code>, <code>*</code>, <code>?</code>, <code>{n}</code>, <code>^</code>, <code>$</code>, <code>\b</code>.</li>
+  <li>Por que todo padrão se escreve com <code>r"…"</code>, e o que acontece quando você esquece.</li>
+  <li>A achar todos com <code>findall</code>, trocar com <code>sub</code>, quebrar com <code>split</code> e validar com <code>fullmatch</code>.</li>
+  <li>Grupos <code>( )</code>, grupos com nome e como eles mudam o <code>findall</code>.</li>
+  <li>Padrões de CPF, CEP, telefone e email brasileiros, e os limites deles.</li>
+  <li>Os erros reais: <code>SyntaxWarning: invalid escape sequence</code>, <code>'NoneType' object has no attribute 'group'</code>, <code>re.PatternError</code>, o ponto que aceita tudo e o <code>.*</code> guloso.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: o molde de procurar</h2>
+<p>A Ana tem uma pilha de recados e quer anotar todos os telefones. Ela não lê cada palavra perguntando "isto é o 3222-1080?": ela bate o olho procurando o <strong>formato</strong> "quatro algarismos, hífen, quatro algarismos". Uma expressão regular é esse formato escrito de um jeito que o computador entende:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>O que a Ana pensa</th><th>Na regex</th></tr>
+<tr><td>um algarismo</td><td><code>\d</code></td></tr>
+<tr><td>quatro algarismos</td><td><code>\d{4}</code></td></tr>
+<tr><td>um hífen</td><td><code>-</code></td></tr>
+<tr><td>quatro algarismos, hífen, quatro algarismos</td><td><code>\d{4}-\d{4}</code></td></tr>
+</table>
+</div>
+
+<p>Cada letra ou símbolo comum (<code>-</code>, <code>a</code>, <code>@</code>) quer dizer ele mesmo. Alguns símbolos têm um significado especial, como <code>\d</code> ("um dígito") e <code>{4}</code> ("quatro vezes o anterior"). O resto da aula é aprender esses símbolos e as funções do <code>re</code> que usam o padrão.</p>
+
+<hr>
+
+<h2>1. A primeira busca: <code>re.search</code></h2>
+
+<pre class="file" data-file="primeiro.py">import re
+
+recado = "Ana, o pedido 4521 sai às 15h. Ligue para 3222-1080."
+
+achado = re.search(r"\d+", recado)
+print(achado)
+print(achado.group())
+print(achado.start(), achado.end())
+
+print(re.search(r"\d+", "sem números aqui"))
+</pre>
+
+<pre class="term">$ python3 primeiro.py
+&lt;re.Match object; span=(14, 18), match='4521'&gt;
+4521
+14 18
+None</pre>
+
+<dl class="anatomy">
+  <dt>import re</dt><dd>O módulo das expressões regulares. Ele vem com o Python, não precisa instalar.</dd>
+  <dt>r"\d+"</dt><dd>O padrão. <code>\d</code> é "um dígito" (de 0 a 9) e <code>+</code> é "um ou mais do anterior": uma sequência de dígitos. O <code>r</code> na frente das aspas é obrigatório na prática; a seção 3 explica.</dd>
+  <dt>re.search(padrao, texto)</dt><dd>"Procurar": percorre o texto e para no <strong>primeiro</strong> trecho que casa com o padrão.</dd>
+  <dt>&lt;re.Match object; span=(14, 18), match='4521'&gt;</dt><dd>O resultado é um objeto <code>Match</code> ("casamento"): achou <code>'4521'</code>, do índice 14 até antes do 18 (como nas fatias da aula <a href="strings-fatias.html">Índices e Fatias</a>).</dd>
+  <dt>achado.group()</dt><dd>O texto encontrado.</dd>
+  <dt>None</dt><dd>Quando não acha nada, <code>search</code> devolve <code>None</code> (aula <a href="none.html">O Valor None</a>). Por isso, antes de usar o resultado, confira com <code>if achado:</code>.</dd>
+</dl>
+
+<hr>
+
+<h2>2. Os símbolos</h2>
+<p>Estes são os símbolos que você vai usar quase sempre. Não é preciso decorar: volte a esta tabela quando precisar.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Símbolo</th><th>Casa com</th><th>Exemplo</th><th>Casa em…</th></tr>
+<tr><td><code>\d</code></td><td>um dígito, 0 a 9</td><td><code>\d\d</code></td><td><code>86</code></td></tr>
+<tr><td><code>\w</code></td><td>uma "letra de palavra": letra (com acento também), dígito ou <code>_</code></td><td><code>\w+</code></td><td><code>pão</code>, <code>ana_1</code></td></tr>
+<tr><td><code>\s</code></td><td>um espaço em branco (espaço, tab, quebra de linha)</td><td><code>a\sb</code></td><td><code>a b</code></td></tr>
+<tr><td><code>.</code></td><td><strong>qualquer</strong> caractere (menos a quebra de linha)</td><td><code>p.o</code></td><td><code>pão</code>, <code>pio</code>, <code>p-o</code></td></tr>
+<tr><td><code>[abc]</code></td><td>um dos caracteres da lista</td><td><code>[,;]</code></td><td><code>,</code> ou <code>;</code></td></tr>
+<tr><td><code>[0-9]</code>, <code>[A-Z]</code></td><td>um caractere da faixa</td><td><code>[A-Z]</code></td><td>uma maiúscula sem acento</td></tr>
+<tr><td><code>[^abc]</code></td><td>um caractere que <strong>não</strong> está na lista</td><td><code>[^0-9]</code></td><td>tudo menos dígito</td></tr>
+<tr><td><code>\.</code>, <code>\(</code>, <code>\-</code></td><td>o próprio <code>.</code>, <code>(</code>… (a barra tira o poder especial)</td><td><code>\d\.\d</code></td><td><code>3.5</code></td></tr>
+<tr><th colspan="4">Quantas vezes (valem para o que vem logo antes)</th></tr>
+<tr><td><code>+</code></td><td>uma ou mais</td><td><code>\d+</code></td><td><code>7</code>, <code>4521</code></td></tr>
+<tr><td><code>*</code></td><td>zero ou mais</td><td><code>\d*</code></td><td>nada, <code>12</code></td></tr>
+<tr><td><code>?</code></td><td>zero ou uma (opcional)</td><td><code>9?\d{4}</code></td><td><code>3222</code>, <code>98765</code></td></tr>
+<tr><td><code>{n}</code></td><td>exatamente <code>n</code></td><td><code>\d{3}</code></td><td><code>123</code></td></tr>
+<tr><td><code>{n,m}</code></td><td>de <code>n</code> a <code>m</code></td><td><code>\d{4,5}</code></td><td><code>3222</code>, <code>99876</code></td></tr>
+<tr><th colspan="4">Posições (não consomem caracteres)</th></tr>
+<tr><td><code>^</code></td><td>começo do texto</td><td><code>^Ana</code></td><td>"Ana" só no começo</td></tr>
+<tr><td><code>$</code></td><td>fim do texto</td><td><code>\.$</code></td><td>um ponto no fim</td></tr>
+<tr><td><code>\b</code></td><td>borda de palavra (entre <code>\w</code> e não-<code>\w</code>)</td><td><code>\bpão\b</code></td><td>"pão", mas não "pãozinho"</td></tr>
+<tr><th colspan="4">Outros</th></tr>
+<tr><td><code>a|b</code></td><td><code>a</code> ou <code>b</code></td><td><code>pão|bolo</code></td><td><code>pão</code>, <code>bolo</code></td></tr>
+<tr><td><code>( )</code></td><td>grupo: junta e "captura" um pedaço (seção 5)</td><td><code>(\d{2})</code></td><td>o DDD</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>3. Por que <code>r"…"</code></h2>
+<p>As expressões regulares usam muito a barra invertida <code>\</code>. Só que as strings do Python <strong>também</strong> usam a barra para os caracteres especiais (aula <a href="strings-escape.html">Caracteres de Escape</a>): <code>"\n"</code> é uma quebra de linha, <code>"\t"</code> um tab, <code>"\b"</code> um caractere de "voltar uma casa" (<em>backspace</em>). Quando você escreve <code>"\bpão\b"</code>, o Python transforma os <code>\b</code> em <em>backspaces</em> <strong>antes</strong> de o <code>re</code> ver o padrão.</p>
+
+<p>O <code>r</code> na frente das aspas faz uma <strong>string crua</strong> (<em>raw string</em>): nela, a barra é só uma barra, e chega intacta ao <code>re</code>.</p>
+
+<pre class="file" data-file="cru.py">import re
+
+texto = "o pão da padaria, o pãozinho e o pão de queijo"
+
+print(len("\b"), len(r"\b"))
+print(re.findall("\bpão\b", texto))
+print(re.findall(r"\bpão\b", texto))
+</pre>
+
+<pre class="term">$ python3 cru.py
+1 2
+[]
+['pão', 'pão']</pre>
+
+<ul>
+  <li><code>len("\b")</code> é 1: um caractere só, o <em>backspace</em>. <code>len(r"\b")</code> é 2: a barra e o <code>b</code>, que o <code>re</code> entende como "borda de palavra".</li>
+  <li>Sem o <code>r</code>, a busca procurou "<em>backspace</em>, pão, <em>backspace</em>", que não existe no texto: lista vazia, <strong>sem erro nenhum</strong>.</li>
+  <li>Com o <code>r</code>, achou os dois "pão" soltos e deixou de fora o "pãozinho" (depois do "pão" dele vem um <code>z</code>, que é letra: não há borda ali).</li>
+</ul>
+
+<p>Com <code>\d</code>, a falta do <code>r</code> não muda o resultado, porque <code>\d</code> não é um escape do Python. Mas o Python avisa, e o aviso aparece toda vez que o programa roda:</p>
+
+<pre class="file" data-file="aviso.py">import re
+
+print(re.findall("\d+", "pedido 4521"))
+</pre>
+
+<pre class="term">$ python3 aviso.py
+/home/ana/aviso.py:3: SyntaxWarning: "\d" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\d"? A raw string is also an option.
+  print(re.findall("\d+", "pedido 4521"))
+['4521']</pre>
+
+<p>"Aviso de sintaxe: <code>\d</code> é uma sequência de escape inválida. Sequências assim não vão funcionar no futuro. Você quis dizer <code>\\d</code>? Uma string crua também é uma opção." É um <strong>aviso</strong>, e não um erro: o programa rodou e mostrou <code>['4521']</code> na última linha. A linha de cima mostra onde está o problema: arquivo <code>aviso.py</code>, linha 3. O editor do guia mostra o mesmo aviso. A regra é simples: <strong>todo padrão de regex com <code>r"…"</code></strong>, sempre, e nunca mais pense nisso.</p>
+
+<hr>
+
+<h2>4. <code>findall</code>: todos os trechos</h2>
+<p><code>re.findall(padrao, texto)</code> ("achar todos") devolve uma lista com <strong>todos</strong> os trechos que casam, na ordem em que aparecem:</p>
+
+<pre class="file" data-file="findall.py">import re
+
+recado = "Ana, o pedido 4521 sai às 15h. Ligue para 3222-1080."
+
+print(re.findall(r"\d+", recado))
+print(re.findall(r"\d{4}", recado))
+print(re.findall(r"\d{4}-\d{4}", recado))
+print(re.findall(r"[A-Z]\w*", recado))
+print(re.findall(r"\bp\w+", recado))
+</pre>
+
+<pre class="term">$ python3 findall.py
+['4521', '15', '3222', '1080']
+['4521', '3222', '1080']
+['3222-1080']
+['Ana', 'Ligue']
+['pedido', 'para']</pre>
+
+<dl class="anatomy">
+  <dt>\d+</dt><dd>Toda sequência de dígitos: até o <code>15</code> de "15h" e as duas metades do telefone, separadas.</dd>
+  <dt>\d{4}</dt><dd>Exatamente quatro dígitos seguidos. O <code>15</code> ficou de fora.</dd>
+  <dt>\d{4}-\d{4}</dt><dd>O formato do telefone: só o <code>3222-1080</code>.</dd>
+  <dt>[A-Z]\w*</dt><dd>Uma maiúscula seguida de zero ou mais letras: as palavras que começam com maiúscula.</dd>
+  <dt>\bp\w+</dt><dd>Uma borda de palavra, um <code>p</code> e mais letras: palavras que <strong>começam</strong> com p. Sem o <code>\b</code>, um <code>p</code> no meio da palavra também serviria: em <code>"a compra do pão"</code>, <code>r"p\w+"</code> acha <code>['pra', 'pão']</code>, e <code>r"\bp\w+"</code> acha só <code>['pão']</code>.</dd>
+</dl>
+
+<p>Quando não acha nada, <code>findall</code> devolve uma lista vazia, <code>[]</code>, sem erro.</p>
+
+<div class="trypy" data-goal="out:['(86) 3222-1080', '(86) 99876-5432'];;src:re\.findall\s*\(;;semerro">
+<p class="try-task"><strong>Missão:</strong> tire da mensagem os dois telefones com DDD. Use <code>re.findall</code> com o padrão: parêntese, dois dígitos, parêntese, espaço, 4 ou 5 dígitos, hífen, 4 dígitos. Lembre que o parêntese é especial: escreva <code>\(</code> e <code>\)</code>.</p>
+<pre class="script" data-file="main.py">import re
+
+mensagem = "Encomendas: (86) 3222-1080 ou (86) 99876-5432. Pedido 4521."
+
+print(mensagem)
+</pre>
+<pre class="solucao" data-file="main.py">import re
+
+mensagem = "Encomendas: (86) 3222-1080 ou (86) 99876-5432. Pedido 4521."
+
+print(re.findall(r"\(\d{2}\) \d{4,5}-\d{4}", mensagem))
+</pre>
+</div>
+
+<hr>
+
+<h2>5. Grupos: pegar só um pedaço</h2>
+<p>Às vezes você quer o telefone inteiro para achar, mas só o DDD para guardar. Parênteses <code>( )</code> no padrão formam um <strong>grupo</strong>: o <code>re</code> lembra o que casou com cada grupo, e você pega pelo número.</p>
+
+<pre class="file" data-file="grupos.py">import re
+
+contato = "Ana: (86) 99876-5432"
+
+achado = re.search(r"\((\d{2})\) (\d{4,5})-(\d{4})", contato)
+print(achado.group())
+print(achado.group(1))
+print(achado.group(2), achado.group(3))
+print(achado.groups())
+
+achado = re.search(r"\((?P&lt;ddd&gt;\d{2})\) (?P&lt;numero&gt;\d{4,5}-\d{4})", contato)
+print(achado["ddd"], achado["numero"])
+print(achado.groupdict())
+</pre>
+
+<pre class="term">$ python3 grupos.py
+(86) 99876-5432
+86
+99876 5432
+('86', '99876', '5432')
+86 99876-5432
+{'ddd': '86', 'numero': '99876-5432'}</pre>
+
+<dl class="anatomy">
+  <dt>\( … \)</dt><dd>Os parênteses <strong>de verdade</strong> do telefone, com barra: casam com o caractere <code>(</code> e <code>)</code>.</dd>
+  <dt>(\d{2})</dt><dd>Parênteses <strong>sem barra</strong>: um grupo. O primeiro grupo guarda o DDD.</dd>
+  <dt>group() / group(1) / group(2)</dt><dd>Sem número (ou <code>group(0)</code>), o trecho inteiro. Com número, só o grupo: contam-se os <code>(</code> da esquerda para a direita.</dd>
+  <dt>groups()</dt><dd>Todos os grupos, numa tupla.</dd>
+  <dt>(?P&lt;ddd&gt;…)</dt><dd>Um grupo com <strong>nome</strong>. Fica mais fácil de ler que "grupo 1": <code>achado["ddd"]</code>. O <code>groupdict()</code> devolve um dicionário com todos.</dd>
+</dl>
+
+<h3>Grupos mudam o que o <code>findall</code> devolve</h3>
+<p>Atenção a este detalhe, que pega muita gente: se o padrão tem grupos, o <code>findall</code> devolve <strong>só os grupos</strong>, e não o trecho inteiro.</p>
+
+<pre class="file" data-file="findall_grupos.py">import re
+
+agenda = "Ana (86) 99876-5432, Bruno (11) 3456-7890, Carla (21) 98888-1111"
+
+print(re.findall(r"\((\d{2})\) [\d-]+", agenda))
+print(re.findall(r"(\w+) \((\d{2})\)", agenda))
+</pre>
+
+<pre class="term">$ python3 findall_grupos.py
+['86', '11', '21']
+[('Ana', '86'), ('Bruno', '11'), ('Carla', '21')]</pre>
+
+<p>Com um grupo, vem uma lista de textos (só os DDDs). Com dois ou mais, uma lista de tuplas, uma por trecho encontrado. Se você precisa de parênteses só para <strong>juntar</strong> (para pôr um <code>?</code> num pedaço inteiro, por exemplo) sem mudar o <code>findall</code>, use o grupo que não captura: <code>(?:…)</code>. Ele aparece na seção 7.</p>
+
+<hr>
+
+<h2>6. <code>sub</code>: procurar e trocar</h2>
+<p><code>re.sub(padrao, troca, texto)</code> ("substituir") troca cada trecho que casa pelo texto de troca. Na troca, <code>\1</code>, <code>\2</code>… são os grupos encontrados:</p>
+
+<pre class="file" data-file="sub.py">import re
+
+cadastro = "Cliente: Ana Souza, CPF 123.456.789-09, nascida em 12/03/1985"
+
+print(re.sub(r"\d{3}\.\d{3}\.\d{3}-\d{2}", "***.***.***-**", cadastro))
+print(re.sub(r"(\d{2})/(\d{2})/(\d{4})", r"\3-\2-\1", cadastro))
+print(re.sub(r"\s+", " ", "pão    de     queijo"))
+
+cpf_cru = "12345678909"
+print(re.sub(r"(\d{3})(\d{3})(\d{3})(\d{2})", r"\1.\2.\3-\4", cpf_cru))
+</pre>
+
+<pre class="term">$ python3 sub.py
+Cliente: Ana Souza, CPF ***.***.***-**, nascida em 12/03/1985
+Cliente: Ana Souza, CPF 123.456.789-09, nascida em 1985-03-12
+pão de queijo
+123.456.789-09</pre>
+
+<ol class="passo">
+  <li><strong>Esconder o CPF:</strong> o padrão casa com o formato do CPF e a troca é um texto fixo.</li>
+  <li><strong>Inverter a data:</strong> três grupos (dia, mês, ano) e a troca <code>r"\3-\2-\1"</code> os escreve na ordem ano-mês-dia. A troca também leva <code>r</code>, por causa das barras.</li>
+  <li><strong>Espaços repetidos:</strong> <code>\s+</code> (um ou mais espaços) vira um espaço só.</li>
+  <li><strong>Formatar o CPF:</strong> 11 dígitos colados, separados em quatro grupos e remontados com pontos e hífen.</li>
+</ol>
+
+<div class="trypy" data-goal="out:CPF ***.***.***-09;;out:CPF ***.***.***-00;;src:re\.sub\s*\(;;semerro">
+<p class="try-task"><strong>Missão:</strong> a ficha vai ser impressa, e os CPFs não podem aparecer inteiros: deixe visíveis só os dois últimos dígitos. Use <code>re.sub</code> com um grupo nos dois dígitos do fim, <code>-(\d{2})</code>, e a troca <code>r"***.***.***-\1"</code>.</p>
+<pre class="script" data-file="main.py">import re
+
+ficha = "Ana Souza, CPF 123.456.789-09; Bruno Lima, CPF 987.654.321-00"
+
+print(ficha)
+</pre>
+<pre class="solucao" data-file="main.py">import re
+
+ficha = "Ana Souza, CPF 123.456.789-09; Bruno Lima, CPF 987.654.321-00"
+
+print(re.sub(r"\d{3}\.\d{3}\.\d{3}-(\d{2})", r"***.***.***-\1", ficha))
+</pre>
+</div>
+
+<h3><code>split</code>: quebrar em vários separadores</h3>
+<p>O <code>texto.split(",")</code> quebra só numa vírgula exata. O <code>re.split</code> quebra onde o padrão casar, então aceita vários separadores e espaços variados de uma vez:</p>
+
+<pre class="file" data-file="split.py">import re
+
+lista = "pão, leite;café ; manteiga,açúcar"
+print(re.split(r"\s*[,;]\s*", lista))
+</pre>
+
+<pre class="term">$ python3 split.py
+['pão', 'leite', 'café', 'manteiga', 'açúcar']</pre>
+
+<hr>
+
+<h2>7. Padrões brasileiros: CPF, CEP, telefone e email</h2>
+<p>Para <strong>validar</strong> um campo (o texto inteiro tem de estar no formato, nada antes nem depois), use <code>re.fullmatch</code> ("casamento completo"):</p>
+
+<pre class="file" data-file="validar.py">import re
+
+CPF = r"\d{3}\.\d{3}\.\d{3}-\d{2}"
+CEP = r"\d{5}-?\d{3}"
+EMAIL = r"[\w.+-]+@[\w-]+(\.[\w-]+)+"
+
+testes = [
+    (CPF, "123.456.789-09"),
+    (CPF, "123.456.789-0"),
+    (CPF, "CPF 123.456.789-09"),
+    (CEP, "64000-120"),
+    (CEP, "64000120"),
+    (EMAIL, "ana.souza@email.com.br"),
+    (EMAIL, "ana@email"),
+    (EMAIL, "ana souza@email.com"),
+]
+
+for padrao, texto in testes:
+    ok = re.fullmatch(padrao, texto)
+    print(f"{texto!r:26} {'válido' if ok else 'inválido'}")
+</pre>
+
+<pre class="term">$ python3 validar.py
+'123.456.789-09'           válido
+'123.456.789-0'            inválido
+'CPF 123.456.789-09'       inválido
+'64000-120'                válido
+'64000120'                 válido
+'ana.souza@email.com.br'   válido
+'ana@email'                inválido
+'ana souza@email.com'      inválido</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Padrão</th><th>Lendo em português</th></tr>
+<tr><td><code>\d{3}\.\d{3}\.\d{3}-\d{2}</code></td><td>CPF: 3 dígitos, ponto, 3 dígitos, ponto, 3 dígitos, hífen, 2 dígitos. Os pontos com barra: são pontos de verdade.</td></tr>
+<tr><td><code>\d{5}-?\d{3}</code></td><td>CEP: 5 dígitos, hífen opcional (<code>?</code>), 3 dígitos.</td></tr>
+<tr><td><code>[\w.+-]+@[\w-]+(\.[\w-]+)+</code></td><td>Email (simplificado): letras, pontos, <code>+</code> ou <code>-</code>; uma arroba; o nome do domínio; e um ou mais pedaços "ponto + nome" (<code>.com</code>, <code>.com.br</code>).</td></tr>
+</table>
+</div>
+
+<div class="warning">
+<strong>Formato não é o mesmo que "existe"</strong>
+<p>A regex confere a <strong>forma</strong>, não a verdade. <code>111.111.111-11</code> passa no padrão de CPF, mas não é um CPF válido: os dois últimos dígitos de um CPF são calculados a partir dos nove primeiros (os <strong>dígitos verificadores</strong>), e essa conta se faz com Python comum, não com regex. Do mesmo jeito, um email no formato certo pode não existir. O padrão de email acima é simplificado de propósito: o padrão "completo" da internet é enorme, e para o dia a dia este basta.</p>
+</div>
+
+<h3><code>search</code>, <code>match</code> ou <code>fullmatch</code>?</h3>
+
+<pre class="file" data-file="match_search.py">import re
+
+texto = "CPF 123.456.789-09"
+cpf = r"\d{3}\.\d{3}\.\d{3}-\d{2}"
+
+print("search:   ", re.search(cpf, texto))
+print("match:    ", re.match(cpf, texto))
+print("fullmatch:", re.fullmatch(cpf, texto))
+print("fullmatch:", re.fullmatch(cpf, "123.456.789-09"))
+</pre>
+
+<pre class="term">$ python3 match_search.py
+search:    &lt;re.Match object; span=(4, 18), match='123.456.789-09'&gt;
+match:     None
+fullmatch: None
+fullmatch: &lt;re.Match object; span=(0, 14), match='123.456.789-09'&gt;</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Função</th><th>Procura onde</th><th>Use para</th></tr>
+<tr><td><code>re.search</code></td><td>Em qualquer lugar do texto (o primeiro)</td><td>"Tem um CPF neste texto?"</td></tr>
+<tr><td><code>re.match</code></td><td>Só no <strong>começo</strong> do texto</td><td>Raramente; <code>search</code> com <code>^</code> diz o mesmo e fica mais claro</td></tr>
+<tr><td><code>re.fullmatch</code></td><td>O texto <strong>inteiro</strong></td><td>Validar um campo de formulário</td></tr>
+<tr><td><code>re.findall</code></td><td>Todos os trechos</td><td>Tirar todos os telefones de uma página</td></tr>
+</table>
+</div>
+
+<h3>Telefone: uma regex é sempre um acordo</h3>
+<p>Telefones brasileiros aparecem de muitos jeitos: com ou sem DDD, com ou sem parênteses, fixo (8 dígitos) ou celular (9 dígitos, começando com 9). Uma primeira tentativa:</p>
+
+<pre class="file" data-file="telefones.py">import re
+
+agenda = """Padaria: (86) 3222-1080
+Ana: (86) 99876-5432
+Bruno: 86 98765-4321
+Carla: 99123-4567
+Pedido número 1234-5678-90"""
+
+padrao = r"\(?\d{2}\)? ?9?\d{4}-\d{4}"
+for numero in re.findall(padrao, agenda):
+    print(numero)
+</pre>
+
+<pre class="term">$ python3 telefones.py
+(86) 3222-1080
+(86) 99876-5432
+86 98765-4321</pre>
+
+<p>O padrão: parêntese opcional <code>\(?</code>, DDD <code>\d{2}</code>, parêntese opcional <code>\)?</code>, espaço opcional <code> ?</code>, um 9 opcional <code>9?</code>, 4 dígitos, hífen, 4 dígitos. Achou três, mas <strong>perdeu a Carla</strong>, que não tem DDD. Para tornar o DDD inteiro opcional, é preciso juntá-lo num grupo e pôr um <code>?</code> no grupo. Como o grupo não deve mudar o <code>findall</code>, usamos <code>(?:…)</code>, o grupo que não captura. E, para não pegar pedaços de números maiores, bordas <code>\b</code> e um <code>(?!-)</code>, "e não pode vir hífen depois":</p>
+
+<pre class="file" data-file="telefones3.py">import re
+
+agenda = """Padaria: (86) 3222-1080
+Ana: (86) 99876-5432
+Bruno: 86 98765-4321
+Carla: 99123-4567
+Pedido número 1234-5678-90"""
+
+padrao = r"(?:\(?\d{2}\)? ?)?\b9?\d{4}-\d{4}\b(?!-)"
+for numero in re.findall(padrao, agenda):
+    print(numero)
+</pre>
+
+<pre class="term">$ python3 telefones3.py
+(86) 3222-1080
+(86) 99876-5432
+86 98765-4321
+99123-4567</pre>
+
+<p>Agora vêm os quatro, e o número do pedido ficou de fora. Sem o <code>(?!-)</code>, o <code>1234-5678</code> do pedido entrava como se fosse telefone. Essa é a lição de toda regex: quanto mais formatos ela aceita, mais chance de pegar o que não devia. Teste sempre com exemplos que <strong>devem</strong> casar e com exemplos que <strong>não devem</strong>.</p>
+
+<hr>
+
+<h2>8. Opções e padrões reaproveitados</h2>
+
+<pre class="file" data-file="flags.py">import re
+
+texto = "PÃO francês, Pão doce, pão de queijo"
+
+print(re.findall(r"pão", texto))
+print(re.findall(r"pão", texto, re.IGNORECASE))
+
+cep = re.compile(r"\d{5}-\d{3}")
+for endereco in ["Rua A, 64000-120", "Rua B, sem CEP", "Av. C, 01310-100"]:
+    achado = cep.search(endereco)
+    print(achado.group() if achado else "—")
+</pre>
+
+<pre class="term">$ python3 flags.py
+['pão']
+['PÃO', 'Pão', 'pão']
+64000-120
+—
+01310-100</pre>
+
+<ul>
+  <li><code>re.IGNORECASE</code> ("ignorar maiúsculas"): a busca não diferencia <code>PÃO</code>, <code>Pão</code> e <code>pão</code>, com acento e tudo.</li>
+  <li><code>re.compile(padrao)</code> prepara o padrão uma vez e devolve um objeto com os mesmos métodos (<code>search</code>, <code>findall</code>, <code>sub</code>…). Deixa o laço mais limpo e dá um nome ao padrão.</li>
+  <li><code>achado.group() if achado else "—"</code>: o <code>if</code> em uma linha (aula <a href="if-ternario.html">if em uma Linha</a>) protege do <code>None</code>.</li>
+</ul>
+
+<hr>
+
+<h2>Formas diferentes: regex ou método de texto?</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Tarefa</th><th>Sem regex</th><th>Com regex</th><th>Qual usar</th></tr>
+<tr><td>Tem a palavra "pão"?</td><td><code>"pão" in texto</code></td><td><code>re.search(r"pão", texto)</code></td><td>O <code>in</code>: mais simples e mais rápido</td></tr>
+<tr><td>Trocar um texto fixo</td><td><code>texto.replace("a", "b")</code></td><td><code>re.sub(r"a", "b", texto)</code></td><td>O <code>replace</code></td></tr>
+<tr><td>Quebrar numa vírgula</td><td><code>texto.split(",")</code></td><td><code>re.split(r",", texto)</code></td><td>O <code>split</code></td></tr>
+<tr><td>Só dígitos?</td><td><code>texto.isdigit()</code></td><td><code>re.fullmatch(r"\d+", texto)</code></td><td>Os dois servem</td></tr>
+<tr><td>Achar todos os telefones, CPFs, datas</td><td>Laço complicado</td><td><code>re.findall</code></td><td>Regex</td></tr>
+<tr><td>Validar um formato</td><td>Vários <code>if</code></td><td><code>re.fullmatch</code></td><td>Regex</td></tr>
+<tr><td>Quebrar em vários separadores</td><td><code>replace</code> e <code>split</code> em sequência</td><td><code>re.split(r"[,;]", texto)</code></td><td>Regex</td></tr>
+</table>
+</div>
+
+<p>Regras de bolso: se dá para fazer com um método de texto, faça com ele, porque fica mais fácil de ler. Use regex quando o que você procura é um <strong>formato</strong>.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Esqueceu o <code>r</code></strong>
+<p>É a seção 3: com <code>"\d"</code>, o Python avisa com <code>SyntaxWarning: "\d" is an invalid escape sequence</code>, e o programa funciona. Com <code>"\b"</code>, não há aviso nenhum, e a busca não acha nada, porque <code>"\b"</code> virou um <em>backspace</em>. <strong>Como consertar:</strong> <code>r"…"</code> em todo padrão.</p>
+</div>
+
+<div class="cenario">
+<strong>Usar o resultado quando não achou nada</strong>
+<pre class="file" data-file="none_group.py">import re
+
+contato = "Bruno: sem telefone"
+achado = re.search(r"\d{4}-\d{4}", contato)
+print(achado.group())
+</pre>
+<pre class="term">$ python3 none_group.py
+Traceback (most recent call last):
+  File "/home/ana/none_group.py", line 5, in &lt;module&gt;
+    print(achado.group())
+          ^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'group'</pre>
+<p>"O objeto <code>NoneType</code> não tem o atributo <code>group</code>". O <code>search</code> não achou telefone e devolveu <code>None</code>; na linha 5, o programa pediu <code>.group()</code> ao <code>None</code>. É o erro mais comum com regex. <strong>Como consertar:</strong> <code>if achado: print(achado.group())</code>, com um <code>else</code> para o caso de não achar.</p>
+</div>
+
+<div class="cenario">
+<strong>Parêntese sem fechar no padrão</strong>
+<pre class="file" data-file="parenteses.py">import re
+
+print(re.findall(r"(\d{2}", "(86) 3222-1080"))
+</pre>
+<pre class="term">$ python3 parenteses.py
+Traceback (most recent call last):
+  File "/home/ana/parenteses.py", line 3, in &lt;module&gt;
+    print(re.findall(r"(\d{2}", "(86) 3222-1080"))
+          ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/re/__init__.py", line 278, in findall
+    return _compile(pattern, flags).findall(string)
+           ~~~~~~~~^^^^^^^^^^^^^^^^
+«… mais 14 linhas de dentro do módulo re …»
+re.PatternError: missing ), unterminated subpattern at position 0</pre>
+<p>O traceback é longo porque o erro foi descoberto lá dentro do módulo <code>re</code>, enquanto ele lia o padrão. Leia a <strong>primeira</strong> linha que é do seu arquivo (a linha 3) e a <strong>última</strong>: <code>re.PatternError</code> ("erro de padrão"): "falta um <code>)</code>, subpadrão não terminado, na posição 0". A posição 0 é o <code>(</code> que abriu e não fechou. A intenção era um parêntese <strong>de verdade</strong>, que precisa de barra. <strong>Como consertar:</strong> <code>r"\(\d{2}"</code>. (Os caminhos <code>/usr/lib/python3.14/…</code> mudam de computador para computador.)</p>
+</div>
+
+<div class="note">
+<strong><code>re.PatternError</code> e <code>re.error</code></strong>
+<p>Até o Python 3.12, esse erro se chamava só <code>re.error</code>. Desde o 3.13, o nome é <code>re.PatternError</code>, e <code>re.error</code> continua valendo como apelido. Um <code>except re.error:</code> funciona nos dois.</p>
+</div>
+
+<div class="cenario">
+<strong>O ponto sem barra aceita qualquer coisa (sem erro nenhum)</strong>
+<pre class="file" data-file="ponto.py">import re
+
+sem_barra = r"\d{3}.\d{3}.\d{3}-\d{2}"
+com_barra = r"\d{3}\.\d{3}\.\d{3}-\d{2}"
+
+print(re.fullmatch(sem_barra, "123a456b789-09"))
+print(re.fullmatch(com_barra, "123a456b789-09"))
+</pre>
+<pre class="term">$ python3 ponto.py
+&lt;re.Match object; span=(0, 14), match='123a456b789-09'&gt;
+None</pre>
+<p>Sem a barra, o <code>.</code> quer dizer "qualquer caractere", e o "CPF" <code>123a456b789-09</code> passou como válido. <strong>Como consertar:</strong> <code>\.</code> sempre que você quer um ponto de verdade. O mesmo vale para <code>( ) [ ] { } ? * + | ^ $</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O <code>.*</code> guloso engoliu demais</strong>
+<pre class="file" data-file="guloso.py">import re
+
+html = "&lt;b&gt;pão&lt;/b&gt; e &lt;b&gt;café&lt;/b&gt;"
+print(re.findall(r"&lt;b&gt;.*&lt;/b&gt;", html))
+print(re.findall(r"&lt;b&gt;.*?&lt;/b&gt;", html))
+print(re.findall(r"&lt;b&gt;(.*?)&lt;/b&gt;", html))
+</pre>
+<pre class="term">$ python3 guloso.py
+['&lt;b&gt;pão&lt;/b&gt; e &lt;b&gt;café&lt;/b&gt;']
+['&lt;b&gt;pão&lt;/b&gt;', '&lt;b&gt;café&lt;/b&gt;']
+['pão', 'café']</pre>
+<p>O <code>*</code> é <strong>guloso</strong>: pega o máximo que conseguir. O <code>.*</code> foi do primeiro <code>&lt;b&gt;</code> até o <strong>último</strong> <code>&lt;/b&gt;</code>, num trecho só. Com <code>?</code> depois (<code>.*?</code>), ele vira <strong>preguiçoso</strong>: pega o mínimo, e para no primeiro <code>&lt;/b&gt;</code>. Com o grupo, vêm só as palavras. (Para ler páginas da internet de verdade, existem bibliotecas próprias; regex serve para trechos simples como este.)</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Função</th><th>Devolve</th></tr>
+<tr><td><code>re.search(p, texto)</code></td><td>O primeiro <code>Match</code>, ou <code>None</code></td></tr>
+<tr><td><code>re.fullmatch(p, texto)</code></td><td><code>Match</code> se o texto <strong>inteiro</strong> casa, ou <code>None</code></td></tr>
+<tr><td><code>re.match(p, texto)</code></td><td><code>Match</code> se casa no começo, ou <code>None</code></td></tr>
+<tr><td><code>re.findall(p, texto)</code></td><td>Lista com todos os trechos (ou só os grupos, se houver)</td></tr>
+<tr><td><code>re.sub(p, troca, texto)</code></td><td>Texto novo com as trocas (<code>\1</code> na troca = grupo 1)</td></tr>
+<tr><td><code>re.split(p, texto)</code></td><td>Lista dos pedaços entre os trechos que casam</td></tr>
+<tr><td><code>re.compile(p)</code></td><td>Um padrão pronto, com os mesmos métodos</td></tr>
+<tr><td><code>m.group()</code>, <code>m.group(1)</code>, <code>m["nome"]</code></td><td>O trecho inteiro / o grupo 1 / o grupo com nome</td></tr>
+<tr><td><code>m.groups()</code>, <code>m.groupdict()</code>, <code>m.start()</code>, <code>m.end()</code></td><td>Tupla dos grupos / dicionário dos nomeados / posições</td></tr>
+<tr><td><code>re.IGNORECASE</code></td><td>Opção: ignora maiúsculas e minúsculas</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>SyntaxWarning: "\d" is an invalid escape sequence</code></td><td>Padrão sem <code>r</code></td></tr>
+<tr><td>Busca com <code>\b</code> não acha nada, sem erro</td><td>Padrão sem <code>r</code>: <code>"\b"</code> virou <em>backspace</em></td></tr>
+<tr><td><code>AttributeError: 'NoneType' object has no attribute 'group'</code></td><td>Não achou: confira <code>if achado:</code> antes</td></tr>
+<tr><td><code>re.PatternError: missing ), unterminated subpattern</code></td><td>Parêntese aberto sem fechar; para o caractere, use <code>\(</code></td></tr>
+<tr><td>Aceitou texto que não devia</td><td><code>.</code> sem barra; <code>search</code> em vez de <code>fullmatch</code></td></tr>
+<tr><td><code>findall</code> devolveu só pedaços, ou tuplas</td><td>O padrão tem grupos: use <code>(?:…)</code> para juntar sem capturar</td></tr>
+<tr><td>Pegou um trecho grande demais</td><td><code>.*</code> guloso: use <code>.*?</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Três dígitos</h3>
+<p>Escreva o padrão (sem o <code>r</code> e sem as aspas) que casa com exatamente três dígitos seguidos:</p>
+<div class="ex-code"><input data-answer="\d{3}|\d\d\d|[0-9]{3}" aria-label="padrão"></div>
+</div>
+
+<div class="exercise">
+<h3>2. O CEP</h3>
+<p>Complete o padrão do CEP com hífen opcional:</p>
+<div class="ex-code">r"\d{5}<input data-answer="-?" aria-label="hífen opcional">\d{3}"</div>
+</div>
+
+<div class="exercise">
+<h3>3. Validar o campo</h3>
+<p>Qual função confere se o texto <strong>inteiro</strong> está no formato? Escreva só o nome, sem <code>re.</code>.</p>
+<div class="ex-code"><input data-answer="fullmatch" aria-label="função"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Por que escrever <code>r"\bpão\b"</code> e não <code>"\bpão\b"</code>?</p>
+<label><input type="radio" name="q4"> Porque o <code>r</code> deixa a busca mais rápida</label>
+<label><input type="radio" name="q4"> Porque, sem o <code>r</code>, o Python transforma <code>\b</code> num <em>backspace</em> antes de o <code>re</code> ver o padrão</label>
+<label><input type="radio" name="q4"> Porque o <code>r</code> ignora maiúsculas</label>
+<label><input type="radio" name="q4"> Porque sem o <code>r</code> dá <code>re.PatternError</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. <code>re.findall(r"(\d{2})-\d{4}", "11-2222 e 33-4444")</code> devolve:</p>
+<label><input type="radio" name="q5"> <code>['11-2222', '33-4444']</code></label>
+<label><input type="radio" name="q5"> <code>[('11', '2222'), ('33', '4444')]</code></label>
+<label><input type="radio" name="q5"> <code>'11'</code></label>
+<label><input type="radio" name="q5"> <code>['11', '33']</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. <code>re.search(r"\d+", "sem números")</code> devolve:</p>
+<label><input type="radio" name="q6"> <code>None</code></label>
+<label><input type="radio" name="q6"> <code>[]</code></label>
+<label><input type="radio" name="q6"> <code>""</code></label>
+<label><input type="radio" name="q6"> Um <code>re.PatternError</code></label>
+</div>
+
+<h3>Missão final: os emails do cadastro</h3>
+
+<div class="trypy" data-goal="out:ana@padaria.com.br -&gt; válido;;out:bruno.lima@email.com -&gt; válido;;out:carla@ -&gt; inválido;;out:davi email.com -&gt; inválido;;src:re\.fullmatch\s*\(">
+<p class="try-task"><strong>Missão:</strong> o programa marca todos os emails como válidos, porque só confere se há uma arroba ou um ponto. Troque o teste <code>"@" in email or "." in email</code> por <code>re.fullmatch(EMAIL, email)</code>, usando o padrão que já está pronto. O <code>carla@</code> e o <code>davi email.com</code> devem sair como inválidos.</p>
+<pre class="script" data-file="main.py">import re
+
+EMAIL = r"[\w.+-]+@[\w-]+(\.[\w-]+)+"
+
+cadastros = ["ana@padaria.com.br", "bruno.lima@email.com", "carla@", "davi email.com"]
+
+for email in cadastros:
+    if "@" in email or "." in email:
+        print(email, "-&gt; válido")
+    else:
+        print(email, "-&gt; inválido")
+</pre>
+<pre class="solucao" data-file="main.py">import re
+
+EMAIL = r"[\w.+-]+@[\w-]+(\.[\w-]+)+"
+
+cadastros = ["ana@padaria.com.br", "bruno.lima@email.com", "carla@", "davi email.com"]
+
+for email in cadastros:
+    if re.fullmatch(EMAIL, email):
+        print(email, "-&gt; válido")
+    else:
+        print(email, "-&gt; inválido")
+</pre>
+</div>
+
+<p>Com o <code>fullmatch</code>, o <code>carla@</code> cai porque falta o domínio depois da arroba, e o <code>davi email.com</code> cai porque não tem arroba (e o espaço não está entre os caracteres aceitos). Experimente acrescentar <code>"eva@escola"</code> à lista: sem um <code>.algo</code> no fim, também é inválido.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Uma expressão regular descreve um <strong>formato</strong> de texto; o módulo <code>re</code> procura, troca e valida com ela.</li>
+  <li>Todo padrão com <code>r"…"</code>: sem o <code>r</code>, o <code>\b</code> vira <em>backspace</em> e o <code>\d</code> dá <code>SyntaxWarning</code>.</li>
+  <li><code>search</code> acha o primeiro (ou <code>None</code>), <code>findall</code> acha todos, <code>sub</code> troca, <code>split</code> quebra, <code>fullmatch</code> valida o texto inteiro.</li>
+  <li><code>\d</code>, <code>\w</code>, <code>\s</code>, <code>.</code>, <code>[ ]</code>; <code>+</code>, <code>*</code>, <code>?</code>, <code>{n,m}</code>; <code>^</code>, <code>$</code>, <code>\b</code>. Para o caractere em si, barra na frente: <code>\.</code>, <code>\(</code>.</li>
+  <li>Grupos <code>( )</code> capturam pedaços (<code>group(1)</code>, <code>(?P&lt;nome&gt;…)</code>) e mudam o <code>findall</code>; <code>(?:…)</code> junta sem capturar.</li>
+  <li>Regex confere formato, não verdade (CPF tem dígito verificador). Teste com exemplos que devem e que não devem casar.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
