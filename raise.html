@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python raise — lançando os seus próprios erros | Guia Python</title>
+<meta name="description" content="O raise do Python para quem nunca programou: como a sua função avisa que recebeu um valor impossível, ValueError e TypeError com mensagem própria, por que lançar um erro é melhor que dar print e devolver None, quem chama decide com try/except, o raise sozinho para relançar o erro, o raise from, e os erros reais do Python 3.14 (raise com texto, raise com vírgula, raise sem erro ativo, rise).">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">raise</span></h1>
+
+<p class="intro">Até aqui, quem criava os erros era o Python: o <code>int("dez")</code> dava <code>ValueError</code>, o <code>10 / 0</code> dava <code>ZeroDivisionError</code>. Você só lia os erros e os tratava. Mas o seu próprio código também sabe quando algo está errado. Uma nota 15 numa escala de 0 a 10, um saque maior que o saldo, um desconto de 150%: o Python não acha nada de errado nesses números, mas <strong>você</strong> acha. Para avisar, existe o <code>raise</code> (em inglês, "levantar"): você <strong>lança</strong> um erro, exatamente como o Python lança os dele.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A lançar um erro com <code>raise ValueError("mensagem")</code> e a escrever uma boa mensagem.</li>
+  <li>Por que lançar um erro é melhor que dar um <code>print</code> e seguir em frente.</li>
+  <li>Que quem chama a sua função trata o seu erro com o mesmo <code>try</code>/<code>except</code> de sempre.</li>
+  <li>Qual tipo de erro escolher: <code>ValueError</code>, <code>TypeError</code> e outros.</li>
+  <li>O <code>raise</code> sozinho, que <strong>relança</strong> o erro, e o <code>raise … from</code>.</li>
+  <li>Os erros reais de quem está começando com o <code>raise</code>.</li>
+</ul>
+</div>
+
+<p>Todos os programas desta aula rodaram no <strong>Python 3.14</strong> da máquina da Ana (usuária <code>ana</code>, computador <code>notebook</code>) com <code>python3 arquivo.py</code>. Para entender bem, vale ter visto <a href="funcoes.html">Funções</a>, <a href="return.html">return</a> e <a href="try-except.html">try e except</a>.</p>
+
+<hr>
+
+<h2>A ideia: levantar a mão</h2>
+<p>A Ana trabalha no caixa da padaria. Um cliente pede para pagar R$ 50 com uma nota de R$ 3. Não existe nota de 3 reais. O que ela faz?</p>
+<ul>
+  <li><strong>Jeito errado:</strong> resmunga "nota estranha" baixinho e registra a venda mesmo assim. No fim do dia, o caixa não fecha, e ninguém sabe por quê.</li>
+  <li><strong>Jeito certo:</strong> para tudo, <strong>levanta a mão</strong> e chama a gerente: "Problema aqui: nota de 3 reais não existe". A gerente decide o que fazer.</li>
+</ul>
+<p>O <code>raise</code> é o "levantar a mão". Uma função que recebeu algo impossível não deve tentar seguir em frente nem só resmungar com um <code>print</code>: ela <strong>para</strong> e lança um erro com uma mensagem clara. Quem chamou a função (a "gerente") decide o que fazer: tratar com <code>try</code>/<code>except</code> ou deixar o programa parar.</p>
+
+<hr>
+
+<h2>1. O primeiro <code>raise</code></h2>
+<p>A professora da Ana usa uma função para registrar as notas, que vão de 0 a 10:</p>
+
+<pre class="file" data-file="nota.py">def registrar_nota(nota):
+    if nota &lt; 0 or nota &gt; 10:
+        raise ValueError(f"A nota deve ficar entre 0 e 10, mas veio {nota}.")
+    print(f"Nota {nota} registrada.")
+
+
+registrar_nota(8)
+registrar_nota(15)
+print("Fim")
+</pre>
+
+<dl class="anatomy">
+  <dt>if nota &lt; 0 or nota &gt; 10:</dt><dd>A conferência: a nota está fora da escala? (veja <a href="operadores-logicos.html">and, or e not</a>).</dd>
+  <dt>raise</dt><dd>"Lance": a palavra-chave que lança um erro. Daqui o Python não segue para a linha de baixo; é como um erro que ele mesmo tivesse encontrado.</dd>
+  <dt>ValueError</dt><dd>O <strong>tipo</strong> do erro. <code>ValueError</code> ("erro de valor") é o certo para "o tipo está certo (é um número), mas o valor não serve". É o mesmo que o <code>int("dez")</code> lança.</dd>
+  <dt>( f"A nota deve…" )</dt><dd>A <strong>mensagem</strong>, entre parênteses, como se você chamasse uma função. Ela vai aparecer na última linha do traceback. A <a href="f-strings.html">f-string</a> coloca o valor que chegou na mensagem.</dd>
+  <dt>print(f"Nota {nota} registrada.")</dt><dd>Só chega aqui se o <code>raise</code> não rodou, ou seja, se a nota é válida. Não precisa de <code>else</code>: o <code>raise</code> já interrompe.</dd>
+</dl>
+
+<pre class="term">$ python3 nota.py
+Nota 8 registrada.
+Traceback (most recent call last):
+  File "/home/ana/nota.py", line 8, in &lt;module&gt;
+    registrar_nota(15)
+    ~~~~~~~~~~~~~~^^^^
+  File "/home/ana/nota.py", line 3, in registrar_nota
+    raise ValueError(f"A nota deve ficar entre 0 e 10, mas veio {nota}.")
+ValueError: A nota deve ficar entre 0 e 10, mas veio 15.</pre>
+
+<p>Um traceback igualzinho aos do Python. Leia de baixo para cima, como na aula <a href="erros.html">Lendo uma Mensagem de Erro</a>:</p>
+<ol class="passo">
+  <li><strong>A última linha</strong> tem o tipo que você escolheu (<code>ValueError</code>) e a <strong>sua</strong> mensagem, com o valor que chegou: 15.</li>
+  <li><strong>O <code>File</code> de baixo</strong> aponta a linha 3, a do <code>raise</code>: foi ali que o erro foi lançado.</li>
+  <li><strong>O <code>File</code> de cima</strong> mostra quem chamou com o valor ruim: a linha 8, <code>registrar_nota(15)</code>. É lá que está o defeito de verdade.</li>
+</ol>
+<p>O <code>Fim</code> não apareceu: um erro lançado com <code>raise</code> e não tratado para o programa, como qualquer outro.</p>
+
+<h3>Uma boa mensagem</h3>
+<p>A mensagem é para uma pessoa ler, talvez você mesmo daqui a seis meses. Compare:</p>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Ajuda?</th></tr>
+<tr><td><code>raise ValueError("Erro")</code></td><td>Quase nada: que erro?</td></tr>
+<tr><td><code>raise ValueError("Nota inválida")</code></td><td>Melhor: diz o que estava errado</td></tr>
+<tr><td><code>raise ValueError(f"A nota deve ficar entre 0 e 10, mas veio {nota}.")</code></td><td>Ótima: diz a regra <strong>e</strong> o valor que chegou</td></tr>
+</table>
+</div>
+
+<div class="trypy" data-goal="erro:Saldo insuficiente;;src:\braise\s+ValueError">
+<p class="try-task"><strong>Missão:</strong> a função <code>sacar</code> deixa o saldo ficar negativo (rode e veja o <code>-130.00</code>). Faça ela lançar um <code>ValueError</code> com uma mensagem que comece com <code>Saldo insuficiente</code> quando o valor for maior que o saldo. O programa vai parar no segundo saque, e é isso mesmo que se quer.</p>
+<pre class="script" data-file="main.py">def sacar(saldo, valor):
+    return saldo - valor
+
+
+saldo = 100.0
+saldo = sacar(saldo, 30)
+print(f"Saldo: R$ {saldo:.2f}")
+saldo = sacar(saldo, 200)
+print(f"Saldo: R$ {saldo:.2f}")
+</pre>
+<pre class="solucao" data-file="main.py">def sacar(saldo, valor):
+    if valor &gt; saldo:
+        raise ValueError(f"Saldo insuficiente: você tem R$ {saldo:.2f}.")
+    return saldo - valor
+
+
+saldo = 100.0
+saldo = sacar(saldo, 30)
+print(f"Saldo: R$ {saldo:.2f}")
+saldo = sacar(saldo, 200)
+print(f"Saldo: R$ {saldo:.2f}")
+</pre>
+</div>
+
+<p>Antes e depois, no terminal da Ana:</p>
+<pre class="term">$ python3 sacar_ini.py
+Saldo: R$ 70.00
+Saldo: R$ -130.00
+$ python3 sacar_sol.py
+Saldo: R$ 70.00
+Traceback (most recent call last):
+  File "/home/ana/sacar_sol.py", line 10, in &lt;module&gt;
+    saldo = sacar(saldo, 200)
+  File "/home/ana/sacar_sol.py", line 3, in sacar
+    raise ValueError(f"Saldo insuficiente: você tem R$ {saldo:.2f}.")
+ValueError: Saldo insuficiente: você tem R$ 70.00.</pre>
+
+<hr>
+
+<h2>2. Por que não um <code>print</code>?</h2>
+<p>Parece mais simples avisar com um <code>print</code> e sair da função com <code>return</code>. Olhe o que acontece:</p>
+
+<pre class="file" data-file="print_none.py">def validar_nota(nota):
+    if nota &lt; 0 or nota &gt; 10:
+        print("Nota inválida!")
+        return
+    return nota
+
+
+notas = [validar_nota(8), validar_nota(15), validar_nota(9)]
+print(notas)
+print(f"Soma: {sum(notas)}")
+</pre>
+
+<pre class="term">$ python3 print_none.py
+Nota inválida!
+[8, None, 9]
+Traceback (most recent call last):
+  File "/home/ana/print_none.py", line 10, in &lt;module&gt;
+    print(f"Soma: {sum(notas)}")
+                   ~~~^^^^^^^
+TypeError: unsupported operand type(s) for +: 'int' and 'NoneType'</pre>
+
+<p>O aviso apareceu, mas o programa <strong>continuou</strong>. O <code>return</code> sozinho devolveu <code>None</code> (o "nada" do Python; veja <a href="none.html">O Valor None</a>), e esse <code>None</code> entrou na lista no lugar da nota. Duas linhas depois, a soma tropeçou nele com um <code>TypeError</code> que fala de <code>'NoneType'</code> e não diz nada sobre notas. Num programa maior, esse <code>None</code> poderia viajar muito mais longe antes de causar problema, e o traceback apontaria para um lugar que não tem culpa nenhuma.</p>
+
+<p>Com <code>raise</code>, o programa para <strong>no lugar certo</strong>, com a mensagem certa:</p>
+
+<pre class="file" data-file="raise_none.py">def validar_nota(nota):
+    if nota &lt; 0 or nota &gt; 10:
+        raise ValueError(f"A nota deve ficar entre 0 e 10, mas veio {nota}.")
+    return nota
+
+
+notas = [validar_nota(8), validar_nota(15), validar_nota(9)]
+print(notas)
+print(f"Soma: {sum(notas)}")
+</pre>
+
+<pre class="term">$ python3 raise_none.py
+Traceback (most recent call last):
+  File "/home/ana/raise_none.py", line 7, in &lt;module&gt;
+    notas = [validar_nota(8), validar_nota(15), validar_nota(9)]
+                              ~~~~~~~~~~~~^^^^
+  File "/home/ana/raise_none.py", line 3, in validar_nota
+    raise ValueError(f"A nota deve ficar entre 0 e 10, mas veio {nota}.")
+ValueError: A nota deve ficar entre 0 e 10, mas veio 15.</pre>
+
+<p>As marcas apontam exatamente o culpado: <code>validar_nota(15)</code>, na linha 7.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th><code>print</code> + <code>return</code></th><th><code>raise</code></th></tr>
+<tr><td>O programa continua?</td><td>Sim, com um <code>None</code> no lugar do valor</td><td>Não, a não ser que alguém trate com <code>try</code></td></tr>
+<tr><td>Onde o problema aparece</td><td>Depois, longe, com outra mensagem</td><td>Na hora, na linha certa</td></tr>
+<tr><td>Quem chamou pode reagir?</td><td>Só testando se veio <code>None</code></td><td>Sim, com <code>try</code>/<code>except</code></td></tr>
+<tr><td>A mensagem vai para</td><td>A tela, sempre (mesmo que ninguém queira)</td><td>O traceback, ou o <code>except</code> que decidir mostrá-la</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>3. Quem chama decide: <code>try</code> e <code>except</code></h2>
+<p>O erro que você lança é um erro como outro qualquer. Quem chama a função pode tratá-lo com o <code>try</code>/<code>except</code> da aula <a href="try-except.html">try e except</a>. Aqui, o programa pede a nota de novo até vir uma válida:</p>
+
+<pre class="file" data-file="pegar.py">def validar_nota(nota):
+    if nota &lt; 0 or nota &gt; 10:
+        raise ValueError(f"A nota deve ficar entre 0 e 10, mas veio {nota}.")
+    return nota
+
+
+while True:
+    try:
+        nota = validar_nota(int(input("Nota: ")))
+        break
+    except ValueError as e:
+        print(f"Erro: {e}")
+print(f"Nota registrada: {nota}")
+</pre>
+
+<pre class="term">$ python3 pegar.py
+Nota: 15
+Erro: A nota deve ficar entre 0 e 10, mas veio 15.
+Nota: dez
+Erro: invalid literal for int() with base 10: 'dez'
+Nota: -1
+Erro: A nota deve ficar entre 0 e 10, mas veio -1.
+Nota: 8
+Nota registrada: 8</pre>
+
+<p>Repare: o mesmo <code>except ValueError</code> pegou <strong>dois</strong> erros diferentes. O <code>dez</code> deu o <code>ValueError</code> do <code>int()</code>, com a mensagem do Python; o <code>15</code> e o <code>-1</code> deram o <code>ValueError</code> da <strong>sua</strong> função, com a sua mensagem. Para quem trata, tanto faz quem lançou: o que importa é o tipo. É por isso que escolher o tipo certo é importante.</p>
+
+<div class="tip">
+<strong>Divisão de trabalho</strong>
+<p>A função <code>validar_nota</code> <strong>não sabe</strong> o que fazer com uma nota ruim: num programa, o certo é perguntar de novo; noutro, pular o aluno; noutro, parar tudo. Por isso ela só lança o erro. Quem sabe o que fazer é quem chamou. Essa separação ("quem descobre o problema avisa; quem sabe resolver, resolve") é uma das ideias mais úteis da programação.</p>
+</div>
+
+<hr>
+
+<h2>4. Qual tipo de erro lançar</h2>
+<p>Você pode lançar qualquer tipo de erro do Python, mas escolha o que <strong>descreve</strong> o problema, porque é pelo tipo que o <code>except</code> de quem chama vai reconhecê-lo. Os mais usados:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Tipo</th><th>Quando lançar</th><th>Exemplo</th></tr>
+<tr><td><code>ValueError</code></td><td>O tipo está certo, o valor não serve</td><td>Nota 15, desconto de 150%, quantidade negativa</td></tr>
+<tr><td><code>TypeError</code></td><td>Veio um tipo que a função não aceita</td><td>Um texto <code>"50"</code> onde devia vir um número</td></tr>
+<tr><td><code>KeyError</code> / <code>IndexError</code></td><td>Procurou algo que não existe numa coleção</td><td>Raramente lançados à mão: o dicionário e a lista já lançam sozinhos</td></tr>
+<tr><td><code>FileNotFoundError</code></td><td>Um arquivo necessário não existe</td><td>Também costuma vir sozinho, do <code>open()</code></td></tr>
+<tr><td>Um erro seu</td><td>Nenhum dos de cima descreve bem o problema</td><td><code>SaldoInsuficiente</code>: aula <a href="excecoes-proprias.html">Criando suas Exceções</a></td></tr>
+</table>
+</div>
+
+<p>Um exemplo com os dois primeiros. O <code>isinstance(preco, (int, float))</code> pergunta "o <code>preco</code> é um <code>int</code> ou um <code>float</code>?" e responde <code>True</code> ou <code>False</code>:</p>
+
+<pre class="file" data-file="tipo.py">def aplicar_desconto(preco, porcentagem):
+    if not isinstance(preco, (int, float)):
+        raise TypeError(f"O preço tem de ser número, não {type(preco).__name__}.")
+    if porcentagem &lt; 0 or porcentagem &gt; 100:
+        raise ValueError(f"Desconto de {porcentagem}% não existe.")
+    return preco * (1 - porcentagem / 100)
+
+
+print(aplicar_desconto(50.0, 10))
+print(aplicar_desconto("50", 10))
+</pre>
+
+<pre class="term">$ python3 tipo.py
+45.0
+Traceback (most recent call last):
+  File "/home/ana/tipo.py", line 10, in &lt;module&gt;
+    print(aplicar_desconto("50", 10))
+          ~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/home/ana/tipo.py", line 3, in aplicar_desconto
+    raise TypeError(f"O preço tem de ser número, não {type(preco).__name__}.")
+TypeError: O preço tem de ser número, não str.</pre>
+
+<p>E com um desconto impossível, a outra conferência:</p>
+
+<pre class="file" data-file="desconto_valor.py">def aplicar_desconto(preco, porcentagem):
+    if porcentagem &lt; 0 or porcentagem &gt; 100:
+        raise ValueError(f"Desconto de {porcentagem}% não existe.")
+    return preco * (1 - porcentagem / 100)
+
+
+print(aplicar_desconto(50.0, 150))
+</pre>
+
+<pre class="term">$ python3 desconto_valor.py
+Traceback (most recent call last):
+  File "/home/ana/desconto_valor.py", line 7, in &lt;module&gt;
+    print(aplicar_desconto(50.0, 150))
+          ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "/home/ana/desconto_valor.py", line 3, in aplicar_desconto
+    raise ValueError(f"Desconto de {porcentagem}% não existe.")
+ValueError: Desconto de 150% não existe.</pre>
+
+<p>Sem essa conferência, <code>aplicar_desconto(50.0, 150)</code> devolveria <code>-25.0</code>: a padaria pagaria R$ 25 para o cliente levar o produto.</p>
+
+<div class="note">
+<strong>E se nenhum tipo servir?</strong>
+<p>Você pode criar os seus próprios tipos de erro, como <code>SaldoInsuficiente</code> ou <code>NotaInvalida</code>. Isso pede <a href="classes.html">classes</a>, que são do Nível 3; está na aula <a href="excecoes-proprias.html">Criando suas Exceções</a>. Até lá, <code>ValueError</code> resolve a grande maioria dos casos.</p>
+</div>
+
+<hr>
+
+<h2>5. <code>raise</code> sozinho: relançar o erro</h2>
+<p>Às vezes você quer fazer alguma coisa quando o erro acontece (anotar, avisar) e, <strong>mesmo assim</strong>, deixar o erro seguir em frente, porque não é você quem sabe resolvê-lo. Dentro de um <code>except</code>, um <code>raise</code> sem nada depois <strong>relança</strong> o mesmo erro que acabou de ser pego:</p>
+
+<pre class="file" data-file="reraise.py">def ler_preco(texto):
+    try:
+        return float(texto)
+    except ValueError:
+        print(f"[registro] preço mal digitado: {texto}")
+        raise
+
+
+print(ler_preco("4.50"))
+print(ler_preco("4,50"))
+</pre>
+
+<pre class="term">$ python3 reraise.py
+4.5
+[registro] preço mal digitado: 4,50
+Traceback (most recent call last):
+  File "/home/ana/reraise.py", line 10, in &lt;module&gt;
+    print(ler_preco("4,50"))
+          ~~~~~~~~~^^^^^^^^
+  File "/home/ana/reraise.py", line 3, in ler_preco
+    return float(texto)
+ValueError: could not convert string to float: '4,50'</pre>
+
+<dl class="anatomy">
+  <dt>except ValueError:</dt><dd>Pega o erro do <code>float()</code>, que não entende a vírgula de <code>4,50</code>.</dd>
+  <dt>print(f"[registro] …")</dt><dd>Faz a anotação.</dd>
+  <dt>raise</dt><dd>Sozinho, sem tipo: "lance de novo o erro que eu peguei". O erro continua sua viagem, como se o <code>except</code> não o tivesse segurado.</dd>
+</dl>
+
+<p>O traceback é o <strong>original</strong>: o erro aponta a linha 3, a do <code>float(texto)</code>, e a mensagem é a do Python. Nada se perdeu; só se acrescentou o registro antes.</p>
+
+<h3><code>raise … from</code>: trocar o erro por outro mais claro</h3>
+<p>Outro caso: o erro que aconteceu "por dentro" não faz sentido para quem usa a sua função. Um <code>KeyError: 'café'</code> diz pouco; "produto não cadastrado" diz tudo. Você pode lançar um erro novo e dizer que ele veio do antigo, com <code>from</code> ("de"):</p>
+
+<pre class="file" data-file="from.py">precos = {"pão": 0.75, "leite": 5.49}
+
+
+def preco_de(produto):
+    try:
+        return precos[produto]
+    except KeyError as e:
+        raise ValueError(f"Produto não cadastrado: {produto}") from e
+
+
+print(preco_de("café"))
+</pre>
+
+<pre class="term">$ python3 from.py
+Traceback (most recent call last):
+  File "/home/ana/from.py", line 6, in preco_de
+    return precos[produto]
+           ~~~~~~^^^^^^^^^
+KeyError: 'café'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/ana/from.py", line 11, in &lt;module&gt;
+    print(preco_de("café"))
+          ~~~~~~~~^^^^^^^^
+  File "/home/ana/from.py", line 8, in preco_de
+    raise ValueError(f"Produto não cadastrado: {produto}") from e
+ValueError: Produto não cadastrado: café</pre>
+
+<p>Dois tracebacks, ligados pela frase do meio: "A exceção acima foi a <strong>causa direta</strong> da exceção a seguir." Embaixo, o erro novo (<code>ValueError</code>, com a sua mensagem); em cima, o erro original, guardado para quem quiser investigar. Compare com o "During handling of the above exception, another exception occurred" da aula <a href="try-except.html">try e except</a>: aquele era um erro <strong>acidental</strong> dentro do <code>except</code>; este é uma troca <strong>de propósito</strong>.</p>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Quando usar</th></tr>
+<tr><td><code>raise ValueError("mensagem")</code></td><td>Lança um erro novo, com mensagem</td><td><strong>O normal.</strong> Sempre com mensagem</td></tr>
+<tr><td><code>raise ValueError</code></td><td>Lança um erro sem mensagem</td><td>Evite: a última linha do traceback fica só <code>ValueError</code></td></tr>
+<tr><td><code>raise</code> (dentro de um <code>except</code>)</td><td>Relança o erro que foi pego, sem mudar nada</td><td>Quando você só quer anotar ou arrumar algo e deixar o erro seguir</td></tr>
+<tr><td><code>raise Novo("…") from e</code></td><td>Troca o erro por outro, guardando o original</td><td>Quando o erro de dentro não faz sentido para quem usa a função</td></tr>
+<tr><td><code>print(…)</code> + <code>return</code></td><td>Avisa e devolve <code>None</code></td><td>Não use para erros: o programa segue com um valor errado</td></tr>
+</table>
+</div>
+
+<p>O <code>raise ValueError</code> sem mensagem, de verdade:</p>
+<pre class="file" data-file="sem_msg.py">estoque = 0
+if estoque == 0:
+    raise ValueError
+</pre>
+<pre class="term">$ python3 sem_msg.py
+Traceback (most recent call last):
+  File "/home/ana/sem_msg.py", line 3, in &lt;module&gt;
+    raise ValueError
+ValueError</pre>
+<p>Funciona, mas quem lê só a última linha fica sem saber o que aconteceu.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Lançar um texto</strong>
+<pre class="file" data-file="raise_texto.py">idade = -3
+if idade &lt; 0:
+    raise "Idade negativa!"
+</pre>
+<pre class="term">$ python3 raise_texto.py
+Traceback (most recent call last):
+  File "/home/ana/raise_texto.py", line 3, in &lt;module&gt;
+    raise "Idade negativa!"
+TypeError: exceptions must derive from BaseException</pre>
+<p>"Exceções precisam derivar de <code>BaseException</code>." O <code>raise</code> só aceita <strong>erros</strong> (<code>ValueError</code>, <code>TypeError</code>…), e um texto não é um erro. Todos os tipos de erro do Python descendem de um "avô" comum chamado <code>BaseException</code>; é isso que a mensagem quer dizer. Ironia: tentando lançar o seu erro, você ganhou um <code>TypeError</code>. <strong>Como consertar:</strong> o texto vai <strong>dentro</strong> de um tipo de erro: <code>raise ValueError("Idade negativa!")</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Vírgula no lugar dos parênteses</strong>
+<pre class="file" data-file="raise_virgula.py">idade = -3
+if idade &lt; 0:
+    raise ValueError, "Idade negativa!"
+</pre>
+<pre class="term">$ python3 raise_virgula.py
+  File "/home/ana/raise_virgula.py", line 3
+    raise ValueError, "Idade negativa!"
+                    ^
+SyntaxError: invalid syntax</pre>
+<p>Esse jeito de escrever era do Python 2, que deixou de ser mantido em 2020; ainda aparece em tutoriais antigos na internet. No Python 3, a mensagem vai entre parênteses. <strong>Como consertar:</strong> <code>raise ValueError("Idade negativa!")</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>raise</code> sozinho fora de um <code>except</code></strong>
+<pre class="file" data-file="raise_sozinho.py">idade = -3
+if idade &lt; 0:
+    raise
+</pre>
+<pre class="term">$ python3 raise_sozinho.py
+Traceback (most recent call last):
+  File "/home/ana/raise_sozinho.py", line 3, in &lt;module&gt;
+    raise
+RuntimeError: No active exception to reraise</pre>
+<p>"Nenhuma exceção ativa para relançar." O <code>raise</code> sozinho quer dizer "relance o erro que eu peguei", e aqui não havia erro nenhum: ele só funciona dentro de um <code>except</code>. O Python reclamou com outro tipo, o <code>RuntimeError</code> ("erro durante a execução"). <strong>Como consertar:</strong> diga qual erro lançar: <code>raise ValueError("Idade negativa!")</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>rise</code> no lugar de <code>raise</code> <span class="versao">3.14</span></strong>
+<pre class="file" data-file="rise.py">idade = -3
+if idade &lt; 0:
+    rise ValueError("Idade negativa!")
+</pre>
+<pre class="term">$ python3 rise.py
+  File "/home/ana/rise.py", line 3
+    rise ValueError("Idade negativa!")
+    ^^^^
+SyntaxError: invalid syntax. Did you mean 'raise'?</pre>
+<p>O Python 3.14 reconhece a palavra-chave digitada errado e sugere <code>raise</code> (num 3.13, sai só <code>invalid syntax</code>). Como é <code>SyntaxError</code>, nada rodou.</p>
+</div>
+
+<div class="cenario">
+<strong>Lançar o erro e tratar na mesma função</strong>
+<p>Um <code>raise</code> dentro de um <code>try</code> com <code>except ValueError</code> logo embaixo, na mesma função, é pego por ela mesma: o erro não chega a quem chamou. Em geral isso é sinal de confusão; se a própria função sabe resolver, ela não precisa lançar nada, basta um <code>if</code>. Lance na função que <strong>descobre</strong> o problema e trate em quem <strong>chama</strong>, como na seção 3.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>raise ValueError("…")</code></td><td>Lança um erro de valor com a sua mensagem</td></tr>
+<tr><td><code>raise TypeError("…")</code></td><td>Lança um erro de tipo</td></tr>
+<tr><td><code>raise</code> (num <code>except</code>)</td><td>Relança o erro que foi pego</td></tr>
+<tr><td><code>raise Novo("…") from e</code></td><td>Lança outro erro, guardando <code>e</code> como causa</td></tr>
+<tr><td><code>try</code>/<code>except ValueError as e</code></td><td>Trata o seu erro (e os do Python) em quem chama</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>TypeError: exceptions must derive from BaseException</code></td><td><code>raise "texto"</code>: falta o tipo do erro</td></tr>
+<tr><td><code>SyntaxError: invalid syntax</code> na vírgula</td><td><code>raise Tipo, "msg"</code> do Python 2</td></tr>
+<tr><td><code>RuntimeError: No active exception to reraise</code></td><td><code>raise</code> sozinho fora de um <code>except</code></td></tr>
+<tr><td><code>Did you mean 'raise'?</code></td><td>Palavra-chave digitada errado</td></tr>
+<tr><td><code>The above exception was the direct cause…</code></td><td>Não é um defeito: é um <code>raise … from</code>; leia os dois</td></tr>
+<tr><td>Um <code>TypeError</code> com <code>'NoneType'</code> longe do problema</td><td>Uma função que deu <code>print</code> + <code>return</code> em vez de <code>raise</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Complete o <code>raise</code></h3>
+<p>Complete para lançar um erro de valor quando a quantidade for negativa:</p>
+<div class="ex-code">if quantidade &lt; 0:
+    <input data-answer="raise" aria-label="palavra-chave"> <input data-answer="ValueError" aria-label="tipo">("A quantidade não pode ser negativa.")</div>
+</div>
+
+<div class="exercise">
+<h3>2. A última linha</h3>
+<p>Um programa roda <code>raise ValueError("Mês 13 não existe.")</code> e ninguém trata. Escreva a última linha do traceback:</p>
+<div class="ex-code"><input data-answer="ValueError: Mês 13 não existe." aria-label="última linha"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. Por que uma função deve lançar um erro em vez de dar <code>print("inválido")</code> e <code>return</code>?</p>
+<label><input type="radio" name="q3"> Porque o <code>print</code> não funciona dentro de funções</label>
+<label><input type="radio" name="q3"> Porque com <code>print</code> + <code>return</code> o programa segue com um <code>None</code> no lugar do valor, e o problema aparece longe, com outra mensagem</label>
+<label><input type="radio" name="q3"> Porque o <code>raise</code> deixa o programa mais rápido</label>
+<label><input type="radio" name="q3"> Porque o <code>return</code> sozinho dá <code>SyntaxError</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">4. Uma função recebe a idade <code>-5</code>. Qual tipo de erro descreve melhor o problema?</p>
+<label><input type="radio" name="q4"> <code>ValueError</code></label>
+<label><input type="radio" name="q4"> <code>TypeError</code></label>
+<label><input type="radio" name="q4"> <code>KeyError</code></label>
+<label><input type="radio" name="q4"> <code>ZeroDivisionError</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. O que faz um <code>raise</code> sozinho, sem nada depois, dentro de um <code>except</code>?</p>
+<label><input type="radio" name="q5"> Ignora o erro</label>
+<label><input type="radio" name="q5"> Dá <code>SyntaxError</code></label>
+<label><input type="radio" name="q5"> Relança o mesmo erro que foi pego, para ele seguir em frente</label>
+<label><input type="radio" name="q5"> Lança um <code>ValueError</code> sem mensagem</label>
+</div>
+
+<h3>Missão final: a função lança, quem chama trata</h3>
+
+<div class="trypy" data-stdin="15\n-1\n8" data-goal="out:A nota deve ficar entre 0 e 10;;out:Nota registrada: 8;;semerro;;src:\braise\s+ValueError">
+<p class="try-task"><strong>Missão:</strong> a caixa vai "digitar" <code>15</code>, <code>-1</code> e <code>8</code>. O laço de baixo já está pronto para tratar um <code>ValueError</code>, mas a função <code>validar_nota</code> aceita qualquer coisa: por isso o <code>15</code> passa. Faça a função lançar <code>ValueError(f"A nota deve ficar entre 0 e 10, mas veio {nota}.")</code> quando a nota estiver fora da escala, para o programa só aceitar o <code>8</code>.</p>
+<pre class="script" data-file="main.py">def validar_nota(nota):
+    return nota
+
+
+while True:
+    try:
+        nota = validar_nota(int(input("Nota: ")))
+        break
+    except ValueError as e:
+        print(f"Erro: {e}")
+print(f"Nota registrada: {nota}")
+</pre>
+<pre class="solucao" data-file="main.py">def validar_nota(nota):
+    if nota &lt; 0 or nota &gt; 10:
+        raise ValueError(f"A nota deve ficar entre 0 e 10, mas veio {nota}.")
+    return nota
+
+
+while True:
+    try:
+        nota = validar_nota(int(input("Nota: ")))
+        break
+    except ValueError as e:
+        print(f"Erro: {e}")
+print(f"Nota registrada: {nota}")
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>raise Tipo("mensagem")</code> lança um erro, como o Python lança os dele: o programa para ali, a não ser que alguém trate.</li>
+  <li>Escreva mensagens que digam a regra e o valor que chegou: <code>f"A nota deve ficar entre 0 e 10, mas veio {nota}."</code>.</li>
+  <li>Lance em vez de dar <code>print</code> + <code>return</code>: assim o problema aparece na hora e no lugar certo, e não um <code>None</code> viajando pelo programa.</li>
+  <li>Quem chama trata com <code>try</code>/<code>except</code>; para o <code>except</code>, tanto faz se o erro veio do Python ou de você: vale o tipo.</li>
+  <li><code>ValueError</code> para valor que não serve; <code>TypeError</code> para tipo errado. Tipos próprios: <a href="excecoes-proprias.html">Criando suas Exceções</a>.</li>
+  <li><code>raise</code> sozinho, dentro de um <code>except</code>, relança o erro; <code>raise Novo(…) from e</code> troca por outro, guardando a causa.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
