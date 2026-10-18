@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Formatação — referência da mini-linguagem {:&gt;10.2f} | Guia Python</title>
+<meta name="description" content="Referência da mini-linguagem de formatação do Python 3.14 (f-strings e format): alinhamento, preenchimento, sinal, largura, precisão, separador de milhar com , e _, porcentagem, binário, octal, hexadecimal, notação científica, datas com strftime e o jeito brasileiro de trocar vírgula por ponto, com resultados reais e os erros reais.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Formatação</span></h1>
+
+<p class="intro">Esta é a página de consulta da <strong>mini-linguagem de formatação</strong> do Python: os códigos que vão depois dos dois-pontos dentro das chaves de uma f-string, como o <code>&gt;10.2f</code> de <code>f"{preco:&gt;10.2f}"</code>. Com eles você alinha colunas, fixa as casas decimais, põe separador de milhar, mostra porcentagens, números em binário e datas no formato brasileiro. A explicação passo a passo das f-strings está na aula <a href="f-strings.html">f-strings: Formatando Textos</a>; aqui ficam as tabelas para consultar.</p>
+
+<div class="note">
+<strong>Como ler as tabelas</strong>
+<ul>
+  <li><strong>Exemplo</strong> é uma f-string que você pode digitar no <a href="repl.html">modo interativo</a> (<code>&gt;&gt;&gt;</code>).</li>
+  <li><strong>Resultado</strong> é o que o Python 3.14.4 respondeu no computador da Ana, mostrado <strong>entre aspas</strong>, como o modo interativo mostra, para você enxergar os espaços. Com <code>print()</code>, as aspas não aparecem.</li>
+  <li>Os exemplos usam estas variáveis: <code>preco = 1234.5</code>, <code>nome = "Ana"</code>, <code>n = 42</code>, <code>x = -7.25</code> e <code>largura = 8</code>.</li>
+  <li>O <code>|</code> no fim de alguns exemplos é só uma "parede", para mostrar onde o espaço reservado termina.</li>
+</ul>
+</div>
+
+<p>Pule direto para o que você procura:</p>
+<ul>
+  <li><a href="#anatomia">A anatomia de uma especificação</a></li>
+  <li><a href="#alinhar">Largura e alinhamento</a> · <a href="#preencher">Preenchimento e zeros</a> · <a href="#sinal">Sinal</a></li>
+  <li><a href="#precisao">Casas decimais (precisão)</a> · <a href="#milhar">Separador de milhar</a></li>
+  <li><a href="#tipos">Os tipos: f, %, e, g, b, o, x, c…</a></li>
+  <li><a href="#extras">Largura variável, <code>!r</code> e o <code>=</code> de depuração</a></li>
+  <li><a href="#datas">Datas e horas (strftime)</a></li>
+  <li><a href="#brasil">O jeito brasileiro: 1.234,50</a></li>
+  <li><a href="#antigos">Os jeitos antigos: <code>.format()</code> e <code>%</code></a> · <a href="#erros">Erros comuns</a></li>
+</ul>
+
+<hr>
+
+<h2 id="anatomia">A anatomia de uma especificação</h2>
+<p>Dentro das chaves vem o valor, dois-pontos e a <strong>especificação</strong> (em inglês, <em>format spec</em>). Cada parte é opcional, mas a <strong>ordem é fixa</strong>:</p>
+
+<pre class="term">&gt;&gt;&gt; preco = 1234.5
+&gt;&gt;&gt; f"{preco:&gt;10.2f}"
+'   1234.50'
+</pre>
+
+<dl class="anatomy">
+  <dt>preco</dt><dd>O valor a formatar (uma variável, uma conta, uma chamada de função).</dd>
+  <dt>:</dt><dd>Separa o valor da especificação.</dd>
+  <dt>&gt;</dt><dd>Alinhamento: à direita.</dd>
+  <dt>10</dt><dd>Largura: o resultado ocupa pelo menos 10 posições.</dd>
+  <dt>.2</dt><dd>Precisão: 2 casas decimais.</dd>
+  <dt>f</dt><dd>Tipo: número com casas decimais fixas (<em>fixed point</em>).</dd>
+</dl>
+
+<p>A ordem completa, como na <a href="https://docs.python.org/3/library/string.html#formatspec">documentação oficial</a>:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Posição</th><th>Parte</th><th>Valores</th><th>Exemplo</th></tr>
+<tr><td>1</td><td>preenchimento</td><td>qualquer caractere (só junto com um alinhamento)</td><td><code>*</code> em <code>*^9</code></td></tr>
+<tr><td>2</td><td>alinhamento</td><td><code>&lt;</code> <code>&gt;</code> <code>^</code> <code>=</code></td><td><code>&gt;</code></td></tr>
+<tr><td>3</td><td>sinal</td><td><code>+</code> <code>-</code> espaço</td><td><code>+</code></td></tr>
+<tr><td>4</td><td><code>z</code></td><td>transforma <code>-0.0</code> em <code>0.0</code></td><td><code>z.1f</code></td></tr>
+<tr><td>5</td><td><code>#</code></td><td>prefixo <code>0b</code>, <code>0o</code>, <code>0x</code></td><td><code>#x</code></td></tr>
+<tr><td>6</td><td><code>0</code></td><td>completa com zeros</td><td><code>05</code></td></tr>
+<tr><td>7</td><td>largura</td><td>um número</td><td><code>10</code></td></tr>
+<tr><td>8</td><td>agrupamento</td><td><code>,</code> ou <code>_</code></td><td><code>,</code></td></tr>
+<tr><td>9</td><td>precisão</td><td><code>.</code> e um número</td><td><code>.2</code></td></tr>
+<tr><td>10</td><td>tipo</td><td><code>s</code> <code>d</code> <code>f</code> <code>e</code> <code>g</code> <code>%</code> <code>b</code> <code>o</code> <code>x</code> <code>X</code> <code>c</code> <code>n</code>…</td><td><code>f</code></td></tr>
+</table>
+</div>
+
+<p>Um exemplo com quase tudo: <code>f"{1234.5:12,.2f}|"</code> (largura 12, separador de milhar, 2 casas) dá <code>'&nbsp;&nbsp;&nbsp;&nbsp;1,234.50|'</code>.</p>
+
+<p>O mesmo código funciona fora das f-strings, na função <code>format()</code> e no método <code>.format()</code>: <code>format(1234.5, ",.2f")</code> dá <code>'1,234.50'</code>.</p>
+
+<hr>
+
+<h2 id="alinhar">Largura e alinhamento</h2>
+<p>A <strong>largura</strong> é o número mínimo de posições. Se o valor for menor, o resto vira espaço; se for maior, nada é cortado. Sem alinhamento, <strong>textos</strong> ficam à esquerda e <strong>números</strong> à direita.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Código</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th></tr>
+<tr><td><code>N</code></td><td>Largura N, alinhamento padrão (texto à esquerda)</td><td><code>f"{nome:8}|"</code></td><td><code>'Ana&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|'</code></td></tr>
+<tr><td><code>N</code></td><td>Largura N, alinhamento padrão (número à direita)</td><td><code>f"{n:8}|"</code></td><td><code>'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;42|'</code></td></tr>
+<tr><td><code>&lt;N</code></td><td>À esquerda</td><td><code>f"{nome:&lt;8}|"</code></td><td><code>'Ana&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|'</code></td></tr>
+<tr><td><code>&gt;N</code></td><td>À direita</td><td><code>f"{nome:&gt;8}|"</code></td><td><code>'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Ana|'</code></td></tr>
+<tr><td><code>^N</code></td><td>Centralizado (sobrando um espaço, ele vai para a direita)</td><td><code>f"{nome:^8}|"</code></td><td><code>'&nbsp;&nbsp;Ana&nbsp;&nbsp;&nbsp;|'</code></td></tr>
+<tr><td><code>=N</code></td><td>Só para números: o sinal fica na ponta esquerda e os espaços vêm depois dele</td><td><code>f"{x:=10}|"</code></td><td><code>'-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;7.25|'</code></td></tr>
+</table>
+</div>
+
+<p>É assim que se monta uma tabela alinhada na tela:</p>
+
+<pre class="file" data-file="tabela.py">produtos = [("Pão francês", 0.75, 12), ("Leite", 5.5, 2), ("Queijo minas", 42.9, 1)]
+
+print(f"{'Produto':&lt;14}{'Preço':&gt;9}{'Qtd':&gt;5}{'Total':&gt;10}")
+print("-" * 38)
+soma = 0
+for nome, preco, qtd in produtos:
+    total = preco * qtd
+    soma = soma + total
+    print(f"{nome:&lt;14}{preco:&gt;9.2f}{qtd:&gt;5}{total:&gt;10.2f}")
+print("-" * 38)
+print(f"{'TOTAL':&lt;28}{soma:&gt;10.2f}")
+</pre>
+
+<pre class="term">$ python3 tabela.py
+Produto           Preço  Qtd     Total
+--------------------------------------
+Pão francês        0.75   12      9.00
+Leite              5.50    2     11.00
+Queijo minas      42.90    1     42.90
+--------------------------------------
+TOTAL                            62.90
+</pre>
+
+<div class="trypy">
+<p class="try-task"><strong>Experimente:</strong> troque as larguras (<code>14</code>, <code>9</code>, <code>5</code>, <code>10</code>) e os alinhamentos (<code>&lt;</code>, <code>&gt;</code>, <code>^</code>) e veja a tabela mudar. Tente acrescentar um produto com nome comprido: o que acontece quando ele passa de 14 letras?</p>
+<pre class="script" data-file="main.py">produtos = [("Pão francês", 0.75, 12), ("Leite", 5.5, 2), ("Queijo minas", 42.9, 1)]
+
+print(f"{'Produto':&lt;14}{'Preço':&gt;9}{'Qtd':&gt;5}{'Total':&gt;10}")
+print("-" * 38)
+soma = 0
+for nome, preco, qtd in produtos:
+    total = preco * qtd
+    soma = soma + total
+    print(f"{nome:&lt;14}{preco:&gt;9.2f}{qtd:&gt;5}{total:&gt;10.2f}")
+print("-" * 38)
+print(f"{'TOTAL':&lt;28}{soma:&gt;10.2f}")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="preencher">Preenchimento e zeros</h2>
+<p>Em vez de espaço, o espaço vazio pode ser preenchido com qualquer caractere. Ele vem logo <strong>antes</strong> do alinhamento, que fica obrigatório.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Código</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th></tr>
+<tr><td><code>*^9</code></td><td>Centraliza em 9 posições, preenchendo com <code>*</code></td><td><code>f"{nome:*^9}"</code></td><td><code>'***Ana***'</code></td></tr>
+<tr><td><code>.&lt;10</code></td><td>Pontinhos depois do texto (como num índice de livro)</td><td><code>f"{nome:.&lt;10}"</code></td><td><code>'Ana.......'</code></td></tr>
+<tr><td><code>0N</code></td><td>Número com zeros à esquerda, até N posições</td><td><code>f"{n:05}"</code></td><td><code>'00042'</code></td></tr>
+<tr><td><code>0&gt;N</code></td><td>O mesmo, escrito com preenchimento</td><td><code>f"{n:0&gt;5}"</code></td><td><code>'00042'</code></td></tr>
+<tr><td><code>02</code></td><td>Horas e minutos com dois algarismos</td><td><code>f"{7:02}:{5:02}"</code></td><td><code>'07:05'</code></td></tr>
+<tr><td><code>0N</code> com sinal</td><td>Os zeros entram depois do sinal</td><td><code>f"{x:010}"</code></td><td><code>'-000007.25'</code></td></tr>
+<tr><td><code>+0N.2f</code></td><td>Sinal, zeros e casas decimais juntos</td><td><code>f"{12.5:+08.2f}"</code></td><td><code>'+0012.50'</code></td></tr>
+<tr><td><code>08b</code></td><td>Binário com 8 algarismos</td><td><code>f"{5:08b}"</code></td><td><code>'00000101'</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="sinal">Sinal</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Código</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th></tr>
+<tr><td><code>-</code></td><td>Sinal só nos negativos (é o padrão)</td><td><code>f"{n:-}"</code></td><td><code>'42'</code></td></tr>
+<tr><td><code>+</code></td><td>Sinal sempre, <code>+</code> ou <code>-</code></td><td><code>f"{n:+}"</code>, <code>f"{x:+}"</code></td><td><code>'+42'</code>, <code>'-7.25'</code></td></tr>
+<tr><td>espaço</td><td>Um espaço no lugar do <code>+</code> (os positivos ficam alinhados com os negativos)</td><td><code>f"{n: }"</code>, <code>f"{x: }"</code></td><td><code>'&nbsp;42'</code>, <code>'-7.25'</code></td></tr>
+<tr><td><code>z</code></td><td>Um número que, arredondado, vira <code>-0.0</code> aparece como <code>0.0</code></td><td><code>f"{-0.0001:.1f}"</code>, <code>f"{-0.0001:z.1f}"</code></td><td><code>'-0.0'</code>, <code>'0.0'</code></td></tr>
+</table>
+</div>
+<div class="note">
+<strong>Versões</strong>
+<p>A opção <code>z</code> existe desde o Python 3.11, e o <code>_</code> desde o 3.6. Tudo o que está nesta página funciona no 3.13 do Debian, menos o agrupamento das casas decimais (seção <a href="#milhar">Separador de milhar</a>), que é do 3.14.</p>
+</div>
+
+<hr>
+
+<h2 id="precisao">Casas decimais (precisão)</h2>
+<p>A <strong>precisão</strong> é um ponto seguido de um número. O que ela faz depende do tipo:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Código</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th></tr>
+<tr><td><code>.2f</code></td><td>Exatamente 2 casas decimais (arredonda)</td><td><code>f"{3.14159:.2f}"</code></td><td><code>'3.14'</code></td></tr>
+<tr><td><code>.2f</code> num inteiro</td><td>Acrescenta as casas</td><td><code>f"{7:.2f}"</code></td><td><code>'7.00'</code></td></tr>
+<tr><td><code>.0f</code></td><td>Sem casas decimais</td><td><code>f"{3.14159:.0f}"</code></td><td><code>'3'</code></td></tr>
+<tr><td><code>.0f</code> no meio</td><td>Como o <code>round()</code>: no meio exato, vai para o par</td><td><code>f"{2.5:.0f}"</code></td><td><code>'2'</code></td></tr>
+<tr><td><code>.3</code> (sem tipo)</td><td>3 algarismos <strong>no total</strong>, não 3 casas</td><td><code>f"{3.14159:.3}"</code></td><td><code>'3.14'</code></td></tr>
+<tr><td></td><td>Se não couber, passa para notação científica</td><td><code>f"{1234.5:.3}"</code></td><td><code>'1.23e+03'</code></td></tr>
+<tr><td><code>.N</code> num texto</td><td><strong>Corta</strong> o texto em N letras</td><td><code>f"{'Conceição':.5}"</code></td><td><code>'Conce'</code></td></tr>
+<tr><td><code>.{v}</code></td><td>A precisão vinda de uma variável</td><td><code>f"{3.14159:.{2}f}"</code></td><td><code>'3.14'</code></td></tr>
+</table>
+</div>
+<p>Por que <code>2.5</code> vira <code>2</code>, e não <code>3</code>? É o "arredondamento do banqueiro", explicado na aula <a href="funcoes-embutidas.html">Funções Embutidas</a> (seção do <code>round()</code>).</p>
+
+<hr>
+
+<h2 id="milhar">Separador de milhar</h2>
+<p>O <code>,</code> e o <code>_</code> agrupam os algarismos de 3 em 3. O separador sai sempre no padrão americano (vírgula no milhar, ponto nos decimais); para o padrão brasileiro, veja <a href="#brasil">O jeito brasileiro</a>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Código</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th></tr>
+<tr><td><code>,</code></td><td>Vírgula a cada 3 algarismos</td><td><code>f"{1234567:,}"</code></td><td><code>'1,234,567'</code></td></tr>
+<tr><td><code>_</code></td><td>Sublinhado a cada 3 algarismos</td><td><code>f"{1234567:_}"</code></td><td><code>'1_234_567'</code></td></tr>
+<tr><td><code>,.2f</code></td><td>Milhar e 2 casas</td><td><code>f"{1234567.891:,.2f}"</code></td><td><code>'1,234,567.89'</code></td></tr>
+<tr><td><code>_.2f</code></td><td>O mesmo com sublinhado</td><td><code>f"{1234567.891:_.2f}"</code></td><td><code>'1_234_567.89'</code></td></tr>
+<tr><td><code>+,.2f</code></td><td>Com o sinal</td><td><code>f"{-1234.5:+,.2f}"</code></td><td><code>'-1,234.50'</code></td></tr>
+<tr><td><code>_b</code>, <code>_x</code></td><td>Em binário e hexadecimal, o <code>_</code> agrupa de <strong>4 em 4</strong></td><td><code>f"{255:_b}"</code>, <code>f"{1234567:_x}"</code></td><td><code>'1111_1111'</code>, <code>'12_d687'</code></td></tr>
+<tr><td><code>.,</code> <span class="versao">3.14</span></td><td>Agrupa as <strong>casas decimais</strong></td><td><code>f"{123456789.123456789:.,}"</code></td><td><code>'123456789.123,456,79'</code></td></tr>
+<tr><td><code>,._</code> <span class="versao">3.14</span></td><td>Vírgula na parte inteira, sublinhado nas casas</td><td><code>f"{123456789.123456789:,._}"</code></td><td><code>'123,456,789.123_456_79'</code></td></tr>
+<tr><td><code>.6_f</code> <span class="versao">3.14</span></td><td>6 casas, agrupadas</td><td><code>f"{3.14159265:.6_f}"</code></td><td><code>'3.141_593'</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="tipos">Os tipos</h2>
+<p>A letra do fim diz <strong>como</strong> o valor vai ser escrito.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Tipo</th><th>Nome</th><th>Exemplo</th><th>Resultado</th></tr>
+<tr><td><code>s</code></td><td>Texto (o padrão para textos)</td><td><code>f"{nome:s}"</code></td><td><code>'Ana'</code></td></tr>
+<tr><td><code>d</code></td><td>Inteiro em decimal (o padrão para <code>int</code>)</td><td><code>f"{n:d}"</code></td><td><code>'42'</code></td></tr>
+<tr><td><code>f</code></td><td>Casas decimais fixas (6, se não disser a precisão)</td><td><code>f"{preco:f}"</code></td><td><code>'1234.500000'</code></td></tr>
+<tr><td><code>%</code></td><td>Porcentagem: multiplica por 100 e põe o <code>%</code></td><td><code>f"{0.256:.1%}"</code></td><td><code>'25.6%'</code></td></tr>
+<tr><td></td><td></td><td><code>f"{0.256:.0%}"</code>, <code>f"{1:.0%}"</code></td><td><code>'26%'</code>, <code>'100%'</code></td></tr>
+<tr><td></td><td>sem precisão, 6 casas</td><td><code>f"{0.256:%}"</code></td><td><code>'25.600000%'</code></td></tr>
+<tr><td><code>e</code> / <code>E</code></td><td>Notação científica (<code>e+08</code> = "vezes 10 elevado a 8")</td><td><code>f"{299792458:.2e}"</code></td><td><code>'3.00e+08'</code></td></tr>
+<tr><td></td><td></td><td><code>f"{299792458:e}"</code>, <code>f"{0.000123:.2E}"</code></td><td><code>'2.997925e+08'</code>, <code>'1.23E-04'</code></td></tr>
+<tr><td><code>g</code></td><td>"Geral": decimal ou científica, o que ficar mais curto</td><td><code>f"{1234.5:g}"</code>, <code>f"{299792458:g}"</code></td><td><code>'1234.5'</code>, <code>'2.99792e+08'</code></td></tr>
+<tr><td></td><td></td><td><code>f"{0.0000123:g}"</code></td><td><code>'1.23e-05'</code></td></tr>
+<tr><td><code>b</code></td><td>Binário (base 2)</td><td><code>f"{255:b}"</code></td><td><code>'11111111'</code></td></tr>
+<tr><td><code>o</code></td><td>Octal (base 8)</td><td><code>f"{255:o}"</code></td><td><code>'377'</code></td></tr>
+<tr><td><code>x</code> / <code>X</code></td><td>Hexadecimal (base 16), letras minúsculas / maiúsculas</td><td><code>f"{255:x}"</code>, <code>f"{255:X}"</code></td><td><code>'ff'</code>, <code>'FF'</code></td></tr>
+<tr><td><code>#b</code>, <code>#o</code>, <code>#x</code></td><td>Com o prefixo da base</td><td><code>f"{255:#b}"</code>, <code>f"{255:#o}"</code>, <code>f"{255:#x}"</code></td><td><code>'0b11111111'</code>, <code>'0o377'</code>, <code>'0xff'</code></td></tr>
+<tr><td><code>c</code></td><td>O caractere daquele número (como o <code>chr()</code>)</td><td><code>f"{65:c}"</code></td><td><code>'A'</code></td></tr>
+<tr><td><code>n</code></td><td>Como <code>d</code> ou <code>g</code>, mas com o separador do idioma configurado (veja <a href="#brasil">O jeito brasileiro</a>)</td><td><code>f"{1234567:n}"</code></td><td>depende do <code>locale</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="extras">Largura variável, <code>!r</code> e o <code>=</code> de depuração</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th></tr>
+<tr><td><code>{v:&gt;{largura}}</code></td><td>Chaves dentro da especificação: a largura vem de uma variável</td><td><code>f"{nome:&gt;{largura}}|"</code></td><td><code>'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Ana|'</code></td></tr>
+<tr><td><code>!r</code></td><td>Mostra o valor como no código (com aspas, usando <code>repr()</code>)</td><td><code>f"{nome!r}"</code></td><td><code>"'Ana'"</code></td></tr>
+<tr><td><code>!s</code></td><td>Usa <code>str()</code> (o padrão)</td><td><code>f"{nome!s}"</code></td><td><code>'Ana'</code></td></tr>
+<tr><td><code>{v=}</code></td><td>Mostra o nome, o <code>=</code> e o valor: ótimo para depurar</td><td><code>f"{preco=}"</code></td><td><code>'preco=1234.5'</code></td></tr>
+<tr><td><code>{v = :.2f}</code></td><td>Os espaços em volta do <code>=</code> aparecem na saída; a especificação vem depois</td><td><code>f"{preco = :.2f}"</code></td><td><code>'preco = 1234.50'</code></td></tr>
+<tr><td><code>{{</code> e <code>}}</code></td><td>Uma chave de verdade no texto</td><td><code>f"{{n}} vale {n}"</code></td><td><code>'{n} vale 42'</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="datas">Datas e horas (strftime)</h2>
+<p>Com datas do módulo <code>datetime</code> (aula <a href="datetime.html">Datas e Horas</a>), a especificação é outra: os códigos de <code>%</code>, os mesmos do método <code>.strftime()</code> (<em>string format time</em>, "formatar o tempo como texto"). Os exemplos usam <code>data = datetime(2026, 10, 18, 14, 30, 5)</code>, um domingo, às 14h30min05s.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Código</th><th>O que é</th><th>Exemplo</th><th>Resultado</th></tr>
+<tr><td><code>%d/%m/%Y</code></td><td>Dia, mês e ano com 4 algarismos: o formato brasileiro</td><td><code>f"{data:%d/%m/%Y}"</code></td><td><code>'18/10/2026'</code></td></tr>
+<tr><td><code>%y</code></td><td>Ano com 2 algarismos</td><td><code>f"{data:%d/%m/%y %H:%M}"</code></td><td><code>'18/10/26 14:30'</code></td></tr>
+<tr><td><code>%Y-%m-%d</code></td><td>O formato internacional (ISO 8601), bom para nomes de arquivo</td><td><code>f"{data:%Y-%m-%d}"</code></td><td><code>'2026-10-18'</code></td></tr>
+<tr><td><code>%H:%M:%S</code></td><td>Hora (0 a 23), minuto e segundo</td><td><code>f"{data:%H:%M:%S}"</code></td><td><code>'14:30:05'</code></td></tr>
+<tr><td><code>%I</code> e <code>%p</code></td><td>Hora de 1 a 12 e AM/PM</td><td><code>f"{data:%I:%M %p}"</code></td><td><code>'02:30 PM'</code></td></tr>
+<tr><td><code>%A</code> / <code>%a</code></td><td>Dia da semana, completo / abreviado</td><td><code>f"{data:%A}"</code> / <code>f"{data:%a}"</code></td><td><code>'Sunday'</code> / <code>'Sun'</code> (veja abaixo)</td></tr>
+<tr><td><code>%B</code> / <code>%b</code></td><td>Nome do mês, completo / abreviado</td><td><code>f"{data:%B}"</code> / <code>f"{data:%b}"</code></td><td><code>'October'</code> / <code>'Oct'</code></td></tr>
+<tr><td><code>%j</code></td><td>Dia do ano (1 a 366)</td><td><code>f"{data:%j}"</code></td><td><code>'291'</code></td></tr>
+<tr><td><code>%U</code></td><td>Semana do ano (começando no domingo)</td><td><code>f"{data:%U}"</code></td><td><code>'42'</code></td></tr>
+<tr><td><code>%%</code></td><td>Um <code>%</code> de verdade</td><td><code>f"{data:%%}"</code></td><td><code>'%'</code></td></tr>
+<tr><td><code>%-d</code>, <code>%-m</code></td><td>Sem o zero da frente. Funciona no Linux da Ana e no editor do guia, mas depende do sistema: não conte com ele em todo computador</td><td><code>f"{date(2026, 3, 5):%-d/%-m}"</code></td><td><code>'5/3'</code></td></tr>
+<tr><td><code>.strftime()</code></td><td>O mesmo, como método</td><td><code>data.strftime("%d/%m/%Y")</code></td><td><code>'18/10/2026'</code></td></tr>
+</table>
+</div>
+
+<div class="warning">
+<strong>Os nomes saem em inglês</strong>
+<p>Mesmo no computador da Ana, que está em português, <code>%A</code> e <code>%B</code> dão <code>Sunday</code> e <code>October</code>: o Python começa sempre no idioma "neutro" (em inglês). Para usar o idioma do sistema, chame <code>locale.setlocale(locale.LC_ALL, "")</code> no começo do programa:</p>
+<pre class="file" data-file="data_pt.py">import locale
+from datetime import datetime
+
+locale.setlocale(locale.LC_ALL, "")
+data = datetime(2026, 10, 18, 14, 30, 5)
+print(f"{data:%A, %d de %B de %Y}")
+print(f"{data:%x %X}")
+</pre>
+<pre class="term">$ python3 data_pt.py
+domingo, 18 de outubro de 2026
+18/10/2026 14:30:05
+</pre>
+<p>(<code>%x</code> e <code>%X</code> são a data e a hora no formato do idioma.) No <strong>editor do guia</strong>, que roda o Python no navegador, o <code>setlocale</code> não dá erro, mas os nomes continuam em inglês. Se você precisa dos nomes em português em qualquer lugar, use uma lista sua: <code>["segunda", "terça", …][data.weekday()]</code>.</p>
+</div>
+
+<hr>
+
+<h2 id="brasil">O jeito brasileiro: 1.234,50</h2>
+<p>No Brasil, o milhar é separado por <strong>ponto</strong> e os decimais por <strong>vírgula</strong>, o contrário do que o <code>,.2f</code> faz. Há dois caminhos.</p>
+
+<h3>1. Trocar os caracteres</h3>
+<p>Formate no padrão americano e depois troque vírgula por ponto e ponto por vírgula. O método <code>.translate()</code> faz a troca dupla de uma vez (com <code>.replace()</code>, é preciso um caractere intermediário, senão a segunda troca desfaz a primeira):</p>
+
+<pre class="file" data-file="brl.py">def brl(valor):
+    texto = f"{valor:,.2f}"
+    return "R$ " + texto.translate(str.maketrans(",.", ".,"))
+
+
+print(brl(1234567.891))
+print(brl(0.5))
+print(brl(-42))
+</pre>
+<pre class="term">$ python3 brl.py
+R$ 1.234.567,89
+R$ 0,50
+R$ -42,00
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita (com <code>valor = 1234567.891</code>)</th><th>Resultado</th></tr>
+<tr><td><code>f"{valor:,.2f}"</code></td><td><code>'1,234,567.89'</code></td></tr>
+<tr><td><code>f"{valor:,.2f}".translate(str.maketrans(",.", ".,"))</code></td><td><code>'1.234.567,89'</code></td></tr>
+<tr><td><code>f"{valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")</code></td><td><code>'1.234.567,89'</code></td></tr>
+<tr><td><code>f"{valor:_.2f}".replace(".", ",").replace("_", ".")</code></td><td><code>'1.234.567,89'</code></td></tr>
+</table>
+</div>
+
+<h3>2. Usar o idioma do sistema (<code>locale</code>)</h3>
+<p>Com o <code>locale</code> configurado para português do Brasil (como no computador da Ana), o módulo <code>locale</code> formata do jeito brasileiro, até com o <code>R$</code>:</p>
+
+<pre class="file" data-file="br.py">import locale
+
+locale.setlocale(locale.LC_ALL, "")
+valor = 1234567.891
+print(locale.currency(valor, grouping=True))
+print(locale.format_string("%.2f", valor, grouping=True))
+print(f"{1234567:n}")
+</pre>
+<pre class="term">$ python3 br.py
+R$ 1.234.567,89
+1.234.567,89
+1.234.567
+</pre>
+
+<div class="tip">
+<strong>Qual usar?</strong>
+<p>O <code>locale</code> depende da configuração do computador: no computador de outra pessoa (ou num servidor em inglês), o mesmo programa mostra outra coisa. A troca de caracteres dá sempre o mesmo resultado. Para um programa que sempre vai mostrar reais, a troca é a escolha mais segura.</p>
+</div>
+
+<div class="trypy" data-goal="out:R$ 1.234,50;;out:R$ 0,99;;semerro">
+<p class="try-task"><strong>Missão:</strong> a função mostra os preços no formato americano. Mude a função <code>brl</code> para mostrar <code>R$ 1.234,50</code> e <code>R$ 0,99</code>: duas casas, ponto no milhar e vírgula nos decimais.</p>
+<pre class="script" data-file="main.py">def brl(valor):
+    return f"R$ {valor}"
+
+
+print(brl(1234.5))
+print(brl(0.99))
+</pre>
+<pre class="solucao" data-file="main.py">def brl(valor):
+    texto = f"{valor:,.2f}"
+    return "R$ " + texto.translate(str.maketrans(",.", ".,"))
+
+
+print(brl(1234.5))
+print(brl(0.99))
+</pre>
+</div>
+
+<hr>
+
+<h2 id="antigos">Os jeitos antigos: <code>.format()</code> e <code>%</code></h2>
+<p>Antes das f-strings (Python 3.6), formatava-se de outros dois jeitos, que você ainda encontra em muito código. O <code>.format()</code> usa a mesma mini-linguagem desta página; o <code>%</code> usa códigos parecidos, mas mais limitados.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Jeito</th><th>Exemplo</th><th>Resultado</th></tr>
+<tr><td>f-string (prefira)</td><td><code>f"{3.5:&gt;8.2f}"</code></td><td><code>'&nbsp;&nbsp;&nbsp;&nbsp;3.50'</code></td></tr>
+<tr><td><code>.format()</code></td><td><code>"{:&gt;8.2f}".format(3.5)</code></td><td><code>'&nbsp;&nbsp;&nbsp;&nbsp;3.50'</code></td></tr>
+<tr><td></td><td><code>"{} tem {} anos".format("Ana", 30)</code></td><td><code>'Ana tem 30 anos'</code></td></tr>
+<tr><td><code>format()</code></td><td><code>format(1234.5, ",.2f")</code></td><td><code>'1,234.50'</code></td></tr>
+<tr><td><code>%</code> (o mais antigo)</td><td><code>"%.2f" % 3.14159</code></td><td><code>'3.14'</code></td></tr>
+<tr><td></td><td><code>"%5d|" % 42</code></td><td><code>'&nbsp;&nbsp;&nbsp;42|'</code></td></tr>
+<tr><td></td><td><code>"%s tem %d anos" % ("Ana", 30)</code></td><td><code>'Ana tem 30 anos'</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="erros">Erros comuns</h2>
+<p>A especificação precisa combinar com o tipo do valor. Quando não combina, vem um <code>ValueError</code> (erro de valor). No modo interativo:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; f"{'Ana':.2f}"
+Traceback (most recent call last):
+  File "&lt;python-input-0&gt;", line 1, in &lt;module&gt;
+    f"{'Ana':.2f}"
+      ^^^^^^^^^^^
+ValueError: Unknown format code 'f' for object of type 'str'
+&gt;&gt;&gt; f"{3.5:d}"
+Traceback (most recent call last):
+  File "&lt;python-input-1&gt;", line 1, in &lt;module&gt;
+    f"{3.5:d}"
+      ^^^^^^^
+ValueError: Unknown format code 'd' for object of type 'float'
+&gt;&gt;&gt; exit()
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Exemplo</th><th>Mensagem</th><th>O que houve</th></tr>
+<tr><td><code>f"{'Ana':.2f}"</code></td><td><code>ValueError: Unknown format code 'f' for object of type 'str'</code></td><td>"Código <code>f</code> desconhecido para um <code>str</code>." O valor é um texto (muitas vezes, o que veio do <code>input()</code>): converta com <code>float()</code> antes</td></tr>
+<tr><td><code>f"{3.5:d}"</code></td><td><code>ValueError: Unknown format code 'd' for object of type 'float'</code></td><td><code>d</code> é só para inteiros. Use <code>.0f</code>, ou <code>int()</code> antes</td></tr>
+<tr><td><code>f"{42:.2s}"</code></td><td><code>ValueError: Unknown format code 's' for object of type 'int'</code></td><td><code>s</code> é só para textos</td></tr>
+<tr><td><code>f"{'Ana':+}"</code></td><td><code>ValueError: Sign not allowed in string format specifier</code></td><td>"Sinal não permitido para textos"</td></tr>
+<tr><td><code>f"{1234:,_}"</code></td><td><code>ValueError: Cannot specify both ',' and '_'.</code></td><td>"Não dá para usar <code>,</code> e <code>_</code> juntos" (na mesma parte do número)</td></tr>
+<tr><td><code>f"{'Ana':05}"</code></td><td>sem erro: <code>'Ana00'</code></td><td>O <code>0</code> num texto completa com zeros <strong>à direita</strong>. Provavelmente não era o que você queria</td></tr>
+<tr><td><code>f"{'18/10/2026':%d/%m/%Y}"</code></td><td><code>ValueError: Invalid format specifier '%d/%m/%Y' for object of type 'str'</code></td><td>Os códigos de <code>%</code> só funcionam com objetos <code>date</code>/<code>datetime</code>; converta o texto com <code>datetime.strptime()</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>A ordem da especificação é fixa: <strong>preenchimento, alinhamento, sinal, <code>z</code>, <code>#</code>, <code>0</code>, largura, agrupamento, precisão, tipo</strong>. Ex.: <code>*&gt;+12,.2f</code>.</li>
+  <li>Alinhamento: <code>&lt;</code> esquerda, <code>&gt;</code> direita, <code>^</code> centro. Textos ficam à esquerda e números à direita por padrão.</li>
+  <li><code>.2f</code> = 2 casas; <code>,</code> ou <code>_</code> = separador de milhar; <code>.1%</code> = porcentagem; <code>b</code>/<code>o</code>/<code>x</code> = outras bases.</li>
+  <li>Datas usam os códigos <code>%</code>: <code>f"{data:%d/%m/%Y}"</code>. Nomes de dia e mês saem em inglês sem <code>locale.setlocale()</code>.</li>
+  <li>Para o formato brasileiro, formate com <code>,.2f</code> e troque os caracteres com <code>.translate(str.maketrans(",.", ".,"))</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
