@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python if e else — escolher entre dois caminhos | Guia Python</title>
+<meta name="description" content="if e else no Python para quem nunca programou: o else como 'senão', exatamente um dos dois blocos roda, o else sem condição e alinhado com o if, dar valor a uma variável nos dois caminhos, por que dois if opostos não são o mesmo que if/else, e os erros reais do Python 3.14 (else sem if, else com condição, else recuado, expected an indented block after 'else'). Com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">if e else</span></h1>
+
+<p class="intro">Na aula <a href="if.html">if</a>, o programa fazia algo <strong>só quando</strong> a condição era verdadeira; quando era falsa, ele não fazia nada de especial. Muitas vezes, porém, você quer fazer uma coisa <strong>ou</strong> outra: se a nota é 7 ou mais, "Aprovada"; <strong>senão</strong>, "Reprovada". Se a senha está certa, entra; senão, "Acesso negado". Para o "senão" existe o <code>else</code> (em inglês, "senão", "caso contrário").</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A escrever um <code>if</code> … <code>else</code> e a regra de ouro: <strong>exatamente um</strong> dos dois blocos roda.</li>
+  <li>Por que o <code>else</code> não tem condição, e onde ele fica (alinhado com o <code>if</code>).</li>
+  <li>A dar um valor a uma variável nos dois caminhos.</li>
+  <li>Por que dois <code>if</code> com condições "opostas" não são o mesmo que um <code>if</code>/<code>else</code>.</li>
+  <li>Os erros reais do Python 3.14: <code>else</code> sem <code>if</code>, <code>else</code> com condição, <code>else</code> recuado, <code>else</code> sem dois-pontos e o bloco vazio.</li>
+</ul>
+</div>
+
+<p>Todos os programas desta aula rodaram no <strong>Python 3.14</strong> do computador fictício da Ana (usuária <code>ana</code>, computador <code>notebook</code>), na pasta pessoal dela, com <code>python3 arquivo.py</code>.</p>
+
+<hr>
+
+<h2>A ideia: a bifurcação na estrada</h2>
+<p>A Ana está dirigindo e chega numa bifurcação. Uma placa diz: "<strong>Se</strong> vai para a praia, siga pela esquerda; <strong>senão</strong>, siga pela direita". Ela lê a placa, responde à pergunta e segue <strong>um</strong> dos caminhos. Nunca os dois, e nunca nenhum. Um pouco adiante, as duas estradas se juntam de novo e a viagem continua.</p>
+<p>O <code>if</code> com <code>else</code> é essa placa:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Na estrada</th><th>No Python</th></tr>
+<tr><td>"Vai para a praia?"</td><td>A condição do <code>if</code></td></tr>
+<tr><td>Caminho da esquerda</td><td>O bloco do <code>if</code>: roda quando a condição é <code>True</code></td></tr>
+<tr><td>Caminho da direita</td><td>O bloco do <code>else</code>: roda quando a condição é <code>False</code></td></tr>
+<tr><td>As estradas se juntam</td><td>A primeira linha depois dos dois blocos, de volta à margem</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. Aprovada ou reprovada</h2>
+
+<pre class="file" data-file="aprovacao.py">nota = float(input("Digite a nota da prova: "))
+if nota &gt;= 7:
+    print("Aprovada!")
+else:
+    print("Reprovada. Faltaram", 7 - nota, "pontos.")
+print("Boletim fechado.")
+</pre>
+
+<pre class="term">$ python3 aprovacao.py
+Digite a nota da prova: 9
+Aprovada!                          « 9 &gt;= 7 é True: rodou o bloco do if
+Boletim fechado.
+$ python3 aprovacao.py
+Digite a nota da prova: 5.5
+Reprovada. Faltaram 1.5 pontos.    « 5.5 &gt;= 7 é False: rodou o bloco do else
+Boletim fechado.</pre>
+
+<dl class="anatomy">
+  <dt>if nota &gt;= 7:</dt><dd>A pergunta, como na aula anterior, com os dois-pontos no fim.</dd>
+  <dt>o bloco do if</dt><dd>As linhas recuadas logo abaixo. Rodam quando a resposta é <code>True</code>.</dd>
+  <dt>else:</dt><dd>"Senão". Vem logo depois do bloco do <code>if</code>, <strong>na mesma coluna do <code>if</code></strong> (sem recuo), e também termina com dois-pontos. Ele <strong>não tem condição</strong>: o <code>else</code> é "todo o resto", ou seja, todos os casos em que a condição do <code>if</code> deu <code>False</code>.</dd>
+  <dt>o bloco do else</dt><dd>As linhas recuadas abaixo do <code>else:</code>. Rodam quando a resposta é <code>False</code>.</dd>
+  <dt>7 - nota</dt><dd>Dentro do bloco você faz contas normalmente. A conta só acontece no caminho do <code>else</code>.</dd>
+  <dt>print("Boletim fechado.")</dt><dd>De volta à margem: os dois caminhos se juntam aqui. Essa linha roda sempre.</dd>
+</dl>
+
+<div class="tip">
+<strong>A regra de ouro</strong>
+<p>Num <code>if</code>/<code>else</code>, roda <strong>exatamente um</strong> dos dois blocos. Nunca os dois, nunca nenhum. Não existe nota que seja ao mesmo tempo "maior ou igual a 7" e "não maior ou igual a 7".</p>
+</div>
+
+<h3>Um detalhe dos números: 6.9</h3>
+<p>Olhe o que acontece com a nota 6.9:</p>
+
+<pre class="term">$ python3 aprovacao.py
+Digite a nota da prova: 6.9
+Reprovada. Faltaram 0.09999999999999964 pontos.
+Boletim fechado.</pre>
+
+<p>O <code>if</code>/<code>else</code> funcionou certinho (6.9 é menor que 7). O número estranho vem da conta <code>7 - 6.9</code>: o computador guarda os números com casas decimais de um jeito que nem sempre é exato (a aula <a href="numeros.html">Números</a> explica). Para mostrar, arredonde na <a href="f-strings.html">f-string</a>:</p>
+
+<pre class="file" data-file="aprovacao2.py">nota = float(input("Digite a nota da prova: "))
+if nota &gt;= 7:
+    print("Aprovada!")
+else:
+    print(f"Reprovada. Faltaram {7 - nota:.1f} pontos.")
+print("Boletim fechado.")
+</pre>
+
+<pre class="term">$ python3 aprovacao2.py
+Digite a nota da prova: 6.9
+Reprovada. Faltaram 0.1 pontos.
+Boletim fechado.</pre>
+
+<hr>
+
+<h2>2. Blocos com várias linhas: a senha</h2>
+<p>Os dois blocos podem ter quantas linhas quiserem, e não precisam ter o mesmo tamanho. A Ana fez um programa para a padaria, que só mostra as encomendas para quem sabe a senha:</p>
+
+<pre class="file" data-file="senha.py">senha = input("Senha: ")
+if senha == "pao123":
+    print("Bem-vinda, Ana!")
+    print("Você tem 3 encomendas para hoje.")
+else:
+    print("Senha errada. Acesso negado.")
+</pre>
+
+<pre class="term">$ python3 senha.py
+Senha: pao123
+Bem-vinda, Ana!
+Você tem 3 encomendas para hoje.
+$ python3 senha.py
+Senha: Pao123
+Senha errada. Acesso negado.       « P maiúsculo: para o Python, é outro texto</pre>
+
+<p>Comparar textos com <code>==</code> é exato: maiúsculas, acentos e espaços contam (aula <a href="operadores-comparacao.html">Comparações</a>). Por isso <code>"Pao123"</code> não é igual a <code>"pao123"</code>.</p>
+
+<div class="warning">
+<strong>Só um exemplo</strong>
+<p>Uma senha escrita no meio do código, como aqui, serve para aprender o <code>if</code>/<code>else</code>, mas não é segura: qualquer pessoa que abrir o arquivo vê a senha. Programas de verdade guardam senhas de outro jeito.</p>
+</div>
+
+<div class="trypy">
+<p class="try-task"><strong>Experimente:</strong> clique em Rodar e digite uma senha no terminal da caixa. Tente <code>pao123</code>, depois <code>PAO123</code> e <code>pao123 </code> (com um espaço no fim). Depois troque a senha certa no código por outra e acrescente mais uma linha ao bloco do <code>else</code>, como <code>print("Fale com a gerente.")</code>.</p>
+<pre class="script" data-file="main.py">senha = input("Senha: ")
+if senha == "pao123":
+    print("Bem-vinda, Ana!")
+    print("Você tem 3 encomendas para hoje.")
+else:
+    print("Senha errada. Acesso negado.")
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Par ou ímpar</h2>
+<p>Um clássico: um número é par quando o resto da divisão por 2 é zero. O resto se calcula com <code>%</code> (aula <a href="operadores-aritmeticos.html">Operadores Aritméticos</a>):</p>
+
+<pre class="file" data-file="par.py">numero = int(input("Digite um número inteiro: "))
+if numero % 2 == 0:
+    print(numero, "é par.")
+else:
+    print(numero, "é ímpar.")
+</pre>
+
+<pre class="term">$ python3 par.py
+Digite um número inteiro: 10
+10 é par.
+$ python3 par.py
+Digite um número inteiro: 7
+7 é ímpar.
+$ python3 par.py
+Digite um número inteiro: -3
+-3 é ímpar.                       « no Python, -3 % 2 dá 1: funciona com negativos</pre>
+
+<div class="trypy" data-stdin="7" data-goal="out:7 é ímpar;;src:^\s*else\s*:">
+<p class="try-task"><strong>Missão:</strong> este programa só avisa quando o número é par; para os ímpares ele fica calado. Acrescente um <code>else</code> que mostre que o número é ímpar. A entrada preparada é <code>7</code>, e a saída esperada é <code>7 é ímpar.</code></p>
+<pre class="script" data-file="main.py">numero = int(input("Digite um número inteiro: "))
+if numero % 2 == 0:
+    print(numero, "é par.")
+</pre>
+<pre class="solucao" data-file="main.py">numero = int(input("Digite um número inteiro: "))
+if numero % 2 == 0:
+    print(numero, "é par.")
+else:
+    print(numero, "é ímpar.")
+</pre>
+</div>
+
+<hr>
+
+<h2>4. Um valor para cada caminho: o frete</h2>
+<p>Na aula <a href="if.html">if</a>, o frete começava em R$ 15,00 e o <code>if</code> trocava para zero. Com o <code>else</code>, cada caminho dá o seu valor, e o bloco do <code>else</code> ainda pode fazer coisas que só interessam a quem <strong>não</strong> ganhou o frete grátis:</p>
+
+<pre class="file" data-file="frete.py">total = float(input("Total da compra: R$ "))
+if total &gt;= 100:
+    frete = 0.0
+    print("Frete grátis!")
+else:
+    frete = 15.0
+    falta = 100 - total
+    print(f"Faltam R$ {falta:.2f} para o frete grátis.")
+print(f"Total a pagar: R$ {total + frete:.2f}")
+</pre>
+
+<pre class="term">$ python3 frete.py
+Total da compra: R$ 130
+Frete grátis!
+Total a pagar: R$ 130.00
+$ python3 frete.py
+Total da compra: R$ 72.5
+Faltam R$ 27.50 para o frete grátis.
+Total a pagar: R$ 87.50</pre>
+
+<p>Repare que a variável <code>frete</code> é criada <strong>dentro</strong> dos blocos, e mesmo assim a última linha consegue usá-la. No Python, o bloco do <code>if</code> não esconde as variáveis: o que foi criado lá dentro continua existindo depois. Como os dois caminhos dão um valor a <code>frete</code>, ela sempre existe quando chega na última linha. A variável <code>falta</code>, ao contrário, só existe quando o programa passou pelo <code>else</code>.</p>
+
+<hr>
+
+<h2>5. Dois <code>if</code> não são um <code>if</code>/<code>else</code></h2>
+<p>Dá vontade de escrever o "senão" com um segundo <code>if</code>, com a condição contrária. Às vezes funciona, mas é fácil errar a condição. A Ana tentou:</p>
+
+<pre class="file" data-file="dois_ifs.py">nota = 7
+if nota &gt;= 7:
+    print("Aprovada")
+if nota &lt;= 7:
+    print("Reprovada")
+</pre>
+
+<pre class="term">$ python3 dois_ifs.py
+Aprovada
+Reprovada                         « aprovada E reprovada ao mesmo tempo!</pre>
+
+<p>O contrário de <code>&gt;= 7</code> é <code>&lt; 7</code>, e não <code>&lt;= 7</code>. Com a nota exatamente 7, as duas perguntas responderam "sim", e os dois blocos rodaram (lembre da aula anterior: dois <code>if</code> são perguntas independentes). Com <code>else</code>, esse erro é impossível: você escreve a condição <strong>uma vez só</strong>, e o <code>else</code> cuida de todo o resto.</p>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma escolha</h2>
+<p>Os três programas abaixo mostram o mesmo frete:</p>
+
+<pre class="file" data-file="forma1.py">if total &gt;= 100:
+    frete = 0.0
+else:
+    frete = 15.0
+</pre>
+
+<pre class="file" data-file="forma2.py">frete = 15.0
+if total &gt;= 100:
+    frete = 0.0
+</pre>
+
+<pre class="file" data-file="forma3.py">frete = 0.0 if total &gt;= 100 else 15.0
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>if</code>/<code>else</code> completo</td><td>O jeito mais claro, e o único quando cada caminho faz <strong>várias</strong> coisas (como o frete da seção 4)</td></tr>
+<tr><td>Valor padrão + <code>if</code></td><td>Quando existe um valor "normal" e só um caso especial muda ele</td></tr>
+<tr><td><code>if</code> em uma linha</td><td>Quando cada caminho só escolhe um valor. É o assunto da aula <a href="if-ternario.html">if em uma Linha</a></td></tr>
+<tr><td>Dois <code>if</code> com condições opostas</td><td>Evite: você escreve a condição duas vezes e pode errar uma delas (seção 5)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+<p>O <code>else</code> precisa estar <strong>grudado</strong> num <code>if</code>: logo depois do bloco dele, na mesma coluna. Quase todos os erros vêm daí. Todos são erros de escrita, avisados antes de o programa rodar.</p>
+
+<div class="cenario">
+<strong><code>else</code> sem <code>if</code></strong>
+<pre class="file" data-file="else_sozinho.py">nota = 5
+print("Corrigindo a prova...")
+else:
+    print("Reprovada")
+</pre>
+<pre class="term">$ python3 else_sozinho.py
+  File "/home/ana/else_sozinho.py", line 3
+    else:
+    ^^^^
+SyntaxError: invalid syntax</pre>
+<p>"Sintaxe inválida", com a marca embaixo do <code>else</code>. Um <code>else</code> sozinho não quer dizer nada: "senão" do quê? <strong>Como consertar:</strong> todo <code>else</code> vem depois de um <code>if</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Uma linha entre o bloco do <code>if</code> e o <code>else</code></strong>
+<pre class="file" data-file="linha_no_meio.py">nota = 5
+if nota &gt;= 7:
+    print("Aprovada")
+print("----------")
+else:
+    print("Reprovada")
+</pre>
+<pre class="term">$ python3 linha_no_meio.py
+  File "/home/ana/linha_no_meio.py", line 5
+    else:
+    ^^^^
+SyntaxError: invalid syntax</pre>
+<p>É o mesmo erro do caso anterior, por um motivo menos óbvio. A linha 4 voltou para a margem, então o <code>if</code> terminou ali. Quando o Python chega no <code>else</code> da linha 5, o <code>if</code> já acabou, e o <code>else</code> ficou sozinho. <strong>Como consertar:</strong> o <code>else</code> vem <strong>imediatamente</strong> depois do bloco do <code>if</code>. Se a linha de traços deve aparecer sempre, mova-a para depois do bloco do <code>else</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>else</code> recuado, dentro do bloco do <code>if</code></strong>
+<pre class="file" data-file="else_recuado.py">nota = 5
+if nota &gt;= 7:
+    print("Aprovada")
+    else:
+        print("Reprovada")
+</pre>
+<pre class="term">$ python3 else_recuado.py
+  File "/home/ana/else_recuado.py", line 4
+    else:
+    ^^^^
+SyntaxError: invalid syntax</pre>
+<p>Com 4 espaços, o <code>else</code> ficou <strong>dentro</strong> do bloco do <code>if</code>, como se fosse uma instrução qualquer, e lá não existe <code>if</code> para ele acompanhar. <strong>Como consertar:</strong> o <code>else:</code> fica na <strong>mesma coluna</strong> do <code>if</code> a que pertence.</p>
+</div>
+
+<div class="cenario">
+<strong><code>else</code> com condição</strong>
+<pre class="file" data-file="else_condicao.py">nota = 5
+if nota &gt;= 7:
+    print("Aprovada")
+else nota &lt; 7:
+    print("Reprovada")
+</pre>
+<pre class="term">$ python3 else_condicao.py
+  File "/home/ana/else_condicao.py", line 4
+    else nota &lt; 7:
+         ^^^^
+SyntaxError: expected ':'</pre>
+<p>"Era esperado um <code>:</code>", com a marca embaixo de <code>nota</code>. O Python esperava os dois-pontos logo depois do <code>else</code>, porque o <code>else</code> nunca tem condição: ele já quer dizer "em todos os outros casos". <strong>Como consertar:</strong> apague a condição e deixe só <code>else:</code>. Se você precisa mesmo de uma segunda condição, quem faz isso é o <code>elif</code>, da próxima aula (<a href="elif.html">elif</a>).</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu os dois-pontos do <code>else</code></strong>
+<pre class="file" data-file="else_sem_dois_pontos.py">nota = 5
+if nota &gt;= 7:
+    print("Aprovada")
+else
+    print("Reprovada")
+</pre>
+<pre class="term">$ python3 else_sem_dois_pontos.py
+  File "/home/ana/else_sem_dois_pontos.py", line 4
+    else
+        ^
+SyntaxError: expected ':'</pre>
+<p>A mesma mensagem, agora com a setinha logo depois do <code>else</code>, onde faltam os dois-pontos. O <code>else</code> também abre um bloco, então também precisa de <code>:</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O bloco do <code>else</code> sem recuo</strong>
+<pre class="file" data-file="else_vazio.py">nota = 5
+if nota &gt;= 7:
+    print("Aprovada")
+else:
+print("Reprovada")
+</pre>
+<pre class="term">$ python3 else_vazio.py
+  File "/home/ana/else_vazio.py", line 5
+    print("Reprovada")
+    ^^^^^
+IndentationError: expected an indented block after 'else' statement on line 4</pre>
+<p>"Era esperado um bloco recuado depois do <code>else</code> da linha 4". É o mesmo erro da aula <a href="if.html">if</a>, agora para o <code>else</code>. <strong>Como consertar:</strong> recue o <code>print</code> com 4 espaços.</p>
+</div>
+
+<div class="trypy" data-stdin="5" data-goal="out:Reprovada;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa não roda. Leia a mensagem de erro e conserte o <code>else</code>. A entrada preparada é <code>5</code>, e o programa deve mostrar <code>Reprovada</code>.</p>
+<pre class="script" data-file="main.py">nota = float(input("Nota: "))
+if nota &gt;= 7:
+    print("Aprovada")
+else nota &lt; 7:
+    print("Reprovada")
+</pre>
+<pre class="solucao" data-file="main.py">nota = float(input("Nota: "))
+if nota &gt;= 7:
+    print("Aprovada")
+else:
+    print("Reprovada")
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>if condição:</code> + bloco</td><td>Roda o bloco quando a condição é verdadeira</td></tr>
+<tr><td><code>else:</code> + bloco</td><td>Roda o bloco quando a condição do <code>if</code> é falsa</td></tr>
+<tr><td><code>else</code> na coluna do <code>if</code></td><td>Liga o <code>else</code> ao <code>if</code> certo</td></tr>
+<tr><td>Linha de volta à margem depois do <code>else</code></td><td>Os dois caminhos se juntam; roda sempre</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>SyntaxError: invalid syntax</code>, marcando o <code>else</code></td><td><code>else</code> sem <code>if</code>: sozinho, com uma linha na margem antes dele, ou recuado para dentro do bloco do <code>if</code></td></tr>
+<tr><td><code>SyntaxError: expected ':'</code>, marcando depois do <code>else</code></td><td><code>else</code> com condição, ou sem os dois-pontos</td></tr>
+<tr><td><code>IndentationError: expected an indented block after 'else' statement on line N</code></td><td>O bloco do <code>else</code> não foi recuado</td></tr>
+<tr><td>Os dois blocos rodaram</td><td>Não era um <code>if</code>/<code>else</code>, eram dois <code>if</code> com condições que se sobrepõem</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Complete o "senão"</h3>
+<p>Complete a palavra e o sinal que faltam:</p>
+<div class="ex-code">if idade &gt;= 18:<br>&nbsp;&nbsp;&nbsp;&nbsp;print("Maior de idade")<br><input data-answer="else" aria-label="palavra-chave"><input data-answer=":" aria-label="sinal"><br>&nbsp;&nbsp;&nbsp;&nbsp;print("Menor de idade")</div>
+</div>
+
+<div class="exercise">
+<h3>2. Quantos blocos rodam?</h3>
+<p>Num <code>if</code>/<code>else</code>, quantos dos dois blocos rodam a cada vez? Responda com um número.</p>
+<div class="ex-code">Resposta: <input data-answer="1|um" aria-label="quantidade"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">3. O que este programa mostra?</p>
+<pre class="file">estoque = 0
+if estoque &gt; 0:
+    print("Disponível")
+else:
+    print("Esgotado")
+print("Fim")
+</pre>
+<label><input type="radio" name="q3"> <code>Disponível</code> e <code>Fim</code></label>
+<label><input type="radio" name="q3"> <code>Esgotado</code></label>
+<label><input type="radio" name="q3"> <code>Esgotado</code> e <code>Fim</code></label>
+<label><input type="radio" name="q3"> <code>Disponível</code>, <code>Esgotado</code> e <code>Fim</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Qual destas linhas está certa?</p>
+<label><input type="radio" name="q4"> <code>else nota &lt; 7:</code></label>
+<label><input type="radio" name="q4"> <code>else:</code></label>
+<label><input type="radio" name="q4"> <code>else</code></label>
+<label><input type="radio" name="q4"> <code>Else:</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. Por que, com a nota 7, o <code>dois_ifs.py</code> da seção 5 mostrou "Aprovada" e "Reprovada"?</p>
+<label><input type="radio" name="q5"> Porque o Python roda sempre os dois blocos</label>
+<label><input type="radio" name="q5"> Porque faltou um <code>else</code> no fim</label>
+<label><input type="radio" name="q5"> Porque 7 não é um número válido</label>
+<label><input type="radio" name="q5"> Porque eram dois <code>if</code> independentes, e 7 cumpre <code>&gt;= 7</code> e também <code>&lt;= 7</code></label>
+</div>
+
+<h3>Missão final: o ingresso do cinema</h3>
+
+<div class="trypy" data-stdin="65" data-goal="out:Meia-entrada: R$ 15.00;;src:^\s*else\s*:">
+<p class="try-task"><strong>Missão:</strong> o cinema do bairro cobra <strong>R$ 30.00</strong> a entrada inteira, e <strong>meia-entrada</strong> (R$ 15.00) para quem tem menos de 18 anos ou 60 anos ou mais. Escreva um <code>if</code>/<code>else</code> que mostre <code>Meia-entrada: R$ 15.00</code> ou <code>Inteira: R$ 30.00</code>. A entrada preparada é <code>65</code>. Dica: a condição usa <code>or</code>.</p>
+<pre class="script" data-file="main.py">idade = int(input("Idade: "))
+# escreva o if/else aqui
+</pre>
+<pre class="solucao" data-file="main.py">idade = int(input("Idade: "))
+if idade &lt; 18 or idade &gt;= 60:
+    print("Meia-entrada: R$ 15.00")
+else:
+    print("Inteira: R$ 30.00")
+</pre>
+</div>
+
+<p>No lab, a solução mostrou <code>Meia-entrada: R$ 15.00</code> para 65 anos e <code>Inteira: R$ 30.00</code> para 30. E quando são três preços (criança, adulto, idoso)? Aí são <strong>três</strong> caminhos, e é a vez do <a href="elif.html">elif</a>.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>else</code> ("senão") dá ao <code>if</code> um segundo caminho: roda quando a condição é falsa.</li>
+  <li>Num <code>if</code>/<code>else</code> roda <strong>exatamente um</strong> dos dois blocos; depois, o programa segue na primeira linha de volta à margem.</li>
+  <li>O <code>else</code> não tem condição, termina com dois-pontos e fica <strong>na mesma coluna</strong> do <code>if</code>, logo depois do bloco dele.</li>
+  <li>Variáveis criadas dentro dos blocos continuam existindo depois deles; dê valor a elas nos dois caminhos.</li>
+  <li>Dois <code>if</code> com condições "opostas" são perguntas independentes e podem rodar os dois; com <code>else</code>, isso não acontece.</li>
+  <li>Erros clássicos: <code>else</code> solto ou recuado (<code>invalid syntax</code>), <code>else</code> com condição ou sem dois-pontos (<code>expected ':'</code>), bloco sem recuo (<code>expected an indented block after 'else'</code>).</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
