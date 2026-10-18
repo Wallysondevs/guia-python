@@ -38,4 +38,4 @@ timeout 2400 node tools/testar-navegador.js -q --todas             # Chromium he
 
 ## Pendências / ideias
 - O editor é o 3.14.2 e o lab o 3.14.4 (o Pyodide estável mais novo, 314.0.7, traz o 3.14.2). Quando sair um Pyodide com 3.14.4+, atualizar.
-- `input()` dentro de uma corrotina do `asyncio` com JSPI não foi testado a fundo (o `time.sleep` lá dentro usa o sleep do C).
+- `input()` dentro de uma corrotina do `asyncio`: o `run_sync` do Pyodide não volta lá dentro, então o motor troca sozinho para o modo por repetição (conferido com `sim.js --digitar`). O `time.sleep` dentro do asyncio usa o sleep do C (ocupa a CPU enquanto espera).

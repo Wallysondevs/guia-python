@@ -39,7 +39,7 @@ class _Pare(BaseException):
     """O editor parou o programa: ele pediu uma linha que o leitor ainda não digitou."""
 
 class _E:
-    modo = "texto"; parado = False; senha = False
+    modo = "texto"; parado = False; senha = False; trocar = False
     linhas = []; pos = 0; eof = True
     pedir = None; avisar = None; eco = None; dorme = None
 
@@ -83,11 +83,19 @@ def _esperar_js(promessa):
     from pyodide.ffi import run_sync
     import asyncio.events as ev
     laco = ev._get_running_loop()
+    tarefa = None
+    if laco is not None:
+        import asyncio.tasks as at
+        try: tarefa = at._swap_current_task(laco, None)
+        except Exception: tarefa = None
     ev._set_running_loop(None)
     try:
         return run_sync(promessa)
     finally:
         ev._set_running_loop(laco)
+        if tarefa is not None:
+            try: at._swap_current_task(laco, tarefa)
+            except Exception: pass
 
 def _proxima_linha():
     """Uma linha (com o \n) ou None no fim da entrada."""
@@ -104,6 +112,13 @@ def _proxima_linha():
         return None
     if _E.modo == "jspi":
         _descarregar()
+        import asyncio.events as ev
+        if ev._get_running_loop() is not None:
+            # dentro de um laço do asyncio o run_sync do Pyodide não volta: o editor
+            # troca para o modo por repetição (o JS roda de novo com o que já foi digitado)
+            _E.trocar = True
+            _parar()
+            raise _Pare()
         r = _esperar_js(_E.pedir(_E.senha))
         r = "" if r is None else str(r)
         return r or None  # "" = fim da entrada (Ctrl+D)
@@ -441,7 +456,7 @@ def executar(req, pedir=None, avisar=None, eco=None, dorme=None):
     _escrever_arquivos(arquivos)
     _E.modo = r.get("modo") or "texto"
     _E.pedir, _E.avisar, _E.eco, _E.dorme = pedir, avisar, eco, dorme
-    _E.pos = 0
+    _E.pos = 0; _E.trocar = False
     if _E.modo == "texto":
         t = r.get("stdin") or ""
         _E.linhas = t.splitlines(keepends=True); _E.eof = True
@@ -507,6 +522,7 @@ def executar(req, pedir=None, avisar=None, eco=None, dorme=None):
     atexit._clear()
     _descarregar()
     sys.stdout = sys.__stdout__; sys.stderr = sys.__stderr__
+    res["trocar"] = _E.trocar
     for nome in (r.get("conferir") or []):
         c = os.path.join(HOME, nome)
         try:
@@ -624,16 +640,21 @@ export async function servirMotor(opts) {
     }
     total = 0; estourou = false; pend = []; ultimoEnvio = Date.now(); filaEntrada = []; esperando = null;
     dec.out = new TextDecoder(); dec.err = new TextDecoder();
-    const semente = req.semente !== undefined ? req.semente : (modo === "repeticao" ? Math.floor(Math.random() * 2 ** 31) : null);
+    // semente do random fixa por Rodar (sorteada a cada Rodar): se precisar repetir, os números são os mesmos
+    const semente = req.semente !== undefined ? req.semente : Math.floor(Math.random() * 2 ** 31);
     let res, repeticoes = 1;
+    let lidas = [], mostrado0 = 0;
     if (modo !== "repeticao") {
-      atual = { id: m.id, eco: modo === "texto", saida: paraFila };
+      atual = { id: m.id, eco: modo === "texto", saida: (t, s) => { mostrado0 += s.length; paraFila(t, s); } };
       const pedido = Object.assign({}, req, { modo: modo, stdin: modo === "texto" ? (req.stdin || "") : null, semente: semente });
-      res = await umaVez(pedido, { pedir: modo === "jspi" ? pedirLinha : null });
-    } else {
+      const pedirGuardando = (senha) => pedirLinha(senha).then((l) => { if (l) lidas.push(l); return l; });
+      res = await umaVez(pedido, { pedir: modo === "jspi" ? pedirGuardando : null });
+    }
+    if (modo === "repeticao" || (res && res.trocar)) {
       // "por repetição": roda até pedir uma linha nova; o leitor digita; roda de novo do
       // começo com as linhas já digitadas, mostrando só o que ainda não apareceu.
-      const linhas = []; let eof = false, mostrado = 0, senha = false;
+      const linhas = lidas.slice(); let eof = false, mostrado = mostrado0, senha = false;
+      if (res && res.trocar) { modo = "repeticao"; repeticoes = 0; }
       for (;;) {
         let pos = 0, parou = false;
         atual = {
