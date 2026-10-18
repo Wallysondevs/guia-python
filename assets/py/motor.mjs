@@ -254,6 +254,13 @@ def preparar(ambiente, em_node=False):
     os.makedirs(HOME, exist_ok=True)
     import random, json, re, math, string, collections, functools, itertools, dataclasses, enum, datetime, pathlib, csv
     _arrumar_asyncio()
+    # sem cores automáticas (traceback, doctest, unittest, pdb): a saída é a de um
+    # python3 com a saída num arquivo/pipe, e as metas out: não tropeçam em \x1b[…m
+    try:
+        import _colorize
+        _colorize.can_colorize = lambda *a, **k: False
+    except Exception:
+        pass
     import pdb
     _arrumar_pdb()
     import getpass

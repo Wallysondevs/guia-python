@@ -103,6 +103,7 @@ No `.exercise`, `data-answer="a|b"` aceita respostas alternativas (a comparaçã
 
 ### 4.1 O que é
 - **Editor = Python 3.14.2** (CPython de verdade compilado para WebAssembly: **Pyodide 314.0.7**, em `assets/py/`, ~6 MB baixados no 1º Rodar e guardados pelo navegador). **Lab = Python 3.14.4** do Ubuntu 26.04. Mesma série 3.14; as mensagens de erro, o traceback e o comportamento da linguagem são os mesmos. Detalhes em `assets/py/VERSAO.txt`.
+- Metas: o `data-goal` é lido **já decodificado** (o `&lt;`/`&quot;` vira `<`/`"`) e só então separado nos `;;` — no editor e no testador. `out:&lt;class 'str'&gt;;;semerro` funciona.
 - Roda num Web Worker: a página não trava. Cada **Rodar** parte do zero: `/home/ana` vazia com só os arquivos das abas, `__main__` novo, módulos do leitor esquecidos, `os.environ` e `logging`/`decimal`/`locale` reiniciados.
 - O terminal da caixa mostra `ana@notebook:~$ python3 main.py` (+ `data-args`), a saída (stderr/traceback em **vermelho**, cores ANSI desenhadas), e no fim `[código de saída: N]`.
 
@@ -112,7 +113,7 @@ No `.exercise`, `data-answer="a|b"` aceita respostas alternativas (a comparaçã
 | Tempo máximo rodando | **10 s** (sem contar a espera pelo teclado; até 60 s de `time.sleep` não contam). Passou: `(o editor parou o programa: ele rodou mais de 10 segundos sem terminar — laço infinito?)` e `[programa interrompido]` |
 | Botão **■ Parar** (o Rodar vira Parar) e **Ctrl+C** no campo de entrada | encerram na hora: mostra `^C` e `[programa interrompido]`. **Não** há `KeyboardInterrupt`/traceback (no terminal do lab, Ctrl+C mostra o traceback do `KeyboardInterrupt`) e os `finally` não rodam |
 | Saída máxima | **2 milhões de caracteres**; o terminal desenha as primeiras **3000 linhas** e as últimas 40 (as metas veem tudo) |
-| `sys.getrecursionlimit()` | 1000, igual ao lab (`[Previous line repeated 996 more times]` nos dois) |
+| `sys.getrecursionlimit()` | 1000, igual ao lab: cabem as mesmas chamadas (`[Previous line repeated 996 more times]` nos dois; até 18/10 o editor mostrava 995 — corrigido) |
 
 ### 4.3 Entrada (`input()`)
 - **Com `data-stdin`**: o `input()` lê dali (uma linha por `\n`); a caixa ganha um campo **Entrada** editável. A linha lida aparece no terminal em branco logo depois do prompt (como se fosse digitada), mas **não entra no `out:`**: a saída do programa é `Qual é o seu nome? Olá, Ana!` — a mesma de `python3 main.py < entrada.txt` no lab. Acabou o texto → `EOFError: EOF when reading a line`.
@@ -160,6 +161,10 @@ No `.exercise`, `data-answer="a|b"` aceita respostas alternativas (a comparaçã
 | Ordem de `set` de textos, `id()`, `hash()` de texto | mudam (e podem repetir entre Rodar na mesma página) | mudam a cada execução |
 | Ctrl+C | Parar: `^C`, sem traceback | traceback do `KeyboardInterrupt`, código 130 |
 | `__pycache__` ao importar módulo próprio | não é criado | criado ao lado do módulo |
+| `sys.getsizeof(...)` | `16 24 28 16` para `1`, `"abc"`, `[]`, `1.5` (32 bits: cerca de metade) | `28 44 56 24` |
+| Endereço no repr de objeto | `<__main__.A object at 0x184ad08>` (curto) | `<__main__.A object at 0x7fbf87390590>` |
+| `2.0 ** 10000` | `OverflowError: (68, 'Result not representable')` (errno do Emscripten) | `OverflowError: (34, 'Numerical result out of range')` |
+| Cores automáticas (traceback, `doctest`, `unittest`, `pdb`) | nunca (como o `python3` com a saída num arquivo) | coloridas no terminal (`-t`); sem cor com a saída num pipe/arquivo |
 
 Por isso: **meta e texto da aula não podem depender** de nada da tabela acima (§3). Diga "no editor…" só com o que está nesta seção; o resto, mostre no lab.
 

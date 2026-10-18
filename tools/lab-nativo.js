@@ -32,7 +32,7 @@ function rodar(arquivos, opts) {
     "printf %s " + q(b64(opts.stdin || "")) + " | base64 -d > /tmp/entrada.txt",
     "echo @@RODA@@",
     // stdout em linhas (como no terminal): sem isso, o print e o traceback trocariam de ordem
-    "PYTHONUNBUFFERED=1 timeout 10 python3 " + q(arquivos[0].nome) + " " + (opts.args || []).map(q).join(" ") + " < /tmp/entrada.txt 2>&1; echo \"@@EXIT@@$?\"",
+    "NO_COLOR=1 PYTHON_COLORS=0 PYTHONUNBUFFERED=1 timeout 10 python3 " + q(arquivos[0].nome) + " " + (opts.args || []).map(q).join(" ") + " < /tmp/entrada.txt 2>&1; echo \"@@EXIT@@$?\"",
     "python3 -c 'import sys; print(sys.version.split()[0])'",
   ].join("\n");
   const r = spawnSync("timeout", ["60", LAB, "-n", NOME, "-N", "--", "bash", "-s"], { input: script, encoding: "utf8", maxBuffer: 32 * 1024 * 1024 });
