@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Métodos de Conjunto e Tupla — set, frozenset e tuple | Guia Python</title>
+<meta name="description" content="Referência rápida dos 17 métodos de conjunto (set) do Python 3.14 (add, update, remove, discard, pop, union, intersection, difference, issubset…), dos operadores | &amp; - ^ &lt;=, do frozenset e dos 2 métodos de tupla (count e index), com exemplo curto, resultado real e o link para a aula.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Métodos de Conjunto e Tupla</span></h1>
+
+<p class="intro">Esta é a página de consulta rápida dos <strong>conjuntos</strong> (<code>set</code> e <code>frozenset</code>) e das <strong>tuplas</strong> (<code>tuple</code>). Um conjunto guarda valores <strong>sem repetição e sem ordem</strong>, e tem 17 métodos para acrescentar, remover e fazer as contas de conjuntos da escola (união, interseção, diferença). A tupla é uma sequência que <strong>não muda</strong> depois de criada, e tem só 2 métodos. As explicações passo a passo estão nas aulas <a href="conjuntos.html">Conjuntos (set)</a>, <a href="conjuntos-operacoes.html">União, Interseção e Diferença</a> e <a href="tuplas.html">Tuplas</a>.</p>
+
+<div class="note">
+<strong>Como ler as tabelas</strong>
+<ul>
+  <li><strong>Exemplo</strong> é o que você digitaria depois do <code>&gt;&gt;&gt;</code> do <a href="repl.html">modo interativo</a>, uma linha depois da outra; <strong>Resultado</strong> é o que o Python 3.14.4 respondeu no computador da Ana.</li>
+  <li>Os exemplos de conjunto usam <strong>números pequenos</strong> de propósito: com eles, o Python mostra sempre na mesma ordem. Com textos, a ordem muda de uma execução para outra (veja o quadro abaixo).</li>
+  <li>Quando o exemplo dá erro, o resultado mostra a última linha da mensagem do Python (em inglês).</li>
+</ul>
+</div>
+
+<div class="warning">
+<strong>Conjunto não tem ordem</strong>
+<p>A Ana rodou o mesmo programa três vezes seguidas:</p>
+<pre class="file" data-file="feira.py">feira = {"pão", "leite", "café", "ovo"}
+print(feira)
+</pre>
+<pre class="term">$ python3 feira.py
+{'café', 'leite', 'pão', 'ovo'}
+$ python3 feira.py
+{'leite', 'ovo', 'café', 'pão'}
+$ python3 feira.py
+{'ovo', 'leite', 'pão', 'café'}
+</pre>
+<p>Os itens são os mesmos, mas a ordem mudou a cada vez. Isso é normal: o conjunto não promete ordem nenhuma (por segurança, o Python sorteia o jeito de guardar textos a cada vez que começa). Quando a ordem importa, mostre com <code>sorted(feira)</code>, que devolve uma lista em ordem alfabética: <code>['café', 'leite', 'ovo', 'pão']</code>. Pelo mesmo motivo, conjunto não aceita índice: <code>feira[0]</code> dá <code>TypeError: 'set' object is not subscriptable</code> ("o objeto set não aceita <code>[ ]</code>").</p>
+</div>
+
+<hr>
+
+<h2 id="criar">Criar um conjunto</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>{a, b, c}</code></td><td>Um conjunto com esses valores. Os repetidos somem.</td><td><code>{3, 1, 3, 2}</code></td><td><code>{1, 2, 3}</code></td><td><a href="conjuntos.html">Conjuntos</a></td></tr>
+<tr><td><code>set(itens)</code></td><td>Um conjunto com os itens de uma lista (ou texto, tupla…). O jeito clássico de <strong>tirar repetidos</strong>.</td><td><code>set([5, 5, 7])</code></td><td><code>{5, 7}</code></td><td><a href="conjuntos.html">Conjuntos</a></td></tr>
+<tr><td><code>set()</code></td><td>Um conjunto vazio.</td><td><code>set()</code></td><td><code>set()</code></td><td></td></tr>
+<tr><td><code>{}</code></td><td><strong>Não</strong> é um conjunto vazio: é um dicionário vazio!</td><td><code>type({})</code></td><td><code>&lt;class 'dict'&gt;</code></td><td><a href="dicionarios.html">Dicionários</a></td></tr>
+<tr><td><code>{expr for x in …}</code></td><td>Monta um conjunto a partir de um laço.</td><td><code>{n % 3 for n in range(10)}</code></td><td><code>{0, 1, 2}</code></td><td><a href="dict-comprehension.html">Dict e Set Comprehension</a></td></tr>
+<tr><td><code>len(s)</code></td><td>Quantos valores diferentes.</td><td><code>len({1, 2, 2, 3})</code></td><td><code>3</code></td><td></td></tr>
+<tr><td><code>x in s</code></td><td>"Tem?" No conjunto, essa pergunta é muito rápida, mesmo com milhões de itens.</td><td><code>3 in {1, 2, 3}</code></td><td><code>True</code></td><td><a href="operadores-is-in.html">is e in</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="alterar">Acrescentar e remover</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Método</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>add(x)</code></td><td>Acrescenta um valor (<em>add</em> = "adicionar").</td><td><code>s = {1, 2}</code><br><code>s.add(3)</code><br><code>s</code></td><td><code>{1, 2, 3}</code></td><td><a href="conjuntos.html">Conjuntos</a></td></tr>
+<tr><td></td><td>se já tem, nada muda (e não dá erro)</td><td><code>s.add(2)</code><br><code>s</code></td><td><code>{1, 2, 3}</code></td><td></td></tr>
+<tr><td></td><td><span class="versao">3.14</span> listas não podem entrar num conjunto</td><td><code>s.add([7])</code></td><td><code>TypeError: cannot use 'list' as a set element (unhashable type: 'list')</code></td><td><a href="mutabilidade.html">Mutável × Imutável</a></td></tr>
+<tr><td><code>update(itens, …)</code></td><td>Acrescenta todos os valores de uma ou mais listas/conjuntos.</td><td><code>s.update([4, 5], {6})</code><br><code>s</code></td><td><code>{1, 2, 3, 4, 5, 6}</code></td><td></td></tr>
+<tr><td><code>remove(x)</code></td><td>Tira o valor. Se não tem, dá <strong>erro</strong>.</td><td><code>s = {1, 2, 3, 4}</code><br><code>s.remove(2)</code><br><code>s</code></td><td><code>{1, 3, 4}</code></td><td><a href="conjuntos.html">Conjuntos</a></td></tr>
+<tr><td></td><td>valor que não está lá</td><td><code>s.remove(9)</code></td><td><code>KeyError: 9</code></td><td></td></tr>
+<tr><td><code>discard(x)</code></td><td>Tira o valor, se tiver. Se não tem, <strong>não</strong> dá erro (<em>discard</em> = "descartar").</td><td><code>s.discard(9)</code><br><code>s.discard(3)</code><br><code>s</code></td><td><code>{1, 4}</code></td><td></td></tr>
+<tr><td><code>pop()</code></td><td>Tira e devolve um valor <strong>qualquer</strong> (não dá para escolher qual).</td><td><code>s = {7}</code><br><code>s.pop()</code><br><code>s</code></td><td><code>7</code><br><code>set()</code></td><td></td></tr>
+<tr><td></td><td>conjunto vazio</td><td><code>set().pop()</code></td><td><code>KeyError: 'pop from an empty set'</code></td><td></td></tr>
+<tr><td><code>clear()</code></td><td>Esvazia o conjunto.</td><td><code>s = {1, 2, 3}</code><br><code>s.clear()</code><br><code>s</code></td><td><code>set()</code></td><td></td></tr>
+<tr><td><code>copy()</code></td><td>Uma cópia: mudar a cópia não muda o original.</td><td><code>c = {1, 2}</code><br><code>d = c.copy()</code><br><code>d.add(9)</code><br><code>c</code></td><td><code>{1, 2}</code></td><td><a href="copias.html">Cópia Rasa e Cópia Profunda</a></td></tr>
+</table>
+</div>
+
+<p>A diferença entre <code>remove</code> e <code>discard</code>, no terminal:</p>
+
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; s = {1, 2, 3, 4}
+&gt;&gt;&gt; s.remove(9)
+Traceback (most recent call last):
+  File "&lt;python-input-1&gt;", line 1, in &lt;module&gt;
+    s.remove(9)
+    ~~~~~~~~^^^
+KeyError: 9
+&gt;&gt;&gt; s.discard(9)
+&gt;&gt;&gt; s
+{1, 2, 3, 4}
+&gt;&gt;&gt; exit()
+</pre>
+
+<p><code>KeyError: 9</code> = "erro de chave: 9" (o conjunto usa o mesmo erro dos dicionários). O <code>discard(9)</code> não reclamou, e o conjunto ficou igual.</p>
+
+<hr>
+
+<h2 id="operacoes">União, interseção e diferença</h2>
+
+<p>Nos exemplos: <code>a = {1, 2, 3, 4}</code> e <code>b = {3, 4, 5}</code>. Cada operação tem um <strong>método</strong> e um <strong>operador</strong> que fazem a mesma coisa e devolvem um conjunto <strong>novo</strong> (o <code>a</code> e o <code>b</code> não mudam).</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Método</th><th>Operador</th><th>O que dá</th><th>Exemplo</th><th>Resultado</th></tr>
+<tr><td><code>a.union(b)</code></td><td><code>a | b</code></td><td><strong>União</strong>: o que está em <code>a</code> <strong>ou</strong> em <code>b</code> (ou nos dois)</td><td><code>a | b</code></td><td><code>{1, 2, 3, 4, 5}</code></td></tr>
+<tr><td><code>a.intersection(b)</code></td><td><code>a &amp; b</code></td><td><strong>Interseção</strong>: o que está nos <strong>dois</strong></td><td><code>a &amp; b</code></td><td><code>{3, 4}</code></td></tr>
+<tr><td><code>a.difference(b)</code></td><td><code>a - b</code></td><td><strong>Diferença</strong>: o que está em <code>a</code> e <strong>não</strong> em <code>b</code></td><td><code>a - b</code><br><code>b - a</code></td><td><code>{1, 2}</code><br><code>{5}</code></td></tr>
+<tr><td><code>a.symmetric_difference(b)</code></td><td><code>a ^ b</code></td><td><strong>Diferença simétrica</strong>: o que está em <strong>só um</strong> dos dois</td><td><code>a ^ b</code></td><td><code>{1, 2, 5}</code></td></tr>
+</table>
+</div>
+
+<div class="tip">
+<strong>Método ou operador?</strong>
+<p>O operador é mais curto e só aceita conjuntos dos dois lados: <code>a | [9, 10]</code> dá <code>TypeError: unsupported operand type(s) for |: 'set' and 'list'</code>. O método aceita qualquer sequência e vários argumentos: <code>a.union([9, 10])</code> dá <code>{1, 2, 3, 4, 9, 10}</code>, e <code>a.intersection({3}, {3, 4})</code> dá <code>{3}</code>.</p>
+</div>
+
+<h3 id="update">As versões que mudam o conjunto</h3>
+
+<p>Os métodos terminados em <code>_update</code> (e os operadores com <code>=</code>) guardam o resultado no próprio conjunto da esquerda, em vez de criar um novo. Devolvem <code>None</code>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Método</th><th>Operador</th><th>Exemplo</th><th>Resultado</th></tr>
+<tr><td><code>a.update(b)</code></td><td><code>a |= b</code></td><td><code>a = {1, 2}</code><br><code>a |= {5}</code><br><code>a</code></td><td><code>{1, 2, 5}</code></td></tr>
+<tr><td><code>a.intersection_update(b)</code></td><td><code>a &amp;= b</code></td><td><code>a = {1, 2, 3, 4}</code><br><code>a.intersection_update({2, 3, 9})</code><br><code>a</code></td><td><code>{2, 3}</code></td></tr>
+<tr><td><code>a.difference_update(b)</code></td><td><code>a -= b</code></td><td><code>a = {1, 2, 3, 4}</code><br><code>a.difference_update({1, 2})</code><br><code>a</code></td><td><code>{3, 4}</code></td></tr>
+<tr><td><code>a.symmetric_difference_update(b)</code></td><td><code>a ^= b</code></td><td><code>a = {1, 2, 3}</code><br><code>a.symmetric_difference_update({3, 4})</code><br><code>a</code></td><td><code>{1, 2, 4}</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="comparar">Comparar conjuntos</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Método</th><th>Operador</th><th>Pergunta</th><th>Exemplo</th><th>Resultado</th></tr>
+<tr><td><code>a.issubset(b)</code></td><td><code>a &lt;= b</code></td><td>"Tudo de <code>a</code> está em <code>b</code>?" (<code>a</code> é <strong>subconjunto</strong> de <code>b</code>)</td><td><code>{1, 2} &lt;= {1, 2, 3}</code></td><td><code>True</code></td></tr>
+<tr><td></td><td><code>a &lt; b</code></td><td>…e <code>b</code> tem algo a mais?</td><td><code>{1, 2} &lt; {1, 2}</code></td><td><code>False</code></td></tr>
+<tr><td><code>a.issuperset(b)</code></td><td><code>a &gt;= b</code></td><td>"<code>a</code> contém tudo de <code>b</code>?" (<strong>superconjunto</strong>)</td><td><code>{1, 2, 3}.issuperset({1, 3})</code></td><td><code>True</code></td></tr>
+<tr><td><code>a.isdisjoint(b)</code></td><td>—</td><td>"Não têm <strong>nada</strong> em comum?" (<em>disjoint</em> = "separados")</td><td><code>{1, 2}.isdisjoint({3, 4})</code><br><code>{1, 2}.isdisjoint({2, 3})</code></td><td><code>True</code><br><code>False</code></td></tr>
+<tr><td>—</td><td><code>a == b</code></td><td>"Têm os mesmos valores?" A ordem não importa.</td><td><code>{1, 2} == {2, 1}</code></td><td><code>True</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="frozenset">frozenset: o conjunto congelado</h2>
+
+<p>O <code>frozenset</code> é um conjunto que não muda depois de criado. Ele tem só os 8 métodos que <strong>não</strong> alteram o conjunto: <code>copy</code>, <code>union</code>, <code>intersection</code>, <code>difference</code>, <code>symmetric_difference</code>, <code>issubset</code>, <code>issuperset</code> e <code>isdisjoint</code>. Por não mudar, ele pode ser chave de dicionário ou item de outro conjunto.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th></tr>
+<tr><td><code>frozenset(itens)</code></td><td>Cria o conjunto congelado.</td><td><code>f = frozenset([3, 1, 3])</code><br><code>f</code></td><td><code>frozenset({1, 3})</code></td></tr>
+<tr><td><code>f | s</code></td><td>As operações funcionam e devolvem um <code>frozenset</code> novo.</td><td><code>f | {5}</code></td><td><code>frozenset({1, 3, 5})</code></td></tr>
+<tr><td><code>f.add(x)</code></td><td>Não existe: ele não muda.</td><td><code>f.add(5)</code></td><td><code>AttributeError: 'frozenset' object has no attribute 'add'</code></td></tr>
+<tr><td>como chave</td><td>Pode ser chave de dicionário.</td><td><code>{frozenset([1, 2]): "par"}</code></td><td><code>{frozenset({1, 2}): 'par'}</code></td></tr>
+<tr><td><code>==</code></td><td>Compara com um <code>set</code> pelos valores.</td><td><code>frozenset([1, 2]) == {1, 2}</code></td><td><code>True</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="tupla">Tuplas: os 2 métodos e as operações</h2>
+
+<p>Uma tupla se escreve com parênteses: <code>ponto = (3, 4)</code>. Ela tem índices e fatias como a lista, mas <strong>não muda</strong>: por isso não tem <code>append</code>, <code>remove</code>, <code>sort</code>… Os únicos métodos são os dois que só leem. Nos exemplos, <code>notas = (7.5, 9.0, 6.5, 9.0)</code>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>count(x)</code></td><td>Quantas vezes <code>x</code> aparece.</td><td><code>notas.count(9.0)</code></td><td><code>2</code></td><td><a href="tuplas.html">Tuplas</a></td></tr>
+<tr><td><code>index(x)</code></td><td>A posição do primeiro <code>x</code>.</td><td><code>notas.index(9.0)</code></td><td><code>1</code></td><td><a href="tuplas.html">Tuplas</a></td></tr>
+<tr><td></td><td>se não tem, dá erro</td><td><code>notas.index(10)</code></td><td><code>ValueError: tuple.index(x): x not in tuple</code></td><td></td></tr>
+<tr><td><code>t[i]</code>, <code>t[a:b]</code></td><td>Um item; uma fatia (outra tupla).</td><td><code>notas[1:3]</code></td><td><code>(9.0, 6.5)</code></td><td><a href="listas-acessar.html">Acessando Itens</a></td></tr>
+<tr><td><code>t[i] = x</code></td><td>Não pode: tupla não muda.</td><td><code>ponto = (3, 4)</code><br><code>ponto[0] = 9</code></td><td><code>TypeError: 'tuple' object does not support item assignment</code></td><td><a href="mutabilidade.html">Mutável × Imutável</a></td></tr>
+<tr><td><code>len</code>, <code>in</code></td><td>Quantos itens; "tem?"</td><td><code>len(notas)</code>, <code>9.0 in notas</code></td><td><code>4</code>, <code>True</code></td><td></td></tr>
+<tr><td><code>min</code>, <code>max</code>, <code>sum</code>, <code>sorted</code></td><td>Funcionam como nas listas. <code>sorted</code> devolve uma <strong>lista</strong>.</td><td><code>min(notas), max(notas), sum(notas)</code><br><code>sorted(notas)</code></td><td><code>(6.5, 9.0, 32.0)</code><br><code>[6.5, 7.5, 9.0, 9.0]</code></td><td><a href="ref-funcoes-embutidas.html#numeros">Funções Embutidas</a></td></tr>
+<tr><td><code>a + b</code>, <code>t * n</code></td><td>Uma tupla <strong>nova</strong>, juntando ou repetindo.</td><td><code>(1, 2) + (3,)</code>, <code>(0,) * 3</code></td><td><code>(1, 2, 3)</code>, <code>(0, 0, 0)</code></td><td></td></tr>
+<tr><td><code>(x,)</code></td><td>Tupla de <strong>um</strong> item: a vírgula é obrigatória. Sem ela, os parênteses são só parênteses.</td><td><code>type((5))</code><br><code>type((5,))</code></td><td><code>&lt;class 'int'&gt;</code><br><code>&lt;class 'tuple'&gt;</code></td><td><a href="tuplas.html">Tuplas</a></td></tr>
+<tr><td><code>a, b</code></td><td>Quem faz a tupla é a <strong>vírgula</strong>; os parênteses são opcionais.</td><td><code>5,</code></td><td><code>(5,)</code></td><td></td></tr>
+<tr><td><code>tuple(itens)</code></td><td>Converte para tupla; sem nada, a tupla vazia.</td><td><code>tuple("Ana")</code>, <code>tuple()</code></td><td><code>('A', 'n', 'a')</code>, <code>()</code></td><td></td></tr>
+<tr><td><code>x, y = t</code></td><td>Desempacota: cada variável recebe um item.</td><td><code>nome, idade = ("Ana", 30)</code><br><code>nome</code>, depois <code>idade</code></td><td><code>'Ana'</code><br><code>30</code></td><td><a href="desempacotamento.html">Desempacotamento</a></td></tr>
+<tr><td></td><td>a quantidade tem que bater</td><td><code>x, y = (1, 2, 3)</code></td><td><code>ValueError: too many values to unpack (expected 2, got 3)</code></td><td></td></tr>
+<tr><td><code>a &lt; b</code></td><td>Compara item por item.</td><td><code>(1, 2) &lt; (1, 3)</code></td><td><code>True</code></td><td><a href="operadores-comparacao.html">Comparações</a></td></tr>
+<tr><td>como chave</td><td>Uma tupla pode ser chave de dicionário ou item de conjunto…</td><td><code>{(1, 2): "A1"}</code></td><td><code>{(1, 2): 'A1'}</code></td><td><a href="dicionarios.html">Dicionários</a></td></tr>
+<tr><td></td><td>…desde que tudo dentro dela também não mude</td><td><code>t = ([1], 2)</code><br><code>t[0].append(5)</code><br><code>t</code><br><code>hash(t)</code></td><td><code>([1, 5], 2)</code><br><code>TypeError: unhashable type: 'list'</code></td><td><a href="mutabilidade.html">Mutável × Imutável</a></td></tr>
+</table>
+</div>
+
+<div class="tip">
+<strong>Tupla com nomes</strong>
+<p>Para tuplas em que cada posição tem um significado (nome, idade, cidade), o módulo <code>collections</code> tem a <code>namedtuple</code>, que deixa escrever <code>aluno.nome</code> em vez de <code>aluno[0]</code>. Veja <a href="collections.html">O Módulo collections</a>.</p>
+</div>
+
+<hr>
+
+<h2 id="qual">Lista, tupla, conjunto ou dicionário?</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Tipo</th><th>Escrita</th><th>Tem ordem?</th><th>Repete?</th><th>Muda?</th><th>Use para</th></tr>
+<tr><td><code>list</code></td><td><code>[1, 2]</code></td><td>sim</td><td>sim</td><td>sim</td><td>uma sequência que cresce e muda (a lista de compras)</td></tr>
+<tr><td><code>tuple</code></td><td><code>(1, 2)</code></td><td>sim</td><td>sim</td><td>não</td><td>um grupo fixo de valores (um ponto, uma data, um registro)</td></tr>
+<tr><td><code>set</code></td><td><code>{1, 2}</code></td><td>não</td><td>não</td><td>sim</td><td>tirar repetidos, perguntar "tem?" depressa, comparar grupos</td></tr>
+<tr><td><code>frozenset</code></td><td><code>frozenset({1, 2})</code></td><td>não</td><td>não</td><td>não</td><td>um conjunto que vai ser chave de dicionário</td></tr>
+<tr><td><code>dict</code></td><td><code>{"a": 1}</code></td><td>a da entrada</td><td>chaves não</td><td>sim</td><td>achar um valor pelo nome (preço pelo produto) — veja <a href="ref-metodos-dicionario.html">Métodos de Dicionário</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Experimente</h2>
+
+<div class="trypy" data-goal="out:Nos dois: ['Bia', 'Davi'];;out:Só futebol: ['Ana', 'Caio'];;src:&amp;|\.intersection\(;;src:\s-\s|\.difference\(">
+<p class="try-task"><strong>Missão:</strong> na escola da Ana, há o time de futebol e o clube de xadrez. Troque os dois <code>set()</code> pelas operações certas: quem está <strong>nos dois</strong> (interseção, <code>&amp;</code>) e quem está <strong>só no futebol</strong> (diferença, <code>-</code>). A saída deve ter <code>Nos dois: ['Bia', 'Davi']</code> e <code>Só futebol: ['Ana', 'Caio']</code>. O <code>sorted()</code> já está lá para a ordem não variar.</p>
+<pre class="script" data-file="main.py">futebol = {"Ana", "Bia", "Caio", "Davi"}
+xadrez = {"Bia", "Davi", "Eva"}
+
+nos_dois = set()
+so_futebol = set()
+print("Nos dois:", sorted(nos_dois))
+print("Só futebol:", sorted(so_futebol))
+print("Todos:", sorted(futebol | xadrez))
+</pre>
+<pre class="solucao" data-file="main.py">futebol = {"Ana", "Bia", "Caio", "Davi"}
+xadrez = {"Bia", "Davi", "Eva"}
+
+nos_dois = futebol &amp; xadrez
+so_futebol = futebol - xadrez
+print("Nos dois:", sorted(nos_dois))
+print("Só futebol:", sorted(so_futebol))
+print("Todos:", sorted(futebol | xadrez))
+</pre>
+</div>
+
+<p>A solução, no computador da Ana:</p>
+
+<pre class="term">$ python3 clubes.py
+Nos dois: ['Bia', 'Davi']
+Só futebol: ['Ana', 'Caio']
+Todos: ['Ana', 'Bia', 'Caio', 'Davi', 'Eva']
+</pre>
+
+<div class="trypy">
+<p class="try-task"><strong>Livre:</strong> conjuntos e tuplas juntos. Mude as notas, acrescente uma cidade na tupla (e uma variável no desempacotamento).</p>
+<pre class="script" data-file="main.py">notas = (7, 9, 7, 10, 6, 9, 7)
+diferentes = set(notas)
+print("Notas diferentes:", sorted(diferentes), "-", len(diferentes), "valores")
+print("Alguém tirou 10?", 10 in diferentes)
+
+aluno = ("Ana", 30, "Teresina")
+nome, idade, cidade = aluno
+print(f"{nome} tem {idade} anos e mora em {cidade}")
+print("Quantas vezes o 7 aparece:", notas.count(7))
+print("Posição do primeiro 9:", notas.index(9))
+</pre>
+</div>
+
+<pre class="term">$ python3 turma.py
+Notas diferentes: [6, 7, 9, 10] - 4 valores
+Alguém tirou 10? True
+Ana tem 30 anos e mora em Teresina
+Quantas vezes o 7 aparece: 3
+Posição do primeiro 9: 1
+</pre>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Conjunto: sem repetidos e sem ordem. Para mostrar em ordem, <code>sorted()</code>. <code>{}</code> é dicionário; o conjunto vazio é <code>set()</code>.</li>
+  <li>Acrescentar: <code>add</code> (um), <code>update</code> (vários). Remover: <code>remove</code> (erro se não tem), <code>discard</code> (sem erro), <code>pop</code>, <code>clear</code>.</li>
+  <li>Contas: <code>|</code> união, <code>&amp;</code> interseção, <code>-</code> diferença, <code>^</code> diferença simétrica; os métodos com <code>_update</code> mudam o próprio conjunto.</li>
+  <li>Comparar: <code>issubset</code> (<code>&lt;=</code>), <code>issuperset</code> (<code>&gt;=</code>), <code>isdisjoint</code>.</li>
+  <li><code>frozenset</code> é o conjunto que não muda: só os 8 métodos que leem, e pode ser chave.</li>
+  <li>Tupla: não muda, tem só <code>count</code> e <code>index</code>; tupla de um item precisa da vírgula: <code>(5,)</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
