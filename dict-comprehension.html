@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Dict e Set Comprehension — dicionários e conjuntos numa linha | Guia Python</title>
+<meta name="description" content="Dict comprehension e set comprehension em Python para quem está começando: {chave: valor for item in sequência}, transformar e filtrar um dicionário com items() e if, montar a partir de duas listas com zip, inverter chaves e valores, {x for x in …} para conjuntos, e os erros reais: o SyntaxError da vírgula, o NameError, o too many values to unpack e o conjunto que sai no lugar do dicionário, com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Dict e Set Comprehension</span></h1>
+
+<p class="intro">Na aula <a href="list-comprehension.html">List Comprehension</a>, você viu como montar uma lista numa linha só: <code>[n * 2 for n in numeros]</code>. A mesma ideia vale para dicionários e conjuntos. Com a <strong>dict comprehension</strong>, a Ana monta a tabela de preços com aumento, o estoque sem os produtos zerados ou o boletim da turma, cada um numa linha. Com a <strong>set comprehension</strong>, ela monta um conjunto do mesmo jeito.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A escrever uma dict comprehension: <code>{chave: valor for item in sequência}</code>.</li>
+  <li>A transformar os valores de um dicionário com <code>items()</code>.</li>
+  <li>A filtrar pares com <code>if</code> no fim.</li>
+  <li>A montar um dicionário a partir de duas listas com <code>zip()</code>, e a inverter chaves e valores.</li>
+  <li>A set comprehension: <code>{x for x in …}</code>.</li>
+  <li>Os erros reais e a pegadinha que troca o dicionário por um conjunto sem avisar.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a mesma receita, outra forma</h2>
+<p>Pense numa receita que diz: "<strong>para cada</strong> fruta da cesta, escreva numa etiqueta o nome da fruta e, ao lado, quantas letras ela tem". Essa frase descreve um dicionário inteiro sem você precisar listar cada fruta. A comprehension é essa frase escrita em Python: o que vai na etiqueta (<code>chave: valor</code>), e de onde vêm os itens (<code>for … in …</code>).</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Para montar</th><th>Comprehension</th><th>Envolve com</th></tr>
+<tr><td>Uma lista</td><td><code>[n * 2 for n in numeros]</code></td><td>Colchetes</td></tr>
+<tr><td>Um dicionário</td><td><code>{n: n * 2 for n in numeros}</code></td><td>Chaves, com <code>chave: valor</code></td></tr>
+<tr><td>Um conjunto</td><td><code>{n * 2 for n in numeros}</code></td><td>Chaves, com um valor só</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. A primeira dict comprehension</h2>
+<p>Primeiro, o jeito que você já conhece, com <code>for</code>: um dicionário com cada número de 1 a 5 e o seu quadrado.</p>
+
+<pre class="file" data-file="dc_for.py">quadrados = {}
+for n in range(1, 6):
+    quadrados[n] = n * n
+print(quadrados)
+</pre>
+
+<pre class="term">$ python3 dc_for.py
+{1: 1, 2: 4, 3: 9, 4: 16, 5: 25}
+</pre>
+
+<p>Agora o mesmo resultado, numa linha:</p>
+
+<pre class="file" data-file="dc_basico.py">quadrados = {n: n * n for n in range(1, 6)}
+print(quadrados)
+</pre>
+
+<pre class="term">$ python3 dc_basico.py
+{1: 1, 2: 4, 3: 9, 4: 16, 5: 25}
+</pre>
+
+<dl class="anatomy">
+  <dt>{ … }</dt><dd>As chaves dizem que o resultado vai ser um dicionário (ou um conjunto; o dois-pontos decide).</dd>
+  <dt>n: n * n</dt><dd>O par que vai ser criado a cada volta: a <strong>chave</strong> <code>n</code>, o dois-pontos, e o <strong>valor</strong> <code>n * n</code>. É o que, no <code>for</code>, estava em <code>quadrados[n] = n * n</code>.</dd>
+  <dt>for n in range(1, 6)</dt><dd>De onde vêm os itens: o mesmo <code>for</code> de sempre, sem os dois-pontos do fim e sem o bloco recuado.</dd>
+</dl>
+
+<p>Leia da esquerda para a direita como "o dicionário de <code>n</code> para <code>n * n</code>, para cada <code>n</code> de 1 a 5". A chave e o valor podem vir de qualquer conta sobre o item. Para cada fruta, o tamanho do nome:</p>
+
+<pre class="file" data-file="dc_palavras.py">frutas = ["manga", "caju", "acerola"]
+tamanhos = {fruta: len(fruta) for fruta in frutas}
+print(tamanhos)
+</pre>
+
+<pre class="term">$ python3 dc_palavras.py
+{'manga': 5, 'caju': 4, 'acerola': 7}
+</pre>
+
+<hr>
+
+<h2>2. Transformando um dicionário: <code>items()</code></h2>
+<p>O uso mais comum é partir de um dicionário que já existe e criar outro, mudando os valores (ou as chaves). Percorra com <code>items()</code>, que entrega chave e valor (aula <a href="dicionarios-percorrer.html">Percorrendo um Dicionário</a>):</p>
+
+<pre class="file" data-file="dc_items.py">precos = {"pão": 0.50, "leite": 4.75, "café": 18.90}
+com_aumento = {produto: preco + 1 for produto, preco in precos.items()}
+print(com_aumento)
+em_centavos = {produto: round(preco * 100) for produto, preco in precos.items()}
+print(em_centavos)
+maiusculas = {produto.upper(): preco for produto, preco in precos.items()}
+print(maiusculas)
+</pre>
+
+<pre class="term">$ python3 dc_items.py
+{'pão': 1.5, 'leite': 5.75, 'café': 19.9}
+{'pão': 50, 'leite': 475, 'café': 1890}
+{'PÃO': 0.5, 'LEITE': 4.75, 'CAFÉ': 18.9}
+</pre>
+
+<dl class="anatomy">
+  <dt>for produto, preco in precos.items()</dt><dd>A cada volta, um par do dicionário original, já <a href="desempacotamento.html">desempacotado</a>.</dd>
+  <dt>produto: preco + 1</dt><dd>Mesma chave, valor novo: um real a mais.</dd>
+  <dt>produto: round(preco * 100)</dt><dd>O preço em centavos, arredondado para inteiro.</dd>
+  <dt>produto.upper(): preco</dt><dd>Agora é a <strong>chave</strong> que muda: o nome em maiúsculas.</dd>
+</dl>
+
+<p>Nos três casos, <code>precos</code> continua igual: a comprehension sempre cria um dicionário <strong>novo</strong>.</p>
+
+<div class="trypy" data-goal="out:{'pão': 80, 'leite': 24, 'café': 16};;src:\{[^}]*\bfor\b">
+<p class="try-task"><strong>Missão:</strong> chegou um caminhão e o estoque de tudo dobrou. Troque o <code>{}</code> por uma dict comprehension que cria <code>dobro</code> com cada quantidade vezes 2.</p>
+<pre class="script" data-file="main.py">estoque = {"pão": 40, "leite": 12, "café": 8}
+dobro = {}
+print(dobro)
+</pre>
+<pre class="solucao" data-file="main.py">estoque = {"pão": 40, "leite": 12, "café": 8}
+dobro = {produto: qtd * 2 for produto, qtd in estoque.items()}
+print(dobro)
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Filtrando: o <code>if</code> no fim</h2>
+<p>Como na list comprehension, um <code>if</code> depois do <code>for</code> escolhe quais itens entram. Só os produtos que ainda têm estoque:</p>
+
+<pre class="file" data-file="dc_if.py">estoque = {"pão": 40, "leite": 0, "café": 8, "bolo": 0}
+tem = {produto: qtd for produto, qtd in estoque.items() if qtd &gt; 0}
+print(tem)
+acabou = [produto for produto, qtd in estoque.items() if qtd == 0]
+print(acabou)
+</pre>
+
+<pre class="term">$ python3 dc_if.py
+{'pão': 40, 'café': 8}
+['leite', 'bolo']
+</pre>
+
+<p>A primeira linha cria um dicionário só com os pares em que <code>qtd &gt; 0</code>. A segunda mostra que dá para sair de um dicionário e chegar numa <strong>lista</strong>: com colchetes, o resultado é uma lista dos nomes que zeraram.</p>
+
+<div class="tip">
+<strong>Remover itens sem o <code>RuntimeError</code></strong>
+<p>Na aula <a href="dicionarios-percorrer.html">Percorrendo um Dicionário</a>, apagar chaves dentro do <code>for</code> deu <code>RuntimeError: dictionary changed size during iteration</code>. A comprehension com <code>if</code> é a outra saída: em vez de apagar do dicionário, você cria um novo só com o que fica, e guarda na mesma variável: <code>estoque = {p: q for p, q in estoque.items() if q &gt; 0}</code>.</p>
+</div>
+
+<h3><code>if</code> e <code>else</code> no valor</h3>
+<p>Quando todos os itens entram, mas o valor depende de uma condição, use o <code>if</code> em uma linha (aula <a href="if-ternario.html">if em uma Linha</a>) na posição do valor:</p>
+
+<pre class="file" data-file="dc_if_else.py">notas = {"Ana": 9, "Bia": 6, "Caio": 10}
+situacao = {nome: ("passou" if nota &gt;= 7 else "recuperação") for nome, nota in notas.items()}
+print(situacao)
+</pre>
+
+<pre class="term">$ python3 dc_if_else.py
+{'Ana': 'passou', 'Bia': 'recuperação', 'Caio': 'passou'}
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Onde fica o <code>if</code></th><th>O que faz</th><th>Exemplo</th></tr>
+<tr><td>No fim, depois do <code>for</code></td><td><strong>Filtra</strong>: quem não passa no teste não entra</td><td><code>{n: q for n, q in d.items() if q &gt; 0}</code></td></tr>
+<tr><td>No valor, com <code>else</code></td><td><strong>Escolhe</strong> o valor; todos entram</td><td><code>{n: ("sim" if q &gt; 0 else "não") for n, q in d.items()}</code></td></tr>
+</table>
+</div>
+
+<div class="trypy" data-goal="out:{'Ana': 9, 'Caio': 10};;src:\{[^}]*\bfor\b">
+<p class="try-task"><strong>Missão:</strong> crie <code>passaram</code> com uma dict comprehension que fica só com os alunos de nota <strong>7 ou mais</strong>.</p>
+<pre class="script" data-file="main.py">notas = {"Ana": 9, "Bia": 6, "Caio": 10, "Davi": 5}
+passaram = notas
+print(passaram)
+</pre>
+<pre class="solucao" data-file="main.py">notas = {"Ana": 9, "Bia": 6, "Caio": 10, "Davi": 5}
+passaram = {nome: nota for nome, nota in notas.items() if nota &gt;= 7}
+print(passaram)
+</pre>
+</div>
+
+<hr>
+
+<h2>4. Duas listas viram um dicionário</h2>
+<p>A Ana tem os nomes numa lista e as notas noutra, na mesma ordem. O <code>zip()</code> (aula <a href="enumerate-zip.html">enumerate() e zip()</a>) anda pelas duas ao mesmo tempo e entrega os pares:</p>
+
+<pre class="file" data-file="dc_zip.py">nomes = ["Ana", "Bia", "Caio"]
+notas = [9, 6, 10]
+boletim = {nome: nota for nome, nota in zip(nomes, notas)}
+print(boletim)
+print(dict(zip(nomes, notas)))
+</pre>
+
+<pre class="term">$ python3 dc_zip.py
+{'Ana': 9, 'Bia': 6, 'Caio': 10}
+{'Ana': 9, 'Bia': 6, 'Caio': 10}
+</pre>
+
+<p>A segunda linha mostra um atalho: quando você não vai mudar nada nos pares, <code>dict(zip(nomes, notas))</code> faz o mesmo, mais curto.</p>
+
+<h3>Invertendo chaves e valores</h3>
+<p>Trocando a ordem no par, a chave vira valor e o valor vira chave. A lista de ramais da firma, ao contrário: de quem é o ramal 202?</p>
+
+<pre class="file" data-file="dc_inverter.py">ramais = {"Ana": 201, "Bia": 202, "Caio": 203}
+dono = {ramal: nome for nome, ramal in ramais.items()}
+print(dono)
+print(dono[202])
+</pre>
+
+<pre class="term">$ python3 dc_inverter.py
+{201: 'Ana', 202: 'Bia', 203: 'Caio'}
+Bia
+</pre>
+
+<p>Isso só funciona bem quando os valores não se repetem. Com valores repetidos, alguém some; veja em <a href="#errado">Quando dá errado</a>.</p>
+
+<hr>
+
+<h2>5. Set comprehension</h2>
+<p>Tire a parte <code>chave:</code> e fique com um valor só: o resultado é um <a href="conjuntos.html">conjunto</a>, e as repetições somem, como em todo conjunto.</p>
+
+<pre class="file" data-file="dc_set.py">restos = {n % 3 for n in range(10)}
+print(restos)
+palavras = ["sol", "mar", "céu", "areia", "onda"]
+tamanhos = {len(p) for p in palavras}
+print(tamanhos)
+nomes = ["Ana", "Bia", "Caio", "Bruno", "Alice"]
+iniciais = {nome[0] for nome in nomes}
+print(sorted(iniciais))
+</pre>
+
+<pre class="term">$ python3 dc_set.py
+{0, 1, 2}
+{3, 4, 5}
+['A', 'B', 'C']
+</pre>
+
+<dl class="anatomy">
+  <dt>{n % 3 for n in range(10)}</dt><dd>O resto da divisão por 3 de cada número de 0 a 9. São dez contas, mas só três resultados diferentes: 0, 1 e 2.</dd>
+  <dt>{len(p) for p in palavras}</dt><dd>Os tamanhos <strong>diferentes</strong> das palavras: <code>sol</code>, <code>mar</code> e <code>céu</code> têm 3 letras, e o 3 aparece uma vez.</dd>
+  <dt>{nome[0] for nome in nomes}</dt><dd>As iniciais diferentes. Como é um conjunto de <strong>textos</strong>, a ordem do <code>print</code> mudaria a cada execução; o <code>sorted()</code> põe em ordem alfabética.</dd>
+</dl>
+
+<div class="note">
+<strong>E com parênteses?</strong>
+<p>Não existe "tuple comprehension". <code>(n * n for n in range(4))</code> cria outra coisa, um <strong>gerador</strong> (aula <a href="geradores.html">Geradores</a>), que produz os valores um de cada vez. Para uma tupla, passe o gerador para <code>tuple()</code>:</p>
+<pre class="file" data-file="dc_tupla.py">gen = (n * n for n in range(4))
+print(type(gen))
+print(tuple(n * n for n in range(4)))
+</pre>
+<pre class="term">$ python3 dc_tupla.py
+&lt;class 'generator'&gt;
+(0, 1, 4, 9)
+</pre>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Objetivo</th><th>Com <code>for</code></th><th>Com comprehension</th></tr>
+<tr><td>Dicionário a partir de uma lista</td><td><code>d = {}</code><br><code>for f in frutas:</code><br><code>    d[f] = len(f)</code></td><td><code>d = {f: len(f) for f in frutas}</code></td></tr>
+<tr><td>Filtrar um dicionário</td><td><code>novo = {}</code><br><code>for k, v in d.items():</code><br><code>    if v &gt; 0:</code><br><code>        novo[k] = v</code></td><td><code>novo = {k: v for k, v in d.items() if v &gt; 0}</code></td></tr>
+<tr><td>Duas listas em um dicionário</td><td>um <code>for</code> com <code>zip</code></td><td><code>dict(zip(nomes, notas))</code></td></tr>
+<tr><td>Conjunto a partir de uma lista</td><td><code>s = set()</code><br><code>for p in palavras:</code><br><code>    s.add(len(p))</code></td><td><code>s = {len(p) for p in palavras}</code></td></tr>
+</table>
+</div>
+
+<p><strong>Qual usar?</strong> A comprehension quando a regra cabe numa linha que se lê com facilidade: transformar, filtrar, montar. O <code>for</code> comum quando há várias contas por item, <code>print</code> no meio, ou mais de um <code>if</code>/<code>else</code>: uma comprehension enorme é mais difícil de entender do que um laço de quatro linhas.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Vírgula no lugar do dois-pontos</strong>
+<pre class="file" data-file="dc_virgula.py">precos = {"pão": 0.50, "leite": 4.75}
+copia = {produto, preco for produto, preco in precos.items()}
+</pre>
+<pre class="term">$ python3 dc_virgula.py
+  File "/home/ana/dc_virgula.py", line 2
+    copia = {produto, preco for produto, preco in precos.items()}
+             ^^^^^^^^^^^^^^
+SyntaxError: did you forget parentheses around the comprehension target?
+</pre>
+<dl class="anatomy">
+  <dt>File "/home/ana/dc_virgula.py", line 2</dt><dd>Sem a palavra <code>Traceback</code>: é um erro de escrita, achado antes de o programa rodar.</dd>
+  <dt>^^^^^^^^^^^^^^</dt><dd>Marca <code>produto, preco</code>: o "alvo" da comprehension, o que ela monta a cada volta.</dd>
+  <dt>SyntaxError: did you forget parentheses around the comprehension target?</dt><dd>"Você esqueceu os parênteses em volta do alvo da comprehension?". Com a vírgula, o Python acha que você queria um <strong>conjunto de tuplas</strong>, que se escreve <code>{(produto, preco) for …}</code>, e sugere os parênteses.</dd>
+</dl>
+<p><strong>Como consertar:</strong> para um dicionário, o que separa chave e valor é o <strong>dois-pontos</strong>: <code>{produto: preco for …}</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Usar uma variável que o <code>for</code> não criou</strong>
+<pre class="file" data-file="dc_nameerror.py">precos = {"pão": 0.50, "leite": 4.75}
+copia = {produto: preco for produto in precos}
+</pre>
+<pre class="term">$ python3 dc_nameerror.py
+Traceback (most recent call last):
+  File "/home/ana/dc_nameerror.py", line 2, in &lt;module&gt;
+    copia = {produto: preco for produto in precos}
+                      ^^^^^
+NameError: name 'preco' is not defined. Did you mean: 'precos'?
+</pre>
+<p>O <code>for</code> só criou <code>produto</code> (percorrendo as chaves); <code>preco</code> não existe. O Python ainda sugere <code>precos</code>, que é parecido, mas não é o que se quer. <strong>Como consertar:</strong> percorra os pares, <code>for produto, preco in precos.items()</code>, ou leia o valor pela chave: <code>{produto: precos[produto] for produto in precos}</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Esquecer o <code>items()</code></strong>
+<pre class="file" data-file="dc_sem_items.py">precos = {"pão": 0.50, "leite": 4.75}
+copia = {produto: preco for produto, preco in precos}
+</pre>
+<pre class="term">$ python3 dc_sem_items.py
+Traceback (most recent call last):
+  File "/home/ana/dc_sem_items.py", line 2, in &lt;module&gt;
+    copia = {produto: preco for produto, preco in precos}
+                                ^^^^^^^^^^^^^^
+ValueError: too many values to unpack (expected 2)
+</pre>
+<p>O mesmo erro da aula sobre percorrer: sem <code>items()</code>, o <code>for</code> entrega só a chave <code>"pão"</code>, e o Python tenta desempacotar suas 3 letras em 2 variáveis. <strong>Como consertar:</strong> <code>precos.items()</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Saiu um conjunto, não um dicionário: sem erro</strong>
+<pre class="file" data-file="dc_set_vs_dict.py">precos = {"pão": 0.50, "leite": 4.75}
+a = {produto for produto, preco in precos.items()}
+b = {produto: preco for produto, preco in precos.items()}
+print(type(a))
+print(type(b))
+</pre>
+<pre class="term">$ python3 dc_set_vs_dict.py
+&lt;class 'set'&gt;
+&lt;class 'dict'&gt;
+</pre>
+<p>Sem o <code>: preco</code>, a linha continua válida, mas monta um <strong>conjunto</strong> só com os nomes. Nenhum erro aparece ali; ele só vai aparecer depois, quando você tentar ler <code>a["pão"]</code>. <strong>Como perceber:</strong> o que decide entre dicionário e conjunto é o dois-pontos. Na dúvida, <code>print(type(…))</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Inverter com valores repetidos: alguém some</strong>
+<pre class="file" data-file="dc_inverter_perde.py">notas = {"Ana": 9, "Bia": 6, "Caio": 9}
+quem_tirou = {nota: nome for nome, nota in notas.items()}
+print(quem_tirou)
+</pre>
+<pre class="term">$ python3 dc_inverter_perde.py
+{9: 'Caio', 6: 'Bia'}
+</pre>
+<p>A Ana sumiu. Ela e o Caio tiraram 9, e a chave <code>9</code> só pode existir uma vez: primeiro recebeu <code>'Ana'</code>, depois foi trocada por <code>'Caio'</code>, sem aviso. É a regra de <a href="dicionarios-alterar.html">sempre</a>: chave repetida, vale a última. <strong>Como evitar:</strong> só inverta quando os valores forem únicos (ramais, matrículas). Para agrupar quem tirou cada nota, o valor precisa ser uma lista, montada com um <code>for</code> comum.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>{x: f(x) for x in seq}</code></td><td>Dicionário: chave <code>x</code>, valor <code>f(x)</code></td></tr>
+<tr><td><code>{k: g(v) for k, v in d.items()}</code></td><td>Dicionário novo com os valores transformados</td></tr>
+<tr><td><code>{k: v for k, v in d.items() if teste}</code></td><td>Dicionário novo só com os pares que passam no teste</td></tr>
+<tr><td><code>{k: (a if teste else b) for k, v in d.items()}</code></td><td>Escolhe o valor conforme o teste</td></tr>
+<tr><td><code>{k: v for k, v in zip(chaves, valores)}</code> / <code>dict(zip(…))</code></td><td>Dicionário a partir de duas listas</td></tr>
+<tr><td><code>{v: k for k, v in d.items()}</code></td><td>Inverte chaves e valores (os valores precisam ser únicos)</td></tr>
+<tr><td><code>{f(x) for x in seq}</code></td><td>Conjunto (sem repetidos)</td></tr>
+<tr><td><code>tuple(f(x) for x in seq)</code></td><td>Tupla (com parênteses sozinhos é um gerador)</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>SyntaxError: did you forget parentheses around the comprehension target?</code></td><td>Vírgula no lugar do dois-pontos entre chave e valor</td></tr>
+<tr><td><code>NameError: name 'preco' is not defined</code></td><td>Usou uma variável que o <code>for</code> da comprehension não cria</td></tr>
+<tr><td><code>ValueError: too many values to unpack (expected 2)</code></td><td>Faltou o <code>.items()</code></td></tr>
+<tr><td><code>&lt;class 'set'&gt;</code> onde esperava <code>dict</code></td><td>Faltou o <code>chave:</code></td></tr>
+<tr><td>Um item sumiu, sem erro</td><td>Duas voltas geraram a mesma chave: vale a última</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O símbolo que faz o dicionário</h3>
+<p>Complete o que separa a chave do valor:</p>
+<div class="ex-code">{n<input data-answer=":" aria-label="símbolo"> n * 10 for n in range(3)}</div>
+</div>
+
+<div class="exercise">
+<h3>2. O resultado</h3>
+<p>Escreva, como o Python mostra, o resultado de <code>{n: n + 1 for n in range(3)}</code>:</p>
+<div class="ex-code"><input data-answer="{0: 1, 1: 2, 2: 3}" aria-label="resultado"></div>
+</div>
+
+<div class="exercise">
+<h3>3. O filtro</h3>
+<p>Complete a palavra que fica só com os pares de valor maior que 0:</p>
+<div class="ex-code">{k: v for k, v in d.items() <input data-answer="if" aria-label="palavra"> v &gt; 0}</div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Qual o tipo de <code>{len(p) for p in ["sol", "mar"]}</code>?</p>
+<label><input type="radio" name="q4"> <code>dict</code></label>
+<label><input type="radio" name="q4"> <code>list</code></label>
+<label><input type="radio" name="q4"> <code>set</code></label>
+<label><input type="radio" name="q4"> <code>tuple</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. <code>{v: k for k, v in {"a": 1, "b": 1}.items()}</code> dá o quê?</p>
+<label><input type="radio" name="q5"> <code>{1: 'a', 1: 'b'}</code></label>
+<label><input type="radio" name="q5"> <code>{1: 'b'}</code></label>
+<label><input type="radio" name="q5"> <code>{1: ['a', 'b']}</code></label>
+<label><input type="radio" name="q5"> Dá erro, porque a chave se repete</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Para montar um dicionário a partir de <code>nomes</code> e <code>notas</code>, duas listas na mesma ordem, o jeito mais curto é:</p>
+<label><input type="radio" name="q6"> <code>dict(zip(nomes, notas))</code></label>
+<label><input type="radio" name="q6"> <code>{nomes: notas}</code></label>
+<label><input type="radio" name="q6"> <code>dict(nomes + notas)</code></label>
+<label><input type="radio" name="q6"> <code>{nome for nome in nomes}</code></label>
+</div>
+
+<h3>Missão final: os nomes da turma</h3>
+
+<div class="trypy" data-goal="out:{'Ana': 3, 'Bia': 3, 'Caio': 4, 'Bruno': 5};;out:['A', 'B', 'C'];;src:\{[^}]*\bfor\b">
+<p class="try-task"><strong>Missão:</strong> com a lista de nomes (repare que a Ana aparece duas vezes), crie com comprehensions: <code>tamanhos</code>, um dicionário de cada nome para o tamanho dele, e <code>iniciais</code>, o conjunto das primeiras letras. O <code>print</code> das iniciais já usa <code>sorted()</code> para sair sempre igual.</p>
+<pre class="script" data-file="main.py">nomes = ["Ana", "Bia", "Caio", "Ana", "Bruno"]
+tamanhos = {}
+iniciais = set()
+print(tamanhos)
+print(sorted(iniciais))
+</pre>
+<pre class="solucao" data-file="main.py">nomes = ["Ana", "Bia", "Caio", "Ana", "Bruno"]
+tamanhos = {nome: len(nome) for nome in nomes}
+iniciais = {nome[0] for nome in nomes}
+print(tamanhos)
+print(sorted(iniciais))
+</pre>
+</div>
+
+<p>A Ana repetida não aparece duas vezes no dicionário (a chave é única) nem conta duas vezes o "A" no conjunto.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>{chave: valor for item in sequência}</code> monta um dicionário numa linha; <code>{valor for item in sequência}</code> monta um conjunto. O dois-pontos decide qual.</li>
+  <li>Com <code>for k, v in d.items()</code>, transforme as chaves ou os valores de um dicionário que já existe; o original não muda.</li>
+  <li>Um <code>if</code> no fim filtra; um <code>if … else …</code> no valor escolhe o valor.</li>
+  <li><code>dict(zip(chaves, valores))</code> junta duas listas; <code>{v: k for k, v in d.items()}</code> inverte (com valores únicos).</li>
+  <li>Parênteses não fazem "tuple comprehension": fazem um gerador. Use <code>tuple(…)</code>.</li>
+  <li>Vírgula no lugar do dois-pontos dá <code>SyntaxError</code>; faltar o <code>chave:</code> não dá erro, mas cria um conjunto.</li>
+  <li>Se a regra não cabe numa linha clara, prefira o <code>for</code> comum.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
