@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Enum — um conjunto fixo de opções com nome | Guia Python</title>
+<meta name="description" content="Enum para quem está começando: por que trocar textos soltos como 'pago' e 'enviado' por membros de uma enumeração, .name e .value, auto(), percorrer com for, buscar pelo valor e pelo nome, Enum com métodos e com match, StrEnum e IntEnum, e os erros reais do Python 3.14 (Did you mean, is not a valid, cannot reassign member).">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Enum</span></h1>
+
+<p class="intro">Um pedido da lojinha da Ana passa por poucas situações: pendente, pago, enviado, entregue. Um copo de café tem três tamanhos: pequeno, médio, grande. São listas <strong>fechadas</strong> de opções, que não mudam enquanto o programa roda. Guardar essas opções como textos soltos (<code>"pago"</code>, <code>"enviado"</code>) funciona, até alguém digitar <code>"enviadoo"</code> e o programa seguir em frente sem reclamar. A <strong>enumeração</strong>, ou <code>Enum</code>, dá um nome oficial para cada opção, e o Python passa a conferir.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O problema dos textos soltos, e como o <code>Enum</code> resolve.</li>
+  <li>A criar uma enumeração e a usar os <strong>membros</strong> (<code>Status.PAGO</code>).</li>
+  <li>O <code>.name</code> e o <code>.value</code> de cada membro.</li>
+  <li>A numerar sozinho com <code>auto()</code>.</li>
+  <li>A percorrer todas as opções com <code>for</code>.</li>
+  <li>A achar o membro pelo valor (<code>Status(2)</code>) e pelo nome (<code>Status["PAGO"]</code>).</li>
+  <li>Enumerações com métodos, com <code>match</code>, e as variações <code>StrEnum</code> e <code>IntEnum</code>.</li>
+  <li>Os erros reais: <code>Did you mean</code>, <code>is not a valid Status</code>, <code>KeyError</code>, <code>cannot reassign member</code>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: o carimbo em vez da caneta</h2>
+<p>No balcão da lojinha, a Ana marcava a situação de cada pedido escrevendo à mão: "pago", "enviado". Um dia alguém escreveu "env." e outro escreveu "enviadoo", e ninguém mais sabia quais pedidos tinham saído. A solução foi comprar <strong>carimbos</strong>: um PENDENTE, um PAGO, um ENVIADO, um ENTREGUE. Com carimbo, não tem como errar a letra, e não aparece uma situação que não existe.</p>
+<p>O <code>Enum</code> é a caixa de carimbos. Você define as opções uma vez, cada uma com um nome, e no resto do programa só usa os carimbos.</p>
+
+<hr>
+
+<h2>1. O problema dos textos soltos</h2>
+
+<pre class="file" data-file="com_texto.py">status = "pago"
+
+if status == "pago":
+    print("Pode separar o pedido.")
+
+status = "enviadoo"  # erro de digitação
+
+if status == "enviado":
+    print("O pedido saiu para entrega.")
+print("Fim:", status)
+</pre>
+
+<pre class="term">$ python3 com_texto.py
+Pode separar o pedido.
+Fim: enviadoo
+</pre>
+
+<p>O aviso de entrega nunca apareceu, e o Python não reclamou de nada. Para ele, <code>"enviadoo"</code> é um texto como outro qualquer, só não é igual a <code>"enviado"</code>. Num programa grande, um erro assim pode levar dias para ser encontrado.</p>
+
+<hr>
+
+<h2>2. A primeira enumeração</h2>
+
+<pre class="file" data-file="primeiro.py">from enum import Enum
+
+
+class Status(Enum):
+    PENDENTE = 1
+    PAGO = 2
+    ENVIADO = 3
+
+
+pedido = Status.PAGO
+print(pedido)
+print(repr(pedido))
+print(pedido.name)
+print(pedido.value)
+print(type(pedido))
+print(pedido == Status.PAGO)
+print(pedido is Status.PAGO)
+</pre>
+
+<dl class="anatomy">
+  <dt>from enum import Enum</dt><dd>Traz a classe <code>Enum</code> do módulo <code>enum</code>, que já vem com o Python.</dd>
+  <dt>class Status(Enum):</dt><dd>Uma classe que <strong>herda</strong> de <code>Enum</code> (aula <a href="heranca.html">Herança</a>). É isso que a transforma numa enumeração.</dd>
+  <dt>PENDENTE = 1</dt><dd>Um <strong>membro</strong> da enumeração: um "carimbo". À esquerda, o <strong>nome</strong>; à direita, o <strong>valor</strong>. Os nomes vão em MAIÚSCULAS, porque são constantes: não mudam nunca.</dd>
+  <dt>Status.PAGO</dt><dd>Usa o membro: o nome da enumeração, um ponto e o nome do membro.</dd>
+  <dt>.name</dt><dd>O nome do membro, como texto: <code>'PAGO'</code>.</dd>
+  <dt>.value</dt><dd>O valor que você deu a ele: <code>2</code>.</dd>
+</dl>
+
+<pre class="term">$ python3 primeiro.py
+Status.PAGO
+&lt;Status.PAGO: 2&gt;
+PAGO
+2
+&lt;enum 'Status'&gt;
+True
+True
+</pre>
+
+<ul>
+  <li>O <code>print</code> mostra <code>Status.PAGO</code>: de qual enumeração e qual membro.</li>
+  <li>O <code>repr</code> (aula <a href="metodos-especiais.html">Métodos Especiais</a>) mostra também o valor: <code>&lt;Status.PAGO: 2&gt;</code>.</li>
+  <li>O tipo é <code>&lt;enum 'Status'&gt;</code>: cada membro é um objeto da enumeração <code>Status</code>.</li>
+  <li>Cada membro existe <strong>uma vez só</strong> no programa inteiro. Por isso tanto <code>==</code> quanto <code>is</code> funcionam para comparar (a documentação do Python recomenda o <code>is</code>).</li>
+</ul>
+
+<h3>Agora o erro de digitação aparece</h3>
+
+<pre class="file" data-file="digitacao.py">from enum import Enum
+
+
+class Status(Enum):
+    PENDENTE = 1
+    PAGO = 2
+    ENVIADO = 3
+
+
+pedido = Status.ENVIADOO
+</pre>
+
+<pre class="term">$ python3 digitacao.py
+Traceback (most recent call last):
+  File "/home/ana/digitacao.py", line 10, in &lt;module&gt;
+    pedido = Status.ENVIADOO
+             ^^^^^^^^^^^^^^^
+AttributeError: type object 'Status' has no attribute 'ENVIADOO'. Did you mean: 'ENVIADO'?
+</pre>
+
+<p>"A classe <code>Status</code> não tem o atributo <code>ENVIADOO</code>. Você quis dizer <code>ENVIADO</code>?" O erro aparece <strong>na hora</strong>, na linha certa, e o Python 3.14 ainda sugere o nome certo. É o carimbo que não existe: ninguém consegue usá-lo.</p>
+
+<div class="trypy" data-goal="out:ENVIADO 3;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa usa <code>Status.ENVIADO</code>, mas a enumeração ainda não tem esse membro (rode para ver o erro). Acrescente <code>ENVIADO</code>, com o valor 3.</p>
+<pre class="script" data-file="main.py">from enum import Enum
+
+
+class Status(Enum):
+    PENDENTE = 1
+    PAGO = 2
+
+
+pedido = Status.ENVIADO
+print(pedido.name, pedido.value)
+</pre>
+<pre class="solucao" data-file="main.py">from enum import Enum
+
+
+class Status(Enum):
+    PENDENTE = 1
+    PAGO = 2
+    ENVIADO = 3
+
+
+pedido = Status.ENVIADO
+print(pedido.name, pedido.value)
+</pre>
+</div>
+
+<hr>
+
+<h2>3. <code>auto()</code>: deixe o Python numerar</h2>
+<p>Muitas vezes o valor não importa: você só quer que cada membro seja diferente dos outros. Em vez de numerar à mão (e correr o risco de repetir um número), use <code>auto()</code>:</p>
+
+<pre class="file" data-file="auto.py">from enum import Enum, auto
+
+
+class Status(Enum):
+    PENDENTE = auto()
+    PAGO = auto()
+    ENVIADO = auto()
+    ENTREGUE = auto()
+
+
+print(Status.PENDENTE.value, Status.ENTREGUE.value)
+print(repr(Status.ENVIADO))
+</pre>
+
+<pre class="term">$ python3 auto.py
+1 4
+&lt;Status.ENVIADO: 3&gt;
+</pre>
+
+<p>O <code>auto()</code> deu 1, 2, 3 e 4, na ordem. Se amanhã a Ana inserir <code>CANCELADO</code> no meio, a numeração se ajusta sozinha.</p>
+
+<hr>
+
+<h2>4. O valor pode ser qualquer coisa</h2>
+<p>O valor não precisa ser um número de ordem. Na lojinha, cada tamanho de café tem um preço, e o preço pode ser o próprio valor do membro. E, como a enumeração é uma lista fechada, dá para percorrê-la com <code>for</code> (aula <a href="for.html">for</a>):</p>
+
+<pre class="file" data-file="percorrer.py">from enum import Enum
+
+
+class Tamanho(Enum):
+    PEQUENO = 4.50
+    MEDIO = 6.00
+    GRANDE = 7.50
+
+
+for tamanho in Tamanho:
+    print(tamanho.name, tamanho.value)
+
+print(list(Tamanho))
+print(len(Tamanho))
+print(Tamanho.MEDIO in Tamanho)
+</pre>
+
+<pre class="term">$ python3 percorrer.py
+PEQUENO 4.5
+MEDIO 6.0
+GRANDE 7.5
+[&lt;Tamanho.PEQUENO: 4.5&gt;, &lt;Tamanho.MEDIO: 6.0&gt;, &lt;Tamanho.GRANDE: 7.5&gt;]
+3
+True
+</pre>
+
+<ul>
+  <li>O <code>for</code> passa pelos membros <strong>na ordem em que foram escritos</strong>.</li>
+  <li><code>list(Tamanho)</code> junta todos numa lista (repare no <code>repr</code> de cada um, com os sinais <code>&lt; &gt;</code>).</li>
+  <li><code>len(Tamanho)</code> conta os membros: 3.</li>
+  <li><code>in</code> pergunta se um membro pertence à enumeração.</li>
+</ul>
+<p>O nome do membro é <code>MEDIO</code>, sem acento, pelo mesmo costume das variáveis: acentos funcionam em nomes, mas não são o costume.</p>
+
+<div class="trypy" data-goal="outre:^PEQUENO: R\$ 4\.50\nMEDIO: R\$ 6\.00\nGRANDE: R\$ 7\.50\n$;;src:\bfor\b">
+<p class="try-task"><strong>Missão:</strong> monte o cardápio de tamanhos. Troque o <code>print(Tamanho)</code> por um <code>for</code> que mostre, para cada tamanho, uma linha como <code>PEQUENO: R$ 4.50</code> (use <code>.name</code>, <code>.value</code> e o <code>:.2f</code> da f-string).</p>
+<pre class="script" data-file="main.py">from enum import Enum
+
+
+class Tamanho(Enum):
+    PEQUENO = 4.50
+    MEDIO = 6.00
+    GRANDE = 7.50
+
+
+print(Tamanho)
+</pre>
+<pre class="solucao" data-file="main.py">from enum import Enum
+
+
+class Tamanho(Enum):
+    PEQUENO = 4.50
+    MEDIO = 6.00
+    GRANDE = 7.50
+
+
+for tamanho in Tamanho:
+    print(f"{tamanho.name}: R$ {tamanho.value:.2f}")
+</pre>
+</div>
+
+<hr>
+
+<h2>5. Do valor ou do nome para o membro</h2>
+<p>Os dados nem sempre chegam como membros. Do banco de dados chega o número <code>2</code>; de um formulário chega o texto <code>"pago"</code>. A enumeração converte nos dois sentidos:</p>
+
+<pre class="file" data-file="buscar.py">from enum import Enum
+
+
+class Status(Enum):
+    PENDENTE = 1
+    PAGO = 2
+    ENVIADO = 3
+
+
+print(Status(2))
+print(Status["ENVIADO"])
+texto = "pago"
+print(Status[texto.upper()])
+</pre>
+
+<dl class="anatomy">
+  <dt>Status(2)</dt><dd>Com <strong>parênteses</strong>: procura pelo <strong>valor</strong>. "Qual membro vale 2?"</dd>
+  <dt>Status["ENVIADO"]</dt><dd>Com <strong>colchetes</strong>, como num dicionário: procura pelo <strong>nome</strong>.</dd>
+  <dt>texto.upper()</dt><dd>Os nomes estão em maiúsculas; o <code>.upper()</code> (aula <a href="strings-metodos.html">Métodos de Texto</a>) converte o <code>"pago"</code> do formulário em <code>"PAGO"</code>.</dd>
+</dl>
+
+<pre class="term">$ python3 buscar.py
+Status.PAGO
+Status.ENVIADO
+Status.PAGO
+</pre>
+
+<p>E se o valor ou o nome não existir? O Python não inventa um membro: dá erro. Os dois erros estão em <a href="#errado">Quando dá errado</a>.</p>
+
+<hr>
+
+<h2>6. Membro não é número</h2>
+
+<pre class="file" data-file="comparar_numero.py">from enum import Enum
+
+
+class Status(Enum):
+    PENDENTE = 1
+    PAGO = 2
+    ENVIADO = 3
+
+
+print(Status.PAGO == 2)
+print(Status.PAGO.value == 2)
+print(Status.PAGO &lt; Status.ENVIADO)
+</pre>
+
+<pre class="term">$ python3 comparar_numero.py
+False
+True
+Traceback (most recent call last):
+  File "/home/ana/comparar_numero.py", line 12, in &lt;module&gt;
+    print(Status.PAGO &lt; Status.ENVIADO)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: '&lt;' not supported between instances of 'Status' and 'Status'
+</pre>
+
+<p>Três surpresas comuns:</p>
+<ul>
+  <li><code>Status.PAGO == 2</code> é <code>False</code>. O membro <strong>tem</strong> o valor 2, mas não <strong>é</strong> o número 2. É um carimbo, não um número.</li>
+  <li>Para comparar com o número, compare o <code>.value</code>: <code>Status.PAGO.value == 2</code>.</li>
+  <li>Membros de um <code>Enum</code> comum não têm ordem: o <code>&lt;</code> dá <code>TypeError</code> (o mesmo erro da aula <a href="metodos-especiais.html">Métodos Especiais</a>). Se precisar comparar, compare os valores (<code>Status.PAGO.value &lt; Status.ENVIADO.value</code>) ou use o <code>IntEnum</code> (seção 8).</li>
+</ul>
+
+<hr>
+
+<h2>7. Enumerações com métodos, e com <code>match</code></h2>
+<p>Uma enumeração é uma classe, então pode ter métodos. Dentro deles, o <code>self</code> é o membro:</p>
+
+<pre class="file" data-file="metodos.py">from enum import Enum
+
+
+class Status(Enum):
+    PENDENTE = 1
+    PAGO = 2
+    ENVIADO = 3
+    ENTREGUE = 4
+
+    def descricao(self):
+        return self.name.capitalize()
+
+    def terminou(self):
+        return self is Status.ENTREGUE
+
+
+for status in Status:
+    print(status.descricao(), status.terminou())
+</pre>
+
+<pre class="term">$ python3 metodos.py
+Pendente False
+Pago False
+Enviado False
+Entregue True
+</pre>
+
+<p>O <code>match</code> (aula <a href="match.html">match e case</a>) combina muito bem com enumerações: um <code>case</code> para cada membro.</p>
+
+<pre class="file" data-file="com_match.py">from enum import Enum
+
+
+class Status(Enum):
+    PENDENTE = 1
+    PAGO = 2
+    ENVIADO = 3
+
+
+def aviso(status):
+    match status:
+        case Status.PENDENTE:
+            return "Aguardando o pagamento."
+        case Status.PAGO:
+            return "Pagamento recebido, separando o pedido."
+        case Status.ENVIADO:
+            return "Saiu para entrega."
+
+
+for status in Status:
+    print(aviso(status))
+</pre>
+
+<pre class="term">$ python3 com_match.py
+Aguardando o pagamento.
+Pagamento recebido, separando o pedido.
+Saiu para entrega.
+</pre>
+
+<p>No <code>case</code>, escreva o membro com o nome da enumeração na frente (<code>Status.PAGO</code>). O ponto avisa ao <code>match</code> que é um valor a comparar.</p>
+
+<hr>
+
+<h2>8. Formas diferentes: <code>StrEnum</code> e <code>IntEnum</code></h2>
+<p>Às vezes você quer que os membros <strong>também</strong> se comportem como textos ou como números, para conversar com código que só conhece textos e números (um arquivo JSON, um banco de dados). Para isso existem duas variações:</p>
+
+<pre class="file" data-file="strenum.py">from enum import StrEnum, IntEnum
+
+
+class Cor(StrEnum):
+    AZUL = "azul"
+    VERDE = "verde"
+
+
+class Prioridade(IntEnum):
+    BAIXA = 1
+    ALTA = 2
+
+
+print(Cor.AZUL == "azul")
+print("Camiseta " + Cor.VERDE)
+print(Prioridade.ALTA &gt; Prioridade.BAIXA)
+print(Prioridade.ALTA + 10)
+</pre>
+
+<pre class="term">$ python3 strenum.py
+True
+Camiseta verde
+True
+12
+</pre>
+
+<p>Com <code>StrEnum</code>, <code>Cor.AZUL</code> é igual ao texto <code>"azul"</code> e pode ser somado a outros textos. Com <code>IntEnum</code>, os membros comparam com <code>&gt;</code> e fazem contas como números. O preço disso é perder parte da proteção: <code>Prioridade.ALTA + 10</code> dá 12, uma conta que provavelmente não faz sentido.</p>
+
+<div class="note">
+<strong>Versão</strong>
+<p>O <code>StrEnum</code> existe desde o Python 3.11; <code>Enum</code>, <code>IntEnum</code> e <code>auto()</code> são bem mais antigos. No Python 3.14 do guia (e no 3.13 do Debian 13), tudo desta aula funciona.</p>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Você precisa…</th><th>Use</th></tr>
+<tr><td>Uma lista fechada de opções, e o valor não importa</td><td><code>Enum</code> com <code>auto()</code></td></tr>
+<tr><td>Opções que carregam um dado (o preço do tamanho, o código do banco)</td><td><code>Enum</code> com os valores escritos</td></tr>
+<tr><td>Opções que precisam ser textos de verdade (gravar em JSON, comparar com texto)</td><td><code>StrEnum</code></td></tr>
+<tr><td>Opções que precisam de ordem ou de contas (prioridade 1, 2, 3)</td><td><code>IntEnum</code></td></tr>
+<tr><td>Uma lista de valores que muda enquanto o programa roda</td><td>Uma lista ou um conjunto comum; o <code>Enum</code> é fixo</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Procurar um valor que não existe</strong>
+<pre class="file" data-file="valor_errado.py">from enum import Enum
+
+
+class Status(Enum):
+    PENDENTE = 1
+    PAGO = 2
+    ENVIADO = 3
+
+
+print(Status(9))
+</pre>
+<pre class="term">$ python3 valor_errado.py
+Traceback (most recent call last):
+  File "/home/ana/valor_errado.py", line 10, in &lt;module&gt;
+    print(Status(9))
+          ~~~~~~^^^
+  File "/usr/lib/python3.14/enum.py", line 708, in __call__
+    return cls.__new__(cls, value)
+           ~~~~~~~~~~~^^^^^^^^^^^^
+  File "/usr/lib/python3.14/enum.py", line 1193, in __new__
+    raise ve_exc
+ValueError: 9 is not a valid Status
+</pre>
+<p>Linha por linha:</p>
+<ul>
+  <li><code>File "/home/ana/valor_errado.py", line 10</code>: no seu arquivo, a linha 10, <code>Status(9)</code>. É ela que você vai consertar.</li>
+  <li>As duas entradas de <code>/usr/lib/python3.14/enum.py</code> são o código do próprio módulo <code>enum</code>, por onde a busca passou. Não são o defeito.</li>
+  <li><code>ValueError: 9 is not a valid Status</code>: "9 não é um <code>Status</code> válido". Nenhum membro vale 9.</li>
+</ul>
+<p><strong>Como consertar:</strong> se o número vem de fora (do teclado, de um arquivo), trate o erro com <code>try</code>/<code>except ValueError</code> (aula <a href="try-except.html">try e except</a>), como na missão final.</p>
+</div>
+
+<div class="cenario">
+<strong>Procurar um nome em minúsculas</strong>
+<pre class="file" data-file="nome_errado.py">from enum import Enum
+
+
+class Status(Enum):
+    PENDENTE = 1
+    PAGO = 2
+    ENVIADO = 3
+
+
+print(Status["pago"])
+</pre>
+<pre class="term">$ python3 nome_errado.py
+Traceback (most recent call last):
+  File "/home/ana/nome_errado.py", line 10, in &lt;module&gt;
+    print(Status["pago"])
+          ~~~~~~^^^^^^^^
+  File "/usr/lib/python3.14/enum.py", line 775, in __getitem__
+    return cls._member_map_[name]
+           ~~~~~~~~~~~~~~~~^^^^^^
+KeyError: 'pago'
+</pre>
+<p>Com colchetes, a busca é como num dicionário (repare no <code>_member_map_</code>, o dicionário interno de membros), e o erro é o mesmo de uma chave que não existe: <code>KeyError: 'pago'</code>. O nome do membro é <code>PAGO</code>, e maiúsculas contam. <strong>Como consertar:</strong> <code>Status[texto.upper()]</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Tentar mudar um membro</strong>
+<pre class="file" data-file="reatribuir.py">from enum import Enum
+
+
+class Status(Enum):
+    PENDENTE = 1
+    PAGO = 2
+
+
+Status.PAGO = 5
+</pre>
+<pre class="term">$ python3 reatribuir.py
+Traceback (most recent call last):
+  File "/home/ana/reatribuir.py", line 9, in &lt;module&gt;
+    Status.PAGO = 5
+    ^^^^^^^^^^^
+  File "/usr/lib/python3.14/enum.py", line 821, in __setattr__
+    raise AttributeError('cannot reassign member %r' % (name, ))
+AttributeError: cannot reassign member 'PAGO'
+</pre>
+<p>"Não é possível reatribuir o membro <code>PAGO</code>." Os carimbos são fixos: é justamente para isso que o <code>Enum</code> existe. Se o pedido mudou de situação, mude a <strong>variável</strong> do pedido (<code>pedido = Status.ENVIADO</code>), não o carimbo.</p>
+</div>
+
+<div class="cenario">
+<strong>O mesmo nome duas vezes</strong>
+<pre class="file" data-file="repetido.py">from enum import Enum
+
+
+class Status(Enum):
+    PENDENTE = 1
+    PAGO = 2
+    PAGO = 3
+</pre>
+<pre class="term">$ python3 repetido.py
+Traceback (most recent call last):
+  File "/home/ana/repetido.py", line 4, in &lt;module&gt;
+    class Status(Enum):
+    ...&lt;2 lines&gt;...
+        PAGO = 3
+  File "/home/ana/repetido.py", line 7, in Status
+    PAGO = 3
+    ^^^^
+  File "/usr/lib/python3.14/enum.py", line 391, in __setitem__
+    raise TypeError('%r already defined as %r' % (key, self[key]))
+TypeError: 'PAGO' already defined as 2
+</pre>
+<p>"<code>PAGO</code> já foi definido como 2." O rastro aponta a linha 7, o segundo <code>PAGO</code> (o <code>...&lt;2 lines&gt;...</code> é o Python resumindo as linhas da classe que não interessam). Numa classe comum, a segunda linha apagaria a primeira sem aviso; no <code>Enum</code>, cada nome é único. <strong>Como consertar:</strong> dê outro nome ao membro, ou apague a linha repetida.</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu o <code>import</code></strong>
+<pre class="file" data-file="sem_import.py">class Status(Enum):
+    PENDENTE = 1
+</pre>
+<pre class="term">$ python3 sem_import.py
+Traceback (most recent call last):
+  File "/home/ana/sem_import.py", line 1, in &lt;module&gt;
+    class Status(Enum):
+                 ^^^^
+NameError: name 'Enum' is not defined
+</pre>
+<p><strong>Como consertar:</strong> <code>from enum import Enum</code> (e <code>auto</code>, <code>StrEnum</code> ou <code>IntEnum</code>, se usar) no começo do arquivo.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>from enum import Enum, auto</code></td><td>Traz a classe <code>Enum</code> e o <code>auto</code></td></tr>
+<tr><td><code>class Status(Enum):</code></td><td>Cria uma enumeração</td></tr>
+<tr><td><code>PAGO = 2</code> / <code>PAGO = auto()</code></td><td>Um membro, com valor escrito ou automático</td></tr>
+<tr><td><code>Status.PAGO</code></td><td>Usa um membro</td></tr>
+<tr><td><code>membro.name</code> / <code>membro.value</code></td><td>O nome (<code>'PAGO'</code>) / o valor (<code>2</code>)</td></tr>
+<tr><td><code>for s in Status:</code></td><td>Percorre os membros, na ordem escrita</td></tr>
+<tr><td><code>list(Status)</code>, <code>len(Status)</code></td><td>Todos os membros numa lista / quantos são</td></tr>
+<tr><td><code>Status(2)</code></td><td>Acha o membro pelo valor (ou <code>ValueError</code>)</td></tr>
+<tr><td><code>Status["PAGO"]</code></td><td>Acha o membro pelo nome (ou <code>KeyError</code>)</td></tr>
+<tr><td><code>pedido is Status.PAGO</code></td><td>Compara (também vale <code>==</code>)</td></tr>
+<tr><td><code>StrEnum</code> / <code>IntEnum</code></td><td>Membros que também são textos / números</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>AttributeError: type object 'Status' has no attribute 'X'. Did you mean: …?</code></td><td>Nome do membro digitado errado</td></tr>
+<tr><td><code>ValueError: 9 is not a valid Status</code></td><td><code>Status(9)</code>: nenhum membro tem esse valor</td></tr>
+<tr><td><code>KeyError: 'pago'</code></td><td><code>Status["pago"]</code>: o nome não existe (maiúsculas contam)</td></tr>
+<tr><td><code>Status.PAGO == 2</code> dá <code>False</code></td><td>O membro não é o número: compare <code>.value</code></td></tr>
+<tr><td><code>'&lt;' not supported between instances of 'Status' and 'Status'</code></td><td><code>Enum</code> comum não tem ordem: compare <code>.value</code> ou use <code>IntEnum</code></td></tr>
+<tr><td><code>AttributeError: cannot reassign member 'PAGO'</code></td><td>Tentou mudar um membro</td></tr>
+<tr><td><code>TypeError: 'PAGO' already defined as 2</code></td><td>Nome repetido na enumeração</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O nome e o valor</h3>
+<p>Com <code>class Tamanho(Enum): PEQUENO = 4.50; MEDIO = 6.00</code>, complete:</p>
+<div class="ex-code">Tamanho.MEDIO.<input data-answer="name" aria-label="atributo do nome"> &nbsp;# dá 'MEDIO'<br>Tamanho.MEDIO.<input data-answer="value" aria-label="atributo do valor"> &nbsp;# dá 6.0</div>
+</div>
+
+<div class="exercise">
+<h3>2. Pelo valor</h3>
+<p>Na enumeração <code>Status</code> desta aula, qual membro o Python devolve em <code>Status(3)</code>? Escreva como o <code>print</code> mostraria:</p>
+<div class="ex-code"><input data-answer="Status.ENVIADO" aria-label="resultado"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">3. Qual é a principal vantagem de <code>Status.ENVIADO</code> sobre o texto <code>"enviado"</code>?</p>
+<label><input type="radio" name="q3"> Ocupa menos memória</label>
+<label><input type="radio" name="q3"> Pode ser mudado depois</label>
+<label><input type="radio" name="q3"> Um erro de digitação vira um erro na hora, em vez de passar calado</label>
+<label><input type="radio" name="q3"> Aparece com acento no <code>print</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. <code>class Status(Enum): PENDENTE = 1; PAGO = 2</code>. Quanto dá <code>Status.PAGO == 2</code>?</p>
+<label><input type="radio" name="q4"> <code>True</code></label>
+<label><input type="radio" name="q4"> <code>False</code>: o membro tem o valor 2, mas não é o número 2</label>
+<label><input type="radio" name="q4"> <code>TypeError</code></label>
+<label><input type="radio" name="q4"> <code>Status.PAGO</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. O que <code>auto()</code> faz?</p>
+<label><input type="radio" name="q5"> Cria os membros sozinho, sem você escrever os nomes</label>
+<label><input type="radio" name="q5"> Converte o membro em texto</label>
+<label><input type="radio" name="q5"> Ordena os membros</label>
+<label><input type="radio" name="q5"> Dá um valor automático para o membro (1, 2, 3…)</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. O texto <code>"enviado"</code> veio de um formulário. Como achar o membro <code>Status.ENVIADO</code>?</p>
+<label><input type="radio" name="q6"> <code>Status["enviado".upper()]</code></label>
+<label><input type="radio" name="q6"> <code>Status("enviado")</code></label>
+<label><input type="radio" name="q6"> <code>Status.enviado</code></label>
+<label><input type="radio" name="q6"> <code>Enum("enviado")</code></label>
+</div>
+
+<h3>Missão final: o pedido pelo número</h3>
+
+<div class="trypy" data-stdin="2" data-goal="outre:Situação do pedido: (Status\.)?PAGO;;semerro;;src:=\s*Status\(">
+<p class="try-task"><strong>Missão:</strong> o sistema da lojinha guarda a situação do pedido como um número. O programa lê esse número com <code>input()</code> (aqui, o 2). Converta o número no membro da enumeração e mostre a situação (<code>Situação do pedido: PAGO</code>, ou <code>Status.PAGO</code>, se você mostrar o membro inteiro). (O que acontece com um número que não existe, como o 9, está logo abaixo da caixa.)</p>
+<pre class="script" data-file="main.py">from enum import Enum
+
+
+class Status(Enum):
+    PENDENTE = 1
+    PAGO = 2
+    ENVIADO = 3
+    ENTREGUE = 4
+
+
+numero = int(input("Número da situação: "))
+try:
+    status = numero  # troque esta linha: converta o número num Status
+    print("Situação do pedido:", status)
+except ValueError:
+    print("Não existe situação com o número", numero)
+</pre>
+<pre class="solucao" data-file="main.py">from enum import Enum
+
+
+class Status(Enum):
+    PENDENTE = 1
+    PAGO = 2
+    ENVIADO = 3
+    ENTREGUE = 4
+
+
+numero = int(input("Número da situação: "))
+try:
+    status = Status(numero)
+    print("Situação do pedido:", status.name)
+except ValueError:
+    print("Não existe situação com o número", numero)
+</pre>
+</div>
+
+<p>Com a solução, o lab mostrou, digitando 2 e depois 9:</p>
+<pre class="term">$ python3 main.py
+Número da situação: 2
+Situação do pedido: PAGO
+$ python3 main.py
+Número da situação: 9
+Não existe situação com o número 9
+</pre>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Um <code>Enum</code> é uma lista <strong>fechada</strong> de opções com nome: <code>class Status(Enum):</code> e um membro por linha, em MAIÚSCULAS.</li>
+  <li>Cada membro tem <code>.name</code> (o nome, como texto) e <code>.value</code> (o valor). Use <code>auto()</code> quando o valor não importa.</li>
+  <li>Erro de digitação num membro vira <code>AttributeError</code> na hora (com "Did you mean"), em vez de passar calado como um texto errado.</li>
+  <li><code>for</code> percorre os membros na ordem escrita; <code>Status(2)</code> acha pelo valor, <code>Status["PAGO"]</code> pelo nome.</li>
+  <li>O membro não é o seu valor (<code>Status.PAGO == 2</code> é <code>False</code>) e não tem ordem; para isso existem <code>.value</code>, <code>IntEnum</code> e <code>StrEnum</code>.</li>
+  <li>Membros não podem ser mudados nem repetidos.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
