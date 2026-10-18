@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Gerenciadores de Contexto (with) — __enter__, __exit__ e contextmanager | Guia Python</title>
+<meta name="description" content="Gerenciadores de contexto em Python para quem está começando: o que o with faz por dentro, os métodos __enter__ e __exit__, por que o __exit__ roda mesmo quando dá erro, como engolir uma exceção, contextlib.contextmanager com yield e try/finally, suppress, vários with juntos e os erros reais do Python 3.14.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Gerenciadores de Contexto (with)</span></h1>
+
+<p class="intro">Desde a aula <a href="arquivos.html">Abrindo Arquivos</a>, você abre arquivos com <code>with open(…) as arquivo:</code> e confia que o Python vai fechá-los no fim. Mas quem fecha? E como o <code>with</code> sabe o que fazer com um arquivo? Nesta aula você vai ver o <code>with</code> por dentro: os dois métodos especiais que ele chama, <code>__enter__</code> e <code>__exit__</code>, e o atalho do módulo <code>contextlib</code> para escrever os seus com um gerador.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é um <strong>gerenciador de contexto</strong> e o problema que ele resolve.</li>
+  <li>O que o <code>with</code> faz por dentro, e por que ele é um <code>try</code>/<code>finally</code> disfarçado.</li>
+  <li>A criar o seu com <code>__enter__</code> e <code>__exit__</code>, e o que o <code>as</code> recebe.</li>
+  <li>O que o <code>__exit__</code> recebe quando dá erro, e como (e quando não) engolir a exceção.</li>
+  <li>A escrever um gerenciador com <code>@contextmanager</code>, <code>yield</code> e <code>try</code>/<code>finally</code>.</li>
+  <li><code>suppress</code> e vários gerenciadores no mesmo <code>with</code>.</li>
+  <li>Os erros reais: <code>does not support the context manager protocol</code>, <code>I/O operation on closed file</code>, <code>generator didn't yield</code> e a limpeza que não acontece.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a luz do quarto</h2>
+<p>Ao entrar no quarto, você acende a luz; ao sair, apaga. Tem gente que sempre esquece de apagar, principalmente quando sai com pressa (o telefone tocou, a panela ferveu). Uma solução é o <strong>sensor de presença</strong>: ele acende quando você entra e apaga quando você sai, <strong>não importa como</strong> você saiu.</p>
+<p>Muita coisa em programação tem esse formato "preparar, usar, arrumar": abrir e fechar um arquivo, conectar e desconectar de um banco de dados, travar e destravar um recurso. O <strong>gerenciador de contexto</strong> é o sensor de presença: o <code>with</code> marca o "quarto" (o bloco indentado), e o gerenciador cuida de preparar na entrada e de arrumar na saída, até quando a saída é por um erro.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Momento</th><th>Na luz do quarto</th><th>No arquivo</th><th>Método chamado</th></tr>
+<tr><td>Entrar no bloco <code>with</code></td><td>Acende a luz</td><td>Abre o arquivo</td><td><code>__enter__</code></td></tr>
+<tr><td>Dentro do bloco</td><td>Você lê o livro</td><td>Você lê e escreve</td><td>(o seu código)</td></tr>
+<tr><td>Sair do bloco (normal ou por erro)</td><td>Apaga a luz</td><td>Fecha o arquivo</td><td><code>__exit__</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. O <code>with</code> que você já conhece</h2>
+<p>O atributo <code>closed</code> ("fechado") de um arquivo mostra se ele já foi fechado. Olhe o valor dentro e fora do <code>with</code>:</p>
+
+<pre class="file" data-file="fechado.py">with open("compras.txt", "w", encoding="utf-8") as arquivo:
+    arquivo.write("pão\nleite\n")
+    print("Dentro do with, fechado?", arquivo.closed)
+
+print("Depois do with, fechado?", arquivo.closed)
+</pre>
+
+<pre class="term">$ python3 fechado.py
+Dentro do with, fechado? False
+Depois do with, fechado? True</pre>
+
+<p>Ninguém escreveu <code>arquivo.close()</code>, e mesmo assim, ao sair do bloco, o arquivo estava fechado. Repare também que a variável <code>arquivo</code> continua existindo depois do <code>with</code>: o que acabou foi o "contexto", não a variável.</p>
+
+<h3>O jeito antigo: <code>try</code> e <code>finally</code></h3>
+<p>Sem o <code>with</code>, para garantir o fechamento mesmo quando algo dá errado, é preciso um <code>try</code>/<code>finally</code> (aula <a href="else-finally.html">else e finally</a>). Este programa erra de propósito na linha 4: tenta gravar um número, e <code>write</code> só aceita texto.</p>
+
+<pre class="file" data-file="sem_with.py">arquivo = open("compras.txt", "w", encoding="utf-8")
+try:
+    arquivo.write("pão\n")
+    arquivo.write(10)
+finally:
+    arquivo.close()
+    print("Fechado?", arquivo.closed)
+</pre>
+
+<pre class="term">$ python3 sem_with.py
+Fechado? True
+Traceback (most recent call last):
+  File "/home/ana/sem_with.py", line 4, in &lt;module&gt;
+    arquivo.write(10)
+    ~~~~~~~~~~~~~^^^^
+TypeError: write() argument must be str, not int</pre>
+
+<p>O <code>finally</code> rodou <strong>antes</strong> de o erro aparecer: primeiro o Python arrumou a casa (<code>Fechado? True</code>), depois mostrou o traceback e parou. É exatamente isso que o <code>with</code> faz por você, em uma linha em vez de cinco.</p>
+
+<hr>
+
+<h2>2. O seu gerenciador: <code>__enter__</code> e <code>__exit__</code></h2>
+<p>Qualquer objeto pode ir num <code>with</code>, desde que tenha dois métodos especiais (aula <a href="metodos-especiais.html">Métodos Especiais</a>). A padaria da Ana abre e fecha todo dia; um gerenciador de contexto garante que ela nunca fique aberta:</p>
+
+<pre class="file" data-file="loja.py">class Expediente:
+    def __init__(self, loja):
+        self.loja = loja
+
+    def __enter__(self):
+        print(f"Abrindo a {self.loja}.")
+        return self
+
+    def __exit__(self, tipo, valor, rastro):
+        print(f"Fechando a {self.loja}.")
+        return False
+
+    def vender(self, produto):
+        print(f"  Vendido: {produto}")
+
+
+with Expediente("padaria") as dia:
+    dia.vender("pão")
+    dia.vender("café")
+
+print("Fim do dia.")
+</pre>
+
+<pre class="term">$ python3 loja.py
+Abrindo a padaria.
+  Vendido: pão
+  Vendido: café
+Fechando a padaria.
+Fim do dia.</pre>
+
+<dl class="anatomy">
+  <dt>with Expediente("padaria")</dt><dd>Cria o objeto, como sempre, e entrega para o <code>with</code>.</dd>
+  <dt>def __enter__(self):</dt><dd>"Entrar". O <code>with</code> chama este método antes da primeira linha do bloco. É o "preparar".</dd>
+  <dt>return self</dt><dd>O que o <code>__enter__</code> devolve vai para a variável do <code>as</code>. Aqui, o próprio objeto: por isso <code>dia.vender(…)</code> funciona. (O <code>open()</code> também devolve o próprio arquivo.)</dd>
+  <dt>as dia</dt><dd>O nome que recebe o retorno do <code>__enter__</code>. É opcional: <code>with Expediente("padaria"):</code> também vale, se você não precisar dele.</dd>
+  <dt>def __exit__(self, tipo, valor, rastro):</dt><dd>"Sair". O <code>with</code> chama este método quando o bloco acaba, de qualquer jeito. É o "arrumar". Os três parâmetros contam se houve erro (seção 3).</dd>
+  <dt>return False</dt><dd>"Não engoli nenhum erro": se uma exceção aconteceu no bloco, ela continua subindo. Na seção 3 você vê o <code>True</code>.</dd>
+</dl>
+
+<h3>O <code>with</code> por dentro</h3>
+<p>O <code>with</code> do <code>loja.py</code> faz, escondido, mais ou menos isto:</p>
+
+<pre class="file" data-file="por_dentro.py">class Expediente:
+    def __init__(self, loja):
+        self.loja = loja
+
+    def __enter__(self):
+        print(f"Abrindo a {self.loja}.")
+        return self
+
+    def __exit__(self, tipo, valor, rastro):
+        print(f"Fechando a {self.loja}.")
+        return False
+
+
+gerente = Expediente("padaria")
+dia = gerente.__enter__()
+try:
+    print("  vendendo...")
+finally:
+    gerente.__exit__(None, None, None)
+</pre>
+
+<pre class="term">$ python3 por_dentro.py
+Abrindo a padaria.
+  vendendo...
+Fechando a padaria.</pre>
+
+<ol class="passo">
+  <li>Avalia a expressão depois do <code>with</code> e guarda o gerenciador.</li>
+  <li>Chama <code>__enter__()</code> e põe o resultado na variável do <code>as</code>.</li>
+  <li>Roda o bloco dentro de um <code>try</code>.</li>
+  <li>No fim, chama <code>__exit__</code>: com <code>None, None, None</code> se tudo correu bem; com os dados da exceção se deu erro. (O <code>with</code> de verdade ainda decide, pelo retorno do <code>__exit__</code>, se a exceção continua.)</li>
+</ol>
+
+<div class="trypy" data-goal="out:Luz apagada.;;src:def\s+__exit__\s*\(;;semerro">
+<p class="try-task"><strong>Missão:</strong> a classe <code>Luz</code> só tem o <code>__enter__</code>. Rode e leia o erro. Depois escreva o <code>__exit__(self, tipo, valor, rastro)</code>, que mostra <code>Luz apagada.</code> e devolve <code>False</code>.</p>
+<pre class="script" data-file="main.py">class Luz:
+    def __enter__(self):
+        print("Luz acesa.")
+        return self
+
+
+with Luz():
+    print("Lendo o livro...")
+</pre>
+<pre class="solucao" data-file="main.py">class Luz:
+    def __enter__(self):
+        print("Luz acesa.")
+        return self
+
+    def __exit__(self, tipo, valor, rastro):
+        print("Luz apagada.")
+        return False
+
+
+with Luz():
+    print("Lendo o livro...")
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Quando dá erro dentro do bloco</h2>
+<p>A promessa do <code>with</code> é: o <code>__exit__</code> roda <strong>sempre</strong>. Vamos testar com uma divisão por zero no meio do expediente. Este <code>__exit__</code> também mostra o que recebeu:</p>
+
+<pre class="file" data-file="loja_erro.py">class Expediente:
+    def __init__(self, loja):
+        self.loja = loja
+
+    def __enter__(self):
+        print(f"Abrindo a {self.loja}.")
+        return self
+
+    def __exit__(self, tipo, valor, rastro):
+        print(f"Fechando a {self.loja}.")
+        print(f"  (tipo={tipo}, valor={valor!r})")
+        return False
+
+    def vender(self, produto):
+        print(f"  Vendido: {produto}")
+
+
+with Expediente("padaria") as dia:
+    dia.vender("pão")
+    troco = 10 / 0
+    dia.vender("café")
+
+print("Fim do dia.")
+</pre>
+
+<pre class="term">$ python3 loja_erro.py
+Abrindo a padaria.
+  Vendido: pão
+Fechando a padaria.
+  (tipo=&lt;class 'ZeroDivisionError'&gt;, valor=ZeroDivisionError('division by zero'))
+Traceback (most recent call last):
+  File "/home/ana/loja_erro.py", line 20, in &lt;module&gt;
+    troco = 10 / 0
+            ~~~^~~
+ZeroDivisionError: division by zero</pre>
+
+<ul>
+  <li>O <code>dia.vender("café")</code> não rodou: o erro da linha 20 interrompeu o bloco.</li>
+  <li>Mas a padaria <strong>fechou</strong>: o <code>__exit__</code> rodou antes de o traceback aparecer.</li>
+  <li>O <code>__exit__</code> recebeu o <strong>tipo</strong> da exceção (<code>ZeroDivisionError</code>), o <strong>valor</strong> (a exceção em si, com a mensagem) e o <strong>rastro</strong> (o traceback, um objeto que aqui não mostramos). O <code>!r</code> na f-string mostra o valor como o Python o escreveria no código.</li>
+  <li>Como o <code>__exit__</code> devolveu <code>False</code>, a exceção seguiu o caminho normal: traceback, programa parado, e o <code>Fim do dia.</code> nunca apareceu.</li>
+</ul>
+
+<h3>Engolindo a exceção: <code>return True</code></h3>
+<p>Se o <code>__exit__</code> devolver <code>True</code>, o <code>with</code> entende "eu cuidei do erro" e a exceção <strong>some</strong>. O programa segue depois do bloco:</p>
+
+<pre class="file" data-file="engolir.py">class IgnorarDivisaoPorZero:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, tipo, valor, rastro):
+        if tipo is ZeroDivisionError:
+            print("Divisão por zero ignorada.")
+            return True
+        return False
+
+
+with IgnorarDivisaoPorZero():
+    print("Antes da conta")
+    media = 10 / 0
+    print("Esta linha não roda")
+
+print("O programa continuou.")
+</pre>
+
+<pre class="term">$ python3 engolir.py
+Antes da conta
+Divisão por zero ignorada.
+O programa continuou.</pre>
+
+<div class="warning">
+<strong>Engula só o que você esperava</strong>
+<p>Repare no <code>if tipo is ZeroDivisionError</code>: o gerenciador só engole <strong>aquele</strong> erro. Um <code>__exit__</code> que sempre devolve <code>True</code> esconde todos os erros do bloco, inclusive os que você não imaginou (um nome digitado errado, um <code>TypeError</code>), e o programa segue com dados errados sem avisar ninguém. Na dúvida, devolva <code>False</code>. E lembre: a linha que deu erro e as seguintes, dentro do bloco, não rodam (<code>Esta linha não roda</code>).</p>
+</div>
+
+<hr>
+
+<h2>4. O atalho: <code>@contextmanager</code></h2>
+<p>Escrever uma classe com dois métodos para "abrir e fechar a padaria" é muita cerimônia. O módulo <code>contextlib</code> tem o decorador <code>@contextmanager</code> (aula <a href="decoradores.html">Decoradores</a>) que transforma um <strong>gerador</strong> (aula <a href="geradores.html">Geradores</a>) em gerenciador de contexto:</p>
+
+<pre class="file" data-file="gerador.py">from contextlib import contextmanager
+
+
+@contextmanager
+def expediente(loja):
+    print(f"Abrindo a {loja}.")
+    try:
+        yield loja.upper()
+    finally:
+        print(f"Fechando a {loja}.")
+
+
+with expediente("padaria") as placa:
+    print("  Placa na porta:", placa)
+
+print("---")
+
+with expediente("farmácia"):
+    print("  Vendendo...")
+    raise ValueError("faltou troco")
+</pre>
+
+<pre class="term">$ python3 gerador.py
+Abrindo a padaria.
+  Placa na porta: PADARIA
+Fechando a padaria.
+---
+Abrindo a farmácia.
+  Vendendo...
+Fechando a farmácia.
+Traceback (most recent call last):
+  File "/home/ana/gerador.py", line 20, in &lt;module&gt;
+    raise ValueError("faltou troco")
+ValueError: faltou troco</pre>
+
+<dl class="anatomy">
+  <dt>@contextmanager</dt><dd>Escreve o <code>__enter__</code> e o <code>__exit__</code> para você, a partir do gerador.</dd>
+  <dt>o que vem antes do yield</dt><dd>É o <code>__enter__</code>: roda na entrada do <code>with</code>.</dd>
+  <dt>yield loja.upper()</dt><dd>O ponto em que o bloco do <code>with</code> roda. O valor entregue pelo <code>yield</code> vai para o <code>as</code> (aqui, <code>"PADARIA"</code>). Um <code>yield</code> sozinho entrega <code>None</code>.</dd>
+  <dt>try: … finally:</dt><dd>Se o bloco do <code>with</code> der erro, a exceção "aparece" dentro do gerador, <strong>na linha do <code>yield</code></strong>. Sem o <code>try</code>/<code>finally</code>, a limpeza seria pulada (veja em <a href="#errado">Quando dá errado</a>).</dd>
+  <dt>o que vem depois do yield (no finally)</dt><dd>É o <code>__exit__</code>: roda na saída do <code>with</code>, de qualquer jeito.</dd>
+</dl>
+
+<p>Na farmácia, o <code>raise</code> (aula <a href="raise.html">raise</a>) lançou um erro dentro do bloco: o <code>finally</code> fechou a farmácia, e o erro seguiu até o traceback.</p>
+
+<hr>
+
+<h2>5. Prontos para usar, e vários juntos</h2>
+
+<h3><code>suppress</code>: ignorar um erro esperado</h3>
+<p>O <code>contextlib.suppress</code> ("suprimir") é um gerenciador pronto que engole os tipos de exceção que você disser, como o <code>IgnorarDivisaoPorZero</code> da seção 3. Útil para "apague o rascunho, se ele existir":</p>
+
+<pre class="file" data-file="suppress.py">from contextlib import suppress
+import os
+
+with suppress(FileNotFoundError):
+    os.remove("rascunho.txt")
+    print("Apaguei o rascunho.")
+
+print("Seguindo em frente.")
+</pre>
+
+<pre class="term">$ python3 suppress.py
+Seguindo em frente.                « não havia rascunho: o erro foi engolido
+$ echo "rascunho" &gt; rascunho.txt
+$ python3 suppress.py
+Apaguei o rascunho.
+Seguindo em frente.</pre>
+
+<p>Na primeira vez, o <code>os.remove</code> lançou <code>FileNotFoundError</code>, o <code>suppress</code> engoliu, e a linha <code>Apaguei o rascunho.</code> foi pulada. É o mesmo que um <code>try</code> com <code>except FileNotFoundError: pass</code>, em menos linhas.</p>
+
+<h3>Dois arquivos no mesmo <code>with</code></h3>
+<p>Para copiar de um arquivo para outro, os dois precisam estar abertos ao mesmo tempo. Um <code>with</code> aceita vários gerenciadores, separados por vírgula; entre parênteses, cada um fica numa linha:</p>
+
+<pre class="file" data-file="dois.py">with open("entrada.txt", "w", encoding="utf-8") as f:
+    f.write("pão\nleite\ncafé\n")
+
+with (
+    open("entrada.txt", encoding="utf-8") as origem,
+    open("saida.txt", "w", encoding="utf-8") as destino,
+):
+    for linha in origem:
+        destino.write(linha.upper())
+
+with open("saida.txt", encoding="utf-8") as f:
+    print(f.read(), end="")
+</pre>
+
+<pre class="term">$ python3 dois.py
+PÃO
+LEITE
+CAFÉ</pre>
+
+<p>Os dois são abertos na ordem em que aparecem e fechados na ordem contrária, ao fim do bloco. A forma com parênteses existe desde o Python 3.10; num Python mais antigo, escreva tudo numa linha só: <code>with open(…) as origem, open(…) as destino:</code>.</p>
+
+<hr>
+
+<h2>Formas diferentes de garantir a limpeza</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>try</code> / <code>finally</code> na mão</td><td>Uma limpeza que aparece uma vez só no programa</td></tr>
+<tr><td><code>with</code> com um gerenciador pronto</td><td>Sempre que existe um: <code>open</code>, <code>suppress</code>, conexões de banco (aula <a href="sqlite3.html">sqlite3</a>)</td></tr>
+<tr><td><code>@contextmanager</code> com <code>yield</code></td><td>O seu "preparar e arrumar" de todo dia: curto, e lê de cima para baixo</td></tr>
+<tr><td>Classe com <code>__enter__</code> e <code>__exit__</code></td><td>Quando o gerenciador é um objeto com outros métodos (como o <code>dia.vender</code>), ou precisa decidir com cuidado que exceções engolir</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Um objeto que não é gerenciador de contexto</strong>
+<pre class="file" data-file="erro_protocolo.py">class Expediente:
+    def __init__(self, loja):
+        self.loja = loja
+
+
+with Expediente("padaria") as dia:
+    print("vendendo")
+</pre>
+<pre class="term">$ python3 erro_protocolo.py
+Traceback (most recent call last):
+  File "/home/ana/erro_protocolo.py", line 6, in &lt;module&gt;
+    with Expediente("padaria") as dia:
+         ~~~~~~~~~~^^^^^^^^^^^
+TypeError: 'Expediente' object does not support the context manager protocol (missed __exit__ method)</pre>
+<p>"O objeto <code>Expediente</code> não segue o protocolo de gerenciador de contexto (faltou o método <code>__exit__</code>)". <em>Protocolo</em> aqui quer dizer "o combinado": ter <code>__enter__</code> e <code>__exit__</code>. Esta classe não tem nenhum dos dois, mas a mensagem cita só o <code>__exit__</code>. Na classe que só tem o <code>__exit__</code>, o fim da mensagem muda para <code>(missed __enter__ method)</code>. <strong>Como consertar:</strong> escreva os dois métodos, ou use <code>@contextmanager</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Usar o arquivo depois do <code>with</code></strong>
+<pre class="file" data-file="erro_fechado.py">with open("compras.txt", "w", encoding="utf-8") as arquivo:
+    arquivo.write("pão\n")
+
+arquivo.write("leite\n")
+</pre>
+<pre class="term">$ python3 erro_fechado.py
+Traceback (most recent call last):
+  File "/home/ana/erro_fechado.py", line 4, in &lt;module&gt;
+    arquivo.write("leite\n")
+    ~~~~~~~~~~~~~^^^^^^^^^^^
+ValueError: I/O operation on closed file.</pre>
+<p>"Operação de entrada/saída num arquivo fechado". A linha 4 está fora do bloco (sem indentação), e lá o arquivo já foi fechado pelo <code>__exit__</code>. <strong>Como consertar:</strong> indente a linha para dentro do <code>with</code>, ou abra o arquivo de novo (com <code>"a"</code>, de <em>append</em>, para acrescentar no fim).</p>
+</div>
+
+<div class="cenario">
+<strong>O <code>__enter__</code> esqueceu o <code>return self</code></strong>
+<p>O <code>Expediente</code> do <code>loja.py</code>, com o <code>__enter__</code> sem a linha <code>return self</code>:</p>
+<pre class="term">$ python3 erro_enter_none.py
+Abrindo a padaria.
+Fechando a padaria.
+Traceback (most recent call last):
+  File "/home/ana/erro_enter_none.py", line 17, in &lt;module&gt;
+    dia.vender("pão")
+    ^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'vender'</pre>
+<p>"O objeto <code>NoneType</code> não tem o atributo <code>vender</code>". Sem <code>return</code>, o <code>__enter__</code> devolveu <code>None</code>, e foi o <code>None</code> que o <code>as dia</code> recebeu. O <code>dia.vender</code> falhou na linha 17, e mesmo assim a padaria fechou. <strong>Como consertar:</strong> <code>return self</code> no fim do <code>__enter__</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>@contextmanager</code> sem <code>try</code>/<code>finally</code>: a limpeza não acontece</strong>
+<pre class="file" data-file="gerador_sem_finally.py">from contextlib import contextmanager
+
+
+@contextmanager
+def expediente(loja):
+    print(f"Abrindo a {loja}.")
+    yield
+    print(f"Fechando a {loja}.")
+
+
+with expediente("farmácia"):
+    print("  Vendendo...")
+    raise ValueError("faltou troco")
+</pre>
+<pre class="term">$ python3 gerador_sem_finally.py
+Abrindo a farmácia.
+  Vendendo...
+Traceback (most recent call last):
+  File "/home/ana/gerador_sem_finally.py", line 13, in &lt;module&gt;
+    raise ValueError("faltou troco")
+ValueError: faltou troco</pre>
+<p>Faltou o <code>Fechando a farmácia.</code>! O erro do bloco foi lançado dentro do gerador, na linha do <code>yield</code>, e interrompeu a função ali mesmo: o <code>print</code> de depois nunca rodou. Sem erro, funcionaria; é justamente no dia do erro que a farmácia fica aberta. <strong>Como consertar:</strong> ponha o <code>yield</code> dentro de um <code>try</code> e a limpeza no <code>finally</code>, como no <code>gerador.py</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O gerador não chegou ao <code>yield</code></strong>
+<pre class="file" data-file="erro_sem_yield.py">from contextlib import contextmanager
+
+
+@contextmanager
+def expediente(loja):
+    print(f"Abrindo a {loja}.")
+    if loja == "padaria":
+        yield
+    print(f"Fechando a {loja}.")
+
+
+with expediente("farmácia"):
+    print("  Vendendo...")
+</pre>
+<pre class="term">$ python3 erro_sem_yield.py
+Abrindo a farmácia.
+Fechando a farmácia.
+Traceback (most recent call last):
+  File "/home/ana/erro_sem_yield.py", line 12, in &lt;module&gt;
+    with expediente("farmácia"):
+         ~~~~~~~~~~^^^^^^^^^^^^
+  File "/usr/lib/python3.14/contextlib.py", line 143, in __enter__
+    raise RuntimeError("generator didn't yield") from None
+RuntimeError: generator didn't yield</pre>
+<p>"O gerador não fez <code>yield</code>". Para a farmácia, o <code>if</code> pulou o <code>yield</code>, e a função terminou sem entregar o ponto em que o bloco deveria rodar. O traceback tem um segundo trecho, dentro do <code>contextlib.py</code>: é o <code>__enter__</code> que o <code>@contextmanager</code> escreveu para você. (O caminho desse arquivo muda de computador para computador; no editor do guia aparece <code>/lib/python314.zip/contextlib.py</code>.) O <code>Vendendo...</code> não apareceu: o bloco nem começou. Com dois <code>yield</code> seguidos, o erro é o contrário: <code>RuntimeError: generator didn't stop</code> ("o gerador não parou"). <strong>Como consertar:</strong> o gerador de um <code>@contextmanager</code> tem de passar por <strong>exatamente um</strong> <code>yield</code>, sempre.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>with gerenciador as nome:</code></td><td>Chama <code>__enter__</code>, guarda o retorno em <code>nome</code>, roda o bloco e chama <code>__exit__</code> no fim, sempre</td></tr>
+<tr><td><code>def __enter__(self): … return self</code></td><td>O "preparar"; o retorno vai para o <code>as</code></td></tr>
+<tr><td><code>def __exit__(self, tipo, valor, rastro):</code></td><td>O "arrumar"; recebe <code>None, None, None</code> ou os dados da exceção</td></tr>
+<tr><td><code>return False</code> / <code>return True</code> no <code>__exit__</code></td><td>Deixa a exceção seguir / engole a exceção</td></tr>
+<tr><td><code>@contextmanager</code> + <code>try: yield</code> + <code>finally:</code></td><td>Gerenciador a partir de um gerador (de <code>contextlib</code>)</td></tr>
+<tr><td><code>with suppress(Erro):</code></td><td>Engole as exceções do tipo <code>Erro</code> (de <code>contextlib</code>)</td></tr>
+<tr><td><code>with (a as x, b as y):</code></td><td>Vários gerenciadores; fecham na ordem contrária (3.10+)</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>does not support the context manager protocol (missed __exit__ method)</code></td><td>Faltam o <code>__enter__</code> e/ou o <code>__exit__</code></td></tr>
+<tr><td><code>ValueError: I/O operation on closed file.</code></td><td>Usou o arquivo fora do bloco <code>with</code></td></tr>
+<tr><td><code>AttributeError: 'NoneType' object has no attribute …</code> no <code>as</code></td><td>O <code>__enter__</code> não devolve nada</td></tr>
+<tr><td>A limpeza não roda quando dá erro</td><td><code>@contextmanager</code> sem <code>try</code>/<code>finally</code> em volta do <code>yield</code></td></tr>
+<tr><td><code>RuntimeError: generator didn't yield</code> / <code>didn't stop</code></td><td>O gerador passou por zero / por mais de um <code>yield</code></td></tr>
+<tr><td>Um erro "sumiu" sem aviso</td><td>O <code>__exit__</code> devolve <code>True</code> sempre</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Os dois métodos</h3>
+<p>Escreva os nomes dos dois métodos especiais que o <code>with</code> chama, na ordem:</p>
+<div class="ex-code">Na entrada: <input data-answer="__enter__" aria-label="método de entrada"> · Na saída: <input data-answer="__exit__" aria-label="método de saída"></div>
+</div>
+
+<div class="exercise">
+<h3>2. O que vai para o <code>as</code></h3>
+<p>Complete o <code>__enter__</code> para que <code>with Expediente("padaria") as dia:</code> receba o próprio objeto:</p>
+<div class="ex-code">def __enter__(self):<br>&nbsp;&nbsp;&nbsp;&nbsp;<input data-answer="return self" aria-label="linha"></div>
+</div>
+
+<div class="exercise">
+<h3>3. Ignorando um erro</h3>
+<p>Complete para apagar <code>velho.txt</code> sem dar erro se ele não existir:</p>
+<div class="ex-code">with <input data-answer="suppress(FileNotFoundError)" aria-label="gerenciador">:<br>&nbsp;&nbsp;&nbsp;&nbsp;os.remove("velho.txt")</div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Uma exceção acontece na segunda linha de um bloco <code>with</code>, e o <code>__exit__</code> devolve <code>False</code>. O que acontece?</p>
+<label><input type="radio" name="q4"> O <code>__exit__</code> não roda, e o traceback aparece</label>
+<label><input type="radio" name="q4"> O <code>__exit__</code> roda, e o programa segue depois do bloco</label>
+<label><input type="radio" name="q4"> O <code>__exit__</code> roda, e depois a exceção continua: traceback</label>
+<label><input type="radio" name="q4"> As linhas seguintes do bloco rodam, e depois o <code>__exit__</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. Num <code>@contextmanager</code>, onde fica o código que deve rodar <strong>mesmo se der erro</strong> no bloco do <code>with</code>?</p>
+<label><input type="radio" name="q5"> Antes do <code>yield</code></label>
+<label><input type="radio" name="q5"> Num <code>finally</code>, com o <code>yield</code> dentro do <code>try</code></label>
+<label><input type="radio" name="q5"> Depois do <code>yield</code>, sem <code>try</code></label>
+<label><input type="radio" name="q5"> Num segundo <code>yield</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Por que um <code>__exit__</code> que sempre devolve <code>True</code> é perigoso?</p>
+<label><input type="radio" name="q6"> Porque esconde todos os erros do bloco, até os inesperados</label>
+<label><input type="radio" name="q6"> Porque o arquivo não fecha</label>
+<label><input type="radio" name="q6"> Porque o <code>with</code> roda o bloco duas vezes</label>
+<label><input type="radio" name="q6"> Porque dá <code>SyntaxError</code></label>
+</div>
+
+<h3>Missão final: o caixa sempre fecha</h3>
+
+<div class="trypy" data-goal="out:Caixa fechado.;;erro:ZeroDivisionError;;src:\bfinally\s*:">
+<p class="try-task"><strong>Missão:</strong> num dia sem clientes, a conta da média divide por zero, e o caixa fica aberto: o <code>Caixa fechado.</code> não aparece. Proteja a limpeza: ponha o <code>yield</code> dentro de um <code>try:</code> e o <code>print("Caixa fechado.")</code> num <code>finally:</code>. O erro vai continuar aparecendo (ele é de verdade), mas agora <strong>depois</strong> de o caixa fechar.</p>
+<pre class="script" data-file="main.py">from contextlib import contextmanager
+
+
+@contextmanager
+def caixa():
+    print("Caixa aberto.")
+    yield
+    print("Caixa fechado.")
+
+
+with caixa():
+    clientes = 0
+    print("Média por cliente:", 120 / clientes)
+</pre>
+<pre class="solucao" data-file="main.py">from contextlib import contextmanager
+
+
+@contextmanager
+def caixa():
+    print("Caixa aberto.")
+    try:
+        yield
+    finally:
+        print("Caixa fechado.")
+
+
+with caixa():
+    clientes = 0
+    print("Média por cliente:", 120 / clientes)
+</pre>
+</div>
+
+<p>Com o <code>finally</code>, a saída fica <code>Caixa aberto.</code>, <code>Caixa fechado.</code> e, por último, o traceback do <code>ZeroDivisionError</code>. Para tratar o erro de verdade (mostrar "sem clientes hoje" em vez do traceback), use um <code>if clientes == 0</code> ou um <code>try</code>/<code>except</code> dentro do bloco.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Um <strong>gerenciador de contexto</strong> cuida do "preparar e arrumar" em volta de um bloco: o <code>with</code> garante a arrumação, até quando o bloco termina por erro.</li>
+  <li>O <code>with</code> chama <code>__enter__</code> na entrada (o retorno vai para o <code>as</code>) e <code>__exit__</code> na saída. Por dentro, é um <code>try</code>/<code>finally</code>.</li>
+  <li>O <code>__exit__</code> recebe tipo, valor e rastro da exceção (ou três <code>None</code>). Devolvendo <code>True</code>, engole a exceção; faça isso só com o erro que você esperava.</li>
+  <li><code>@contextmanager</code> faz um gerenciador a partir de um gerador: antes do <code>yield</code> é a entrada, o <code>finally</code> é a saída. Sem o <code>try</code>/<code>finally</code>, a limpeza é pulada quando dá erro.</li>
+  <li><code>suppress(Erro)</code> engole um erro esperado; um <code>with</code> aceita vários gerenciadores, que fecham na ordem contrária.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
