@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Valores Padrão e Argumentos Nomeados — parâmetros opcionais | Guia Python</title>
+<meta name="description" content="Valores padrão e argumentos nomeados em Python para quem está começando: o parâmetro opcional (quantidade=1), chamar com nome=valor em qualquer ordem, pular um parâmetro, o sep e o end do print, a armadilha da lista como valor padrão (com a saída real) e os erros reais: parameter without a default follows, positional argument follows keyword argument, unexpected keyword argument.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Valores Padrão e Argumentos Nomeados</span></h1>
+
+<p class="intro">Na aula <a href="parametros.html">Parâmetros e Argumentos</a>, cada parâmetro era obrigatório: faltou um argumento, <code>TypeError</code>. Mas na vida real muita coisa tem um "de sempre". Quem pede "um pão de queijo" não precisa dizer "quantidade: um". Nesta aula, os parâmetros ganham um <strong>valor padrão</strong>, usado quando a chamada não diz nada, e as chamadas ganham <strong>nomes</strong>: <code>pedido("Café", quantidade=2)</code>, que deixam claro o que é cada valor.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A dar um valor padrão a um parâmetro (<code>quantidade=1</code>), tornando-o opcional.</li>
+  <li>A chamar a função com <strong>argumentos nomeados</strong> (<code>nome=valor</code>), em qualquer ordem.</li>
+  <li>A pular um parâmetro opcional e preencher só o seguinte.</li>
+  <li>Que o <code>sep</code> e o <code>end</code> do <code>print</code> são exatamente isso.</li>
+  <li>A <strong>armadilha da lista como valor padrão</strong>, e o jeito certo com <code>None</code>.</li>
+  <li>As regras de ordem e os erros reais quando elas são quebradas.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: "o de sempre"</h2>
+<p>O Seu Joaquim chega à padaria e diz só: "um café". A atendente já sabe o resto: copo médio, com açúcar. É o <strong>padrão</strong>. Se um dia ele quiser diferente, ele avisa: "um café, <strong>sem açúcar</strong>". Ele não precisa repetir tudo; diz só o que muda, e diz <strong>pelo nome</strong> ("sem açúcar"), sem precisar seguir uma ordem.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Na padaria</th><th>No Python</th></tr>
+<tr><td>O café "de sempre": médio, com açúcar</td><td>Um parâmetro com <strong>valor padrão</strong>: <code>def cafe(tamanho="médio", acucar=True):</code></td></tr>
+<tr><td>"Um café" (não diz mais nada)</td><td><code>cafe()</code>: vale o padrão</td></tr>
+<tr><td>"Um café, sem açúcar"</td><td>Um <strong>argumento nomeado</strong>: <code>cafe(acucar=False)</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. O valor padrão</h2>
+
+<pre class="file" data-file="pedido.py">def pedido(produto, quantidade=1):
+    print(f"{quantidade} x {produto}")
+
+
+pedido("Bolo de milho")
+pedido("Pão francês", 10)
+</pre>
+
+<pre class="term">$ python3 pedido.py
+1 x Bolo de milho
+10 x Pão francês
+</pre>
+
+<dl class="anatomy">
+  <dt>produto</dt><dd>Parâmetro <strong>obrigatório</strong>, como na aula anterior: toda chamada tem de preenchê-lo.</dd>
+  <dt>quantidade=1</dt><dd>Parâmetro <strong>com valor padrão</strong> (também se diz "opcional"). Se a chamada não mandar nada para ele, o Python usa o <code>1</code>.</dd>
+  <dt>pedido("Bolo de milho")</dt><dd>Só um argumento: <code>produto = "Bolo de milho"</code> e <code>quantidade</code> fica com o padrão, <code>1</code>.</dd>
+  <dt>pedido("Pão francês", 10)</dt><dd>Dois argumentos: o <code>10</code> <strong>substitui</strong> o padrão.</dd>
+</dl>
+
+<p>O valor padrão também funciona com texto:</p>
+
+<pre class="file" data-file="saudar.py">def saudar(nome, saudacao="Bom dia"):
+    print(f"{saudacao}, {nome}!")
+
+
+saudar("Ana")
+saudar("Bruno", "Boa noite")
+</pre>
+
+<pre class="term">$ python3 saudar.py
+Bom dia, Ana!
+Boa noite, Bruno!
+</pre>
+
+<div class="tip">
+<strong>Sem espaços em volta do <code>=</code></strong>
+<p>Nas variáveis, o costume é <code>x = 1</code>, com espaços. No valor padrão (e no argumento nomeado, logo adiante), o costume do PEP 8 é <strong>sem espaços</strong>: <code>quantidade=1</code>. Com espaços também funciona; é só estilo. Assim, quem lê sabe na hora que aquele <code>=</code> está dentro dos parênteses de uma função.</p>
+</div>
+
+<div class="trypy" data-goal="src:quantidade\s*=\s*1;;out:10 x Pão francês;;out:1 x Bolo de milho;;semerro">
+<p class="try-task"><strong>Missão:</strong> a segunda chamada dá erro, porque a Ana não disse a quantidade do bolo. Rode, leia a mensagem e dê ao parâmetro <code>quantidade</code> o valor padrão <code>1</code> (mexa só no <code>def</code>).</p>
+<pre class="script" data-file="main.py">def pedido(produto, quantidade):
+    print(f"{quantidade} x {produto}")
+
+
+pedido("Pão francês", 10)
+pedido("Bolo de milho")
+</pre>
+<pre class="solucao" data-file="main.py">def pedido(produto, quantidade=1):
+    print(f"{quantidade} x {produto}")
+
+
+pedido("Pão francês", 10)
+pedido("Bolo de milho")
+</pre>
+</div>
+
+<hr>
+
+<h2>2. Argumentos nomeados</h2>
+<p>Na chamada, você pode dizer <strong>a qual parâmetro</strong> vai cada valor, escrevendo <code>nome_do_parametro=valor</code>. Com nomes, a ordem não importa mais:</p>
+
+<pre class="file" data-file="nomeados.py">def pedido(produto, quantidade=1):
+    print(f"{quantidade} x {produto}")
+
+
+pedido(produto="Café", quantidade=2)
+pedido(quantidade=3, produto="Pão de queijo")
+pedido("Leite", quantidade=4)
+</pre>
+
+<pre class="term">$ python3 nomeados.py
+2 x Café
+3 x Pão de queijo
+4 x Leite
+</pre>
+
+<ul>
+  <li>Na primeira chamada, os dois argumentos têm nome.</li>
+  <li>Na segunda, estão na ordem "errada", e mesmo assim deu certo: o Python não olha a posição, olha o nome. Lembra do <code>30 tem Ana anos.</code> da aula anterior? Com nomes, isso não acontece.</li>
+  <li>Na terceira, o primeiro vai pela posição e o segundo pelo nome. É o jeito mais comum: o que é óbvio vai pela posição, o que precisa de explicação vai com nome.</li>
+</ul>
+
+<p>Em inglês, argumento nomeado é <em>keyword argument</em> ("argumento por palavra-chave"); o comum, pela posição, é <em>positional argument</em>. As mensagens de erro usam esses dois nomes.</p>
+
+<h3>Pulando um parâmetro opcional</h3>
+<p>O nome é a única saída quando há vários parâmetros opcionais e você quer mudar só o último:</p>
+
+<pre class="file" data-file="cartao.py">def cartao(nome, mensagem="Parabéns", assinatura="Padaria Pão Quente"):
+    print(f"{mensagem}, {nome}!")
+    print(f"   Um abraço, {assinatura}")
+
+
+cartao("Ana")
+cartao("Bruno", "Feliz Natal")
+cartao("Carla", assinatura="Tia Rosa")
+</pre>
+
+<pre class="term">$ python3 cartao.py
+Parabéns, Ana!
+   Um abraço, Padaria Pão Quente
+Feliz Natal, Bruno!
+   Um abraço, Padaria Pão Quente
+Parabéns, Carla!
+   Um abraço, Tia Rosa
+</pre>
+
+<p>No cartão da Carla, a mensagem ficou com o padrão ("Parabéns") e só a assinatura mudou. Pela posição, isso seria impossível: o segundo valor sempre cairia na <code>mensagem</code>.</p>
+
+<h3>Você já usou isso: <code>sep</code> e <code>end</code></h3>
+<p>O <code>print</code> é uma função com parâmetros de valor padrão: <code>sep=" "</code> (o que vai entre os valores) e <code>end="\n"</code> (o que vai no fim, uma quebra de linha). Na aula <a href="print-sep-end.html">As Opções sep e end</a>, você os mudou com argumentos nomeados:</p>
+
+<pre class="file" data-file="print_sep.py">print("Ana", "Bruno", "Carla")
+print("Ana", "Bruno", "Carla", sep=" - ")
+print("sem pular linha", end="")
+print(" (continuou na mesma linha)")
+</pre>
+
+<pre class="term">$ python3 print_sep.py
+Ana Bruno Carla
+Ana - Bruno - Carla
+sem pular linha (continuou na mesma linha)
+</pre>
+
+<hr>
+
+<h2>3. As regras de ordem</h2>
+<p>Duas regras, uma no <code>def</code> e uma na chamada:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Onde</th><th>Regra</th><th>Certo</th><th>Errado</th></tr>
+<tr><td>No <code>def</code></td><td>Primeiro os obrigatórios, depois os que têm valor padrão</td><td><code>def pedido(produto, quantidade=1):</code></td><td><code>def pedido(quantidade=1, produto):</code></td></tr>
+<tr><td>Na chamada</td><td>Primeiro os posicionais, depois os nomeados</td><td><code>pedido("Café", quantidade=2)</code></td><td><code>pedido(produto="Café", 2)</code></td></tr>
+</table>
+</div>
+
+<p>Faz sentido: se um parâmetro opcional viesse antes de um obrigatório, o Python não teria como saber se o primeiro valor da chamada é o opcional ou o obrigatório. As mensagens de quando essas regras são quebradas estão em <a href="#errado">Quando dá errado</a>.</p>
+
+<div class="note">
+<strong>Para quando você ler a documentação: <code>/</code> e <code>*</code></strong>
+<p>Em algumas funções você vai ver uma <code>/</code> ou um <code>*</code> sozinhos entre os parâmetros. Eles mudam a regra da chamada:</p>
+<ul>
+  <li><code>def pedido(produto, *, quantidade=1):</code> — tudo o que vem <strong>depois</strong> do <code>*</code> só pode ser passado <strong>com nome</strong>. <code>pedido("Café", quantidade=2)</code> funciona; <code>pedido("Café", 2)</code> dá <code>TypeError: pedido() takes 1 positional argument but 2 were given</code>.</li>
+  <li><code>def dobro(numero, /):</code> — tudo o que vem <strong>antes</strong> da <code>/</code> só pode ser passado <strong>pela posição</strong>. <code>dobro(5)</code> funciona; <code>dobro(numero=5)</code> dá <code>TypeError: dobro() got some positional-only arguments passed as keyword arguments: 'numero'</code>.</li>
+</ul>
+<p>Muitas funções embutidas são assim: no <code>help(len)</code> do modo interativo, o <code>len</code> aparece como <code>len(obj, /)</code>, e por isso <code>len(obj=[1, 2])</code> não funciona (<code>TypeError: len() takes no keyword arguments</code>). Para os seus programas, por enquanto, você não precisa deles.</p>
+</div>
+
+<hr>
+
+<h2>4. A armadilha: lista como valor padrão</h2>
+<p>A Ana quer uma função que comece uma lista de compras nova para cada pessoa. Parece razoável usar uma lista vazia como padrão:</p>
+
+<pre class="file" data-file="mutavel.py">def nova_lista(item, compras=[]):
+    compras.append(item)
+    return compras
+
+
+ana = nova_lista("arroz")
+bruno = nova_lista("café")
+print("Ana:", ana)
+print("Bruno:", bruno)
+</pre>
+
+<pre class="term">$ python3 mutavel.py
+Ana: ['arroz', 'café']                             « o café do Bruno foi parar na lista da Ana
+Bruno: ['arroz', 'café']
+</pre>
+
+<p><strong>As duas pessoas ficaram com a mesma lista.</strong> O arroz da Ana apareceu na lista do Bruno, e o café do Bruno na da Ana. Nenhum erro, só um resultado errado, daqueles que dão muito trabalho para achar.</p>
+
+<h3>Por que acontece</h3>
+<p>O valor padrão é criado <strong>uma vez só</strong>: no momento em que o Python passa pelo <code>def</code>, e não a cada chamada. A lista <code>[]</code> do padrão é sempre <strong>a mesma lista</strong>, guardada junto com a função. Cada chamada sem o segundo argumento usa essa mesma lista, e o <code>append</code> (aula <a href="listas-adicionar.html">Adicionando Itens</a>) vai acumulando nela. Dá para ver isso acontecendo:</p>
+
+<pre class="file" data-file="mutavel_por_que.py">def nova_lista(item, compras=[]):
+    print("A lista padrão antes:", compras)
+    compras.append(item)
+    return compras
+
+
+nova_lista("arroz")
+nova_lista("café")
+nova_lista("feijão")
+print(nova_lista.__defaults__)
+</pre>
+
+<pre class="term">$ python3 mutavel_por_que.py
+A lista padrão antes: []
+A lista padrão antes: ['arroz']
+A lista padrão antes: ['arroz', 'café']
+(['arroz', 'café', 'feijão'],)
+</pre>
+
+<p>A cada chamada, a lista "vazia" do padrão chega com os itens das chamadas anteriores. A última linha espia os valores padrão guardados na função (<code>__defaults__</code>): lá está a lista, com os três itens. Com números e textos isso não acontece, porque eles não podem ser modificados por dentro, como a lista pode com o <code>append</code> (aula <a href="mutabilidade.html">Mutável × Imutável</a>).</p>
+
+<h3>O jeito certo: <code>None</code> como padrão</h3>
+
+<pre class="file" data-file="mutavel_none.py">def nova_lista(item, compras=None):
+    if compras is None:
+        compras = []
+    compras.append(item)
+    return compras
+
+
+ana = nova_lista("arroz")
+bruno = nova_lista("café")
+print("Ana:", ana)
+print("Bruno:", bruno)
+print(nova_lista("feijão", ana))
+</pre>
+
+<pre class="term">$ python3 mutavel_none.py
+Ana: ['arroz']
+Bruno: ['café']
+['arroz', 'feijão']
+</pre>
+
+<dl class="anatomy">
+  <dt>compras=None</dt><dd>O padrão agora é <code>None</code>, "nada" (aula <a href="none.html">O Valor None</a>), que não pode ser modificado.</dd>
+  <dt>if compras is None:</dt><dd>"Se não mandaram lista nenhuma…" (o <code>is</code> é o jeito certo de comparar com <code>None</code>, aula <a href="operadores-is-in.html">is e in</a>).</dd>
+  <dt>compras = []</dt><dd>…cria uma lista vazia <strong>nova</strong>, agora, dentro desta chamada. Cada chamada ganha a sua.</dd>
+  <dt>nova_lista("feijão", ana)</dt><dd>Quem quiser continuar uma lista existente ainda pode passá-la.</dd>
+</dl>
+
+<div class="warning">
+<strong>Regra prática</strong>
+<p>Nunca use uma lista (<code>[]</code>), um dicionário (<code>{}</code>) ou um conjunto (<code>set()</code>) como valor padrão. Use <code>None</code> e crie o valor novo dentro da função.</p>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de chamar a mesma função</h2>
+<p>Com <code>def pedido(produto, quantidade=1):</code>, as chamadas abaixo pedem 2 cafés:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Chamada</th><th>Quando usar</th></tr>
+<tr><td><code>pedido("Café", 2)</code></td><td>Quando a função é curta e a ordem é óbvia</td></tr>
+<tr><td><code>pedido("Café", quantidade=2)</code></td><td>O mais legível: o principal pela posição, o detalhe com nome. Prefira quando o valor sozinho não diz o que é (um <code>2</code>, um <code>True</code>)</td></tr>
+<tr><td><code>pedido(produto="Café", quantidade=2)</code></td><td>Quando há muitos parâmetros e você quer deixar tudo explícito</td></tr>
+<tr><td><code>pedido(quantidade=2, produto="Café")</code></td><td>Funciona, mas seguir a ordem do <code>def</code> facilita a leitura</td></tr>
+</table>
+</div>
+
+<p>E quando o valor é o padrão (1 café), o mais simples é não escrever nada: <code>pedido("Café")</code>.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Parâmetro com padrão antes de um obrigatório</strong>
+<pre class="file" data-file="ordem_def.py">def pedido(quantidade=1, produto):
+    print(f"{quantidade} x {produto}")
+
+
+pedido("Café")
+</pre>
+<pre class="term">$ python3 ordem_def.py
+  File "/home/ana/ordem_def.py", line 1
+    def pedido(quantidade=1, produto):
+                             ^^^^^^^
+SyntaxError: parameter without a default follows parameter with a default
+</pre>
+<p>"Parâmetro sem padrão vem depois de um parâmetro com padrão". O <code>^^^^^^^</code> aponta o <code>produto</code>, que é obrigatório e está depois do <code>quantidade=1</code>. Como é <code>SyntaxError</code>, o programa nem começa. <strong>Como consertar:</strong> obrigatórios primeiro: <code>def pedido(produto, quantidade=1):</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Argumento pela posição depois de um nomeado</strong>
+<pre class="file" data-file="posicional_depois.py">def pedido(produto, quantidade=1):
+    print(f"{quantidade} x {produto}")
+
+
+pedido(produto="Café", 2)
+</pre>
+<pre class="term">$ python3 posicional_depois.py
+  File "/home/ana/posicional_depois.py", line 5
+    pedido(produto="Café", 2)
+                            ^
+SyntaxError: positional argument follows keyword argument
+</pre>
+<p>"Argumento posicional vem depois de argumento nomeado". Depois que você começa a usar nomes na chamada, o Python não aceita mais valores soltos, porque não saberia em que posição encaixá-los. <strong>Como consertar:</strong> <code>pedido("Café", 2)</code> ou <code>pedido(produto="Café", quantidade=2)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Nome de parâmetro que não existe</strong>
+<pre class="file" data-file="nome_errado.py">def pedido(produto, quantidade=1):
+    print(f"{quantidade} x {produto}")
+
+
+pedido("Café", quantidad=2)
+</pre>
+<pre class="term">$ python3 nome_errado.py
+Traceback (most recent call last):
+  File "/home/ana/nome_errado.py", line 5, in &lt;module&gt;
+    pedido("Café", quantidad=2)
+    ~~~~~~^^^^^^^^^^^^^^^^^^^^^
+TypeError: pedido() got an unexpected keyword argument 'quantidad'. Did you mean 'quantidade'?
+</pre>
+<p>"<code>pedido()</code> recebeu um argumento nomeado inesperado, <code>'quantidad'</code>. Você quis dizer <code>'quantidade'</code>?". O nome na chamada tem de ser <strong>exatamente</strong> o nome do parâmetro no <code>def</code>. <strong>Como consertar:</strong> <code>quantidade=2</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O mesmo parâmetro duas vezes</strong>
+<pre class="file" data-file="repetido.py">def pedido(produto, quantidade=1):
+    print(f"{quantidade} x {produto}")
+
+
+pedido("Café", produto="Leite")
+</pre>
+<pre class="term">$ python3 repetido.py
+Traceback (most recent call last):
+  File "/home/ana/repetido.py", line 5, in &lt;module&gt;
+    pedido("Café", produto="Leite")
+    ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: pedido() got multiple values for argument 'produto'
+</pre>
+<p>"<code>pedido()</code> recebeu vários valores para o argumento <code>'produto'</code>". O <code>"Café"</code>, pela posição, já foi para o <code>produto</code>; depois veio <code>produto="Leite"</code> para o mesmo lugar. <strong>Como consertar:</strong> cada parâmetro recebe um valor só.</p>
+</div>
+
+<div class="cenario">
+<strong>A lista como padrão, de novo</strong>
+<p>A seção 4 inteira é este erro: <code>def f(x, lista=[]):</code> não dá mensagem nenhuma, só mistura os dados de chamadas diferentes. Se uma lista "lembra" de coisas que não deveria, procure um <code>=[]</code> ou <code>={}</code> num <code>def</code>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>def f(a, b=10):</code></td><td><code>b</code> tem valor padrão 10: a chamada pode omiti-lo</td></tr>
+<tr><td><code>f(1)</code></td><td><code>a = 1</code>, <code>b = 10</code> (o padrão)</td></tr>
+<tr><td><code>f(1, 5)</code></td><td><code>a = 1</code>, <code>b = 5</code> (substitui o padrão)</td></tr>
+<tr><td><code>f(1, b=5)</code> ou <code>f(b=5, a=1)</code></td><td>Argumentos nomeados: a ordem não importa</td></tr>
+<tr><td><code>def f(x, lista=None):</code> + <code>if lista is None: lista = []</code></td><td>O jeito certo de ter uma lista "vazia" como padrão</td></tr>
+<tr><td><code>def f(a, *, b):</code></td><td><code>b</code> só pode ser passado com nome</td></tr>
+<tr><td><code>def f(a, /):</code></td><td><code>a</code> só pode ser passado pela posição</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>parameter without a default follows parameter with a default</code></td><td>No <code>def</code>, obrigatório depois de opcional</td></tr>
+<tr><td><code>positional argument follows keyword argument</code></td><td>Na chamada, valor solto depois de um <code>nome=valor</code></td></tr>
+<tr><td><code>got an unexpected keyword argument 'x'</code></td><td>Nome de parâmetro digitado errado (ou que não existe)</td></tr>
+<tr><td><code>got multiple values for argument 'x'</code></td><td>O mesmo parâmetro recebeu pela posição e pelo nome</td></tr>
+<tr><td>Uma lista "lembra" de chamadas anteriores</td><td>Lista como valor padrão: troque por <code>None</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O tamanho padrão</h3>
+<p>Complete para que o café seja "médio" quando ninguém disser o tamanho:</p>
+<div class="ex-code">def cafe(tamanho<input data-answer="=&quot;médio&quot;|='médio'" aria-label="valor padrão">):<br>&nbsp;&nbsp;&nbsp;&nbsp;print(f"Café {tamanho}")</div>
+</div>
+
+<div class="exercise">
+<h3>2. Só a assinatura</h3>
+<p>Com a função <code>cartao(nome, mensagem="Parabéns", assinatura="Padaria Pão Quente")</code>, complete a chamada para mudar só a assinatura:</p>
+<div class="ex-code">cartao("Davi", <input data-answer="assinatura" aria-label="nome do parâmetro">="Vó Lurdes")</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. Com <code>def pedido(produto, quantidade=1):</code>, o que mostra <code>pedido(quantidade=5, produto="Sonho")</code>, se o corpo é <code>print(f"{quantidade} x {produto}")</code>?</p>
+<label><input type="radio" name="q3"> <code>Sonho x 5</code></label>
+<label><input type="radio" name="q3"> <code>5 x Sonho</code></label>
+<label><input type="radio" name="q3"> <code>1 x Sonho</code></label>
+<label><input type="radio" name="q3"> Um erro, porque a ordem está trocada</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">4. Qual destes <code>def</code> está certo?</p>
+<label><input type="radio" name="q4"> <code>def f(a=1, b):</code></label>
+<label><input type="radio" name="q4"> <code>def f(a=1, b, c=2):</code></label>
+<label><input type="radio" name="q4"> <code>def f(=1 a, b):</code></label>
+<label><input type="radio" name="q4"> <code>def f(a, b=1, c=2):</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. Por que <code>def f(item, lista=[]):</code> é uma armadilha?</p>
+<label><input type="radio" name="q5"> Porque dá <code>SyntaxError</code></label>
+<label><input type="radio" name="q5"> Porque a lista vazia some depois da primeira chamada</label>
+<label><input type="radio" name="q5"> Porque a lista padrão é criada uma vez só e é a mesma em todas as chamadas</label>
+<label><input type="radio" name="q5"> Porque listas não podem ser parâmetros</label>
+</div>
+
+<h3>Missão final: uma lista para cada um</h3>
+
+<div class="trypy" data-goal="out:Ana: ['arroz'];;out:Bruno: ['café'];;semerro">
+<p class="try-task"><strong>Missão:</strong> rode e veja: a Ana e o Bruno ficaram com a mesma lista de compras. Conserte a função para que cada um tenha a sua (use <code>None</code> como padrão).</p>
+<pre class="script" data-file="main.py">def nova_lista(item, compras=[]):
+    compras.append(item)
+    return compras
+
+
+ana = nova_lista("arroz")
+bruno = nova_lista("café")
+print("Ana:", ana)
+print("Bruno:", bruno)
+</pre>
+<pre class="solucao" data-file="main.py">def nova_lista(item, compras=None):
+    if compras is None:
+        compras = []
+    compras.append(item)
+    return compras
+
+
+ana = nova_lista("arroz")
+bruno = nova_lista("café")
+print("Ana:", ana)
+print("Bruno:", bruno)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>def f(a, b=10):</code> dá a <code>b</code> um <strong>valor padrão</strong>: se a chamada não disser nada, vale o 10.</li>
+  <li>Argumentos <strong>nomeados</strong> (<code>f(a=1, b=5)</code>) dizem a qual parâmetro vai cada valor; a ordem deixa de importar, e dá para pular parâmetros opcionais.</li>
+  <li>No <code>def</code>: obrigatórios antes dos opcionais. Na chamada: posicionais antes dos nomeados.</li>
+  <li>O <code>sep</code> e o <code>end</code> do <code>print</code> são parâmetros com valor padrão.</li>
+  <li>O valor padrão é criado uma vez, no <code>def</code>. Por isso <strong>nunca use lista ou dicionário como padrão</strong>: use <code>None</code> e crie o valor dentro da função.</li>
+  <li><code>*</code> e <code>/</code> no <code>def</code> obrigam a passar com nome ou pela posição; você vai vê-los na documentação.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
