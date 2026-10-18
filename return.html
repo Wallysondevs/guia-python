@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python return — a função devolvendo um resultado | Guia Python</title>
+<meta name="description" content="O return em Python para quem está começando: a função que devolve um valor, a diferença entre print e return (a confusão número 1), o None que aparece quando não há return, o return que encerra a função, devolver vários valores, e os erros reais: NoneType, return fora da função, return dentro do laço.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">return</span></h1>
+
+<p class="intro">Até aqui, as funções da Ana <strong>mostravam</strong> coisas na tela com <code>print</code>. Mas muitas vezes você não quer ver o resultado: quer <strong>usá-lo</strong>. Somar o total de duas notas, guardar o preço com desconto numa variável, comparar a média com 7. Para isso, a função precisa <strong>devolver</strong> o resultado para quem a chamou. É o trabalho do <code>return</code> (em inglês, "devolver", "retornar").</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A devolver um valor com <code>return</code> e a usar esse valor fora da função.</li>
+  <li>A diferença entre <code>print</code> e <code>return</code>, a confusão número 1 de quem está começando.</li>
+  <li>Por que uma função sem <code>return</code> devolve <code>None</code>.</li>
+  <li>Que o <code>return</code> encerra a função na hora, e como usar isso com <code>if</code>.</li>
+  <li>A devolver vários valores de uma vez.</li>
+  <li>Os erros reais: <code>NoneType</code> numa conta, <code>return</code> fora da função, <code>return</code> dentro do laço.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: falar a resposta × entregar a resposta</h2>
+<p>A Ana pede ao sobrinho: "faz a conta de quanto deu o pão e o leite". Ele pode responder de dois jeitos:</p>
+<ul>
+  <li><strong>Falar em voz alta:</strong> "Deu treze e cinquenta!". A Ana ouve, mas a resposta sumiu no ar. Se ela quiser somar o valor com a conta do gás, vai ter de pedir de novo.</li>
+  <li><strong>Escrever num papel e entregar na mão dela:</strong> agora a Ana tem o número. Pode guardá-lo, somá-lo com outro, comparar, anotar no caderno.</li>
+</ul>
+<p>O <code>print</code> é falar em voz alta: mostra na tela, para uma pessoa ler, e acabou. O <code>return</code> é entregar o papel: o valor <strong>volta para o programa</strong>, no lugar onde a função foi chamada, e o programa faz com ele o que quiser.</p>
+
+<hr>
+
+<h2>1. A primeira função com <code>return</code></h2>
+
+<pre class="file" data-file="dobro.py">def dobro(numero):
+    return numero * 2
+
+
+resultado = dobro(5)
+print(resultado)
+</pre>
+
+<pre class="term">$ python3 dobro.py
+10
+</pre>
+
+<dl class="anatomy">
+  <dt>return</dt><dd>"Devolva". A palavra-chave que termina a função e manda um valor de volta.</dd>
+  <dt>numero * 2</dt><dd>O valor devolvido. O Python faz a conta primeiro e devolve o resultado.</dd>
+  <dt>resultado = dobro(5)</dt><dd>A chamada <code>dobro(5)</code> <strong>vira</strong> o valor devolvido, <code>10</code>. É como se a linha fosse <code>resultado = 10</code>.</dd>
+  <dt>print(resultado)</dt><dd>Quem mostra na tela é o programa principal, aqui fora, porque ele quis.</dd>
+</dl>
+
+<p>A frase mais importante desta aula: <strong>a chamada de uma função vira o valor que ela devolve</strong>. Por isso dá para usar a chamada em qualquer lugar onde caberia um valor:</p>
+
+<pre class="file" data-file="usar_valor.py">def dobro(numero):
+    return numero * 2
+
+
+print(dobro(5) + 1)
+print(dobro(dobro(3)))
+print(f"O dobro de 7 é {dobro(7)}.")
+if dobro(4) > 6:
+    print("Passou de 6")
+</pre>
+
+<pre class="term">$ python3 usar_valor.py
+11
+12
+O dobro de 7 é 14.
+Passou de 6
+</pre>
+
+<ul>
+  <li><code>dobro(5) + 1</code>: a chamada vira 10, e 10 + 1 dá 11.</li>
+  <li><code>dobro(dobro(3))</code>: primeiro a de dentro, <code>dobro(3)</code>, vira 6; depois <code>dobro(6)</code> vira 12.</li>
+  <li>Numa f-string e num <code>if</code>, a chamada também vira o valor: 14, e <code>8 &gt; 6</code>.</li>
+</ul>
+
+<hr>
+
+<h2>2. <code>print</code> × <code>return</code>: a confusão número 1</h2>
+<p>As duas funções abaixo parecem fazer a mesma coisa. Não fazem:</p>
+
+<pre class="file" data-file="print_x_return.py">def soma_com_print(a, b):
+    print(a + b)
+
+
+def soma_com_return(a, b):
+    return a + b
+
+
+x = soma_com_print(2, 3)
+y = soma_com_return(2, 3)
+print("x vale", x)
+print("y vale", y)
+</pre>
+
+<pre class="term">$ python3 print_x_return.py
+5                                                  « o print de dentro da soma_com_print
+x vale None
+y vale 5
+</pre>
+
+<ol class="passo">
+  <li><code>x = soma_com_print(2, 3)</code>: a função <strong>mostrou</strong> 5 na tela, mas não devolveu nada. Então <code>x</code> recebeu <code>None</code>, o "nada" do Python (aula <a href="none.html">O Valor None</a>).</li>
+  <li><code>y = soma_com_return(2, 3)</code>: a função não mostrou nada, mas <strong>devolveu</strong> 5. <code>y</code> guardou o 5.</li>
+</ol>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th><code>print(valor)</code></th><th><code>return valor</code></th></tr>
+<tr><td>O que faz</td><td>Mostra o valor na tela</td><td>Devolve o valor para quem chamou</td></tr>
+<tr><td>Para quem</td><td>Para a <strong>pessoa</strong> que está olhando a tela</td><td>Para o <strong>programa</strong>, que pode guardar e usar</td></tr>
+<tr><td>A chamada vira…</td><td><code>None</code></td><td>O valor devolvido</td></tr>
+<tr><td>A função continua depois?</td><td>Sim, segue para a próxima linha</td><td>Não, termina ali</td></tr>
+<tr><td>Comparação</td><td>Falar a resposta em voz alta</td><td>Entregar a resposta escrita num papel</td></tr>
+</table>
+</div>
+
+<h3>Por que o modo interativo confunde</h3>
+<p>No modo interativo (<code>&gt;&gt;&gt;</code>, aula <a href="repl.html">O Modo Interativo</a>), as duas funções parecem iguais:</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> def soma_com_print(a, b):
+...     print(a + b)
+...
+>>> def soma_com_return(a, b):
+...     return a + b
+...
+>>> soma_com_print(2, 3)
+5
+>>> soma_com_return(2, 3)
+5                                                  « quem mostrou foi o >>>, não a função
+>>> x = soma_com_print(2, 3)
+5
+>>> x                                              « x é None: o >>> não mostra nada
+>>> print(x)
+None
+>>> exit()
+</pre>
+
+<p>O <code>&gt;&gt;&gt;</code> mostra sozinho o valor de cada coisa que você digita, então o 5 devolvido pelo <code>return</code> aparece na tela. Já num <strong>arquivo</strong> <code>.py</code>, ninguém mostra nada por você:</p>
+
+<pre class="file" data-file="so_chamar.py">def soma_com_return(a, b):
+    return a + b
+
+
+soma_com_return(2, 3)
+</pre>
+
+<pre class="term">$ python3 so_chamar.py
+$                                                  « nenhuma saída: o 5 foi devolvido e jogado fora
+</pre>
+
+<p>A função calculou 5 e devolveu, mas ninguém guardou nem mostrou o valor. Ele foi descartado. Num programa, use o valor devolvido: guarde numa variável, ou passe para o <code>print</code>.</p>
+
+<div class="trypy" data-goal="src:\breturn\b;;out:Área total: 22 m²;;semerro">
+<p class="try-task"><strong>Missão:</strong> a Ana quer somar a área de dois cômodos, mas o programa dá erro. Rode, veja a mensagem e faça a função <code>area</code> <strong>devolver</strong> o resultado em vez de mostrá-lo.</p>
+<pre class="script" data-file="main.py">def area(largura, altura):
+    print(largura * altura)
+
+
+total = area(3, 4) + area(2, 5)
+print(f"Área total: {total} m²")
+</pre>
+<pre class="solucao" data-file="main.py">def area(largura, altura):
+    return largura * altura
+
+
+total = area(3, 4) + area(2, 5)
+print(f"Área total: {total} m²")
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Sem <code>return</code>, a função devolve <code>None</code></h2>
+<p>Toda função devolve alguma coisa. Quando o corpo acaba sem passar por um <code>return</code>, o Python devolve <code>None</code> sozinho. As funções das aulas anteriores, que só tinham <code>print</code>, devolviam <code>None</code> o tempo todo, e ninguém percebia:</p>
+
+<pre class="file" data-file="none.py">def saudar(nome):
+    print(f"Bom dia, {nome}!")
+
+
+resposta = saudar("Ana")
+print(resposta)
+print(type(resposta))
+</pre>
+
+<pre class="term">$ python3 none.py
+Bom dia, Ana!
+None
+&lt;class 'NoneType'&gt;
+</pre>
+
+<p>Isso é normal e está certo para funções cujo trabalho é <strong>fazer</strong> algo (mostrar uma mensagem, gravar um arquivo), e não <strong>calcular</strong> algo. O problema é quando você esperava um valor e esqueceu o <code>return</code>; veja em <a href="#errado">Quando dá errado</a>.</p>
+
+<hr>
+
+<h2>4. O <code>return</code> encerra a função</h2>
+<p>Quando o Python executa um <code>return</code>, a função acaba <strong>naquele momento</strong>. O que vier depois, dentro dela, não roda:</p>
+
+<pre class="file" data-file="depois_return.py">def dobro(numero):
+    return numero * 2
+    print("Esta linha nunca aparece")
+
+
+print(dobro(5))
+</pre>
+
+<pre class="term">$ python3 depois_return.py
+10
+</pre>
+
+<h3>Vários <code>return</code> com <code>if</code></h3>
+<p>Isso é útil com o <code>if</code>: cada caminho devolve uma resposta diferente.</p>
+
+<pre class="file" data-file="situacao.py">def situacao(nota):
+    if nota &gt;= 7:
+        return "Aprovada"
+    return "Recuperação"
+
+
+print(situacao(8.5))
+print(situacao(6))
+</pre>
+
+<pre class="term">$ python3 situacao.py
+Aprovada
+Recuperação
+</pre>
+
+<p>Com nota 8.5, a condição é verdadeira: o primeiro <code>return</code> devolve "Aprovada" e a função acaba ali, sem chegar ao segundo. Com nota 6, a condição é falsa, o Python pula o bloco do <code>if</code> e encontra o segundo <code>return</code>. Repare que nem foi preciso um <code>else</code>: se chegou à última linha, é porque o <code>if</code> não devolveu nada antes.</p>
+
+<h3><code>return</code> sozinho: "pode parar"</h3>
+<p>Um <code>return</code> sem valor também encerra a função, e devolve <code>None</code>. Serve para sair mais cedo:</p>
+
+<pre class="file" data-file="return_vazio.py">def avisar_estoque(quantidade):
+    if quantidade &gt; 0:
+        return
+    print("Atenção: acabou o estoque!")
+
+
+avisar_estoque(5)
+avisar_estoque(0)
+print(avisar_estoque(5))
+</pre>
+
+<pre class="term">$ python3 return_vazio.py
+Atenção: acabou o estoque!
+None
+</pre>
+
+<p>Com 5 unidades, a função sai no <code>return</code> e não avisa nada. Com 0, ela segue até o aviso. E o <code>print</code> da última linha mostra o que o <code>return</code> sozinho devolveu: <code>None</code>.</p>
+
+<hr>
+
+<h2>5. Devolvendo vários valores</h2>
+<p>Às vezes a função calcula mais de uma coisa. Escreva os valores separados por vírgula depois do <code>return</code>:</p>
+
+<pre class="file" data-file="varios.py">def resumo(notas):
+    total = sum(notas)
+    media = total / len(notas)
+    return total, media
+
+
+soma, media = resumo([8, 9, 7, 10])
+print(f"Soma: {soma}")
+print(f"Média: {media}")
+print(resumo([8, 9, 7, 10]))
+</pre>
+
+<pre class="term">$ python3 varios.py
+Soma: 34
+Média: 8.5
+(34, 8.5)
+</pre>
+
+<dl class="anatomy">
+  <dt>sum(notas) e len(notas)</dt><dd>A soma dos itens da lista e a quantidade de itens (aula <a href="funcoes-embutidas.html">Funções Embutidas</a>).</dd>
+  <dt>return total, media</dt><dd>Devolve os dois valores juntos, num pacote só.</dd>
+  <dt>soma, media = resumo(…)</dt><dd>Abre o pacote: o primeiro valor vai para <code>soma</code>, o segundo para <code>media</code>, como na aula <a href="atribuicao-multipla.html">Atribuição Múltipla</a>.</dd>
+  <dt>(34, 8.5)</dt><dd>Sem abrir o pacote, você vê o que ele é: uma <strong>tupla</strong>, uma sequência entre parênteses (aula <a href="tuplas.html">Tuplas</a>). Na verdade, o <code>return</code> sempre devolve um valor só; com a vírgula, esse valor é uma tupla com dois itens.</dd>
+</dl>
+
+<hr>
+
+<h2>Formas diferentes de entregar o resultado</h2>
+<p>A mesma conta, a média de duas notas, pode ser entregue de três jeitos:</p>
+
+<pre class="file" data-file="formas.py"># 1. A função mostra
+def media_mostrar(a, b):
+    print((a + b) / 2)
+
+
+# 2. A função devolve, e quem chamou mostra
+def media(a, b):
+    return (a + b) / 2
+
+
+# 3. A função devolve um texto pronto
+def media_texto(a, b):
+    return f"Média: {(a + b) / 2}"
+
+
+media_mostrar(8, 9)
+print(media(8, 9))
+print(media_texto(8, 9))
+</pre>
+
+<pre class="term">$ python3 formas.py
+8.5
+8.5
+Média: 8.5
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td>A função mostra (<code>print</code> dentro)</td><td>Quando o trabalho da função é <strong>mostrar</strong> algo (um cabeçalho, um menu). O resultado não pode ser reaproveitado</td></tr>
+<tr><td>A função devolve o número (<code>return</code>)</td><td>Quase sempre, para cálculos. Quem chama decide: mostrar, guardar, somar, comparar. É a mais flexível</td></tr>
+<tr><td>A função devolve um texto pronto</td><td>Quando o texto formatado é usado em vários lugares (tela, arquivo). Mas o número fica "preso" no texto: não dá mais para fazer conta com ele</td></tr>
+</table>
+</div>
+
+<div class="tip">
+<strong>Uma regra que ajuda</strong>
+<p>Funções que <strong>calculam</strong> devolvem; quem <strong>mostra</strong> é o programa principal. Assim, a mesma função <code>media</code> serve para mostrar na tela, para gravar num arquivo e para decidir se o aluno passou.</p>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong><code>print</code> no lugar de <code>return</code>: <code>NoneType</code> na conta</strong>
+<pre class="file" data-file="print_conta.py">def soma_com_print(a, b):
+    print(a + b)
+
+
+total = soma_com_print(2, 3) + 1
+print(total)
+</pre>
+<pre class="term">$ python3 print_conta.py
+5
+Traceback (most recent call last):
+  File "/home/ana/print_conta.py", line 5, in &lt;module&gt;
+    total = soma_com_print(2, 3) + 1
+            ~~~~~~~~~~~~~~~~~~~~~^~~
+TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'
+</pre>
+<p>Linha por linha:</p>
+<dl class="anatomy">
+  <dt>5</dt><dd>O <code>print</code> de dentro da função funcionou: ela mostrou a soma.</dd>
+  <dt>line 5</dt><dd>O erro foi na linha da conta.</dd>
+  <dt>~~~~~~~~~~~~~~~~~~~~~^~~</dt><dd>Os <code>~</code> marcam os dois lados da conta (a chamada e o <code>1</code>), e o <code>^</code> aponta o operador <code>+</code>, onde a coisa quebrou.</dd>
+  <dt>TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'</dt><dd>"Tipos não suportados para o <code>+</code>: <code>NoneType</code> e <code>int</code>". O lado esquerdo era <code>None</code> (do tipo <code>NoneType</code>), porque a função não devolveu nada, e não dá para somar "nada" com 1.</dd>
+</dl>
+<p>Sempre que aparecer <code>NoneType</code> numa mensagem de erro, desconfie de uma função sem <code>return</code>. <strong>Como consertar:</strong> troque o <code>print(a + b)</code> por <code>return a + b</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu o <code>return</code>: aparece <code>None</code></strong>
+<pre class="file" data-file="esqueceu.py">def media(nota1, nota2):
+    resultado = (nota1 + nota2) / 2
+
+
+m = media(8, 9)
+print(f"Média: {m}")
+</pre>
+<pre class="term">$ python3 esqueceu.py
+Média: None
+</pre>
+<p>Sem erro, mas a média saiu <code>None</code>. A função calculou 8.5 e guardou na variável <code>resultado</code>, que só existe dentro dela (aula <a href="escopo.html">Escopo</a>). Como não há <code>return</code>, o valor se perdeu quando a função terminou, e ela devolveu <code>None</code>. <strong>Como consertar:</strong> acrescente <code>return resultado</code> no fim do corpo (ou escreva direto <code>return (nota1 + nota2) / 2</code>).</p>
+</div>
+
+<div class="cenario">
+<strong><code>return</code> dentro do laço: a função para cedo demais</strong>
+<pre class="file" data-file="return_no_for.py">def somar(numeros):
+    total = 0
+    for n in numeros:
+        total = total + n
+        return total
+
+
+print(somar([5, 10, 20]))
+</pre>
+<pre class="term">$ python3 return_no_for.py
+5
+</pre>
+<p>A soma deveria dar 35, mas deu 5. O <code>return</code> ficou <strong>recuado demais</strong>, dentro do <code>for</code>. Na primeira volta, o laço somou o 5 e já encontrou o <code>return</code>, que encerrou a função na hora; o 10 e o 20 nem foram vistos. <strong>Como consertar:</strong> tire 4 espaços do <code>return</code>, para que ele fique no nível do <code>for</code> e só rode depois que o laço terminar.</p>
+</div>
+
+<div class="cenario">
+<strong><code>return</code> fora de uma função</strong>
+<pre class="file" data-file="fora_funcao.py">preco = 10
+return preco * 2
+</pre>
+<pre class="term">$ python3 fora_funcao.py
+  File "/home/ana/fora_funcao.py", line 2
+    return preco * 2
+    ^^^^^^^^^^^^^^^^
+SyntaxError: 'return' outside function
+</pre>
+<p>"<code>'return'</code> fora de função". O <code>return</code> devolve um valor para quem chamou a função; no programa principal, não há ninguém para receber. <strong>Como consertar:</strong> fora de funções, use <code>print</code> para mostrar ou uma variável para guardar. (Para terminar o programa inteiro antes da hora existe o <code>sys.exit()</code>, aula <a href="os-sys.html">Os Módulos os e sys</a>.)</p>
+</div>
+
+<div class="cenario">
+<strong>Abrir o pacote com o número errado de variáveis</strong>
+<pre class="file" data-file="desempacotar.py">def resumo(notas):
+    total = sum(notas)
+    media = total / len(notas)
+    return total, media
+
+
+soma, media, maior = resumo([8, 9, 7, 10])
+</pre>
+<pre class="term">$ python3 desempacotar.py
+Traceback (most recent call last):
+  File "/home/ana/desempacotar.py", line 7, in &lt;module&gt;
+    soma, media, maior = resumo([8, 9, 7, 10])
+    ^^^^^^^^^^^^^^^^^^
+ValueError: not enough values to unpack (expected 3, got 2)
+</pre>
+<p>"Valores insuficientes para desempacotar (esperava 3, recebeu 2)". A função devolve dois valores, e a linha tentou distribuí-los em três variáveis. <strong>Como consertar:</strong> use tantas variáveis quantos forem os valores do <code>return</code>: <code>soma, media = resumo(…)</code>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>return valor</code></td><td>Encerra a função e devolve o valor para quem chamou</td></tr>
+<tr><td><code>x = f()</code></td><td>Guarda o valor devolvido</td></tr>
+<tr><td><code>print(f())</code></td><td>Mostra o valor devolvido</td></tr>
+<tr><td><code>f()</code> sozinho, num arquivo</td><td>O valor devolvido é jogado fora</td></tr>
+<tr><td>Sem <code>return</code>, ou <code>return</code> sozinho</td><td>A função devolve <code>None</code></td></tr>
+<tr><td><code>return a, b</code></td><td>Devolve uma tupla com dois valores; abra com <code>x, y = f()</code></td></tr>
+<tr><td>Vários <code>return</code> com <code>if</code></td><td>Cada caminho devolve uma resposta; o primeiro que rodar encerra a função</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>None</code> onde devia aparecer um valor</td><td>Faltou o <code>return</code> (ou a função usa <code>print</code>)</td></tr>
+<tr><td><code>TypeError: … 'NoneType' …</code></td><td>Uma função sem <code>return</code> foi usada numa conta</td></tr>
+<tr><td>Resultado parcial, só o primeiro item</td><td><code>return</code> recuado para dentro do laço</td></tr>
+<tr><td><code>SyntaxError: 'return' outside function</code></td><td><code>return</code> no programa principal</td></tr>
+<tr><td><code>ValueError: not enough values to unpack</code></td><td>Mais variáveis do que valores devolvidos</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Devolvendo o triplo</h3>
+<p>Complete a palavra que devolve o valor:</p>
+<div class="ex-code">def triplo(n):<br>&nbsp;&nbsp;&nbsp;&nbsp;<input data-answer="return" aria-label="palavra-chave"> n * 3</div>
+</div>
+
+<div class="exercise">
+<h3>2. O valor da chamada</h3>
+<p>Com a função do exercício 1, quanto vale <code>triplo(2) + triplo(1)</code>?</p>
+<div class="ex-code"><input data-answer="9" aria-label="resultado"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">3. Uma função tem só <code>print(a * b)</code> no corpo. O que a variável <code>r</code> guarda depois de <code>r = f(2, 3)</code>?</p>
+<label><input type="radio" name="q3"> <code>6</code></label>
+<label><input type="radio" name="q3"> <code>"6"</code></label>
+<label><input type="radio" name="q3"> <code>None</code></label>
+<label><input type="radio" name="q3"> Dá erro na hora da atribuição</label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. O que acontece com as linhas que estão depois de um <code>return</code>, no mesmo bloco?</p>
+<label><input type="radio" name="q4"> Rodam depois que o valor é devolvido</label>
+<label><input type="radio" name="q4"> Nunca rodam: o <code>return</code> encerra a função</label>
+<label><input type="radio" name="q4"> Dão <code>SyntaxError</code></label>
+<label><input type="radio" name="q4"> Rodam só no modo interativo</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. Um programa num arquivo <code>.py</code> tem só uma função com <code>return 42</code> e, embaixo, a chamada <code>resposta()</code>. O que aparece na tela?</p>
+<label><input type="radio" name="q5"> <code>42</code></label>
+<label><input type="radio" name="q5"> <code>None</code></label>
+<label><input type="radio" name="q5"> Um erro, porque o valor não foi usado</label>
+<label><input type="radio" name="q5"> Nada: o valor foi devolvido e jogado fora</label>
+</div>
+
+<h3>Missão final: o desconto da padaria</h3>
+
+<div class="trypy" data-goal="src:\breturn\b;;out:Bolo: R$ 36.00;;out:Torta: R$ 45.00;;out:Os dois: R$ 81.00;;semerro">
+<p class="try-task"><strong>Missão:</strong> escreva o corpo da função <code>com_desconto</code>: ela recebe o preço e a porcentagem de desconto e <strong>devolve</strong> o preço já com o desconto (preço menos preço × porcentagem / 100). O resto do programa já está pronto e usa o valor devolvido. O bolo de R$ 40 com 10% deve sair por R$ 36.00.</p>
+<pre class="script" data-file="main.py">def com_desconto(preco, porcentagem):
+    pass  # troque o pass pela conta, com return
+
+
+bolo = com_desconto(40, 10)
+torta = com_desconto(60, 25)
+print(f"Bolo: R$ {bolo:.2f}")
+print(f"Torta: R$ {torta:.2f}")
+print(f"Os dois: R$ {bolo + torta:.2f}")
+</pre>
+<pre class="solucao" data-file="main.py">def com_desconto(preco, porcentagem):
+    return preco - preco * porcentagem / 100
+
+
+bolo = com_desconto(40, 10)
+torta = com_desconto(60, 25)
+print(f"Bolo: R$ {bolo:.2f}")
+print(f"Torta: R$ {torta:.2f}")
+print(f"Os dois: R$ {bolo + torta:.2f}")
+</pre>
+</div>
+
+<p>Rode o código inicial antes de mexer: com o <code>pass</code>, a função devolve <code>None</code>, e o Python reclama <code>TypeError: unsupported format string passed to NoneType.__format__</code> ("formatação não suportada para <code>NoneType</code>"): o <code>:.2f</code> não sabe mostrar <code>None</code> com 2 casas. De novo o <code>NoneType</code> denunciando um <code>return</code> que falta.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>return valor</code> encerra a função e <strong>devolve</strong> o valor; a chamada vira esse valor e pode ser guardada, somada, comparada.</li>
+  <li><code>print</code> <strong>mostra</strong> para a pessoa; <code>return</code> <strong>entrega</strong> para o programa. Função que calcula, devolve.</li>
+  <li>O <code>&gt;&gt;&gt;</code> mostra sozinho o valor devolvido; num arquivo, ninguém mostra: use <code>print(f())</code> ou guarde numa variável.</li>
+  <li>Sem <code>return</code>, a função devolve <code>None</code>. <code>NoneType</code> num erro quase sempre é um <code>return</code> esquecido.</li>
+  <li>Depois do <code>return</code>, nada mais roda na função. Vários <code>return</code> com <code>if</code> dão uma resposta por caminho.</li>
+  <li><code>return a, b</code> devolve vários valores (uma tupla), que você abre com <code>x, y = f()</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
