@@ -449,7 +449,7 @@ FileNotFoundError: [Errno 2] No such file or directory: 'fotografias'
   <dt>File "/home/ana/loja/listar.py", line 3</dt><dd>O erro foi na linha 3.</dd>
   <dt>~~~~~~~~~~^^^^^^^^^^^^^^^</dt><dd>As marcas apontam a chamada <code>os.listdir("fotografias")</code>.</dd>
   <dt>FileNotFoundError</dt><dd>"Arquivo não encontrado".</dd>
-  <dt>[Errno 2] No such file or directory: 'fotografias'</dt><dd>"Erro número 2 do sistema: não existe arquivo ou pasta com esse nome". O <code>Errno</code> é o código que o próprio Linux deu.</dd>
+  <dt>[Errno 2] No such file or directory: 'fotografias'</dt><dd>"Erro número 2 do sistema: não existe arquivo ou pasta com esse nome". O <code>Errno</code> é o código que o próprio Linux deu (no editor do guia, que não é Linux, sai <code>[Errno 44]</code>).</dd>
 </dl>
 <p>A pasta se chama <code>fotos</code>. E lembre do caso da seção 1: o nome pode estar certo e o programa ter sido chamado de <strong>outra pasta</strong>. <strong>Como consertar:</strong> confira o nome e confira o <code>os.getcwd()</code>.</p>
 </div>
