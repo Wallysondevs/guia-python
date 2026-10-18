@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python while — repetindo enquanto a condição for verdadeira | Guia Python</title>
+<meta name="description" content="O laço while do Python para quem nunca programou: contar com uma variável contadora, contagem regressiva, juntar dinheiro até a meta, somar compras até digitar 0, pedir de novo até a pessoa digitar uma nota válida, o laço infinito e como pará-lo (Ctrl+C e o KeyboardInterrupt), e os erros reais do Python 3.14.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">while</span></h1>
+
+<p class="intro">Até agora, cada linha dos seus programas rodou <strong>uma vez só</strong>, de cima para baixo. Mas boa parte do trabalho de um computador é <strong>repetir</strong>: mostrar os 30 alunos da turma, somar os preços de todas as compras, perguntar de novo até a pessoa digitar uma resposta que preste. Para repetir existem os <strong>laços</strong> (em inglês, <em>loops</em>). O mais simples deles é o <code>while</code>, que em inglês quer dizer "enquanto": <strong>enquanto</strong> a condição for verdadeira, repita.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é um laço e como se escreve um <code>while</code>: a condição, os dois-pontos e o bloco indentado.</li>
+  <li>Como contar de 1 até 5, e de 5 até 1, com uma variável <strong>contadora</strong>.</li>
+  <li>Como repetir quando você <strong>não sabe</strong> quantas voltas vão ser: juntar dinheiro até chegar à meta.</li>
+  <li>Como ler vários valores com <code>input()</code> até a pessoa digitar <code>0</code>, e como pedir de novo até ela digitar uma nota válida.</li>
+  <li>O que é um <strong>laço infinito</strong> e como pará-lo: <kbd>Ctrl</kbd>+<kbd>C</kbd> e o <code>KeyboardInterrupt</code>.</li>
+  <li>Os erros reais mais comuns: os dois-pontos, a indentação, a variável que não existe e o texto comparado com número.</li>
+</ul>
+</div>
+
+<p>Todos os programas desta aula rodaram no <strong>Python 3.14</strong> da máquina da Ana (usuária <code>ana</code>, computador <code>notebook</code>), salvos na pasta pessoal dela e executados com <code>python3 arquivo.py</code> (veja <a href="executar.html">Rodando um Programa</a>). Você pode rodar cada um no editor do guia.</p>
+
+<hr>
+
+<h2>A ideia: "enquanto tiver pão no cesto, atenda o próximo"</h2>
+<p>A padaria do bairro abre às 6 horas com um cesto de pães. O dono deixa um bilhete para o funcionário: <em>"Enquanto tiver pão no cesto, atenda o próximo cliente."</em> O bilhete não diz quantos clientes vão ser atendidos. Mesmo assim, ele funciona:</p>
+<ol class="passo">
+  <li>O funcionário olha o cesto: tem pão? <strong>Sim</strong> → atende um cliente.</li>
+  <li>Olha de novo: tem pão? <strong>Sim</strong> → atende mais um.</li>
+  <li>… e assim por diante …</li>
+  <li>Olha de novo: tem pão? <strong>Não</strong> → para de atender e vai fazer outra coisa.</li>
+</ol>
+<p>Três detalhes desse bilhete valem para <strong>todo</strong> <code>while</code>:</p>
+<ul>
+  <li>A <strong>pergunta vem antes</strong> de cada atendimento. Se o cesto já começar vazio, ninguém é atendido.</li>
+  <li>Cada volta <strong>muda alguma coisa</strong> (sai pão do cesto). Sem isso, a resposta da pergunta seria sempre a mesma, e o funcionário atenderia para sempre.</li>
+  <li>Quando a resposta vira <strong>não</strong>, ele sai da repetição e continua o resto do dia.</li>
+</ul>
+<p>No Python, a "pergunta" é uma <strong>condição</strong>, a mesma do <a href="if.html">if</a>: uma expressão que dá <code>True</code> (verdadeiro) ou <code>False</code> (falso), como <code>contador &lt;= 5</code> (veja <a href="booleanos.html">Booleanos</a> e <a href="operadores-comparacao.html">Comparações</a>). A diferença é que o <code>if</code> roda o bloco <strong>uma vez</strong> se a condição for verdadeira; o <code>while</code> roda o bloco <strong>de novo e de novo</strong>, enquanto ela continuar verdadeira.</p>
+
+<hr>
+
+<h2>1. O primeiro <code>while</code>: contar de 1 a 5</h2>
+
+<pre class="file" data-file="contador.py">contador = 1
+while contador &lt;= 5:
+    print(f"Volta {contador}")
+    contador += 1
+print(f"Fim! contador agora vale {contador}")
+</pre>
+
+<dl class="anatomy">
+  <dt>contador = 1</dt><dd>A variável <strong>contadora</strong>, criada <strong>antes</strong> do laço, com o valor inicial. Poderia se chamar <code>volta</code> ou <code>i</code> (de "índice", um nome tradicional para contadores); o importante é que ela exista antes de a condição ser testada.</dd>
+  <dt>while</dt><dd>A palavra-chave do laço: "enquanto".</dd>
+  <dt>contador &lt;= 5</dt><dd>A <strong>condição</strong>, testada <strong>antes de cada volta</strong>. Lê-se: "enquanto o contador for menor ou igual a 5". No Python, ela não precisa de parênteses.</dd>
+  <dt>:</dt><dd>Os <strong>dois-pontos</strong> fecham a linha do <code>while</code>, como no <code>if</code>. Eles avisam: "agora vem o bloco que se repete".</dd>
+  <dt>print(f"Volta {contador}")</dt><dd>A primeira linha do <strong>corpo</strong> do laço. Ela está <strong>4 espaços mais para dentro</strong>: é essa indentação que diz ao Python que a linha faz parte do <code>while</code> (veja <a href="sintaxe.html">Sintaxe e Indentação</a>). A <a href="f-strings.html">f-string</a> põe o valor atual do contador no lugar de <code>{contador}</code>.</dd>
+  <dt>contador += 1</dt><dd>Soma 1 ao contador (o atalho de <code>contador = contador + 1</code>; veja <a href="operadores-atribuicao.html">Operadores de Atribuição</a>). É esta linha que faz o laço <strong>andar</strong>: sem ela, o contador seria 1 para sempre.</dd>
+  <dt>print(f"Fim! …")</dt><dd>Esta linha voltou para a margem esquerda: ela está <strong>fora</strong> do laço e roda uma vez só, depois que o laço termina.</dd>
+</dl>
+
+<pre class="term">$ python3 contador.py
+Volta 1
+Volta 2
+Volta 3
+Volta 4
+Volta 5
+Fim! contador agora vale 6</pre>
+
+<p>Cada execução do corpo se chama uma <strong>volta</strong> (os programadores também dizem <strong>iteração</strong>). Aqui foram 5 voltas.</p>
+
+<h3>Passo a passo: o que o Python fez</h3>
+<p>Siga a variável <code>contador</code> volta por volta. Fazer de conta que você é o computador é a melhor forma de entender laços:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Momento</th><th>Valor de <code>contador</code></th><th><code>contador &lt;= 5</code>?</th><th>O que acontece</th></tr>
+<tr><td>1º teste</td><td>1</td><td><code>True</code></td><td>Entra: mostra <code>Volta 1</code>, e o contador vira 2</td></tr>
+<tr><td>2º teste</td><td>2</td><td><code>True</code></td><td>Mostra <code>Volta 2</code>, o contador vira 3</td></tr>
+<tr><td>3º teste</td><td>3</td><td><code>True</code></td><td>Mostra <code>Volta 3</code>, o contador vira 4</td></tr>
+<tr><td>4º teste</td><td>4</td><td><code>True</code></td><td>Mostra <code>Volta 4</code>, o contador vira 5</td></tr>
+<tr><td>5º teste</td><td>5</td><td><code>True</code></td><td>Mostra <code>Volta 5</code>, o contador vira 6</td></tr>
+<tr><td>6º teste</td><td>6</td><td><strong><code>False</code></strong></td><td>Sai do laço e vai para a primeira linha de fora</td></tr>
+</table>
+</div>
+
+<p>Por isso a última linha mostra <code>contador agora vale 6</code>: o laço só termina quando a condição fica falsa, e ela só fica falsa quando o contador passa de 5. A condição foi testada <strong>6 vezes</strong> para o corpo rodar <strong>5 vezes</strong>.</p>
+
+<div class="tip">
+<strong>As três peças de todo laço com contador</strong>
+<p>1) o <strong>início</strong>: <code>contador = 1</code> · 2) a <strong>condição</strong>: <code>contador &lt;= 5</code> · 3) o <strong>passo</strong>: <code>contador += 1</code>. Se faltar qualquer uma, o laço dá errado (a seção <a href="#errado">Quando dá errado</a> mostra cada caso). Na aula <a href="for.html">for</a>, você vai ver um laço que cuida das três sozinho.</p>
+</div>
+
+<div class="trypy" data-goal="out:Volta 10;;src:\bwhile\b">
+<p class="try-task"><strong>Missão:</strong> faça o programa contar até <strong>10</strong> em vez de 5. Depois, por curiosidade, troque o valor inicial para 3 e veja quantas voltas sobram.</p>
+<pre class="script" data-file="main.py">contador = 1
+while contador &lt;= 5:
+    print(f"Volta {contador}")
+    contador += 1
+print(f"Fim! contador agora vale {contador}")
+</pre>
+<pre class="solucao" data-file="main.py">contador = 1
+while contador &lt;= 10:
+    print(f"Volta {contador}")
+    contador += 1
+print(f"Fim! contador agora vale {contador}")
+</pre>
+</div>
+
+<hr>
+
+<h2>2. Contar para trás</h2>
+<p>O passo não precisa ser "mais 1". Para uma contagem regressiva, comece do maior número, <strong>diminua</strong> com <code>-= 1</code> e troque a condição para "maior que zero":</p>
+
+<pre class="file" data-file="regressiva.py">segundos = 5
+while segundos &gt; 0:
+    print(f"{segundos}...")
+    segundos -= 1
+print("Já!")
+</pre>
+
+<pre class="term">$ python3 regressiva.py
+5...
+4...
+3...
+2...
+1...
+Já!</pre>
+
+<p>Quando <code>segundos</code> chega a 0, a pergunta <code>0 &gt; 0</code> dá <code>False</code> e o laço termina. O <code>Já!</code> está <strong>fora</strong> do bloco (na margem esquerda), então aparece uma vez só, no fim.</p>
+
+<p>O passo também pode ser de 2 em 2 (<code>contador += 2</code>), de 10 em 10, ou até uma multiplicação (<code>valor *= 2</code>), como você vai ver na missão final.</p>
+
+<hr>
+
+<h2>3. Quando você não sabe quantas voltas vão ser</h2>
+<p>Nos dois exemplos acima, dava para saber de antemão: 5 voltas. O <code>while</code> brilha mesmo quando <strong>ninguém sabe</strong> quantas voltas serão. A Ana quer juntar R$ 1000 para comprar um notebook novo. Ela consegue guardar R$ 150 por mês. Quantos meses vai levar?</p>
+
+<pre class="file" data-file="poupanca.py">saldo = 0
+meses = 0
+while saldo &lt; 1000:
+    saldo += 150
+    meses += 1
+    print(f"Mês {meses}: R$ {saldo}")
+print(f"A Ana juntou R$ {saldo} em {meses} meses.")
+</pre>
+
+<pre class="term">$ python3 poupanca.py
+Mês 1: R$ 150
+Mês 2: R$ 300
+Mês 3: R$ 450
+Mês 4: R$ 600
+Mês 5: R$ 750
+Mês 6: R$ 900
+Mês 7: R$ 1050
+A Ana juntou R$ 1050 em 7 meses.</pre>
+
+<p>Repare nos papéis das duas variáveis:</p>
+<ul>
+  <li><code>saldo</code> é um <strong>acumulador</strong>: começa em 0 e, a cada volta, recebe mais um pouco. É ele que a condição olha.</li>
+  <li><code>meses</code> é um <strong>contador</strong>: conta as voltas, para no fim a gente saber quantas foram.</li>
+</ul>
+<p>No mês 6 o saldo era 900, ainda menor que 1000: mais uma volta. No mês 7 ele passou para 1050, a condição <code>1050 &lt; 1000</code> deu <code>False</code>, e o laço parou. O programa descobriu sozinho que eram 7 meses.</p>
+
+<h3>Zero voltas também é possível</h3>
+<p>Como a pergunta vem <strong>antes</strong> da primeira volta, o corpo pode não rodar nenhuma vez. Se a Ana já tivesse R$ 1200:</p>
+
+<pre class="file" data-file="nunca.py">saldo = 1200
+meses = 0
+while saldo &lt; 1000:
+    saldo += 150
+    meses += 1
+print(f"Meses de espera: {meses}")
+</pre>
+
+<pre class="term">$ python3 nunca.py
+Meses de espera: 0</pre>
+
+<p>Logo no primeiro teste, <code>1200 &lt; 1000</code> deu <code>False</code>: o Python pulou o bloco inteiro e foi direto para o <code>print</code>. Isso não é erro; é o cesto que já começou vazio.</p>
+
+<hr>
+
+<h2>4. Repetir com <code>input()</code>: somar até digitar 0</h2>
+<p>No caixa da padaria, a Ana digita o preço de cada item da compra. Ela não sabe quantos itens o cliente trouxe; quando acabar, ela digita <code>0</code>. Um valor especial que quer dizer "acabou" se chama <strong>sentinela</strong> (como o vigia que avisa a hora de parar).</p>
+
+<pre class="file" data-file="compras.py">total = 0
+preco = float(input("Preço do item (0 para terminar): "))
+while preco != 0:
+    total += preco
+    preco = float(input("Preço do item (0 para terminar): "))
+print(f"Total da compra: R$ {total:.2f}")
+</pre>
+
+<dl class="anatomy">
+  <dt>preco = float(input(…))</dt><dd>A <strong>primeira</strong> leitura acontece antes do laço, para a condição ter o que testar. O <code>input()</code> sempre devolve texto; o <code>float()</code> o transforma num número com casas decimais (veja <a href="input.html">input()</a> e <a href="conversao.html">Conversão de Tipos</a>).</dd>
+  <dt>while preco != 0:</dt><dd>"Enquanto o preço for <strong>diferente</strong> de zero." O <code>!=</code> é o "diferente" do Python.</dd>
+  <dt>total += preco</dt><dd>Junta o preço no acumulador.</dd>
+  <dt>preco = float(input(…))</dt><dd>A <strong>próxima</strong> leitura, no fim do bloco. É ela que faz o laço andar: cada volta lê um preço novo, e a condição testa esse preço novo.</dd>
+  <dt>{total:.2f}</dt><dd>Mostra o total com 2 casas decimais (o jeito de escrever dinheiro). Os detalhes estão em <a href="f-strings.html">f-strings</a>.</dd>
+</dl>
+
+<p>No terminal, a Ana digitou <code>4.50</code>, <code>12.90</code>, <code>3.25</code> e, por fim, <code>0</code>:</p>
+
+<pre class="term">$ python3 compras.py
+Preço do item (0 para terminar): 4.50
+Preço do item (0 para terminar): 12.90
+Preço do item (0 para terminar): 3.25
+Preço do item (0 para terminar): 0
+Total da compra: R$ 20.65</pre>
+
+<p>Repare que a pergunta aparece no código <strong>duas vezes</strong>: uma antes do laço e uma no fim do bloco. É o jeito clássico de escrever esse tipo de laço com <code>while</code>. Na seção <a href="#formas">Formas diferentes</a> você vê como escrever a pergunta uma vez só.</p>
+
+<div class="trypy">
+<p class="try-task"><strong>Experimente:</strong> rode o programa e digite os preços de uma compra sua no terminal da caixa (use ponto nas casas decimais: <code>4.50</code>). Para terminar, digite <code>0</code>. O que acontece se o primeiro preço já for <code>0</code>?</p>
+<pre class="script" data-file="main.py">total = 0
+preco = float(input("Preço do item (0 para terminar): "))
+while preco != 0:
+    total += preco
+    preco = float(input("Preço do item (0 para terminar): "))
+print(f"Total da compra: R$ {total:.2f}")
+</pre>
+</div>
+
+<hr>
+
+<h2>5. Pedir de novo até a resposta ser válida</h2>
+<p>A professora da Ana lança as notas da turma num programa. Nota vai de 0 a 10; se ela digitar 15 sem querer, o programa deve <strong>reclamar e perguntar de novo</strong>, quantas vezes for preciso. Isso é <strong>validar a entrada</strong>, e é um dos usos mais comuns do <code>while</code>:</p>
+
+<pre class="file" data-file="nota.py">nota = int(input("Digite a nota (0 a 10): "))
+while nota &lt; 0 or nota &gt; 10:
+    print("Nota inválida! Tem de ser de 0 a 10.")
+    nota = int(input("Digite a nota (0 a 10): "))
+print(f"Nota aceita: {nota}")
+</pre>
+
+<p>A condição <code>nota &lt; 0 or nota &gt; 10</code> quer dizer "a nota é <strong>inválida</strong>" (menor que 0 <strong>ou</strong> maior que 10; veja <a href="operadores-logicos.html">and, or e not</a>). Enquanto ela for inválida, o programa reclama e lê de novo. Uma tentativa no terminal, digitando <code>15</code>, depois <code>-2</code>, depois <code>8</code>:</p>
+
+<pre class="term">$ python3 nota.py
+Digite a nota (0 a 10): 15
+Nota inválida! Tem de ser de 0 a 10.
+Digite a nota (0 a 10): -2
+Nota inválida! Tem de ser de 0 a 10.
+Digite a nota (0 a 10): 8
+Nota aceita: 8</pre>
+
+<p>E se ela digitar <code>8</code> logo de cara? A condição dá <code>False</code> no primeiro teste, o bloco não roda nenhuma vez, e o programa aceita a nota direto. Ninguém leva bronca à toa.</p>
+
+<div class="note">
+<strong>Por que não um <code>if</code>?</strong>
+<p>Um <code>if</code> no lugar do <code>while</code> perguntaria de novo <strong>uma vez só</strong>. Se a pessoa errasse duas vezes seguidas, a segunda nota errada passaria. O <code>while</code> não desiste: só sai quando a resposta presta. A missão abaixo mostra a diferença.</p>
+</div>
+
+<div class="trypy" data-stdin="15\n-3\n8" data-goal="out:Nota aceita: 8;;src:\bwhile\b">
+<p class="try-task"><strong>Missão:</strong> este programa usa <code>if</code> e, por isso, aceita a segunda nota errada. A caixa já vai "digitar" <code>15</code>, <code>-3</code> e <code>8</code>. Rode uma vez para ver o problema (<code>Nota aceita: -3</code>) e troque o <code>if</code> por um <code>while</code>, para o programa só aceitar o <code>8</code>.</p>
+<pre class="script" data-file="main.py">nota = int(input("Digite a nota (0 a 10): "))
+if nota &lt; 0 or nota &gt; 10:
+    print("Nota inválida! Tem de ser de 0 a 10.")
+    nota = int(input("Digite a nota (0 a 10): "))
+print(f"Nota aceita: {nota}")
+</pre>
+<pre class="solucao" data-file="main.py">nota = int(input("Digite a nota (0 a 10): "))
+while nota &lt; 0 or nota &gt; 10:
+    print("Nota inválida! Tem de ser de 0 a 10.")
+    nota = int(input("Digite a nota (0 a 10): "))
+print(f"Nota aceita: {nota}")
+</pre>
+</div>
+
+<p>Esse programa ainda tem um ponto fraco: se a professora digitar <code>oito</code>, por extenso, o <code>int()</code> não consegue converter e o programa para com um <code>ValueError</code> (você vai ver a mensagem em <a href="#errado">Quando dá errado</a>). Tratar esse caso também é possível, mas pede uma ferramenta nova, o <code>try</code>, que tem aula própria: <a href="try-except.html">try e except</a>.</p>
+
+<hr>
+
+<h2>6. O laço infinito, e como pará-lo</h2>
+<p>Um laço cuja condição <strong>nunca</strong> fica falsa não termina nunca: é um <strong>laço infinito</strong>. O jeito mais comum de criar um sem querer é esquecer a linha que faz o laço andar. Olhe o contador da seção 1 sem o <code>contador += 1</code>:</p>
+
+<pre class="file" data-file="infinito.py">contador = 1
+while contador &lt;= 5:
+    print(f"Volta {contador}")
+print("Fim!")
+</pre>
+
+<p>O contador fica em 1 para sempre, então <code>1 &lt;= 5</code> é sempre <code>True</code>, e o programa mostra <code>Volta 1</code> sem parar. No lab, foram <strong>centenas de milhares de linhas por segundo</strong>. O <code>Fim!</code> nunca chega.</p>
+
+<h3>No terminal: <kbd>Ctrl</kbd>+<kbd>C</kbd></h3>
+<p>Para interromper um programa que não termina, segure <kbd>Ctrl</kbd> e aperte <kbd>C</kbd>. O terminal mostra <code>^C</code> (é assim que ele escreve o <kbd>Ctrl</kbd>+<kbd>C</kbd>) e o Python para, com esta mensagem:</p>
+
+<pre class="term">$ python3 infinito.py
+Volta 1
+Volta 1
+Volta 1                          « …centenas de milhares de linhas iguais…
+Volta 1
+^C                               « aqui a Ana apertou Ctrl+C
+Volta 1                          « a última linha que já estava a caminho da tela
+Traceback (most recent call last):
+  File "/home/ana/infinito.py", line 3, in &lt;module&gt;
+    print(f"Volta {contador}")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt
+
+$ echo $?
+130</pre>
+
+<p>Linha por linha:</p>
+<dl class="anatomy">
+  <dt>^C</dt><dd>O terminal mostrando que você apertou <kbd>Ctrl</kbd>+<kbd>C</kbd>.</dd>
+  <dt>Traceback (most recent call last):</dt><dd>"Rastro (a chamada mais recente por último)": o Python vai contar onde o programa estava quando parou.</dd>
+  <dt>File "/home/ana/infinito.py", line 3, in &lt;module&gt;</dt><dd>Ele estava no arquivo <code>infinito.py</code>, na <strong>linha 3</strong>, no programa principal (<code>&lt;module&gt;</code>). Faz sentido: é a única linha que o laço repetia.</dd>
+  <dt>print(f"Volta {contador}") e ~~~~~^^^^^</dt><dd>A linha em si, com o trecho que estava rodando marcado embaixo.</dd>
+  <dt>KeyboardInterrupt</dt><dd>"Interrupção pelo teclado". Não é um defeito do seu código: é o Python avisando que <strong>você</strong> mandou parar.</dd>
+  <dt>echo $? → 130</dt><dd>O código de saída do programa (o <code>$?</code> do terminal). 0 quer dizer "terminou bem"; 130 é o código de quem foi interrompido com <kbd>Ctrl</kbd>+<kbd>C</kbd>.</dd>
+</dl>
+
+<p>Se a tela encher tão rápido que o <kbd>Ctrl</kbd>+<kbd>C</kbd> parece não fazer efeito, espere um instante: o terminal ainda está mostrando as linhas que já tinham sido impressas.</p>
+
+<h3>No editor do guia</h3>
+<p id="editor-infinito">A caixa "Experimente" roda o Python de verdade dentro do navegador, então um laço infinito lá também não termina sozinho. O que o editor faz nesse caso está explicado na aula <a href="simulador.html">O Editor do Guia</a>; na dúvida, confira o passo do laço antes de clicar em Rodar.</p>
+
+<h3>Quando o infinito é de propósito: <code>while True</code></h3>
+<p>Às vezes o laço infinito é <strong>proposital</strong>: um programa que fica esperando pedidos até alguém mandar parar. Para isso se escreve <code>while True:</code>, uma condição que é sempre verdadeira. Um laço assim precisa de uma saída no meio do bloco, que é o <code>break</code> (em inglês, "quebrar"). Ele aparece logo abaixo, em <a href="#formas">Formas diferentes</a>, e tem aula própria: <a href="break-continue.html">break e continue</a>.</p>
+
+<hr>
+
+<h2>7. <code>while</code> no modo interativo</h2>
+<p>Dá para escrever um laço direto no <code>&gt;&gt;&gt;</code> do Python (veja <a href="repl.html">O Modo Interativo</a>). Depois da linha com os dois-pontos, o prompt muda para <code>...</code>: o Python está esperando o corpo do laço. No Python 3.14, os 4 espaços de indentação <strong>aparecem sozinhos</strong>; você digita só o <code>print(n)</code>. Para dizer que o bloco acabou, aperte <kbd>Enter</kbd> numa linha vazia:</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; n = 3
+&gt;&gt;&gt; while n &gt; 0:
+...     print(n)
+...     n -= 1
+...
+3
+2
+1
+&gt;&gt;&gt; n
+0
+&gt;&gt;&gt; exit()</pre>
+
+<p>O laço só rodou depois da linha vazia, de uma vez. E a variável continua lá depois do laço: <code>n</code> terminou valendo 0, o valor que fez a condição <code>n &gt; 0</code> ficar falsa.</p>
+
+<div class="warning">
+<strong>Não digite os espaços no <code>&gt;&gt;&gt;</code></strong>
+<p>Como o Python 3.14 já coloca a indentação sozinho, se você digitar mais 4 espaços, a linha fica com 8 e o Python reclama (<code>IndentationError: unexpected indent</code>). No arquivo <code>.py</code> é diferente: lá, quem põe os espaços é você (ou o seu editor de texto).</p>
+</div>
+
+<hr>
+
+<h2 id="formas">Formas diferentes de fazer a mesma coisa</h2>
+<p>A validação da nota (seção 5) pode ser escrita de duas formas. A primeira é a que você já viu: lê antes do laço e lê de novo no fim do bloco.</p>
+
+<pre class="file" data-file="nota.py">nota = int(input("Digite a nota (0 a 10): "))
+while nota &lt; 0 or nota &gt; 10:
+    print("Nota inválida! Tem de ser de 0 a 10.")
+    nota = int(input("Digite a nota (0 a 10): "))
+print(f"Nota aceita: {nota}")
+</pre>
+
+<p>A segunda usa <code>while True</code> e sai do laço com <code>break</code> quando a nota é boa. A pergunta aparece uma vez só:</p>
+
+<pre class="file" data-file="nota_true.py">while True:
+    nota = int(input("Digite a nota (0 a 10): "))
+    if 0 &lt;= nota &lt;= 10:
+        break
+    print("Nota inválida! Tem de ser de 0 a 10.")
+print(f"Nota aceita: {nota}")
+</pre>
+
+<pre class="term">$ python3 nota_true.py
+Digite a nota (0 a 10): 11
+Nota inválida! Tem de ser de 0 a 10.
+Digite a nota (0 a 10): 7
+Nota aceita: 7</pre>
+
+<p>O <code>0 &lt;= nota &lt;= 10</code> é uma comparação encadeada: "0 menor ou igual à nota, e a nota menor ou igual a 10", ou seja, a nota é <strong>válida</strong>. Quando é, o <code>break</code> pula para fora do laço, direto para o <code>print</code> final.</p>
+
+<p>E contar de 1 a 5 também tem outra forma, mais curta, com o <code>for</code> e o <code>range()</code>, que são as próximas aulas. Fica só de aperitivo:</p>
+
+<pre class="file" data-file="contador_for.py">for contador in range(1, 6):
+    print(f"Volta {contador}")
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Situação</th><th>Qual usar</th></tr>
+<tr><td>Não se sabe quantas voltas vão ser (até a meta, até digitar 0, até a resposta ser válida)</td><td><code>while condição:</code></td></tr>
+<tr><td>Ler, testar e talvez repetir, com a pergunta escrita uma vez só</td><td><code>while True:</code> com <code>break</code> (aula <a href="break-continue.html">break e continue</a>)</td></tr>
+<tr><td>Contar um número conhecido de voltas, ou passar por cada letra de um texto ou cada item de uma lista</td><td><code>for</code> (aulas <a href="for.html">for</a> e <a href="range.html">range()</a>)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Esqueceu os dois-pontos</strong>
+<pre class="file" data-file="dois_pontos.py">contador = 1
+while contador &lt;= 5
+    print(f"Volta {contador}")
+    contador += 1
+</pre>
+<pre class="term">$ python3 dois_pontos.py
+  File "/home/ana/dois_pontos.py", line 2
+    while contador &lt;= 5
+                       ^
+SyntaxError: expected ':'</pre>
+<p>"Erro de sintaxe: era esperado <code>:</code>". O Python mostra a <strong>linha 2</strong> e põe o <code>^</code> logo depois do 5, onde os dois-pontos deveriam estar. Repare que não apareceu nenhum <code>Volta</code>: com erro de sintaxe, o programa nem começa a rodar. <strong>Como consertar:</strong> <code>while contador &lt;= 5:</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu a indentação do corpo</strong>
+<pre class="file" data-file="indentacao.py">contador = 1
+while contador &lt;= 5:
+print(f"Volta {contador}")
+contador += 1
+</pre>
+<pre class="term">$ python3 indentacao.py
+  File "/home/ana/indentacao.py", line 3
+    print(f"Volta {contador}")
+    ^^^^^
+IndentationError: expected an indented block after 'while' statement on line 2</pre>
+<p>"Erro de indentação: era esperado um bloco indentado depois do comando <code>while</code> da linha 2". Depois dos dois-pontos, o Python <strong>exige</strong> pelo menos uma linha mais para dentro. <strong>Como consertar:</strong> ponha 4 espaços antes de cada linha que deve se repetir.</p>
+</div>
+
+<div class="cenario">
+<strong>O passo ficou fora do laço: laço infinito</strong>
+<p>Este é mais traiçoeiro, porque o Python não reclama de nada:</p>
+<pre class="file" data-file="fora.py">contador = 1
+while contador &lt;= 5:
+    print(f"Volta {contador}")
+contador += 1
+</pre>
+<p>O <code>contador += 1</code> está na margem esquerda, então ele está <strong>fora</strong> do laço: só rodaria depois que o laço terminasse, e o laço nunca termina. O resultado é o mesmo da seção 6: <code>Volta 1</code> sem parar, até o <kbd>Ctrl</kbd>+<kbd>C</kbd>. <strong>Como consertar:</strong> indente o <code>contador += 1</code> com os mesmos 4 espaços do <code>print</code>. Em Python, a indentação não é enfeite: ela decide o que está dentro e o que está fora.</p>
+</div>
+
+<div class="cenario">
+<strong>A variável não existia antes do laço</strong>
+<pre class="file" data-file="sem_inicio.py">while contador &lt;= 5:
+    print(f"Volta {contador}")
+    contador += 1
+</pre>
+<pre class="term">$ python3 sem_inicio.py
+Traceback (most recent call last):
+  File "/home/ana/sem_inicio.py", line 1, in &lt;module&gt;
+    while contador &lt;= 5:
+          ^^^^^^^^
+NameError: name 'contador' is not defined</pre>
+<p>"Erro de nome: o nome <code>contador</code> não está definido". Para testar a condição pela primeira vez, o Python precisa saber quanto vale o <code>contador</code>, e ninguém criou essa variável. Os <code>^^^^^^^^</code> marcam exatamente o nome que ele não conhece. <strong>Como consertar:</strong> crie a variável <strong>antes</strong> do <code>while</code>: <code>contador = 1</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Comparou o texto do <code>input()</code> com um número</strong>
+<pre class="file" data-file="tipo.py">nota = input("Digite a nota (0 a 10): ")
+while nota &lt; 0 or nota &gt; 10:
+    print("Nota inválida! Tem de ser de 0 a 10.")
+    nota = input("Digite a nota (0 a 10): ")
+print(f"Nota aceita: {nota}")
+</pre>
+<pre class="term">$ python3 tipo.py
+Digite a nota (0 a 10): 8
+Traceback (most recent call last):
+  File "/home/ana/tipo.py", line 2, in &lt;module&gt;
+    while nota &lt; 0 or nota &gt; 10:
+          ^^^^^^^^
+TypeError: '&lt;' not supported between instances of 'str' and 'int'</pre>
+<p>"Erro de tipo: o <code>&lt;</code> não funciona entre um <code>str</code> (texto) e um <code>int</code> (número inteiro)". O <code>input()</code> devolveu o <strong>texto</strong> <code>'8'</code>, e o Python não compara texto com número. O <code>^^^^^^^^</code> aponta a comparação <code>nota &lt; 0</code>. <strong>Como consertar:</strong> converta na hora de ler, <strong>nas duas leituras</strong>: <code>nota = int(input(…))</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Digitou uma palavra onde o programa esperava um número</strong>
+<pre class="term">$ python3 nota.py
+Digite a nota (0 a 10): oito
+Traceback (most recent call last):
+  File "/home/ana/nota.py", line 1, in &lt;module&gt;
+    nota = int(input("Digite a nota (0 a 10): "))
+ValueError: invalid literal for int() with base 10: 'oito'</pre>
+<p>"Erro de valor: texto inválido para o <code>int()</code> na base 10: <code>'oito'</code>". O laço sabe pedir de novo quando a nota está fora da faixa, mas o erro aqui aconteceu antes, na conversão. O programa está certo; foi a entrada que não era um número. Como fazer o programa sobreviver a isso é assunto da aula <a href="try-except.html">try e except</a>.</p>
+</div>
+
+<div class="trypy" data-stdin="12\n7" data-goal="out:Nota aceita: 7;;semerro">
+<p class="try-task"><strong>Missão:</strong> este programa para com um <code>TypeError</code>. A caixa vai "digitar" <code>12</code> e depois <code>7</code>. Conserte as leituras para o programa recusar o 12 e aceitar o 7.</p>
+<pre class="script" data-file="main.py">nota = input("Digite a nota (0 a 10): ")
+while nota &lt; 0 or nota &gt; 10:
+    print("Nota inválida! Tem de ser de 0 a 10.")
+    nota = input("Digite a nota (0 a 10): ")
+print(f"Nota aceita: {nota}")
+</pre>
+<pre class="solucao" data-file="main.py">nota = int(input("Digite a nota (0 a 10): "))
+while nota &lt; 0 or nota &gt; 10:
+    print("Nota inválida! Tem de ser de 0 a 10.")
+    nota = int(input("Digite a nota (0 a 10): "))
+print(f"Nota aceita: {nota}")
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>while condição:</code></td><td>Repete o bloco indentado enquanto a condição for <code>True</code>; testa <strong>antes</strong> de cada volta</td></tr>
+<tr><td><code>contador = 1</code> … <code>contador += 1</code></td><td>Início e passo de um laço com contador</td></tr>
+<tr><td><code>contador -= 1</code></td><td>Passo para contar para trás</td></tr>
+<tr><td><code>total += valor</code></td><td>Acumular: juntar um valor a cada volta</td></tr>
+<tr><td><code>while preco != 0:</code></td><td>Repetir até ler o valor sentinela</td></tr>
+<tr><td><code>while nota &lt; 0 or nota &gt; 10:</code></td><td>Pedir de novo enquanto a resposta for inválida</td></tr>
+<tr><td><code>while True:</code> … <code>break</code></td><td>Laço "infinito" de propósito, com saída no meio</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd></td><td>No terminal, interrompe o programa (<code>KeyboardInterrupt</code>, código de saída 130)</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>SyntaxError: expected ':'</code></td><td>Faltaram os dois-pontos no fim da linha do <code>while</code></td></tr>
+<tr><td><code>IndentationError: expected an indented block after 'while' statement</code></td><td>O corpo do laço não está indentado</td></tr>
+<tr><td>A mesma linha sem parar</td><td>Laço infinito: faltou o passo, ou ele ficou fora do bloco (sem indentação)</td></tr>
+<tr><td><code>NameError: name '…' is not defined</code></td><td>A variável da condição não foi criada antes do <code>while</code></td></tr>
+<tr><td><code>TypeError: '&lt;' not supported between instances of 'str' and 'int'</code></td><td>Comparou o texto do <code>input()</code> com um número: faltou o <code>int()</code></td></tr>
+<tr><td><code>KeyboardInterrupt</code></td><td>Você apertou <kbd>Ctrl</kbd>+<kbd>C</kbd>: não é defeito no código</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Complete o laço</h3>
+<p>Complete para o programa mostrar os números de 1 a 3:</p>
+<div class="ex-code">n = 1<br><input data-answer="while" aria-label="palavra-chave"> n &lt;= 3<input data-answer=":" aria-label="pontuação"><br>&nbsp;&nbsp;&nbsp;&nbsp;print(n)<br>&nbsp;&nbsp;&nbsp;&nbsp;n <input data-answer="+=" aria-label="operador"> 1</div>
+</div>
+
+<div class="exercise">
+<h3>2. Quantas vezes?</h3>
+<p>Quantas vezes este laço mostra <code>Oi</code>? Responda com um número.</p>
+<pre class="file" data-file="oi.py">x = 10
+while x &gt; 4:
+    print("Oi")
+    x -= 2
+</pre>
+<div class="ex-code">Mostra <input data-answer="3" aria-label="número de vezes"> vezes.</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. Qual é o valor de <code>contador</code> depois deste trecho? <code>contador = 1</code> / <code>while contador &lt;= 5:</code> / <code>&nbsp;&nbsp;&nbsp;&nbsp;contador += 1</code></p>
+<label><input type="radio" name="q3"> 5</label>
+<label><input type="radio" name="q3"> 6</label>
+<label><input type="radio" name="q3"> 1</label>
+<label><input type="radio" name="q3"> O laço nunca termina</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Um programa mostra a mesma linha sem parar. O que você aperta no terminal para pará-lo?</p>
+<label><input type="radio" name="q4"> <kbd>Ctrl</kbd>+<kbd>Z</kbd></label>
+<label><input type="radio" name="q4"> <kbd>Esc</kbd></label>
+<label><input type="radio" name="q4"> <kbd>Ctrl</kbd>+<kbd>C</kbd></label>
+<label><input type="radio" name="q4"> <kbd>Enter</kbd> numa linha vazia</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. <code>saldo = 2000</code> / <code>while saldo &lt; 1000:</code> / <code>&nbsp;&nbsp;&nbsp;&nbsp;saldo += 150</code>. Quantas voltas esse laço dá?</p>
+<label><input type="radio" name="q5"> Nenhuma: a condição já é falsa no primeiro teste</label>
+<label><input type="radio" name="q5"> Uma: o <code>while</code> sempre roda pelo menos uma vez</label>
+<label><input type="radio" name="q5"> Infinitas</label>
+<label><input type="radio" name="q5"> Dá erro</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. Para pedir a nota de novo até a pessoa digitar um valor de 0 a 10, qual linha serve?</p>
+<label><input type="radio" name="q6"> <code>if nota &lt; 0 or nota &gt; 10:</code></label>
+<label><input type="radio" name="q6"> <code>while nota &gt;= 0 and nota &lt;= 10:</code></label>
+<label><input type="radio" name="q6"> <code>while nota = 0:</code></label>
+<label><input type="radio" name="q6"> <code>while nota &lt; 0 or nota &gt; 10:</code></label>
+</div>
+
+<h3>Missão final: o dinheiro que dobra</h3>
+
+<div class="trypy" data-goal="out:em 10 dias: R$ 1024;;src:\bwhile\b">
+<p class="try-task"><strong>Missão:</strong> a Ana leu uma história: alguém começa com R$ 1 e, a cada dia, o dinheiro <strong>dobra</strong>. Em quantos dias passa de R$ 1000? Escreva o <code>while</code> no lugar do comentário: enquanto o <code>valor</code> for menor ou igual a 1000, dobre o valor (<code>valor *= 2</code>) e some 1 em <code>dias</code>.</p>
+<pre class="script" data-file="main.py">valor = 1
+dias = 0
+# escreva o while aqui
+
+print(f"Passou de R$ 1000 em {dias} dias: R$ {valor}")
+</pre>
+<pre class="solucao" data-file="main.py">valor = 1
+dias = 0
+while valor &lt;= 1000:
+    valor *= 2
+    dias += 1
+print(f"Passou de R$ 1000 em {dias} dias: R$ {valor}")
+</pre>
+</div>
+
+<p>A resposta é <strong>10 dias</strong>, com R$ 1024. No lab, saiu <code>Passou de R$ 1000 em 10 dias: R$ 1024</code>. Experimente trocar 1000 por um milhão (<code>1000000</code>): bastam mais 10 dias (no lab, deu <code>20 dias: R$ 1048576</code>). É a força de dobrar.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>while condição:</code> ("enquanto") repete o bloco indentado enquanto a condição for <code>True</code>. A condição é testada <strong>antes</strong> de cada volta; se for falsa logo de cara, o bloco não roda nenhuma vez.</li>
+  <li>Laço com contador tem três peças: <strong>início</strong> (antes do laço), <strong>condição</strong> e <strong>passo</strong> (dentro do bloco).</li>
+  <li>O <code>while</code> é a escolha quando não se sabe quantas voltas vão ser: até a meta, até o valor sentinela, até a resposta ser válida.</li>
+  <li>Com <code>input()</code>, leia uma vez antes do laço e de novo no fim do bloco, e converta com <code>int()</code> ou <code>float()</code>.</li>
+  <li>Sem o passo (ou com o passo fora da indentação), o laço é infinito. No terminal, <kbd>Ctrl</kbd>+<kbd>C</kbd> para o programa com um <code>KeyboardInterrupt</code>.</li>
+  <li><code>while True:</code> é um laço infinito de propósito; ele precisa de um <code>break</code> para sair (aula <a href="break-continue.html">break e continue</a>).</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
