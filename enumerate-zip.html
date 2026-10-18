@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python enumerate() e zip() — numerar e andar em várias listas juntas | Guia Python</title>
+<meta name="description" content="enumerate() e zip() para quem está começando: numerar os itens de um for com enumerate (e start=1), percorrer duas ou três listas lado a lado com zip, o que acontece quando as listas têm tamanhos diferentes, a opção strict=True e o ValueError real, dict(zip()), e os erros reais de desempacotamento, com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">enumerate() e zip()</span></h1>
+
+<p class="intro">O <code>for</code> percorre uma lista item por item. Mas duas perguntas aparecem logo: "<strong>em que posição</strong> está este item?" (para numerar uma lista de compras) e "como andar em <strong>duas listas ao mesmo tempo</strong>?" (os nomes dos alunos numa lista, as notas em outra). Para a primeira, existe a função embutida <code>enumerate()</code>; para a segunda, a <code>zip()</code>. As duas deixam o <code>for</code> mais curto e mais claro, e evitam um dos jeitos mais desajeitados de escrever um laço: o <code>range(len(lista))</code>.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A numerar os itens de um <code>for</code> com <code>enumerate()</code>, começando do 0 ou do 1 (<code>start=1</code>).</li>
+  <li>A percorrer duas ou três listas lado a lado com <code>zip()</code>.</li>
+  <li>O que o <code>zip()</code> faz quando as listas têm tamanhos diferentes, e como a opção <code>strict=True</code> transforma isso num erro.</li>
+  <li>A montar um dicionário com <code>dict(zip(…))</code>.</li>
+  <li>A usar os dois juntos para fazer um ranking.</li>
+  <li>Os erros reais: <code>ValueError: too many values to unpack</code> e <code>ValueError: zip() argument 2 is shorter than argument 1</code>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a senha da fila e o zíper</h2>
+<p>Na padaria do bairro, cada pessoa que chega pega uma <strong>senha</strong>: 1, 2, 3… A pessoa continua sendo a mesma, mas agora vem acompanhada de um número. É o que o <code>enumerate()</code> faz: entrega cada item da lista <strong>junto com o número da posição</strong> dele. O nome vem do inglês <em>enumerate</em>, "enumerar", "numerar um por um".</p>
+<p>Agora pense num <strong>zíper</strong> de casaco. Ele tem dois lados com dentes, e ao fechar, cada dente de um lado se encaixa no dente correspondente do outro: o primeiro com o primeiro, o segundo com o segundo. A função <code>zip()</code> (é esse o nome, "zíper" em inglês) faz isso com listas: junta o primeiro item de uma com o primeiro da outra, o segundo com o segundo, e assim por diante.</p>
+
+<hr>
+
+<h2>1. <code>enumerate()</code>: o item e a sua posição</h2>
+
+<pre class="file" data-file="fila.py">fila = ["Ana", "Bruno", "Clara"]
+
+for posicao, nome in enumerate(fila):
+    print(posicao, nome)
+</pre>
+
+<pre class="term">$ python3 fila.py
+0 Ana
+1 Bruno
+2 Clara
+</pre>
+
+<dl class="anatomy">
+  <dt>enumerate(fila)</dt><dd>Em cada volta do laço, entrega <strong>dois valores</strong>: a posição e o item.</dd>
+  <dt>for posicao, nome in …</dt><dd>Duas variáveis no <code>for</code>, separadas por vírgula: a primeira recebe a posição; a segunda, o item. É o desempacotamento que você viu na aula <a href="desempacotamento.html">Desempacotamento</a>.</dd>
+  <dt>0, 1, 2</dt><dd>A contagem começa do <strong>zero</strong>, igual aos índices da lista (aula <a href="listas-acessar.html">Acessando Itens</a>): <code>fila[0]</code> é <code>"Ana"</code>.</dd>
+</dl>
+
+<h3>O que o <code>enumerate()</code> entrega, por dentro</h3>
+<p>No modo interativo, dá para espiar. O <code>enumerate()</code> sozinho não mostra os pares; para vê-los, transforme em lista com <code>list()</code>:</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; fila = ["Ana", "Bruno", "Clara"]
+&gt;&gt;&gt; enumerate(fila)
+&lt;enumerate object at 0x7fb1290e75b0&gt;
+&gt;&gt;&gt; list(enumerate(fila))
+[(0, 'Ana'), (1, 'Bruno'), (2, 'Clara')]
+</pre>
+
+<p><code>&lt;enumerate object at 0x7fb1290e75b0&gt;</code> quer dizer "um objeto <code>enumerate</code>, guardado no endereço tal da memória". (Esse número muda a cada execução; não se preocupe com ele.) O <code>enumerate()</code> não monta uma lista: ele vai entregando os pares <strong>um de cada vez</strong>, conforme o <code>for</code> pede. Com <code>list()</code>, você vê todos: são <strong>tuplas</strong> (aula <a href="tuplas.html">Tuplas</a>), cada uma com a posição e o item.</p>
+
+<h3>Começando do 1: <code>start=1</code></h3>
+<p>Para as pessoas, listas começam do 1. Ninguém escreve "item 0: arroz" numa lista de compras. A opção <code>start</code> ("começo") diz de qual número a contagem parte:</p>
+
+<pre class="file" data-file="compras.py">compras = ["arroz", "feijão", "café", "leite"]
+
+print("Lista de compras:")
+for numero, item in enumerate(compras, start=1):
+    print(f"{numero}. {item}")
+</pre>
+
+<pre class="term">$ python3 compras.py
+Lista de compras:
+1. arroz
+2. feijão
+3. café
+4. leite
+</pre>
+
+<pre class="term">&gt;&gt;&gt; list(enumerate(fila, start=1))
+[(1, 'Ana'), (2, 'Bruno'), (3, 'Clara')]
+</pre>
+
+<p>O <code>start=1</code> muda só o <strong>número que aparece</strong>. A lista continua a mesma: <code>compras[0]</code> ainda é <code>"arroz"</code>.</p>
+
+<div class="trypy" data-goal="out:1. arroz;;out:4. leite;;src:\benumerate\(">
+<p class="try-task"><strong>Missão:</strong> a lista da Ana está saindo numerada a partir do 0. Faça a numeração começar do <strong>1</strong>, mudando só a chamada do <code>enumerate()</code>.</p>
+<pre class="script" data-file="main.py">compras = ["arroz", "feijão", "café", "leite"]
+
+for numero, item in enumerate(compras):
+    print(f"{numero}. {item}")
+</pre>
+<pre class="solucao" data-file="main.py">compras = ["arroz", "feijão", "café", "leite"]
+
+for numero, item in enumerate(compras, start=1):
+    print(f"{numero}. {item}")
+</pre>
+</div>
+
+<h3>Sem o <code>enumerate()</code>: os jeitos antigos</h3>
+<p>Antes de conhecer o <code>enumerate()</code>, muita gente numera de um destes dois jeitos:</p>
+
+<pre class="file" data-file="contador_manual.py">compras = ["arroz", "feijão", "café", "leite"]
+
+numero = 1
+for item in compras:
+    print(f"{numero}. {item}")
+    numero = numero + 1
+
+for i in range(len(compras)):
+    print(f"{i + 1}. {compras[i]}")
+</pre>
+
+<pre class="term">$ python3 contador_manual.py
+1. arroz
+2. feijão
+3. café
+4. leite
+1. arroz
+2. feijão
+3. café
+4. leite
+</pre>
+
+<p>Os dois funcionam, mas cada um tem um ponto fraco. No primeiro, você cuida do contador à mão: se esquecer o <code>numero = numero + 1</code> (ou colocá-lo fora do laço), todos os itens saem com o número 1. No segundo, o <code>range(len(compras))</code> percorre os <strong>números</strong>, e o item só aparece por <code>compras[i]</code>, com colchetes e mais uma chance de errar o índice. O <code>enumerate()</code> entrega as duas coisas prontas.</p>
+
+<hr>
+
+<h2>2. <code>zip()</code>: duas listas lado a lado</h2>
+<p>A professora guardou os nomes dos alunos numa lista e as notas em outra, na mesma ordem: a primeira nota é da Ana, a segunda é do Bruno, a terceira é da Clara.</p>
+
+<pre class="file" data-file="boletim_zip.py">alunos = ["Ana", "Bruno", "Clara"]
+notas = [9.0, 6.5, 8.0]
+
+for aluno, nota in zip(alunos, notas):
+    situacao = "aprovado" if nota &gt;= 7 else "recuperação"
+    print(f"{aluno}: {nota} ({situacao})")
+</pre>
+
+<pre class="term">$ python3 boletim_zip.py
+Ana: 9.0 (aprovado)
+Bruno: 6.5 (recuperação)
+Clara: 8.0 (aprovado)
+</pre>
+
+<dl class="anatomy">
+  <dt>zip(alunos, notas)</dt><dd>Fecha o zíper: junta o 1º aluno com a 1ª nota, o 2º com a 2ª, o 3º com a 3ª.</dd>
+  <dt>for aluno, nota in …</dt><dd>Em cada volta, um par: <code>aluno</code> recebe o item da primeira lista; <code>nota</code>, o da segunda. A ordem das variáveis é a ordem das listas no <code>zip()</code>.</dd>
+  <dt>"aprovado" if nota &gt;= 7 else "recuperação"</dt><dd>Um <code>if</code> numa linha só (aula <a href="if-ternario.html">if em uma Linha</a>), só para enfeitar o boletim.</dd>
+</dl>
+
+<p>Por dentro, também são tuplas:</p>
+<pre class="term">&gt;&gt;&gt; alunos = ["Ana", "Bruno", "Clara"]
+&gt;&gt;&gt; notas = [9.0, 6.5, 8.0]
+&gt;&gt;&gt; list(zip(alunos, notas))
+[('Ana', 9.0), ('Bruno', 6.5), ('Clara', 8.0)]
+</pre>
+
+<div class="trypy" data-goal="out:Ana: 9.0;;out:Clara: 8.0;;src:\bzip\(">
+<p class="try-task"><strong>Missão:</strong> o programa mostra só os nomes. Use <code>zip()</code> para mostrar cada aluno com a sua nota, no formato <code>Ana: 9.0</code>.</p>
+<pre class="script" data-file="main.py">alunos = ["Ana", "Bruno", "Clara"]
+notas = [9.0, 6.5, 8.0]
+
+for aluno in alunos:
+    print(aluno)
+</pre>
+<pre class="solucao" data-file="main.py">alunos = ["Ana", "Bruno", "Clara"]
+notas = [9.0, 6.5, 8.0]
+
+for aluno, nota in zip(alunos, notas):
+    print(f"{aluno}: {nota}")
+</pre>
+</div>
+
+<h3>Três listas (ou mais)</h3>
+<p>O <code>zip()</code> aceita quantas listas você quiser. A cada volta, vem um item de cada uma:</p>
+
+<pre class="file" data-file="tres_listas.py">produtos = ["arroz", "café", "sal"]
+precos = [25.9, 18.5, 3.2]
+quantidades = [2, 1, 3]
+
+total = 0
+for produto, preco, quantidade in zip(produtos, precos, quantidades):
+    subtotal = preco * quantidade
+    total = total + subtotal
+    print(f"{quantidade} x {produto}: R$ {subtotal:.2f}")
+print(f"Total: R$ {total:.2f}")
+</pre>
+
+<pre class="term">$ python3 tres_listas.py
+2 x arroz: R$ 51.80
+1 x café: R$ 18.50
+3 x sal: R$ 9.60
+Total: R$ 79.90
+</pre>
+
+<h3>Montando um dicionário: <code>dict(zip(…))</code></h3>
+<p>Uma lista de chaves e uma lista de valores, juntas pelo <code>zip()</code>, viram um dicionário (aula <a href="dicionarios.html">Dicionários</a>):</p>
+<pre class="term">&gt;&gt;&gt; dict(zip(alunos, notas))
+{'Ana': 9.0, 'Bruno': 6.5, 'Clara': 8.0}
+</pre>
+
+<hr>
+
+<h2>3. Listas de tamanhos diferentes</h2>
+<p>Chegou um aluno novo, o Davi, e a professora pôs o nome dele na lista. Mas ainda não lançou a nota:</p>
+
+<pre class="file" data-file="tamanhos.py">alunos = ["Ana", "Bruno", "Clara", "Davi"]
+notas = [9.0, 6.5, 8.0]
+
+for aluno, nota in zip(alunos, notas):
+    print(aluno, nota)
+print("Fim")
+</pre>
+
+<pre class="term">$ python3 tamanhos.py
+Ana 9.0
+Bruno 6.5
+Clara 8.0
+Fim
+</pre>
+
+<p>O Davi <strong>sumiu</strong>, e sem aviso nenhum. O <code>zip()</code> para assim que a lista <strong>mais curta</strong> acaba: depois da Clara, não há mais nota para encaixar, então o zíper termina ali. Isso pode ser exatamente o que você quer… ou pode esconder um erro de verdade, como uma nota que alguém esqueceu de lançar.</p>
+
+<h3><code>strict=True</code>: exigir o mesmo tamanho</h3>
+<p>Quando as listas <strong>têm de ter</strong> o mesmo tamanho, diga isso ao <code>zip()</code> com a opção <code>strict=True</code> ("estrito", "rigoroso"). Aí, em vez de cortar calado, ele dá erro:</p>
+
+<pre class="file" data-file="estrito.py">alunos = ["Ana", "Bruno", "Clara", "Davi"]
+notas = [9.0, 6.5, 8.0]
+
+for aluno, nota in zip(alunos, notas, strict=True):
+    print(aluno, nota)
+print("Fim")
+</pre>
+
+<pre class="term">$ python3 estrito.py
+Ana 9.0
+Bruno 6.5
+Clara 8.0
+Traceback (most recent call last):
+  File "/home/ana/estrito.py", line 4, in &lt;module&gt;
+    for aluno, nota in zip(alunos, notas, strict=True):
+                       ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: zip() argument 2 is shorter than argument 1
+</pre>
+
+<dl class="anatomy">
+  <dt>Ana 9.0 … Clara 8.0</dt><dd>As três primeiras voltas aconteceram normalmente. O <code>zip()</code> só descobre que faltou uma nota quando tenta montar o quarto par.</dd>
+  <dt>line 4, in &lt;module&gt;</dt><dd>O erro aconteceu na linha do <code>for</code>, a do <code>zip()</code>; as marcas <code>~~~^^^</code> apontam para ele.</dd>
+  <dt>ValueError: zip() argument 2 is shorter than argument 1</dt><dd>"Erro de valor: o argumento 2 do <code>zip()</code> é mais curto que o argumento 1." O argumento 1 é <code>alunos</code> (4 itens); o 2 é <code>notas</code> (3 itens). Se fosse o contrário, a mensagem diria <code>is longer than</code>, "é mais longo que".</dd>
+  <dt>Fim (não apareceu)</dt><dd>O programa parou no erro. Melhor assim: um boletim sem a nota do Davi não pode passar despercebido.</dd>
+</dl>
+
+<div class="tip">
+<strong>Quando usar <code>strict=True</code></strong>
+<p>Sempre que as listas representam a <strong>mesma coisa</strong> (o nome e a nota do mesmo aluno, o produto e o preço do mesmo produto), use <code>strict=True</code>. Se um dia uma lista ficar maior que a outra, você descobre na hora, em vez de receber um resultado errado em silêncio.</p>
+</div>
+
+<hr>
+
+<h2>4. Os dois juntos: o ranking</h2>
+<p>As notas já estão em ordem, da maior para a menor. Para mostrar o ranking, você precisa do lugar (<code>enumerate</code>) e do par aluno-nota (<code>zip</code>):</p>
+
+<pre class="file" data-file="ranking.py">alunos = ["Clara", "Ana", "Bruno"]
+notas = [9.5, 8.0, 7.0]
+
+for lugar, (aluno, nota) in enumerate(zip(alunos, notas), start=1):
+    print(f"{lugar}º lugar: {aluno} com {nota}")
+</pre>
+
+<pre class="term">$ python3 ranking.py
+1º lugar: Clara com 9.5
+2º lugar: Ana com 8.0
+3º lugar: Bruno com 7.0
+</pre>
+
+<dl class="anatomy">
+  <dt>zip(alunos, notas)</dt><dd>Primeiro, os pares: <code>('Clara', 9.5)</code>, <code>('Ana', 8.0)</code>, <code>('Bruno', 7.0)</code>.</dd>
+  <dt>enumerate(…, start=1)</dt><dd>Depois, cada par ganha um número: <code>(1, ('Clara', 9.5))</code>…</dd>
+  <dt>lugar, (aluno, nota)</dt><dd>O desempacotamento acompanha o formato: o número vai para <code>lugar</code>, e o par, entre parênteses, se abre em <code>aluno</code> e <code>nota</code>. Sem os parênteses (<code>for lugar, aluno, nota in …</code>), o Python tentaria distribuir os 2 valores de cada volta (o número e o par) em 3 variáveis, e pararia com <code>ValueError: not enough values to unpack (expected 3, got 2)</code>: "valores de menos para desempacotar (esperava 3, recebeu 2)".</dd>
+</dl>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+<p>Mostrar cada aluno com a sua nota, de três jeitos:</p>
+
+<pre class="file" data-file="forma1.py">for i in range(len(alunos)):
+    print(alunos[i], notas[i])
+</pre>
+<pre class="file" data-file="forma2.py">for i, aluno in enumerate(alunos):
+    print(aluno, notas[i])
+</pre>
+<pre class="file" data-file="forma3.py">for aluno, nota in zip(alunos, notas, strict=True):
+    print(aluno, nota)
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>zip(alunos, notas, strict=True)</code></td><td>Para andar em duas listas juntas. É a mais clara: sem índice, sem colchetes, e avisa se os tamanhos não baterem</td></tr>
+<tr><td><code>enumerate(lista)</code></td><td>Quando você precisa do <strong>número</strong> da posição: para numerar, ou para mudar o item com <code>lista[i] = …</code></td></tr>
+<tr><td><code>range(len(lista))</code></td><td>Evite. Funciona, mas é mais longo e mais fácil de errar. Se a outra lista for mais curta, dá <code>IndexError</code> no meio do laço</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Duas variáveis no <code>for</code>, mas sem o <code>enumerate()</code></strong>
+<p>A Ana queria numerar a lista, escreveu as duas variáveis no <code>for</code>… e esqueceu o <code>enumerate()</code>:</p>
+<pre class="file" data-file="sem_enumerate.py">compras = ["arroz", "feijão", "café"]
+
+for numero, item in compras:
+    print(numero, item)
+</pre>
+<pre class="term">$ python3 sem_enumerate.py
+Traceback (most recent call last):
+  File "/home/ana/sem_enumerate.py", line 3, in &lt;module&gt;
+    for numero, item in compras:
+        ^^^^^^^^^^^^
+ValueError: too many values to unpack (expected 2)
+</pre>
+<dl class="anatomy">
+  <dt>line 3</dt><dd>O erro está na linha do <code>for</code>.</dd>
+  <dt>^^^^^^^^^^^^</dt><dd>As marcas apontam para <code>numero, item</code>: o problema está em distribuir o valor nas duas variáveis.</dd>
+  <dt>ValueError: too many values to unpack (expected 2)</dt><dd>"Valores demais para desempacotar (esperava 2)." Sem o <code>enumerate()</code>, cada volta entrega um item só: o texto <code>"arroz"</code>. O Python tenta abrir esse texto em duas variáveis, como faria com uma tupla, e encontra <strong>cinco</strong> letras para duas variáveis.</dd>
+</dl>
+<p><strong>Como consertar:</strong> <code>for numero, item in enumerate(compras, start=1):</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Usar o mesmo <code>zip</code> duas vezes</strong>
+<p>Assim como o <code>enumerate()</code>, o <code>zip()</code> entrega os pares um de cada vez, e <strong>só uma vez</strong>. Se você guarda o resultado numa variável e percorre duas vezes, a segunda vem vazia, sem erro:</p>
+<pre class="term">&gt;&gt;&gt; pares = zip(alunos, notas)
+&gt;&gt;&gt; list(pares)
+[('Ana', 9.0), ('Bruno', 6.5), ('Clara', 8.0)]
+&gt;&gt;&gt; list(pares)
+[]
+</pre>
+<p>O zíper já foi fechado até o fim; não há mais nada para entregar. <strong>Como consertar:</strong> chame o <code>zip()</code> de novo, direto no <code>for</code> (<code>for aluno, nota in zip(alunos, notas):</code>), ou guarde uma lista com <code>pares = list(zip(alunos, notas))</code>, que pode ser percorrida quantas vezes você quiser. A aula <a href="iteradores.html">Iteradores</a> explica por que isso acontece.</p>
+</div>
+
+<div class="trypy" data-goal="out:Davi 7.5;;semerro;;src:strict=True">
+<p class="try-task"><strong>Missão:</strong> rode e veja o <code>ValueError</code>: falta a nota do Davi. Ele tirou <strong>7.5</strong>. Acrescente a nota que falta (mantenha o <code>strict=True</code>).</p>
+<pre class="script" data-file="main.py">alunos = ["Ana", "Bruno", "Clara", "Davi"]
+notas = [9.0, 6.5, 8.0]
+
+for aluno, nota in zip(alunos, notas, strict=True):
+    print(aluno, nota)
+</pre>
+<pre class="solucao" data-file="main.py">alunos = ["Ana", "Bruno", "Clara", "Davi"]
+notas = [9.0, 6.5, 8.0, 7.5]
+
+for aluno, nota in zip(alunos, notas, strict=True):
+    print(aluno, nota)
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que entrega</th></tr>
+<tr><td><code>enumerate(lista)</code></td><td>Pares <code>(posição, item)</code>, começando do 0</td></tr>
+<tr><td><code>enumerate(lista, start=1)</code></td><td>Pares <code>(número, item)</code>, começando do 1</td></tr>
+<tr><td><code>for i, item in enumerate(lista):</code></td><td>Percorre com o número e o item</td></tr>
+<tr><td><code>zip(a, b)</code></td><td>Pares <code>(item de a, item de b)</code>, até a lista mais curta acabar</td></tr>
+<tr><td><code>zip(a, b, c)</code></td><td>Trios, um item de cada lista</td></tr>
+<tr><td><code>zip(a, b, strict=True)</code></td><td>Igual, mas dá <code>ValueError</code> se os tamanhos forem diferentes</td></tr>
+<tr><td><code>dict(zip(chaves, valores))</code></td><td>Um dicionário</td></tr>
+<tr><td><code>list(enumerate(…))</code>, <code>list(zip(…))</code></td><td>Uma lista com todas as tuplas (para ver, ou para usar mais de uma vez)</td></tr>
+<tr><td><code>for n, (a, b) in enumerate(zip(x, y), start=1):</code></td><td>Os dois juntos</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>ValueError: too many values to unpack (expected 2)</code> num <code>for</code></td><td>Duas variáveis no <code>for</code>, mas faltou o <code>enumerate()</code> ou o <code>zip()</code></td></tr>
+<tr><td><code>ValueError: zip() argument 2 is shorter than argument 1</code></td><td><code>strict=True</code> e a segunda lista tem menos itens (com <code>is longer than</code>, mais itens)</td></tr>
+<tr><td>Itens somem no fim, sem erro</td><td>Listas de tamanhos diferentes num <code>zip()</code> sem <code>strict=True</code></td></tr>
+<tr><td>A segunda volta num <code>zip</code> guardado não mostra nada</td><td>O <code>zip</code> (e o <code>enumerate</code>) só pode ser percorrido uma vez</td></tr>
+<tr><td><code>&lt;enumerate object at 0x…&gt;</code> ou <code>&lt;zip object at 0x…&gt;</code></td><td>Você mostrou o objeto, não os pares: use <code>list(…)</code> ou um <code>for</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Numerando a partir do 1</h3>
+<p>Complete para a numeração começar do 1:</p>
+<div class="ex-code">for numero, item in enumerate(compras, <input data-answer="start=1|start = 1" aria-label="opção">):</div>
+</div>
+
+<div class="exercise">
+<h3>2. O zíper</h3>
+<p>Complete para percorrer os produtos e os preços juntos:</p>
+<div class="ex-code">for produto, preco in <input data-answer="zip" aria-label="função">(produtos, precos):</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. <code>alunos</code> tem 4 nomes e <code>notas</code> tem 3 notas. Quantas voltas dá o <code>for aluno, nota in zip(alunos, notas):</code>?</p>
+<label><input type="radio" name="q3"> 4</label>
+<label><input type="radio" name="q3"> 3</label>
+<label><input type="radio" name="q3"> 7</label>
+<label><input type="radio" name="q3"> Nenhuma: dá erro na hora</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">4. O que <code>list(enumerate(["a", "b"]))</code> devolve?</p>
+<label><input type="radio" name="q4"> <code>['a', 'b']</code></label>
+<label><input type="radio" name="q4"> <code>[1, 2]</code></label>
+<label><input type="radio" name="q4"> <code>[(1, 'a'), (2, 'b')]</code></label>
+<label><input type="radio" name="q4"> <code>[(0, 'a'), (1, 'b')]</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Para que serve o <code>strict=True</code> no <code>zip()</code>?</p>
+<label><input type="radio" name="q5"> Dar erro se as listas tiverem tamanhos diferentes, em vez de cortar calado</label>
+<label><input type="radio" name="q5"> Ordenar as listas antes de juntar</label>
+<label><input type="radio" name="q5"> Completar a lista mais curta com zeros</label>
+<label><input type="radio" name="q5"> Deixar o <code>zip()</code> mais rápido</label>
+</div>
+
+<h3>Missão final: o pódio</h3>
+
+<div class="trypy" data-goal="out:1º lugar: Clara;;out:3º lugar: Bruno;;src:\benumerate\(;;src:\bzip\(">
+<p class="try-task"><strong>Missão:</strong> mostre o pódio da gincana, no formato <code>1º lugar: Clara (95 pontos)</code>, usando <code>enumerate()</code> <strong>e</strong> <code>zip()</code> juntos, com a contagem começando do 1.</p>
+<pre class="script" data-file="main.py">nomes = ["Clara", "Ana", "Bruno"]
+pontos = [95, 80, 70]
+
+# escreva o for aqui
+</pre>
+<pre class="solucao" data-file="main.py">nomes = ["Clara", "Ana", "Bruno"]
+pontos = [95, 80, 70]
+
+for lugar, (nome, ponto) in enumerate(zip(nomes, pontos), start=1):
+    print(f"{lugar}º lugar: {nome} ({ponto} pontos)")
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>enumerate(lista)</code> entrega cada item <strong>junto com a sua posição</strong>: <code>for i, item in enumerate(lista):</code>. Começa do 0; com <code>start=1</code>, do 1.</li>
+  <li><code>zip(a, b)</code> anda em duas (ou mais) listas <strong>ao mesmo tempo</strong>, item com item, como um zíper.</li>
+  <li>Com tamanhos diferentes, o <code>zip()</code> para na lista mais curta, <strong>sem avisar</strong>. Com <code>strict=True</code>, dá <code>ValueError: zip() argument 2 is shorter than argument 1</code>.</li>
+  <li><code>dict(zip(chaves, valores))</code> monta um dicionário.</li>
+  <li>Juntos: <code>for n, (a, b) in enumerate(zip(x, y), start=1):</code>.</li>
+  <li><code>enumerate</code> e <code>zip</code> entregam os pares um de cada vez, e só uma vez. Para ver todos ou reaproveitar, use <code>list(…)</code>.</li>
+  <li>Prefira os dois ao <code>range(len(lista))</code>: menos colchetes, menos chances de errar.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
