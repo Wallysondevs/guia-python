@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Exceções Embutidas — a árvore de erros e a mensagem real de cada um | Guia Python</title>
+<meta name="description" content="Referência das exceções embutidas do Python 3.14: a hierarquia completa (BaseException, Exception, LookupError, OSError…), a mensagem real de cada erro (NameError, TypeError, ValueError, KeyError, IndexError, FileNotFoundError, ZeroDivisionError e as outras), quando cada uma acontece e o link para a aula.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Exceções Embutidas</span></h1>
+
+<p class="intro">Quando algo dá errado, o Python para o programa e mostra o nome de uma <strong>exceção</strong> (<em>exception</em>, "exceção": um erro que acontece com o programa já rodando), como <code>ValueError</code> ou <code>KeyError</code>, seguido de uma mensagem. Esta página é o dicionário desses nomes: a árvore de famílias, a mensagem <strong>real</strong> que cada uma mostra no Python 3.14 e quando ela acontece. Para aprender a ler a mensagem inteira, veja a aula <a href="erros.html">Lendo uma Mensagem de Erro</a>; para tratar o erro, <a href="try-except.html">try e except</a>.</p>
+
+<div class="note">
+<strong>Como ler as tabelas</strong>
+<ul>
+  <li><strong>Exemplo</strong> é um código curto que provoca o erro; <strong>Mensagem real</strong> é a <strong>última linha</strong> do traceback que o Python 3.14.4 mostrou no computador da Ana. As mensagens do Python são sempre em inglês; a coluna "Quando acontece" traduz a ideia.</li>
+  <li>A última linha tem sempre o formato <code>NomeDaExceção: explicação</code>. Algumas exceções não têm explicação, e a linha é só o nome (por exemplo, <code>StopIteration</code>).</li>
+  <li>A coluna <strong>Aula</strong> leva à aula em que o erro aparece pela primeira vez.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2 id="anatomia">Onde fica o nome da exceção</h2>
+
+<p>Um programa que usa uma variável que não existe:</p>
+
+<pre class="term">$ python3 erro_nome.py
+Traceback (most recent call last):
+  File "/home/ana/erro_nome.py", line 2, in &lt;module&gt;
+    print(nome)
+          ^^^^
+NameError: name 'nome' is not defined. Did you mean: 'nomes'?
+</pre>
+
+<dl class="anatomy">
+  <dt><code>Traceback (most recent call last):</code></dt><dd>"Rastro (a chamada mais recente por último)": o Python vai mostrar o caminho até o erro.</dd>
+  <dt><code>File "…", line 2</code></dt><dd>O arquivo e a linha onde o erro aconteceu.</dd>
+  <dt><code>^^^^</code></dt><dd>Os acentos marcam o pedaço exato da linha que deu problema.</dd>
+  <dt><code>NameError</code></dt><dd>O <strong>nome da exceção</strong>: é ele que você procura nesta página e é ele que vai no <code>except</code>.</dd>
+  <dt><code>name 'nome' is not defined. Did you mean: 'nomes'?</code></dt><dd>A explicação: "o nome 'nome' não está definido. Você quis dizer 'nomes'?". O Python 3.14 dá essas dicas quando acha um nome parecido.</dd>
+</dl>
+
+<hr>
+
+<h2 id="arvore">A árvore de exceções</h2>
+
+<p>As exceções são <a href="classes.html">classes</a> organizadas em famílias, como uma árvore genealógica. Cada uma "é filha" de outra mais geral. Isso importa por um motivo prático: um <code>except</code> pega a exceção que você escreveu <strong>e todas as filhas dela</strong>. <code>except LookupError</code> pega <code>IndexError</code> e <code>KeyError</code>; <code>except OSError</code> pega todos os erros de arquivo.</p>
+
+<p>Esta é a árvore das exceções embutidas do Python 3.14.4, montada pelo próprio Python no computador da Ana (cada nível de recuo é uma geração):</p>
+
+<pre>BaseException                   « a mãe de todas
+├── BaseExceptionGroup
+├── GeneratorExit
+├── KeyboardInterrupt           « Ctrl-C
+├── SystemExit                  « sys.exit()
+└── Exception                   « a mãe dos erros "normais"
+    ├── ArithmeticError         « contas
+    │   ├── FloatingPointError
+    │   ├── OverflowError
+    │   └── ZeroDivisionError
+    ├── AssertionError
+    ├── AttributeError
+    ├── BufferError
+    ├── EOFError
+    ├── ExceptionGroup          « filha de BaseExceptionGroup também
+    ├── ImportError
+    │   └── ModuleNotFoundError
+    ├── LookupError             « procurar em listas e dicionários
+    │   ├── IndexError
+    │   └── KeyError
+    ├── MemoryError
+    ├── NameError
+    │   └── UnboundLocalError
+    ├── OSError                 « arquivos, pastas, sistema, rede
+    │   ├── BlockingIOError
+    │   ├── ChildProcessError
+    │   ├── ConnectionError
+    │   │   ├── BrokenPipeError
+    │   │   ├── ConnectionAbortedError
+    │   │   ├── ConnectionRefusedError
+    │   │   └── ConnectionResetError
+    │   ├── FileExistsError
+    │   ├── FileNotFoundError
+    │   ├── InterruptedError
+    │   ├── IsADirectoryError
+    │   ├── NotADirectoryError
+    │   ├── PermissionError
+    │   ├── ProcessLookupError
+    │   └── TimeoutError
+    ├── ReferenceError
+    ├── RuntimeError
+    │   ├── NotImplementedError
+    │   ├── PythonFinalizationError
+    │   └── RecursionError
+    ├── StopAsyncIteration
+    ├── StopIteration
+    ├── SyntaxError
+    │   └── IndentationError
+    │       └── TabError
+    ├── SystemError
+    ├── TypeError
+    ├── ValueError
+    │   └── UnicodeError
+    │       ├── UnicodeDecodeError
+    │       ├── UnicodeEncodeError
+    │       └── UnicodeTranslateError
+    └── Warning                 « avisos (veja no fim da página)
+        ├── BytesWarning
+        ├── DeprecationWarning
+        ├── EncodingWarning
+        ├── FutureWarning
+        ├── ImportWarning
+        ├── PendingDeprecationWarning
+        ├── ResourceWarning
+        ├── RuntimeWarning
+        ├── SyntaxWarning
+        ├── UnicodeWarning
+        └── UserWarning
+</pre>
+
+<p>Você pode perguntar ao Python a "linha da família" de qualquer exceção com <code>__mro__</code> (a ordem dos ancestrais) ou conferir um parentesco com <code>issubclass</code> ("é subclasse de?"):</p>
+
+<pre class="file" data-file="familia.py">print(ZeroDivisionError.__mro__)
+print(FileNotFoundError.__mro__)
+print(issubclass(KeyError, LookupError))
+print(issubclass(KeyboardInterrupt, Exception))
+</pre>
+
+<pre class="term">$ python3 familia.py
+(&lt;class 'ZeroDivisionError'&gt;, &lt;class 'ArithmeticError'&gt;, &lt;class 'Exception'&gt;, &lt;class 'BaseException'&gt;, &lt;class 'object'&gt;)
+(&lt;class 'FileNotFoundError'&gt;, &lt;class 'OSError'&gt;, &lt;class 'Exception'&gt;, &lt;class 'BaseException'&gt;, &lt;class 'object'&gt;)
+True
+False
+</pre>
+
+<div class="warning">
+<strong>Por que nunca usar <code>except BaseException</code> (nem <code>except:</code> sozinho)</strong>
+<p>Repare na última linha: <code>KeyboardInterrupt</code> <strong>não</strong> é filha de <code>Exception</code>. Ela, <code>SystemExit</code> e <code>GeneratorExit</code> ficam de fora de propósito: não são "erros", são pedidos para o programa parar (o Ctrl-C do teclado, o <code>sys.exit()</code>). Um <code>except Exception</code> deixa esses pedidos passarem; um <code>except BaseException</code> ou um <code>except:</code> sem nome os engole, e o programa não para nem com Ctrl-C. Quando precisar de um "pega tudo", o mais largo aceitável é <code>except Exception</code>, e de preferência com o nome exato do erro que você espera.</p>
+</div>
+
+<p>A família ajuda a tratar vários erros parecidos de uma vez. O estoque da Ana tem um dicionário e uma lista; procurar algo que não existe dá <code>KeyError</code> num e <code>IndexError</code> na outra, e um único <code>except LookupError</code> pega os dois:</p>
+
+<pre class="file" data-file="estoque.py">estoque = {"pão": 30, "leite": 12}
+prateleira = ["pão", "leite"]
+
+for tentativa in ["café", 5]:
+    try:
+        if isinstance(tentativa, str):
+            print(estoque[tentativa])
+        else:
+            print(prateleira[tentativa])
+    except LookupError as erro:
+        print(f"{type(erro).__name__}: {erro}")
+</pre>
+
+<pre class="term">$ python3 estoque.py
+KeyError: 'café'
+IndexError: list index out of range
+</pre>
+
+<hr>
+
+<h2 id="comuns">Os erros do dia a dia</h2>
+
+<p>Estas são as exceções que um iniciante encontra quase todo dia.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Exceção</th><th>Quando acontece</th><th>Exemplo</th><th>Mensagem real</th><th>Aula</th></tr>
+<tr><td><code>NameError</code></td><td>Usou um nome (variável, função) que não existe: erro de digitação ou variável criada depois.</td><td><code>nomes = ["Ana", "Bia"]</code><br><code>print(nome)</code></td><td><code>NameError: name 'nome' is not defined. Did you mean: 'nomes'?</code></td><td><a href="variaveis.html">Variáveis</a></td></tr>
+<tr><td><code>UnboundLocalError</code></td><td>Dentro de uma função, mudou uma variável de fora sem <code>global</code>.</td><td><code>total = 0</code><br><code>def somar():</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;total += 1</code><br><code>somar()</code></td><td><code>UnboundLocalError: cannot access local variable 'total' where it is not associated with a value</code></td><td><a href="escopo.html">Escopo</a></td></tr>
+<tr><td rowspan="7"><code>TypeError</code></td><td>Juntou texto com número.</td><td><code>"Idade: " + 30</code></td><td><code>TypeError: can only concatenate str (not "int") to str</code></td><td><a href="strings-juntar.html">Juntar Textos</a></td></tr>
+<tr><td>Usou uma função num tipo que ela não aceita.</td><td><code>len(5)</code></td><td><code>TypeError: object of type 'int' has no len()</code></td><td><a href="funcoes-embutidas.html">Funções Embutidas</a></td></tr>
+<tr><td>Chamou uma função sem um argumento obrigatório.</td><td><code>def saudar(nome): ...</code><br><code>saudar()</code></td><td><code>TypeError: saudar() missing 1 required positional argument: 'nome'</code></td><td><a href="parametros.html">Parâmetros</a></td></tr>
+<tr><td>Pôs <code>( )</code> em algo que não é função.</td><td><code>None()</code></td><td><code>TypeError: 'NoneType' object is not callable</code></td><td><a href="none.html">None</a></td></tr>
+<tr><td>Tentou mudar uma letra de um texto (textos não mudam).</td><td><code>"abc"[0] = "x"</code></td><td><code>TypeError: 'str' object does not support item assignment</code></td><td><a href="mutabilidade.html">Mutável × Imutável</a></td></tr>
+<tr><td>Usou uma lista como chave de dicionário.</td><td><code>{[1]: 2}</code></td><td><code>TypeError: cannot use 'list' as a dict key (unhashable type: 'list')</code></td><td><a href="dicionarios.html">Dicionários</a></td></tr>
+<tr><td>Comparou número com texto.</td><td><code>3 &lt; "a"</code></td><td><code>TypeError: '&lt;' not supported between instances of 'int' and 'str'</code></td><td><a href="operadores-comparacao.html">Comparações</a></td></tr>
+<tr><td rowspan="5"><code>ValueError</code></td><td>O tipo está certo, mas o <strong>valor</strong> não serve: texto que não é número.</td><td><code>int("dez")</code></td><td><code>ValueError: invalid literal for int() with base 10: 'dez'</code></td><td><a href="conversao.html">Conversão de Tipos</a></td></tr>
+<tr><td>Número com vírgula (o Python usa ponto).</td><td><code>float("1,5")</code></td><td><code>ValueError: could not convert string to float: '1,5'</code></td><td><a href="conversao.html">Conversão de Tipos</a></td></tr>
+<tr><td>Tirou da lista um item que ela não tem.</td><td><code>[1, 2].remove(3)</code></td><td><code>ValueError: list.remove(x): x not in list</code></td><td><a href="listas-remover.html">Removendo Itens</a></td></tr>
+<tr><td>Desempacotou com o número errado de variáveis.</td><td><code>a, b = [1, 2, 3]</code></td><td><code>ValueError: too many values to unpack (expected 2, got 3)</code></td><td><a href="desempacotamento.html">Desempacotamento</a></td></tr>
+<tr><td>Valor fora do que a conta aceita.</td><td><code>math.sqrt(-1)</code></td><td><code>ValueError: expected a nonnegative input, got -1.0</code></td><td><a href="math.html">O Módulo math</a></td></tr>
+<tr><td rowspan="3"><code>IndexError</code></td><td>Posição que não existe na lista.</td><td><code>["pão", "leite"][5]</code></td><td><code>IndexError: list index out of range</code></td><td><a href="listas-acessar.html">Acessando Itens</a></td></tr>
+<tr><td>Posição que não existe no texto.</td><td><code>"Ana"[10]</code></td><td><code>IndexError: string index out of range</code></td><td><a href="strings-fatias.html">Índices e Fatias</a></td></tr>
+<tr><td><code>pop()</code> numa lista vazia.</td><td><code>[].pop()</code></td><td><code>IndexError: pop from empty list</code></td><td><a href="listas-remover.html">Removendo Itens</a></td></tr>
+<tr><td><code>KeyError</code></td><td>Chave que não existe no dicionário. A mensagem é só a chave.</td><td><code>{"pão": 4.5}["café"]</code></td><td><code>KeyError: 'café'</code></td><td><a href="dicionarios.html">Dicionários</a></td></tr>
+<tr><td rowspan="3"><code>AttributeError</code></td><td>Método ou atributo que o valor não tem (muitas vezes, erro de digitação).</td><td><code>"ana".upercase()</code></td><td><code>AttributeError: 'str' object has no attribute 'upercase'</code></td><td><a href="strings-metodos.html">Métodos de Texto</a></td></tr>
+<tr><td>A variável ficou <code>None</code> e você chamou um método nela.</td><td><code>x = None</code><br><code>x.append(1)</code></td><td><code>AttributeError: 'NoneType' object has no attribute 'append'</code></td><td><a href="none.html">None</a></td></tr>
+<tr><td>Nome que o módulo não tem.</td><td><code>import math</code><br><code>math.pi2</code></td><td><code>AttributeError: module 'math' has no attribute 'pi2'. Did you mean: 'pi'?</code></td><td><a href="modulos.html">Módulos e import</a></td></tr>
+<tr><td rowspan="3"><code>ZeroDivisionError</code></td><td>Divisão por zero.</td><td><code>10 / 0</code></td><td><code>ZeroDivisionError: division by zero</code></td><td><a href="operadores-aritmeticos.html">Operadores Aritméticos</a></td></tr>
+<tr><td>O mesmo com a divisão inteira…</td><td><code>10 // 0</code></td><td><code>ZeroDivisionError: division by zero</code></td><td></td></tr>
+<tr><td>…e com o resto.</td><td><code>10 % 0</code></td><td><code>ZeroDivisionError: division by zero</code></td><td></td></tr>
+</table>
+</div>
+
+<div class="tip">
+<strong><code>TypeError</code> ou <code>ValueError</code>?</strong>
+<p><code>TypeError</code> = o <strong>tipo</strong> está errado (deu um número onde se esperava um texto). <code>ValueError</code> = o tipo está certo, mas o <strong>valor</strong> não serve (é um texto, mas <code>"dez"</code> não vira número). Em <code>int("dez")</code> o <code>int</code> aceita textos, só não esse.</p>
+</div>
+
+<hr>
+
+<h2 id="sintaxe">Erros de escrita (antes de o programa rodar)</h2>
+
+<p><code>SyntaxError</code> ("erro de sintaxe") e suas filhas são diferentes de todas as outras: o Python os encontra <strong>lendo</strong> o arquivo, antes de rodar a primeira linha. Por isso um <code>try</code> no mesmo arquivo não os pega: o programa nem começa. Cada mensagem abaixo vem com a linha e os <code>^</code> que o Python mostrou (arquivo <code>teste.py</code>).</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Exceção</th><th>Quando acontece</th><th>Exemplo</th><th>Mensagem real</th><th>Aula</th></tr>
+<tr><td rowspan="8"><code>SyntaxError</code></td><td>Abriu um parêntese e não fechou.</td><td><code>print('oi'</code></td><td><code>SyntaxError: '(' was never closed</code></td><td><a href="sintaxe.html">Sintaxe e Indentação</a></td></tr>
+<tr><td>Esqueceu os dois-pontos.</td><td><code>if x == 1</code></td><td><code>SyntaxError: expected ':'</code></td><td><a href="if.html">if</a></td></tr>
+<tr><td>Abriu uma aspa e não fechou.</td><td><code>'abc</code></td><td><code>SyntaxError: unterminated string literal (detected at line 1)</code></td><td><a href="strings.html">Strings</a></td></tr>
+<tr><td>O mesmo com três aspas.</td><td><code>"""abc</code></td><td><code>SyntaxError: unterminated triple-quoted string literal (detected at line 1)</code></td><td></td></tr>
+<tr><td><code>print</code> sem parênteses (jeito do Python 2).</td><td><code>print 'oi'</code></td><td><code>SyntaxError: Missing parentheses in call to 'print'. Did you mean print(...)?</code></td><td><a href="print.html">print()</a></td></tr>
+<tr><td>Usou uma <a href="ref-palavras-chave.html">palavra-chave</a> como nome de variável.</td><td><code>class = 1</code></td><td><code>SyntaxError: invalid syntax</code></td><td><a href="nomes-variaveis.html">Nomes de Variáveis</a></td></tr>
+<tr><td>Expressão pela metade.</td><td><code>a = 1 +</code></td><td><code>SyntaxError: invalid syntax</code></td><td></td></tr>
+<tr><td><code>return</code> fora de uma função.</td><td><code>return 5</code></td><td><code>SyntaxError: 'return' outside function</code></td><td><a href="return.html">return</a></td></tr>
+<tr><td rowspan="2"><code>IndentationError</code></td><td>Faltou recuar a linha depois do <code>:</code>.</td><td><code>def f():</code><br><code>print(1)</code></td><td><code>IndentationError: expected an indented block after function definition on line 1</code></td><td><a href="sintaxe.html">Sintaxe e Indentação</a></td></tr>
+<tr><td>Voltou para um recuo que não existia antes.</td><td><code>if True:</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a = 1</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;b = 2</code></td><td><code>IndentationError: unindent does not match any outer indentation level</code></td><td></td></tr>
+<tr><td><code>TabError</code></td><td>Misturou Tab e espaços no recuo do mesmo bloco.</td><td>uma linha com Tab, a seguinte com 8 espaços</td><td><code>TabError: inconsistent use of tabs and spaces in indentation</code></td><td><a href="sintaxe.html">Sintaxe e Indentação</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="arquivos">Arquivos, pastas e sistema (família <code>OSError</code>)</h2>
+
+<p>Todos estes são filhos de <code>OSError</code> ("erro do sistema operacional"). A mensagem traz um número entre colchetes, o <code>Errno</code> (número do erro no sistema), e o caminho do arquivo.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Exceção</th><th>Quando acontece</th><th>Exemplo</th><th>Mensagem real</th><th>Aula</th></tr>
+<tr><td><code>FileNotFoundError</code></td><td>O arquivo (ou a pasta) não existe nesse caminho.</td><td><code>open("notas.txt")</code></td><td><code>FileNotFoundError: [Errno 2] No such file or directory: 'notas.txt'</code></td><td><a href="arquivos.html">Abrindo Arquivos</a></td></tr>
+<tr><td><code>PermissionError</code></td><td>Você não tem permissão para ler ou escrever ali.</td><td><code>open("segredo.txt")</code> (depois de <code>chmod 000 segredo.txt</code>)</td><td><code>PermissionError: [Errno 13] Permission denied: 'segredo.txt'</code></td><td><a href="arquivos.html">Abrindo Arquivos</a></td></tr>
+<tr><td><code>IsADirectoryError</code></td><td>Tentou abrir uma <strong>pasta</strong> como se fosse arquivo.</td><td><code>open("/home/ana")</code></td><td><code>IsADirectoryError: [Errno 21] Is a directory: '/home/ana'</code></td><td><a href="pathlib.html">Pastas e Caminhos</a></td></tr>
+<tr><td><code>NotADirectoryError</code></td><td>Usou um arquivo como se fosse pasta no meio do caminho.</td><td><code>open("/etc/hostname/x")</code></td><td><code>NotADirectoryError: [Errno 20] Not a directory: '/etc/hostname/x'</code></td><td><a href="pathlib.html">Pastas e Caminhos</a></td></tr>
+<tr><td><code>FileExistsError</code></td><td>Tentou criar algo que já existe.</td><td><code>os.mkdir("/home/ana")</code></td><td><code>FileExistsError: [Errno 17] File exists: '/home/ana'</code></td><td><a href="os-sys.html">os e sys</a></td></tr>
+<tr><td><code>ProcessLookupError</code></td><td>Mandou um sinal para um processo que não existe.</td><td><code>os.kill(999999, 0)</code></td><td><code>ProcessLookupError: [Errno 3] No such process</code></td><td><a href="subprocess.html">subprocess</a></td></tr>
+<tr><td><code>ChildProcessError</code></td><td>Esperou por um processo filho, mas não há nenhum.</td><td><code>os.waitpid(-1, 0)</code></td><td><code>ChildProcessError: [Errno 10] No child processes</code></td><td></td></tr>
+<tr><td><code>ConnectionRefusedError</code></td><td>O outro computador (ou programa) recusou a conexão: não há ninguém "atendendo" naquela porta.</td><td><code>socket.socket().connect(("127.0.0.1", 9))</code></td><td><code>ConnectionRefusedError: [Errno 111] Connection refused</code></td><td></td></tr>
+<tr><td><code>ConnectionResetError</code>, <code>ConnectionAbortedError</code>, <code>BrokenPipeError</code></td><td>A conexão caiu no meio da conversa (o outro lado fechou).</td><td colspan="2">dependem da rede; todas são filhas de <code>ConnectionError</code></td><td></td></tr>
+<tr><td><code>TimeoutError</code></td><td>Uma operação de sistema ou de rede esperou demais e desistiu. (Cuidado: o <code>timeout=</code> do <code>subprocess.run</code> lança outra exceção, a <code>subprocess.TimeoutExpired</code>.)</td><td colspan="2">depende do tempo; sem mensagem fixa</td><td></td></tr>
+<tr><td><code>BlockingIOError</code>, <code>InterruptedError</code></td><td>Casos de programação de sistema (leitura sem espera, sinal no meio de uma chamada). Raros para quem está começando.</td><td colspan="2"></td><td></td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>Nomes antigos: <code>IOError</code> e <code>EnvironmentError</code></strong>
+<p>Em programas antigos você pode ver <code>except IOError</code>. Hoje <code>IOError</code> e <code>EnvironmentError</code> são só outros nomes para <code>OSError</code>: no computador da Ana, <code>print(EnvironmentError is OSError, IOError is OSError)</code> mostrou <code>True True</code>. Em código novo, escreva <code>OSError</code> ou a filha exata.</p>
+</div>
+
+<hr>
+
+<h2 id="outros">Os outros erros</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Exceção</th><th>Quando acontece</th><th>Exemplo</th><th>Mensagem real</th><th>Aula</th></tr>
+<tr><td><code>ModuleNotFoundError</code></td><td>O módulo não existe ou não está instalado (ou o nome está errado).</td><td><code>import requets</code></td><td><code>ModuleNotFoundError: No module named 'requets'</code></td><td><a href="pip.html">pip</a></td></tr>
+<tr><td><code>ImportError</code></td><td>O módulo existe, mas não tem o nome que você pediu no <code>from … import</code>.</td><td><code>from math import raiz</code></td><td><code>ImportError: cannot import name 'raiz' from 'math' (unknown location)</code></td><td><a href="modulos.html">Módulos e import</a></td></tr>
+<tr><td><code>RecursionError</code></td><td>Uma função chamou a si mesma vezes demais (quase sempre: faltou o caso de parada).</td><td><code>def f(): return f()</code><br><code>f()</code></td><td><code>RecursionError: maximum recursion depth exceeded</code></td><td><a href="recursao.html">Recursão</a></td></tr>
+<tr><td><code>RuntimeError</code></td><td>Erro "genérico" de execução. O caso clássico: mudar o tamanho de um dicionário enquanto passa por ele.</td><td><code>d = {1: 1}</code><br><code>for k in d: d[2] = 2</code></td><td><code>RuntimeError: dictionary changed size during iteration</code></td><td><a href="dicionarios-percorrer.html">Percorrendo um Dicionário</a></td></tr>
+<tr><td><code>NotImplementedError</code></td><td>Você mesmo lança, num método que as classes filhas ainda precisam escrever.</td><td><code>raise NotImplementedError</code></td><td><code>NotImplementedError</code></td><td><a href="heranca.html">Herança</a></td></tr>
+<tr><td><code>StopIteration</code></td><td><code>next()</code> num iterador que já acabou. O <code>for</code> usa esse sinal para saber quando parar (por isso você quase nunca o vê).</td><td><code>it = iter([])</code><br><code>next(it)</code></td><td><code>StopIteration</code></td><td><a href="iteradores.html">Iteradores</a></td></tr>
+<tr><td><code>StopAsyncIteration</code></td><td>O mesmo, para iteradores assíncronos (<code>async for</code>).</td><td><code>raise StopAsyncIteration</code></td><td><code>StopAsyncIteration</code></td><td><a href="asyncio.html">asyncio</a></td></tr>
+<tr><td rowspan="2"><code>AssertionError</code></td><td>Um <code>assert</code> deu falso.</td><td><code>assert 2 + 2 == 5</code></td><td><code>AssertionError</code></td><td><a href="testes.html">Testes</a></td></tr>
+<tr><td>Com mensagem depois da vírgula.</td><td><code>assert 1 &gt; 2, "a nota não pode passar de 10"</code></td><td><code>AssertionError: a nota não pode passar de 10</code></td><td></td></tr>
+<tr><td><code>EOFError</code></td><td><code>input()</code> chegou ao fim da entrada sem ler nada (Ctrl-D, ou a entrada veio vazia de um arquivo).</td><td><code>input()</code> com a entrada vazia</td><td><code>EOFError: EOF when reading a line</code></td><td><a href="input.html">input()</a></td></tr>
+<tr><td><code>OverflowError</code></td><td>Uma conta com número decimal (<code>float</code>) passou do maior valor possível. Com <code>int</code> não acontece: inteiros crescem à vontade.</td><td><code>math.exp(1000)</code><br><code>2.0 ** 10000</code></td><td><code>OverflowError: math range error</code><br><code>OverflowError: (34, 'Numerical result out of range')</code></td><td><a href="numeros.html">Números</a></td></tr>
+<tr><td><code>ValueError</code> (número enorme)</td><td>Converter em texto (ou de texto) um inteiro com mais de 4300 algarismos: um limite de segurança.</td><td><code>int("9" * 5000)</code></td><td><code>ValueError: Exceeds the limit (4300 digits) for integer string conversion: value has 5000 digits; use sys.set_int_max_str_digits() to increase the limit</code></td><td><a href="numeros.html">Números</a></td></tr>
+<tr><td><code>MemoryError</code></td><td>Pediu mais memória do que existe.</td><td><code>"a" * (2 ** 62)</code></td><td><code>MemoryError</code></td><td></td></tr>
+<tr><td><code>UnicodeDecodeError</code></td><td>Leu bytes com a codificação errada (arquivo que não é UTF-8).</td><td><code>b"\xff".decode("utf-8")</code></td><td><code>UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte</code></td><td><a href="arquivos-ler.html">Lendo Arquivos</a></td></tr>
+<tr><td><code>UnicodeEncodeError</code></td><td>Tentou gravar um caractere que a codificação escolhida não tem (o <code>é</code> não existe em ASCII).</td><td><code>"café".encode("ascii")</code></td><td><code>UnicodeEncodeError: 'ascii' codec can't encode character '\xe9' in position 3: ordinal not in range(128)</code></td><td><a href="arquivos-escrever.html">Escrevendo Arquivos</a></td></tr>
+<tr><td><code>LookupError</code></td><td>A mãe de <code>IndexError</code> e <code>KeyError</code>; sozinha, aparece com codificação desconhecida.</td><td><code>"a".encode("utf-99")</code></td><td><code>LookupError: unknown encoding: utf-99</code></td><td></td></tr>
+<tr><td><code>ReferenceError</code></td><td>Usou uma "referência fraca" (<code>weakref</code>) de um objeto que já foi apagado.</td><td><code>r = weakref.proxy(a)</code><br><code>del a</code><br><code>r.x</code></td><td><code>ReferenceError: weakly-referenced object no longer exists</code></td><td></td></tr>
+<tr><td><code>ExceptionGroup</code></td><td>Vários erros juntos, de uma vez (usado com <code>asyncio</code> e tratado com <code>except*</code>).</td><td><code>raise ExceptionGroup("dois erros", [ValueError("a"), TypeError("b")])</code></td><td><code>ExceptionGroup: dois erros (2 sub-exceptions)</code></td><td><a href="asyncio.html">asyncio</a></td></tr>
+<tr><td><code>PythonFinalizationError</code> <span class="versao">3.13</span></td><td>Algo tentou criar uma thread ou processo enquanto o Python está desligando.</td><td colspan="2">raro; filha de <code>RuntimeError</code></td><td></td></tr>
+<tr><td><code>SystemError</code>, <code>BufferError</code>, <code>FloatingPointError</code></td><td>Problemas internos do Python ou de módulos escritos em C. Se aparecer <code>SystemError</code>, é um defeito do Python, não do seu código.</td><td colspan="2"></td><td></td></tr>
+</table>
+</div>
+
+<p>Um <code>ExceptionGroup</code> tem um traceback com cara própria, em forma de árvore, um ramo para cada erro do grupo:</p>
+
+<pre class="term">$ python3 grupo.py
+  + Exception Group Traceback (most recent call last):
+  |   File "/home/ana/grupo.py", line 1, in &lt;module&gt;
+  |     raise ExceptionGroup("dois erros", [ValueError("nota inválida"), KeyError("café")])
+  | ExceptionGroup: dois erros (2 sub-exceptions)
+  +-+---------------- 1 ----------------
+    | ValueError: nota inválida
+    +---------------- 2 ----------------
+    | KeyError: 'café'
+    +------------------------------------
+</pre>
+
+<hr>
+
+<h2 id="parar">Os pedidos para parar (fora de <code>Exception</code>)</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Exceção</th><th>Quando acontece</th><th>Exemplo</th><th>Mensagem real</th><th>Aula</th></tr>
+<tr><td><code>KeyboardInterrupt</code></td><td>Você apertou <kbd>Ctrl</kbd>+<kbd>C</kbd> com o programa rodando.</td><td>um <code>while True:</code> e Ctrl-C</td><td><code>KeyboardInterrupt</code></td><td><a href="while.html">while</a></td></tr>
+<tr><td><code>SystemExit</code></td><td>O programa chamou <code>sys.exit()</code>. Não mostra traceback: o programa só termina, com o código que você deu.</td><td><code>sys.exit(3)</code></td><td>(nada na tela; <code>echo $?</code> mostra <code>3</code>)</td><td><a href="os-sys.html">os e sys</a></td></tr>
+<tr><td><code>GeneratorExit</code></td><td>Um gerador foi fechado (<code>close()</code>) antes de terminar. É um sinal interno.</td><td><code>gerador.close()</code></td><td>(não aparece)</td><td><a href="geradores.html">Geradores</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="avisos">Avisos (<code>Warning</code>)</h2>
+
+<p>Os avisos são da família <code>Warning</code>: em vez de parar o programa, o Python escreve uma linha na saída de erros e <strong>continua</strong>. Eles servem para dizer "isso funciona, mas cuidado".</p>
+
+<pre class="term">$ python3 -c 'import warnings; warnings.warn("cuidado com isso")'
+&lt;string&gt;:1: UserWarning: cuidado com isso
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Aviso</th><th>Quer dizer</th></tr>
+<tr><td><code>UserWarning</code></td><td>O aviso padrão do <code>warnings.warn()</code>, para você usar nos seus programas.</td></tr>
+<tr><td><code>DeprecationWarning</code></td><td>"Isso vai sair numa versão futura do Python (ou da biblioteca); troque logo."</td></tr>
+<tr><td><code>PendingDeprecationWarning</code></td><td>"Isso vai ser marcado como ultrapassado mais adiante."</td></tr>
+<tr><td><code>FutureWarning</code></td><td>"O comportamento disto vai mudar." Comum em bibliotecas como pandas.</td></tr>
+<tr><td><code>SyntaxWarning</code></td><td>Código que roda, mas parece engano. Ex.: <code>None()</code> avisa <code>'NoneType' object is not callable; perhaps you missed a comma?</code> já na leitura do arquivo.</td></tr>
+<tr><td><code>RuntimeWarning</code></td><td>Algo suspeito durante a execução (uma corrotina que ninguém esperou com <code>await</code>, por exemplo).</td></tr>
+<tr><td><code>ResourceWarning</code></td><td>Um arquivo ou conexão ficou aberto. Fica escondido por padrão; <code>python3 -X dev</code> mostra. Use <code>with</code>.</td></tr>
+<tr><td><code>EncodingWarning</code></td><td><code>open()</code> sem <code>encoding=</code> (só aparece com <code>-X warn_default_encoding</code>).</td></tr>
+<tr><td><code>ImportWarning</code>, <code>UnicodeWarning</code>, <code>BytesWarning</code></td><td>Casos específicos de importação, Unicode e <code>bytes</code>; raros.</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="qual-except">Qual nome pôr no <code>except</code></h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Você quer tratar…</th><th>Escreva</th><th>Pega</th></tr>
+<tr><td>texto que não vira número</td><td><code>except ValueError</code></td><td><code>int("dez")</code>, <code>float("1,5")</code></td></tr>
+<tr><td>item ou chave que não existe</td><td><code>except LookupError</code> (ou <code>IndexError</code> / <code>KeyError</code>)</td><td>listas, textos e dicionários</td></tr>
+<tr><td>qualquer problema com arquivo</td><td><code>except OSError</code></td><td>não existe, sem permissão, é pasta…</td></tr>
+<tr><td>só "arquivo não existe"</td><td><code>except FileNotFoundError</code></td><td>só esse</td></tr>
+<tr><td>qualquer erro de conta</td><td><code>except ArithmeticError</code></td><td>divisão por zero, estouro</td></tr>
+<tr><td>dois erros diferentes, mesmo tratamento</td><td><code>except (ValueError, ZeroDivisionError)</code></td><td>os dois</td></tr>
+<tr><td>"qualquer erro", para registrar e seguir</td><td><code>except Exception as erro</code></td><td>todos, menos Ctrl-C e <code>sys.exit()</code></td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>Novidade do 3.14: <code>except</code> com vírgula, sem parênteses</strong> <span class="versao">3.14</span>
+<p>Até o 3.13, vários erros no mesmo <code>except</code> precisavam de parênteses: <code>except (ValueError, TypeError):</code>. No 3.14 os parênteses podem ficar de fora (<a href="https://peps.python.org/pep-0758/">PEP 758</a>): <code>except ValueError, TypeError:</code> rodou no computador da Ana e pegou o <code>ValueError</code>. Se o seu programa também vai rodar num Python mais antigo (o Debian 13 traz o 3.13), continue usando os parênteses, que valem em todas as versões. Com <code>as erro</code>, os parênteses continuam obrigatórios: sem eles, o 3.14 recusa o arquivo com <code>SyntaxError: multiple exception types must be parenthesized when using 'as'</code>.</p>
+</div>
+
+<hr>
+
+<h2>Experimente</h2>
+
+<div class="trypy">
+<p class="try-task"><strong>Livre:</strong> cada linha da lista é um código que dá erro. O programa roda um por um e mostra a família de cada erro, da filha até a mãe. Acrescente os seus (por exemplo <code>"[].pop()"</code> ou <code>"float('1,5')"</code>) e veja de que família eles são.</p>
+<pre class="script" data-file="main.py">testes = [
+    "10 / 0",
+    "int('dez')",
+    "['pão', 'leite'][5]",
+    "{'pão': 4.5}['café']",
+    "'Idade: ' + 30",
+    "'ana'.upercase()",
+    "open('notas.txt')",
+]
+
+for codigo in testes:
+    try:
+        eval(codigo)
+    except Exception as erro:
+        familia = " → ".join(c.__name__ for c in type(erro).__mro__[:-1])
+        print(f"{codigo:24} {familia}")
+</pre>
+</div>
+
+<p>No computador da Ana (com mais uma linha, <code>import requets</code>, rodada com <code>exec</code>), a saída foi:</p>
+
+<pre class="term">$ python3 livre.py
+10 / 0                   ZeroDivisionError → ArithmeticError → Exception → BaseException
+int('dez')               ValueError → Exception → BaseException
+['pão', 'leite'][5]      IndexError → LookupError → Exception → BaseException
+{'pão': 4.5}['café']     KeyError → LookupError → Exception → BaseException
+'Idade: ' + 30           TypeError → Exception → BaseException
+'ana'.upercase()         AttributeError → Exception → BaseException
+open('notas.txt')        FileNotFoundError → OSError → Exception → BaseException
+import requets           ModuleNotFoundError → ImportError → Exception → BaseException
+</pre>
+
+<div class="cenario">
+<strong>O <code>except</code> com o nome errado</strong>
+<p>A Ana quis tratar o caso de alguém digitar a idade por extenso, mas pôs o nome errado no <code>except</code>:</p>
+<pre class="file" data-file="idade.py">texto = "dez"
+try:
+    idade = int(texto)
+    print("Daqui a 1 ano:", idade + 1)
+except ZeroDivisionError:
+    print("Não é um número:", texto)
+</pre>
+<pre class="term">$ python3 idade.py
+Traceback (most recent call last):
+  File "/home/ana/idade.py", line 3, in &lt;module&gt;
+    idade = int(texto)
+ValueError: invalid literal for int() with base 10: 'dez'
+</pre>
+<p>O <code>except ZeroDivisionError</code> só pega divisão por zero. O erro foi outro, <code>ValueError</code>, que não é filho de <code>ZeroDivisionError</code>: o <code>except</code> o deixou passar e o programa parou. A última linha do traceback diz qual nome usar.</p>
+</div>
+
+<div class="trypy" data-goal="out:Não é um número: dez;;semerro;;src:except\s+ValueError">
+<p class="try-task"><strong>Missão:</strong> conserte o programa da Ana: troque o nome no <code>except</code> pela exceção que o <code>int("dez")</code> realmente lança (leia a última linha do erro ao rodar). A saída deve ser <code>Não é um número: dez</code>.</p>
+<pre class="script" data-file="main.py">texto = "dez"
+try:
+    idade = int(texto)
+    print("Daqui a 1 ano:", idade + 1)
+except ZeroDivisionError:
+    print("Não é um número:", texto)
+</pre>
+<pre class="solucao" data-file="main.py">texto = "dez"
+try:
+    idade = int(texto)
+    print("Daqui a 1 ano:", idade + 1)
+except ValueError:
+    print("Não é um número:", texto)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>O nome da exceção está no começo da <strong>última linha</strong> do traceback: <code>NomeDaExceção: explicação</code>.</li>
+  <li>As exceções formam uma árvore. <code>except Mãe</code> pega a mãe e todas as filhas: <code>LookupError</code> pega <code>IndexError</code> e <code>KeyError</code>; <code>OSError</code> pega os erros de arquivo; <code>ArithmeticError</code> pega <code>ZeroDivisionError</code>.</li>
+  <li><code>KeyboardInterrupt</code> e <code>SystemExit</code> ficam fora de <code>Exception</code>: por isso o "pega tudo" certo é <code>except Exception</code>, nunca <code>except:</code> sozinho.</li>
+  <li><code>TypeError</code> = tipo errado; <code>ValueError</code> = tipo certo, valor ruim.</li>
+  <li><code>SyntaxError</code> e <code>IndentationError</code> aparecem antes de o programa rodar; um <code>try</code> no mesmo arquivo não os pega.</li>
+  <li>Avisos (<code>Warning</code>) não param o programa.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
