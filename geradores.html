@@ -304,7 +304,19 @@ True</pre>
 
 <div class="note">
 <strong>No editor do guia, os números saem outros</strong>
-<p>O tamanho exato dos objetos depende do computador e de como o Python foi compilado. O editor do guia roda o Python dentro do navegador, em WebAssembly, e lá o <code>getsizeof</code> mostra valores diferentes dos do terminal da Ana. A conclusão é a mesma em qualquer lugar: a lista cresce com a quantidade de itens; o gerador, não.</p>
+<p>O tamanho exato dos objetos depende do computador e de como o Python foi compilado. O editor do guia roda o Python dentro do navegador, em WebAssembly de 32 bits, em que cada endereço de memória ocupa 4 bytes, e não 8 como no computador da Ana. Por isso, lá, o mesmo programa mostra <code>Lista:    4224364 bytes</code> e <code>Gerador:  104 bytes</code>: mais ou menos a metade. A conclusão é a mesma em qualquer lugar: a lista cresce com a quantidade de itens; o gerador, não.</p>
+</div>
+
+<div class="trypy">
+<p class="try-task"><strong>Experimente:</strong> rode e compare com os números do terminal. Depois troque o <code>1_000_000</code> por <code>10</code> e por <code>100_000</code>: o tamanho da lista acompanha; o do gerador não muda.</p>
+<pre class="script" data-file="main.py">import sys
+
+em_lista = [n * n for n in range(1_000_000)]
+em_gerador = (n * n for n in range(1_000_000))
+
+print("Lista:   ", sys.getsizeof(em_lista), "bytes")
+print("Gerador: ", sys.getsizeof(em_gerador), "bytes")
+</pre>
 </div>
 
 <p>Quando usar cada um? Se você vai percorrer os itens <strong>uma vez</strong> (somar, procurar o maior, gravar num arquivo), o gerador basta e economiza memória. Se vai precisar deles várias vezes, acessar pela posição (<code>itens[3]</code>) ou saber quantos são (<code>len</code>), use uma lista.</p>
