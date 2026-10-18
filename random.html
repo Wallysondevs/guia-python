@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python random — sorteando números e itens | Guia Python</title>
+<meta name="description" content="O módulo random para quem está começando: randint (com as duas pontas), random, uniform, randrange, choice, choices com pesos, sample, shuffle (que devolve None), random.seed para repetir o mesmo sorteio, por que não usar random para senhas (secrets), e os erros reais: lista vazia, amostra maior que a lista, shuffle num texto e o seed dentro do laço.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">random</span></h1>
+
+<p class="intro">Jogar um dado, tirar um nome do chapéu para o amigo secreto, embaralhar a ordem das apresentações da turma, dar um palpite na Mega-Sena. Tudo isso é <strong>sorteio</strong>, e o módulo <code>random</code> ("aleatório") faz todos eles. É ele que vai dar vida aos jogos do guia, como o <a href="projeto-adivinhacao.html">Jogo de Adivinhação</a> e o <a href="projeto-forca.html">Jogo da Forca</a>.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A sortear números inteiros com <code>randint</code> (e por que o fim <strong>entra</strong> no sorteio).</li>
+  <li>Os outros sorteios de números: <code>random</code>, <code>uniform</code>, <code>randrange</code>.</li>
+  <li>A sortear itens de uma lista: <code>choice</code>, <code>choices</code> (até com pesos) e <code>sample</code>.</li>
+  <li>A embaralhar uma lista com <code>shuffle</code>, que muda a própria lista e devolve <code>None</code>.</li>
+  <li>A repetir exatamente o mesmo sorteio com <code>random.seed</code>.</li>
+  <li>Por que o <code>random</code> não serve para senhas, e o módulo <code>secrets</code>.</li>
+  <li>Os erros reais: lista vazia, amostra maior que a lista, <code>shuffle</code> num texto, e o <code>seed</code> no lugar errado.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: o globo do bingo</h2>
+<p>No bingo da quermesse, as bolinhas giram no globo e sai uma de cada vez, sem ninguém escolher. O módulo <code>random</code> é esse globo: você diz quais são as bolinhas (os números de 1 a 75, os nomes da turma, as frutas da feira), e ele tira uma, ou várias, ou embaralha todas.</p>
+
+<p>Uma diferença importante para esta aula: como o resultado é sorteado, <strong>a saída muda a cada execução</strong>. Os números que aparecem nos exemplos abaixo foram os que saíram no computador da Ana; quando você rodar, os seus vão ser outros. Isso não é erro. (A seção 5 mostra como fazer o sorteio se repetir quando você precisar.)</p>
+
+<hr>
+
+<h2>1. Um número inteiro: <code>randint</code></h2>
+
+<pre class="file" data-file="dado.py">import random
+
+print("O dado deu:", random.randint(1, 6))
+</pre>
+
+<pre class="term">$ python3 dado.py
+O dado deu: 2
+$ python3 dado.py
+O dado deu: 1
+$ python3 dado.py
+O dado deu: 2
+</pre>
+
+<dl class="anatomy">
+  <dt>import random</dt><dd>Traz o módulo de sorteios.</dd>
+  <dt>random.randint(1, 6)</dt><dd>Sorteia um número <strong>inteiro</strong> (<em>random integer</em>, "inteiro aleatório") de 1 a 6, <strong>incluindo</strong> o 1 e o 6. Cada um tem a mesma chance.</dd>
+</dl>
+
+<p>Três jogadas, três execuções, e o 2 saiu duas vezes: num dado de verdade também acontece. Repare no detalhe que mais confunde quem já conhece o <a href="range.html"><code>range</code></a>: no <code>range(1, 6)</code>, o 6 fica de fora; no <code>randint(1, 6)</code>, o 6 <strong>entra</strong>. As duas pontas fazem parte do sorteio.</p>
+
+<div class="trypy" data-goal="outre:^Dado de 20 lados: ([1-9]|1[0-9]|20)\n$;;src:randint\(\s*1\s*,\s*20\s*\)">
+<p class="try-task"><strong>Missão:</strong> nos jogos de tabuleiro de aventura, usa-se um dado de 20 lados. Mude o programa para sortear de 1 a 20 e ajuste a frase. (Rode várias vezes: o número muda, e tudo bem. A missão confere que ele está entre 1 e 20.)</p>
+<pre class="script" data-file="main.py">import random
+
+print("Dado de 6 lados:", random.randint(1, 6))
+</pre>
+<pre class="solucao" data-file="main.py">import random
+
+print("Dado de 20 lados:", random.randint(1, 20))
+</pre>
+</div>
+
+<hr>
+
+<h2>2. Outros números: <code>random</code>, <code>uniform</code>, <code>randrange</code></h2>
+
+<pre class="file" data-file="numeros.py">import random
+
+print(random.random())
+print(random.uniform(1.5, 2.5))
+print(random.randint(1, 10))
+print(random.randrange(0, 100, 5))
+</pre>
+
+<pre class="term">$ python3 numeros.py
+0.5203349410522208
+2.444173566535794
+2
+65
+$ python3 numeros.py
+0.9415966565976439
+2.4721534510169167
+4
+15
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Função</th><th>Sorteia</th><th>Exemplo de uso</th></tr>
+<tr><td><code>random.random()</code></td><td>Um <code>float</code> de 0 até 1 (o 0 pode sair, o 1 nunca)</td><td>Uma chance: <code>if random.random() &lt; 0.3:</code> acontece 30% das vezes</td></tr>
+<tr><td><code>random.uniform(a, b)</code></td><td>Um <code>float</code> entre <code>a</code> e <code>b</code></td><td>Uma altura entre 1,5 e 2,5 metros</td></tr>
+<tr><td><code>random.randint(a, b)</code></td><td>Um <code>int</code> de <code>a</code> até <code>b</code>, <strong>com</strong> o <code>b</code></td><td>O dado: <code>randint(1, 6)</code></td></tr>
+<tr><td><code>random.randrange(a, b, passo)</code></td><td>Um <code>int</code> do <code>range(a, b, passo)</code>, <strong>sem</strong> o <code>b</code></td><td>Um múltiplo de 5 menor que 100: <code>randrange(0, 100, 5)</code></td></tr>
+</table>
+</div>
+
+<p>O <code>randrange</code> segue as regras do <code>range</code>: o fim fica de fora e dá para escolher o passo. <code>randrange(0, 100, 5)</code> sorteia um entre 0, 5, 10, …, 95.</p>
+
+<hr>
+
+<h2>3. Itens de uma lista: <code>choice</code>, <code>choices</code>, <code>sample</code></h2>
+
+<pre class="file" data-file="escolher.py">import random
+
+frutas = ["maçã", "banana", "uva", "manga", "caju"]
+
+print("Uma fruta:", random.choice(frutas))
+print("Três, podendo repetir:", random.choices(frutas, k=3))
+print("Duas, sem repetir:", random.sample(frutas, 2))
+print("A lista continua igual:", frutas)
+</pre>
+
+<pre class="term">$ python3 escolher.py
+Uma fruta: maçã
+Três, podendo repetir: ['maçã', 'maçã', 'caju']
+Duas, sem repetir: ['banana', 'uva']
+A lista continua igual: ['maçã', 'banana', 'uva', 'manga', 'caju']
+</pre>
+
+<dl class="anatomy">
+  <dt>random.choice(frutas)</dt><dd>"Escolha" (<em>choice</em>) <strong>um</strong> item. Funciona com qualquer sequência: lista, tupla, texto (<code>random.choice("aeiou")</code> sorteia uma vogal).</dd>
+  <dt>random.choices(frutas, k=3)</dt><dd>Escolhe <strong>vários</strong>, um de cada vez, devolvendo a bolinha ao globo depois de cada um: o mesmo item pode sair de novo (saíram duas maçãs). O <code>k</code> é quantos.</dd>
+  <dt>random.sample(frutas, 2)</dt><dd>Uma "amostra" (<em>sample</em>) de 2 itens <strong>diferentes</strong>: a bolinha que saiu fica fora do globo. É o sorteio de quem ganha os prêmios de uma rifa: a mesma pessoa não ganha duas vezes.</dd>
+</dl>
+
+<p>Nenhum dos três muda a lista original. A Mega-Sena é um <code>sample</code>: 6 dezenas diferentes, de 1 a 60.</p>
+
+<pre class="file" data-file="mega.py">import random
+
+dezenas = random.sample(range(1, 61), 6)
+print("Palpite:", sorted(dezenas))
+</pre>
+
+<pre class="term">$ python3 mega.py
+Palpite: [16, 17, 30, 33, 55, 60]
+</pre>
+
+<p>O <code>range(1, 61)</code> são as bolinhas de 1 a 60 (o 61 fica de fora), e o <code>sorted</code> só arruma o palpite em ordem para ler.</p>
+
+<h3>Sorteio com pesos</h3>
+<p>Na roleta da quermesse, nem todo prêmio tem a mesma chance. O <code>choices</code> aceita <code>weights</code> ("pesos"): quanto maior o peso, mais fácil sair.</p>
+
+<pre class="file" data-file="pesos.py">import random
+
+premios = ["bala", "pirulito", "chocolate", "bicicleta"]
+chances = [60, 30, 9, 1]
+
+sorteados = random.choices(premios, weights=chances, k=20)
+for premio in premios:
+    print(f"{premio}: {sorteados.count(premio)}")
+</pre>
+
+<pre class="term">$ python3 pesos.py
+bala: 10
+pirulito: 7
+chocolate: 3
+bicicleta: 0
+</pre>
+
+<p>Em 20 giros, a bala saiu metade das vezes e a bicicleta, nenhuma: com peso 1 em 100, ela é rara. Os pesos não precisam somar 100; o que conta é a proporção entre eles.</p>
+
+<hr>
+
+<h2>4. Embaralhando: <code>shuffle</code></h2>
+
+<pre class="file" data-file="embaralhar.py">import random
+
+fila = ["Ana", "Bia", "Caio", "Duda", "Enzo"]
+random.shuffle(fila)
+print("Ordem de apresentação:", fila)
+</pre>
+
+<pre class="term">$ python3 embaralhar.py
+Ordem de apresentação: ['Caio', 'Enzo', 'Bia', 'Duda', 'Ana']
+</pre>
+
+<dl class="anatomy">
+  <dt>random.shuffle(fila)</dt><dd>"Embaralha" (<em>shuffle</em>) a <strong>própria</strong> lista, como embaralhar um baralho: depois dessa linha, a variável <code>fila</code> está em outra ordem. Ele não cria uma lista nova e não devolve nada (devolve <code>None</code>).</dd>
+</dl>
+
+<div class="warning">
+<strong><code>shuffle</code> não devolve a lista</strong>
+<p>Escrever <code>fila = random.shuffle(fila)</code> é um erro muito comum: o <code>shuffle</code> embaralha a lista e devolve <code>None</code>, e a variável passa a guardar <code>None</code> (veja em <a href="#errado">Quando dá errado</a>). Use o <code>shuffle</code> sozinho na linha. Se você quiser <strong>manter</strong> a lista original e ter uma cópia embaralhada, use <code>embaralhada = random.sample(fila, len(fila))</code>.</p>
+</div>
+
+<hr>
+
+<h2>5. Repetindo o sorteio: <code>random.seed</code></h2>
+<p>Um computador não sabe jogar dados de verdade. O que o <code>random</code> faz é uma <strong>conta</strong> muito bem bolada, que produz uma sequência de números que parecem não ter padrão nenhum. Por isso eles se chamam números <strong>pseudoaleatórios</strong> ("quase aleatórios"). Essa conta parte de um número inicial, a <strong>semente</strong> (<em>seed</em>). Sem você dizer nada, o Python escolhe uma semente diferente a cada execução (a partir de uma fonte de aleatoriedade do sistema operacional), e por isso os resultados mudam.</p>
+
+<p>Com <code>random.seed(N)</code>, você escolhe a semente. A mesma semente gera <strong>sempre a mesma sequência</strong>:</p>
+
+<pre class="file" data-file="semente1.py">import random
+
+random.seed(42)
+print(random.randint(1, 6), random.randint(1, 6), random.randint(1, 6))
+</pre>
+
+<pre class="term">$ python3 semente1.py
+6 1 1
+$ python3 semente1.py
+6 1 1
+</pre>
+
+<p>Duas execuções, os mesmos três números. E rodando no editor do guia, com a mesma semente e o mesmo Python, saem os mesmos <code>6 1 1</code>. Cada semente dá a sua sequência:</p>
+
+<pre class="file" data-file="semente2.py">import random
+
+random.seed(42)
+print("Primeira vez:", random.randint(1, 100), random.randint(1, 100))
+random.seed(42)
+print("De novo:     ", random.randint(1, 100), random.randint(1, 100))
+random.seed(43)
+print("Outra semente:", random.randint(1, 100), random.randint(1, 100))
+</pre>
+
+<pre class="term">$ python3 semente2.py
+Primeira vez: 82 15
+De novo:      82 15
+Outra semente: 5 37
+</pre>
+
+<dl class="anatomy">
+  <dt>random.seed(42)</dt><dd>"Plante a semente 42": a partir daqui, os sorteios seguem a sequência da semente 42. O número é qualquer um; 42 é só uma escolha comum entre programadores.</dd>
+  <dt>random.seed(42) de novo</dt><dd>Volta ao começo da mesma sequência: 82 e 15 outra vez.</dd>
+</dl>
+
+<p>Para que serve um sorteio que não é surpresa? Para <strong>testar</strong>: quando um jogo dá um defeito só com certos sorteios, com a semente fixa você repete a mesma partida até achar o problema. Também é por isso que as missões desta aula que conferem um resultado exato usam <code>seed</code>. Num jogo de verdade, deixe sem <code>seed</code>.</p>
+
+<div class="note">
+<strong>A mesma semente em outra versão do Python</strong>
+<p>A documentação do Python garante que <code>random.seed(N)</code> seguido de <code>random.random()</code> dá os mesmos números em versões diferentes. Para as outras funções (<code>randint</code>, <code>choice</code>, <code>shuffle</code>…), o resultado é o mesmo em qualquer computador com a <strong>mesma versão</strong>, mas pode mudar de uma versão do Python para outra.</p>
+</div>
+
+<div class="trypy" data-goal="out:Sobremesa de hoje: pudim;;src:random\.choice\(">
+<p class="try-task"><strong>Missão:</strong> a Ana quer sortear a sobremesa do almoço de domingo. O programa já plantou a semente 3, mas pega sempre o primeiro item. Troque o <code>cardapio[0]</code> por um sorteio com <code>random.choice</code>. Com essa semente, deve sair <code>pudim</code>.</p>
+<pre class="script" data-file="main.py">import random
+
+random.seed(3)
+cardapio = ["bolo", "pudim", "sorvete", "pavê"]
+print("Sobremesa de hoje:", cardapio[0])
+</pre>
+<pre class="solucao" data-file="main.py">import random
+
+random.seed(3)
+cardapio = ["bolo", "pudim", "sorvete", "pavê"]
+print("Sobremesa de hoje:", random.choice(cardapio))
+</pre>
+</div>
+
+<hr>
+
+<h2>6. Sorteio não é segredo: o módulo <code>secrets</code></h2>
+<p>Se a sequência do <code>random</code> sai de uma conta, quem descobrir o estado dessa conta consegue prever os próximos números. Para um jogo, tanto faz. Para uma <strong>senha</strong>, um código de confirmação ou um <em>token</em> de acesso, é perigoso. Para isso o Python tem o módulo <code>secrets</code> ("segredos"), que usa a fonte de aleatoriedade segura do sistema operacional:</p>
+
+<pre class="file" data-file="senha.py">import secrets
+import string
+
+caracteres = string.ascii_letters + string.digits
+senha = "".join(secrets.choice(caracteres) for _ in range(12))
+print("Senha:", senha)
+</pre>
+
+<pre class="term">$ python3 senha.py
+Senha: B8YqjeJxWxg0
+</pre>
+
+<p>O <code>string.ascii_letters</code> são as letras de a a z, minúsculas e maiúsculas, e o <code>string.digits</code>, os algarismos. O <code>secrets.choice</code> funciona como o <code>random.choice</code>, só que de forma segura (e não aceita <code>seed</code>: não dá para repetir). Regra simples: <strong>jogos e simulações, <code>random</code>; senhas e segurança, <code>secrets</code></strong>.</p>
+
+<hr>
+
+<h2>Formas diferentes de sortear: qual usar</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Quero…</th><th>Use</th><th>Cuidado</th></tr>
+<tr><td>Um inteiro de 1 a 6</td><td><code>random.randint(1, 6)</code></td><td>O 6 entra</td></tr>
+<tr><td>Um inteiro de um <code>range</code> (com passo)</td><td><code>random.randrange(0, 100, 5)</code></td><td>O fim fica de fora</td></tr>
+<tr><td>Um número com vírgula</td><td><code>random.uniform(a, b)</code> ou <code>random.random()</code></td><td>—</td></tr>
+<tr><td>Um item da lista</td><td><code>random.choice(lista)</code></td><td>Lista vazia dá erro</td></tr>
+<tr><td>Vários itens, podendo repetir</td><td><code>random.choices(lista, k=n)</code></td><td>Aceita <code>weights</code></td></tr>
+<tr><td>Vários itens, sem repetir</td><td><code>random.sample(lista, n)</code></td><td><code>n</code> não pode passar do tamanho da lista</td></tr>
+<tr><td>Embaralhar a própria lista</td><td><code>random.shuffle(lista)</code></td><td>Devolve <code>None</code>; só listas</td></tr>
+<tr><td>Uma cópia embaralhada</td><td><code>random.sample(lista, len(lista))</code></td><td>A original fica igual</td></tr>
+<tr><td>Um item com <code>randint</code> (jeito antigo)</td><td><code>lista[random.randint(0, len(lista) - 1)]</code></td><td>Funciona, mas o <code>choice</code> é mais claro e não erra o <code>- 1</code></td></tr>
+<tr><td>Uma senha, um código secreto</td><td><code>secrets.choice(…)</code></td><td>Nunca <code>random</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Sortear de uma lista vazia: <code>IndexError</code></strong>
+<pre class="file" data-file="erro_vazia.py">import random
+
+sorteio = []
+print(random.choice(sorteio))
+</pre>
+<pre class="term">$ python3 erro_vazia.py
+Traceback (most recent call last):
+  File "/home/ana/erro_vazia.py", line 4, in &lt;module&gt;
+    print(random.choice(sorteio))
+          ~~~~~~~~~~~~~^^^^^^^^^
+  File "/usr/lib/python3.14/random.py", line 353, in choice
+    raise IndexError('Cannot choose from an empty sequence')
+IndexError: Cannot choose from an empty sequence
+</pre>
+<p>"Não dá para escolher de uma sequência vazia." O globo está sem bolinhas. A sua linha é a 4; a de baixo, de <code>/usr/lib/python3.14/random.py</code>, é o lugar onde o próprio módulo levantou o erro (o <code>raise</code>, aula <a href="raise.html">raise</a>). <strong>Como consertar:</strong> confira antes: <code>if sorteio:</code> (uma lista vazia conta como falso).</p>
+</div>
+
+<div class="cenario">
+<strong>Amostra maior que a lista: <code>ValueError</code></strong>
+<pre class="file" data-file="erro_sample.py">import random
+
+alunos = ["Bia", "Caio", "Duda"]
+print(random.sample(alunos, 5))
+</pre>
+<pre class="term">$ python3 erro_sample.py
+Traceback (most recent call last):
+  File "/home/ana/erro_sample.py", line 4, in &lt;module&gt;
+    print(random.sample(alunos, 5))
+          ~~~~~~~~~~~~~^^^^^^^^^^^
+  File "/usr/lib/python3.14/random.py", line 436, in sample
+    raise ValueError("Sample larger than population or is negative")
+ValueError: Sample larger than population or is negative
+</pre>
+<p>"Amostra maior que a população, ou negativa." Não dá para tirar 5 nomes <strong>diferentes</strong> de uma lista de 3. <strong>Como consertar:</strong> peça no máximo <code>len(alunos)</code> itens; ou, se repetir não for problema, use <code>random.choices(alunos, k=5)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Guardar o resultado do <code>shuffle</code>: a lista vira <code>None</code></strong>
+<pre class="file" data-file="erro_shuffle.py">import random
+
+fila = ["Ana", "Bia", "Caio"]
+fila = random.shuffle(fila)
+print(fila)
+print(fila[0])
+</pre>
+<pre class="term">$ python3 erro_shuffle.py
+None
+Traceback (most recent call last):
+  File "/home/ana/erro_shuffle.py", line 6, in &lt;module&gt;
+    print(fila[0])
+          ~~~~^^^
+TypeError: 'NoneType' object is not subscriptable
+</pre>
+<p>Primeiro o <code>print(fila)</code> mostrou <code>None</code>: o <code>shuffle</code> embaralhou a lista e devolveu nada, e esse nada foi guardado em <code>fila</code> (a lista embaralhada se perdeu). Depois, <code>fila[0]</code>: "um objeto <code>NoneType</code> não aceita índice" (<em>subscriptable</em> = "que aceita <code>[ ]</code>"; aula <a href="none.html">O Valor None</a>). <strong>Como consertar:</strong> <code>random.shuffle(fila)</code> sozinho na linha, sem <code>fila =</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Embaralhar um texto: <code>TypeError</code></strong>
+<pre class="file" data-file="erro_texto.py">import random
+
+palavra = "python"
+random.shuffle(palavra)
+</pre>
+<pre class="term">$ python3 erro_texto.py
+Traceback (most recent call last):
+  File "/home/ana/erro_texto.py", line 4, in &lt;module&gt;
+    random.shuffle(palavra)
+    ~~~~~~~~~~~~~~^^^^^^^^^
+  File "/usr/lib/python3.14/random.py", line 363, in shuffle
+    x[i], x[j] = x[j], x[i]
+    ~^^^
+TypeError: 'str' object does not support item assignment
+</pre>
+<p>"Um objeto <code>str</code> não aceita que se troque um item." O <code>shuffle</code> embaralha trocando os itens de lugar, e um texto não pode ser alterado (os textos são imutáveis, aula <a href="mutabilidade.html">Mutável × Imutável</a>). O mesmo vale para tuplas. <strong>Como consertar:</strong> transforme em lista, embaralhe e junte: <code>letras = list(palavra)</code>, <code>random.shuffle(letras)</code>, <code>"".join(letras)</code>. Ou, numa linha: <code>"".join(random.sample(palavra, len(palavra)))</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>randint</code> com número com vírgula, ou com as pontas trocadas</strong>
+<pre class="file" data-file="erro_randint.py">import random
+
+print(random.randint(1, 6.5))
+</pre>
+<pre class="term">$ python3 erro_randint.py
+Traceback (most recent call last):
+  File "/home/ana/erro_randint.py", line 3, in &lt;module&gt;
+    print(random.randint(1, 6.5))
+          ~~~~~~~~~~~~~~^^^^^^^^
+  File "/usr/lib/python3.14/random.py", line 339, in randint
+    b = _index(b)
+TypeError: 'float' object cannot be interpreted as an integer
+</pre>
+<pre class="file" data-file="erro_randint2.py">import random
+
+print(random.randint(10, 1))
+</pre>
+<pre class="term">$ python3 erro_randint2.py
+Traceback (most recent call last):
+  File "/home/ana/erro_randint2.py", line 3, in &lt;module&gt;
+    print(random.randint(10, 1))
+          ~~~~~~~~~~~~~~^^^^^^^^
+  File "/usr/lib/python3.14/random.py", line 341, in randint
+    raise ValueError(f"empty range in randint({a}, {b})")
+ValueError: empty range in randint(10, 1)
+</pre>
+<p>O <code>randint</code> só trabalha com inteiros ("um <code>float</code> não pode ser interpretado como inteiro"), e o primeiro número tem de ser o <strong>menor</strong>: de 10 até 1 é um "intervalo vazio" (<em>empty range</em>). <strong>Como consertar:</strong> <code>randint(1, 6)</code>, menor primeiro; para sortear com vírgula, <code>uniform</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O <code>seed</code> dentro do laço: o "sorteio" que sempre dá igual</strong>
+<pre class="file" data-file="erro_seed.py">import random
+
+for rodada in range(3):
+    random.seed(1)
+    print("Rodada", rodada + 1, "- o dado deu", random.randint(1, 6))
+</pre>
+<pre class="term">$ python3 erro_seed.py
+Rodada 1 - o dado deu 2
+Rodada 2 - o dado deu 2
+Rodada 3 - o dado deu 2
+</pre>
+<p>Sem mensagem de erro, mas o dado "viciou": a cada volta, o <code>seed(1)</code> recomeça a sequência do zero, e o primeiro número da semente 1 é sempre o mesmo. <strong>Como consertar:</strong> o <code>seed</code>, quando usado, vai <strong>uma vez só</strong>, no começo do programa, fora do laço. E num jogo de verdade, não use <code>seed</code>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>random.randint(a, b)</code></td><td>Inteiro de <code>a</code> a <code>b</code>, com os dois</td></tr>
+<tr><td><code>random.randrange(a, b, passo)</code></td><td>Inteiro do <code>range(a, b, passo)</code>, sem o <code>b</code></td></tr>
+<tr><td><code>random.random()</code></td><td><code>float</code> de 0 (incluído) a 1 (não incluído)</td></tr>
+<tr><td><code>random.uniform(a, b)</code></td><td><code>float</code> entre <code>a</code> e <code>b</code></td></tr>
+<tr><td><code>random.choice(seq)</code></td><td>Um item</td></tr>
+<tr><td><code>random.choices(seq, k=n)</code></td><td><code>n</code> itens, podendo repetir</td></tr>
+<tr><td><code>random.choices(seq, weights=[…], k=n)</code></td><td>…com pesos</td></tr>
+<tr><td><code>random.sample(seq, n)</code></td><td><code>n</code> itens diferentes, numa lista nova</td></tr>
+<tr><td><code>random.shuffle(lista)</code></td><td>Embaralha a própria lista; devolve <code>None</code></td></tr>
+<tr><td><code>random.seed(N)</code></td><td>Fixa a semente: a mesma sequência a cada execução</td></tr>
+<tr><td><code>secrets.choice(seq)</code></td><td>Um item, de forma segura (senhas)</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>IndexError: Cannot choose from an empty sequence</code></td><td><code>choice</code> numa lista vazia</td></tr>
+<tr><td><code>ValueError: Sample larger than population or is negative</code></td><td><code>sample</code> pedindo mais itens do que a lista tem</td></tr>
+<tr><td>A lista virou <code>None</code>; <code>'NoneType' object is not subscriptable</code></td><td><code>lista = random.shuffle(lista)</code></td></tr>
+<tr><td><code>TypeError: 'str' object does not support item assignment</code></td><td><code>shuffle</code> num texto ou tupla</td></tr>
+<tr><td><code>TypeError: 'float' object cannot be interpreted as an integer</code></td><td><code>randint</code>/<code>randrange</code> com <code>float</code></td></tr>
+<tr><td><code>ValueError: empty range in randint(10, 1)</code></td><td>Pontas trocadas: o menor vem primeiro</td></tr>
+<tr><td>O sorteio sai sempre igual</td><td>Um <code>seed</code> esquecido no programa, ou dentro do laço</td></tr>
+<tr><td>O 6 nunca sai do "dado"</td><td>Usou <code>randrange(1, 6)</code>: troque por <code>randint(1, 6)</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O bingo</h3>
+<p>Complete para sortear uma bolinha de 1 a 75 (as duas pontas podem sair):</p>
+<div class="ex-code">bolinha = random.<input data-answer="randint" aria-label="função">(1, 75)</div>
+</div>
+
+<div class="exercise">
+<h3>2. Sem repetir</h3>
+<p>Complete para sortear 3 ganhadores <strong>diferentes</strong> da lista <code>inscritos</code>:</p>
+<div class="ex-code">ganhadores = random.<input data-answer="sample" aria-label="função">(inscritos, 3)</div>
+</div>
+
+<div class="exercise">
+<h3>3. O que sai</h3>
+<p>O que o <code>print</code> mostra depois de <code>fila = random.shuffle(["a", "b", "c"])</code> e <code>print(fila)</code>?</p>
+<div class="ex-code"><input data-answer="None" aria-label="saída"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Quais números <code>random.randrange(1, 6)</code> pode sortear?</p>
+<label><input type="radio" name="q4"> De 1 a 6</label>
+<label><input type="radio" name="q4"> De 1 a 5: o fim fica de fora, como no <code>range</code></label>
+<label><input type="radio" name="q4"> De 0 a 6</label>
+<label><input type="radio" name="q4"> Só 1 ou 6</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. Para que serve o <code>random.seed(42)</code>?</p>
+<label><input type="radio" name="q5"> Para sortear números maiores que 42</label>
+<label><input type="radio" name="q5"> Para deixar o sorteio mais aleatório</label>
+<label><input type="radio" name="q5"> Para que os sorteios sigam sempre a mesma sequência, útil para testar</label>
+<label><input type="radio" name="q5"> Para gerar senhas seguras</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. A Ana vai gerar o código de confirmação que o cliente recebe no celular. Qual módulo usar?</p>
+<label><input type="radio" name="q6"> <code>random</code>, com <code>seed</code></label>
+<label><input type="radio" name="q6"> <code>random</code>, sem <code>seed</code></label>
+<label><input type="radio" name="q6"> <code>math</code></label>
+<label><input type="radio" name="q6"> <code>secrets</code></label>
+</div>
+
+<h3>Missão final: a ordem das apresentações</h3>
+
+<div class="trypy" data-goal="out:1º: Duda;;out:5º: Enzo;;src:random\.shuffle\(">
+<p class="try-task"><strong>Missão:</strong> a professora vai sortear a ordem das apresentações dos trabalhos. O programa já plantou a semente 10 (para todo mundo conferir o mesmo resultado) e mostra a lista numerada, mas esqueceu de embaralhar. Acrescente o <code>random.shuffle</code> no lugar certo. Com essa semente, a Duda abre e o Enzo fecha.</p>
+<pre class="script" data-file="main.py">import random
+
+random.seed(10)
+amigos = ["Ana", "Bia", "Caio", "Duda", "Enzo"]
+
+for posicao, nome in enumerate(amigos, start=1):
+    print(f"{posicao}º: {nome}")
+</pre>
+<pre class="solucao" data-file="main.py">import random
+
+random.seed(10)
+amigos = ["Ana", "Bia", "Caio", "Duda", "Enzo"]
+random.shuffle(amigos)
+
+for posicao, nome in enumerate(amigos, start=1):
+    print(f"{posicao}º: {nome}")
+</pre>
+</div>
+
+<p>Depois de cumprir a missão, apague a linha do <code>seed</code> e rode várias vezes: a cada vez, uma ordem nova. (O <code>enumerate</code> numera os itens; aula <a href="enumerate-zip.html">enumerate() e zip()</a>.)</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>import random</code> traz os sorteios. Sem <code>seed</code>, o resultado muda a cada execução, e isso é o esperado.</li>
+  <li><code>randint(a, b)</code> sorteia um inteiro <strong>com</strong> as duas pontas; <code>randrange</code> segue o <code>range</code> (sem o fim); <code>random()</code> e <code>uniform</code> dão <code>float</code>.</li>
+  <li><code>choice</code>: um item. <code>choices(k=…)</code>: vários, com repetição (e com <code>weights</code>). <code>sample</code>: vários, sem repetição.</li>
+  <li><code>shuffle</code> embaralha a própria lista e devolve <code>None</code>: nunca escreva <code>lista = random.shuffle(lista)</code>. Texto e tupla não se embaralham.</li>
+  <li><code>random.seed(N)</code>, uma vez no começo, faz o sorteio se repetir: bom para testes, ruim para jogos.</li>
+  <li>Para senhas e códigos secretos, <code>secrets</code>, nunca <code>random</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
