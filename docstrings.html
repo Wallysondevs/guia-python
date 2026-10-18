@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Docstrings — documentando suas funções | Guia Python</title>
+<meta name="description" content="Docstrings para quem está começando: o texto entre três aspas logo abaixo do def, a diferença entre docstring e comentário, docstrings de uma linha e de várias linhas, help() e __doc__ de verdade, a docstring de um módulo e os erros reais: docstring fora do lugar (None), sem recuo (IndentationError) e aspas que não fecham (SyntaxError).">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Docstrings</span></h1>
+
+<p class="intro">Você escreveu uma função útil. Daqui a três meses, você (ou uma colega) vai querer usá-la de novo: o que ela faz? O que é cada parâmetro? Em que unidade vai o preço? A resposta fica numa <strong>docstring</strong> (de <em>documentation string</em>, "texto de documentação"): um texto entre três aspas, logo abaixo do <code>def</code>, que explica a função. Diferente de um comentário, a docstring <strong>fica guardada dentro da função</strong>, e o Python sabe mostrá-la quando alguém pede ajuda com <code>help()</code>.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é uma docstring e onde ela fica (a primeira linha do corpo da função).</li>
+  <li>A diferença entre docstring e comentário (<code>#</code>).</li>
+  <li>A escrever docstrings de uma linha e de várias linhas, do jeito que a comunidade Python costuma escrever.</li>
+  <li>A ler a documentação com <code>help()</code> e com o atributo <code>__doc__</code>.</li>
+  <li>A documentar um arquivo inteiro (a docstring do módulo).</li>
+  <li>Os erros reais: docstring fora do lugar, sem recuo e com as aspas abertas.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a etiqueta do pote</h2>
+<p>Na cozinha da Ana, os potes de tempero são todos iguais. Sem etiqueta, ela precisa abrir, cheirar e provar para saber o que é cada um. Com uma etiqueta colada no pote ("Páprica defumada. Usar pouco: é forte."), qualquer pessoa da casa sabe o que tem dentro <strong>sem abrir</strong>.</p>
+<p>A docstring é a etiqueta da função. Quem vai <strong>usar</strong> a função não precisa ler o código de dentro: lê a etiqueta. E, como a etiqueta está colada no pote, ela vai junto para onde a função for: para outro arquivo que a importa, para o <code>help()</code>, para o editor de código que mostra a dica quando você digita o nome da função.</p>
+
+<hr>
+
+<h2>1. A primeira docstring</h2>
+
+<pre class="file" data-file="troco.py">def troco(pago, total):
+    """Devolve quanto de troco a Ana tem de dar."""
+    return pago - total
+
+
+print(troco(20, 13.5))
+</pre>
+
+<dl class="anatomy">
+  <dt>def troco(pago, total):</dt><dd>Uma função comum (aula <a href="funcoes.html">Funções</a>).</dd>
+  <dt>"""</dt><dd>Três aspas duplas abrem a docstring. É um texto (uma string) como outro qualquer, só que com aspas triplas, que permitem várias linhas.</dd>
+  <dt>Devolve quanto de troco a Ana tem de dar.</dt><dd>O que a função faz, numa frase. Costuma começar com um verbo ("Devolve", "Calcula", "Mostra") e terminar com ponto.</dd>
+  <dt>"""</dt><dd>Três aspas fecham a docstring. Numa docstring de uma linha, abre e fecha na mesma linha.</dd>
+  <dt>O lugar</dt><dd>Tem de ser a <strong>primeira coisa</strong> dentro da função, logo abaixo do <code>def</code>, com o mesmo recuo (4 espaços) do resto do corpo. Em qualquer outro lugar, não é docstring (veja <a href="#errado">Quando dá errado</a>).</dd>
+</dl>
+
+<pre class="term">$ python3 troco.py
+6.5
+</pre>
+
+<p>A docstring não muda nada no que a função faz: ela não aparece na saída nem atrapalha o <code>return</code>. Para que serve, então? Para ser lida, como você vai ver agora.</p>
+
+<hr>
+
+<h2>2. Lendo a documentação: <code>help()</code> e <code>__doc__</code></h2>
+<p>A Ana guardou as funções da padaria num arquivo próprio, <code>padaria.py</code>, que outros programas podem importar (aula <a href="modulos-proprios.html">Criando seu Módulo</a>):</p>
+
+<pre class="file" data-file="padaria.py">"""Funções da padaria do bairro: preços e troco."""
+
+
+def preco_com_desconto(preco, porcentagem):
+    """Devolve o preço depois de aplicar o desconto.
+
+    preco: o preço original, em reais.
+    porcentagem: o desconto, de 0 a 100 (10 quer dizer 10%).
+    """
+    return preco - preco * porcentagem / 100
+
+
+def troco(pago, total):
+    """Devolve quanto de troco a Ana tem de dar."""
+    return pago - total
+</pre>
+
+<h3><code>help()</code>: a ajuda do Python</h3>
+<p>A função embutida <code>help()</code> ("ajuda") mostra a documentação de qualquer coisa: uma função, um módulo inteiro. Ela monta a página com o nome, os parâmetros e a docstring:</p>
+
+<pre class="term">$ python3 -c "import padaria; help(padaria.troco)"
+Help on function troco in module padaria:
+
+troco(pago, total)
+    Devolve quanto de troco a Ana tem de dar.
+
+</pre>
+
+<dl class="anatomy">
+  <dt>Help on function troco in module padaria:</dt><dd>"Ajuda sobre a função <code>troco</code>, do módulo <code>padaria</code>."</dd>
+  <dt>troco(pago, total)</dt><dd>O nome e os parâmetros, tirados do <code>def</code>. Isso o <code>help()</code> descobre sozinho.</dd>
+  <dt>Devolve quanto de troco a Ana tem de dar.</dt><dd>A docstring. Isso é o que só você pode escrever.</dd>
+</dl>
+
+<p>(O <code>python3 -c "…"</code> roda um programa de uma linha, escrito ali mesmo; é só um atalho para não criar mais um arquivo.) E com o módulo inteiro:</p>
+
+<pre class="term">$ python3 -c "import padaria; help(padaria)"
+Help on module padaria:
+
+NAME
+    padaria - Funções da padaria do bairro: preços e troco.
+
+FUNCTIONS
+    preco_com_desconto(preco, porcentagem)
+        Devolve o preço depois de aplicar o desconto.
+
+        preco: o preço original, em reais.
+        porcentagem: o desconto, de 0 a 100 (10 quer dizer 10%).
+
+    troco(pago, total)
+        Devolve quanto de troco a Ana tem de dar.
+
+FILE
+    /home/ana/padaria.py
+
+</pre>
+
+<p>Uma página de manual completa, montada só com as docstrings: o <code>NAME</code> ("nome") usa a docstring do <strong>módulo</strong> (a primeira linha do arquivo), <code>FUNCTIONS</code> lista as funções com as suas docstrings, e <code>FILE</code> diz onde está o arquivo.</p>
+
+<div class="note">
+<strong>O <code>help()</code> no modo interativo</strong>
+<p>No modo interativo (<code>&gt;&gt;&gt;</code>), <code>help()</code> mostra o mesmo texto, mas numa <strong>tela à parte</strong>, para você poder rolar páginas longas com as setas. No terminal da Ana, depois de <code>import padaria</code> e <code>help(padaria.preco_com_desconto)</code>, a última linha dessa tela é:</p>
+<pre class="term">Help on preco_com_desconto line 1/7 (END) (press h for help or q to quit)</pre>
+<p>"(FIM) (aperte h para ajuda ou q para sair)". Aperte <strong>q</strong> para voltar ao <code>&gt;&gt;&gt;</code>. Experimente com as funções embutidas: <code>help(len)</code>, <code>help(print)</code>.</p>
+</div>
+
+<h3><code>__doc__</code>: a docstring como texto</h3>
+<p>A docstring fica guardada num atributo da função chamado <code>__doc__</code> (com <strong>dois</strong> sublinhados de cada lado; em inglês se lê "dunder doc"). Dá para mostrá-la com <code>print</code>:</p>
+
+<pre class="file" data-file="usa_doc.py">import padaria
+
+print(padaria.troco.__doc__)
+print("---")
+print(padaria.preco_com_desconto.__doc__)
+print("---")
+print(padaria.__doc__)
+</pre>
+
+<pre class="term">$ python3 usa_doc.py
+Devolve quanto de troco a Ana tem de dar.
+---
+Devolve o preço depois de aplicar o desconto.
+
+preco: o preço original, em reais.
+porcentagem: o desconto, de 0 a 100 (10 quer dizer 10%).
+
+---
+Funções da padaria do bairro: preços e troco.
+</pre>
+
+<p>Repare que os 4 espaços de recuo das linhas de dentro da docstring <strong>não aparecem</strong>: o Python tira o recuo em comum ao guardar o texto. A linha vazia antes do segundo <code>---</code> é a última linha da docstring, a das três aspas sozinhas.</p>
+
+<p>As funções embutidas também têm docstring (em inglês):</p>
+<pre class="term">$ python3 -c "print(len.__doc__)"
+Return the number of items in a container.
+</pre>
+<p>"Devolve o número de itens de um contêiner." É daí que o <code>help(len)</code> tira o texto.</p>
+
+<div class="trypy" data-goal="out:Devolve a área do retângulo.;;src:&quot;&quot;&quot;">
+<p class="try-task"><strong>Missão:</strong> o <code>print</code> mostra <code>None</code>, porque a função não tem docstring. Escreva uma docstring de uma linha, com três aspas, dizendo <code>Devolve a área do retângulo.</code></p>
+<pre class="script" data-file="main.py">def area(largura, altura):
+    return largura * altura
+
+
+print(area.__doc__)
+</pre>
+<pre class="solucao" data-file="main.py">def area(largura, altura):
+    """Devolve a área do retângulo."""
+    return largura * altura
+
+
+print(area.__doc__)
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Docstring de várias linhas</h2>
+<p>Quando uma frase não basta, a docstring cresce. O costume da comunidade Python (descrito num documento chamado <strong>PEP 257</strong>) é:</p>
+
+<ol class="passo">
+  <li><strong>Primeira linha:</strong> um resumo curto, numa frase, logo depois das aspas de abertura.</li>
+  <li><strong>Uma linha em branco.</strong> Ela separa o resumo do resto; ferramentas como o <code>help()</code> e os editores de código usam a primeira linha como resumo.</li>
+  <li><strong>Os detalhes:</strong> o que é cada parâmetro, o que a função devolve, cuidados.</li>
+  <li><strong>As aspas de fechamento</strong> sozinhas na última linha.</li>
+</ol>
+
+<pre class="file" data-file="media.py">def media(notas):
+    """Devolve a média das notas, com uma casa decimal.
+
+    notas: uma lista de números de 0 a 10. Não pode estar vazia.
+    Devolve um float, por exemplo 7.3.
+    """
+    return round(sum(notas) / len(notas), 1)
+</pre>
+
+<div class="tip">
+<strong>O que vale a pena escrever</strong>
+<ul>
+  <li>O que a função <strong>faz</strong> e o que <strong>devolve</strong>, não <em>como</em> ela faz por dentro (isso o código já mostra).</li>
+  <li>O que cada parâmetro espera: o tipo, a unidade (reais? centavos? de 0 a 100 ou de 0 a 1?), os limites.</li>
+  <li>O que pode dar errado: "não pode estar vazia".</li>
+</ul>
+<p>Uma docstring que só repete o nome da função (<code>"""Função troco."""</code>) não ajuda ninguém.</p>
+</div>
+
+<div class="note">
+<strong>Exemplos dentro da docstring</strong>
+<p>Muita gente coloca, na docstring, um exemplo de uso no formato do modo interativo (<code>&gt;&gt;&gt; troco(20, 13.5)</code> e a resposta embaixo). O Python tem até uma ferramenta, o <code>doctest</code>, que roda esses exemplos e confere se a resposta continua certa. Ela é assunto da aula <a href="testes.html">Testes</a>.</p>
+</div>
+
+<hr>
+
+<h2>4. Docstring do módulo</h2>
+<p>Um arquivo <code>.py</code> também pode ter docstring: é um texto entre três aspas na <strong>primeira linha do arquivo</strong>, antes de tudo (antes até dos <code>import</code>). Foi o que a Ana fez no <code>padaria.py</code>:</p>
+
+<pre class="file" data-file="padaria.py">"""Funções da padaria do bairro: preços e troco."""
+</pre>
+
+<p>Ela aparece no <code>help(padaria)</code>, na linha <code>NAME</code>, e em <code>padaria.__doc__</code>. As classes (aula <a href="classes.html">Classes e Objetos</a>) também têm docstring, logo abaixo da linha <code>class</code>, do mesmo jeito.</p>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Exemplo</th><th>Quando usar</th></tr>
+<tr><td>Docstring de uma linha</td><td><code>"""Devolve o troco."""</code></td><td>Funções simples, em que uma frase explica tudo</td></tr>
+<tr><td>Docstring de várias linhas</td><td>Resumo, linha em branco, detalhes</td><td>Quando há parâmetros que precisam de explicação, unidades, limites</td></tr>
+<tr><td>Comentário <code>#</code></td><td><code># o desconto vem em porcentagem</code></td><td>Para explicar <strong>como</strong> uma linha do código funciona, para quem lê o código (aula <a href="comentarios.html">Comentários</a>). Não aparece no <code>help()</code></td></tr>
+<tr><td><code>'''</code> (aspas simples triplas)</td><td><code>'''Devolve o troco.'''</code></td><td>Funciona igual, mas o costume (PEP 257) é <code>"""</code>. Prefira <code>"""</code></td></tr>
+<tr><td>Uma aspa só</td><td><code>"Devolve o troco."</code></td><td>Também vira docstring se estiver no lugar certo, mas não aceita várias linhas. Prefira <code>"""</code> sempre</td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>Docstring × comentário, em uma frase</strong>
+<p>A docstring é para quem vai <strong>usar</strong> a função (o que ela faz); o comentário é para quem vai <strong>mexer</strong> no código (como ele faz). Veja a diferença no <code>help()</code> logo abaixo, em Quando dá errado.</p>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Um comentário no lugar da docstring</strong>
+<pre class="file" data-file="comentario.py">def troco(pago, total):
+    # Devolve quanto de troco a Ana tem de dar.
+    return pago - total
+
+
+print(troco.__doc__)
+help(troco)
+</pre>
+<pre class="term">$ python3 comentario.py
+None
+Help on function troco in module __main__:
+
+troco(pago, total)
+
+</pre>
+<p>Não há erro, mas a explicação sumiu: <code>__doc__</code> vale <code>None</code> ("nada", aula <a href="none.html">O Valor None</a>), e o <code>help()</code> mostra só o nome e os parâmetros. O Python <strong>joga fora</strong> os comentários ao ler o programa; eles não ficam guardados em lugar nenhum. (<code>__main__</code> é o nome que o Python dá ao arquivo que você mandou rodar.) <strong>Como consertar:</strong> troque o <code>#</code> por uma docstring: <code>"""Devolve quanto de troco a Ana tem de dar."""</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>A docstring fora do lugar</strong>
+<pre class="file" data-file="fora_do_lugar.py">def troco(pago, total):
+    resultado = pago - total
+    """Devolve quanto de troco a Ana tem de dar."""
+    return resultado
+
+
+print(troco.__doc__)
+</pre>
+<pre class="term">$ python3 fora_do_lugar.py
+None
+</pre>
+<p>De novo <code>None</code>, e sem erro. O texto entre aspas está lá, mas não é a <strong>primeira</strong> coisa do corpo da função: veio depois do <code>resultado = …</code>. Aí ele vira só um texto solto, que o Python calcula e descarta. <strong>Como consertar:</strong> a docstring vai logo abaixo do <code>def</code>, antes de qualquer outra linha.</p>
+</div>
+
+<div class="trypy" data-goal="out:Devolve quanto de troco;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa mostra <code>None</code> em vez da documentação. Mova a docstring para o lugar certo.</p>
+<pre class="script" data-file="main.py">def troco(pago, total):
+    resultado = pago - total
+    """Devolve quanto de troco a Ana tem de dar."""
+    return resultado
+
+
+print(troco.__doc__)
+</pre>
+<pre class="solucao" data-file="main.py">def troco(pago, total):
+    """Devolve quanto de troco a Ana tem de dar."""
+    resultado = pago - total
+    return resultado
+
+
+print(troco.__doc__)
+</pre>
+</div>
+
+<div class="cenario">
+<strong>A docstring sem recuo</strong>
+<pre class="file" data-file="sem_recuo.py">def troco(pago, total):
+"""Devolve quanto de troco a Ana tem de dar."""
+    return pago - total
+</pre>
+<pre class="term">$ python3 sem_recuo.py
+  File "/home/ana/sem_recuo.py", line 2
+    """Devolve quanto de troco a Ana tem de dar."""
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+IndentationError: expected an indented block after function definition on line 1
+</pre>
+<p>"Erro de indentação: esperava um bloco recuado depois da definição de função da linha 1." A docstring faz parte do corpo da função, então precisa do mesmo recuo de 4 espaços (aula <a href="sintaxe.html">Sintaxe e Indentação</a>). Repare que não há <code>Traceback</code>: o Python nem começou a rodar o programa, porque não conseguiu nem ler o arquivo. <strong>Como consertar:</strong> 4 espaços antes das aspas.</p>
+</div>
+
+<div class="cenario">
+<strong>As aspas que não fecham</strong>
+<p>Uma aspa só não aceita quebra de linha:</p>
+<pre class="file" data-file="aspas_simples.py">def troco(pago, total):
+    "Devolve quanto de troco
+    a Ana tem de dar."
+    return pago - total
+</pre>
+<pre class="term">$ python3 aspas_simples.py
+  File "/home/ana/aspas_simples.py", line 2
+    "Devolve quanto de troco
+    ^
+SyntaxError: unterminated string literal (detected at line 2)
+</pre>
+<p>"Texto não terminado (detectado na linha 2)": a aspa abriu e a linha acabou sem fechá-la. E quando as três aspas abrem, mas a pessoa esquece de fechar:</p>
+<pre class="file" data-file="aspas_fim.py">def troco(pago, total):
+    """Devolve quanto de troco a Ana tem de dar.
+    return pago - total
+
+
+print(troco(20, 13.5))
+</pre>
+<pre class="term">$ python3 aspas_fim.py
+  File "/home/ana/aspas_fim.py", line 2
+    """Devolve quanto de troco a Ana tem de dar.
+    ^
+SyntaxError: unterminated triple-quoted string literal (detected at line 6)
+</pre>
+<p>"Texto de aspas triplas não terminado (detectado na linha 6)". O Python foi engolindo tudo como parte do texto, o <code>return</code> e o <code>print</code> inclusive, até o fim do arquivo (linha 6), procurando as três aspas de fechamento. O <code>^</code> aponta para onde o texto <strong>começou</strong>, que é onde você deve procurar. <strong>Como consertar:</strong> feche com <code>"""</code> no fim da docstring.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>"""Resumo em uma linha."""</code> logo abaixo do <code>def</code></td><td>Docstring de uma linha</td></tr>
+<tr><td><code>"""Resumo.</code> / linha em branco / detalhes / <code>"""</code></td><td>Docstring de várias linhas (PEP 257)</td></tr>
+<tr><td><code>"""…"""</code> na primeira linha do arquivo</td><td>Docstring do módulo</td></tr>
+<tr><td><code>help(funcao)</code></td><td>Mostra a página de ajuda (nome, parâmetros, docstring)</td></tr>
+<tr><td><code>help(modulo)</code></td><td>Mostra a ajuda do módulo inteiro</td></tr>
+<tr><td><code>funcao.__doc__</code></td><td>A docstring como texto (<code>None</code> se não houver)</td></tr>
+<tr><td><kbd>q</kbd></td><td>Sai da tela do <code>help()</code> no modo interativo</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>__doc__</code> vale <code>None</code>, <code>help()</code> sem descrição</td><td>Não há docstring: foi usado <code>#</code>, ou o texto não é a primeira linha do corpo</td></tr>
+<tr><td><code>IndentationError: expected an indented block after function definition</code></td><td>A docstring (ou o corpo) sem os 4 espaços de recuo</td></tr>
+<tr><td><code>SyntaxError: unterminated string literal</code></td><td>Docstring de várias linhas com uma aspa só: use <code>"""</code></td></tr>
+<tr><td><code>SyntaxError: unterminated triple-quoted string literal</code></td><td>Faltou fechar o <code>"""</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. As aspas</h3>
+<p>Complete a docstring de uma linha (as aspas de abrir e de fechar são iguais):</p>
+<div class="ex-code">def dobro(n):
+    <input data-answer="&quot;&quot;&quot;|'''" aria-label="aspas de abrir">Devolve o dobro de n.<input data-answer="&quot;&quot;&quot;|'''" aria-label="aspas de fechar">
+    return n * 2</div>
+</div>
+
+<div class="exercise">
+<h3>2. O atributo</h3>
+<p>Complete para mostrar a docstring da função <code>dobro</code>:</p>
+<div class="ex-code">print(dobro.<input data-answer="__doc__" aria-label="atributo">)</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. Onde fica a docstring de uma função?</p>
+<label><input type="radio" name="q3"> Na linha de cima do <code>def</code></label>
+<label><input type="radio" name="q3"> Logo abaixo do <code>def</code>, como primeira coisa do corpo</label>
+<label><input type="radio" name="q3"> Em qualquer lugar dentro da função</label>
+<label><input type="radio" name="q3"> Depois do <code>return</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. A função tem só um comentário <code># Calcula o troco.</code> logo abaixo do <code>def</code>. O que <code>print(troco.__doc__)</code> mostra?</p>
+<label><input type="radio" name="q4"> <code>Calcula o troco.</code></label>
+<label><input type="radio" name="q4"> <code># Calcula o troco.</code></label>
+<label><input type="radio" name="q4"> <code>None</code></label>
+<label><input type="radio" name="q4"> Dá erro</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Pelo costume da PEP 257, o que vem logo depois da primeira linha (o resumo) numa docstring de várias linhas?</p>
+<label><input type="radio" name="q5"> Uma linha em branco</label>
+<label><input type="radio" name="q5"> O <code>return</code></label>
+<label><input type="radio" name="q5"> As aspas de fechamento, sempre</label>
+<label><input type="radio" name="q5"> Um comentário com <code>#</code></label>
+</div>
+
+<h3>Missão final: documentando a média</h3>
+
+<div class="trypy" data-goal="outre:^Devolve a média das notas\.\n\n[\s\S]+;;semerro">
+<p class="try-task"><strong>Missão:</strong> escreva uma docstring <strong>de várias linhas</strong> para a função <code>media</code>: na primeira linha, o resumo <code>Devolve a média das notas.</code>; depois, uma linha em branco; depois, pelo menos uma linha explicando o parâmetro <code>notas</code>.</p>
+<pre class="script" data-file="main.py">def media(notas):
+    return sum(notas) / len(notas)
+
+
+print(media.__doc__)
+</pre>
+<pre class="solucao" data-file="main.py">def media(notas):
+    """Devolve a média das notas.
+
+    notas: uma lista de números de 0 a 10. Não pode estar vazia.
+    """
+    return sum(notas) / len(notas)
+
+
+print(media.__doc__)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>A <strong>docstring</strong> é um texto entre <code>"""</code> que fica <strong>logo abaixo do <code>def</code></strong>, como primeira coisa do corpo, com o mesmo recuo.</li>
+  <li>Ela explica <strong>o que</strong> a função faz, o que espera e o que devolve, para quem vai usá-la. O comentário <code>#</code> explica <strong>como</strong>, para quem vai mexer no código.</li>
+  <li>Uma linha: <code>"""Devolve o troco."""</code>. Várias linhas: resumo, linha em branco, detalhes, <code>"""</code> sozinho no fim (PEP 257).</li>
+  <li><code>help(funcao)</code> mostra a página de ajuda; no modo interativo, saia com <kbd>q</kbd>. <code>funcao.__doc__</code> devolve o texto, ou <code>None</code>.</li>
+  <li>Um texto entre aspas na primeira linha do arquivo é a docstring do <strong>módulo</strong>.</li>
+  <li>Fora do lugar ou com <code>#</code>, não é docstring: <code>None</code>, sem erro. Sem recuo, <code>IndentationError</code>; sem fechar, <code>SyntaxError: unterminated …</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
