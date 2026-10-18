@@ -1,0 +1,1128 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Projeto Calculadora — input, float, match, while e try passo a passo | Guia Python</title>
+<meta name="description" content="Projeto passo a passo: uma calculadora de terminal em Python que lê dois números e uma operação com input() e float(), escolhe a conta com if/elif e depois com match, recusa a divisão por zero, repete até você sair e, na versão final, valida o que foi digitado com try/except e funções. Quatro versões com sessões reais no Python 3.14 e missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Projeto <span class="hl">Calculadora</span></h1>
+
+<p class="intro">O primeiro projeto do guia: uma calculadora que roda no terminal. Ela pede um número, a operação e outro número, mostra o resultado e pergunta se você quer fazer outra conta. A conta em si é a parte fácil: o Python já sabe somar. O desafio é fazer o programa <strong>não quebrar</strong> quando alguém divide por zero, escolhe uma operação que não existe ou digita "seis" no lugar de um número.</p>
+
+<div class="note">
+<strong>Você vai praticar</strong>
+<ul>
+  <li>Ler o teclado com <a href="input.html">input()</a> e transformar o texto em número com <a href="conversao.html">float()</a>.</li>
+  <li>Escolher a conta com <a href="elif.html">if e elif</a> e depois com <a href="match.html">match e case</a>.</li>
+  <li>Recusar a divisão por zero com <a href="if-else.html">if e else</a>.</li>
+  <li>Repetir tudo com <a href="while.html">while</a> e sair com <a href="break-continue.html">break</a>.</li>
+  <li>Limpar o que foi digitado com <a href="strings-metodos.html">strip(), lower() e replace()</a>.</li>
+  <li>Separar o programa em <a href="funcoes.html">funções</a> que devolvem valores com <a href="return.html">return</a>.</li>
+  <li>Não deixar o programa quebrar com <a href="try-except.html">try e except</a>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>O que vamos construir</h2>
+<p>Esta é a calculadora pronta, rodando no computador da Ana. <strong>O que aparece depois dos dois-pontos de cada pergunta foi digitado por ela</strong> (o <code>10</code>, o <code>+</code>, o <code>s</code>…); o resto foi o programa que escreveu:</p>
+
+<pre class="term" data-cwd="~/projetos/calculadora">$ python3 calculadora.py
+=== Calculadora da Ana ===
+Primeiro número: 10
+Operação (+ - * /): +
+Segundo número: 5
+10 + 5 = 15
+Outra conta? (s/n): s
+Primeiro número: seis
+"seis" não é um número. Tente de novo.          « texto no lugar de número
+Primeiro número: 6
+Operação (+ - * /): %
+Operação desconhecida: %                        « operação que não existe
+Operação (+ - * /): *
+Segundo número: 1.5
+6 * 1.5 = 9
+Outra conta? (s/n): s
+Primeiro número: 2,5                            « com vírgula também vale
+Operação (+ - * /): /
+Segundo número: 0
+Não dá para dividir por zero.                   « divisão por zero
+Outra conta? (s/n): s
+Primeiro número: 0.1
+Operação (+ - * /): +
+Segundo número: 0.2
+0.1 + 0.2 = 0.3
+Outra conta? (s/n): s
+Primeiro número: 10
+Operação (+ - * /): /
+Segundo número: 3
+10 / 3 = 3.333333
+Outra conta? (s/n): n
+Até logo!</pre>
+
+<p>Vamos chegar lá em quatro versões. No fim de cada uma, o programa roda; cada versão acrescenta uma coisa só:</p>
+
+<ol class="passo">
+  <li><a href="#versao1">Dois números e um operador</a> (<code>input</code>, <code>float</code>, <code>if</code>/<code>elif</code>).</li>
+  <li><a href="#versao2">match e a divisão por zero</a>.</li>
+  <li><a href="#versao3">Repetir até a pessoa sair</a> (<code>while True</code> e <code>break</code>).</li>
+  <li><a href="#versao4">Funções e entrada validada</a> (<code>def</code>, <code>return</code>, <code>try</code>/<code>except</code>).</li>
+</ol>
+
+<h3>Antes de começar</h3>
+<p>Você precisa saber criar e rodar um arquivo <code>.py</code> (<a href="executar.html">Rodando um Programa</a>), usar <a href="variaveis.html">variáveis</a> e <a href="f-strings.html">f-strings</a>. No seu computador, crie a pasta do projeto; o arquivo vai se chamar <code>calculadora.py</code>:</p>
+
+<pre class="term">$ mkdir -p projetos/calculadora
+$ cd projetos/calculadora</pre>
+
+<p>Em cada versão há também uma caixa <strong>Experimente</strong>, que roda Python de verdade aqui na página. Nas missões deste projeto, a caixa já vem com a <strong>entrada da missão</strong>: as respostas que o programa vai receber, como se alguém as digitasse (a missão diz quais são).</p>
+
+<hr>
+
+<h2>Antes da versão 1: o tropeço clássico</h2>
+<p>O jeito mais curto de pedir dois números e somar seria este:</p>
+
+<pre class="file" data-file="calculadora.py">print("=== Calculadora da Ana ===")
+a = input("Primeiro número: ")
+b = input("Segundo número: ")
+print(f"{a} + {b} = {a + b}")
+</pre>
+
+<pre class="term" data-cwd="~/projetos/calculadora">$ python3 calculadora.py
+=== Calculadora da Ana ===
+Primeiro número: 10
+Segundo número: 5
+10 + 5 = 105</pre>
+
+<p><strong>10 + 5 = 105?</strong> Não deu erro nenhum, mas a conta está errada. O motivo: o <code>input()</code> sempre devolve um <strong>texto</strong> (uma <code>str</code>), mesmo que a pessoa tenha digitado só algarismos. Para o Python, <code>a</code> vale <code>"10"</code> e <code>b</code> vale <code>"5"</code>, e o <code>+</code> entre dois textos <strong>junta</strong> os textos (veja <a href="strings-juntar.html">Juntar e Repetir Textos</a>): <code>"10" + "5"</code> é <code>"105"</code>. Para fazer conta, é preciso converter o texto em número antes. É o primeiro passo da versão 1.</p>
+
+<hr>
+
+<h2 id="versao1">Versão 1 · Dois números e um operador</h2>
+<p>A calculadora pede o primeiro número, a operação e o segundo número. Os números passam pelo <code>float()</code>, que transforma o texto num número com casas decimais (um <code>float</code>, veja <a href="numeros.html">Números</a>), porque a Ana quer fazer contas como <code>7.5 / 2</code>. A operação fica como texto mesmo: <code>"+"</code>, <code>"-"</code>, <code>"*"</code> ou <code>"/"</code>. Para escolher a conta, uma escada de <a href="elif.html">if e elif</a>.</p>
+
+<pre class="file" data-file="calculadora.py">print("=== Calculadora da Ana ===")
+a = float(input("Primeiro número: "))
+op = input("Operação (+ - * /): ")
+b = float(input("Segundo número: "))
+
+if op == "+":
+    print(f"{a} + {b} = {a + b}")
+elif op == "-":
+    print(f"{a} - {b} = {a - b}")
+elif op == "*":
+    print(f"{a} * {b} = {a * b}")
+elif op == "/":
+    print(f"{a} / {b} = {a / b}")
+else:
+    print(f"Operação desconhecida: {op}")
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Linha</th><th>O que faz</th></tr>
+<tr><td><code>print("=== Calculadora da Ana ===")</code></td><td>O título, para a pessoa saber que programa está rodando.</td></tr>
+<tr><td><code>input("Primeiro número: ")</code></td><td>Mostra a pergunta e <strong>espera</strong> a pessoa digitar e apertar <kbd>Enter</kbd>. Devolve o que ela digitou, como texto. A pergunta termina com <code>": "</code> (dois-pontos e espaço) para o que for digitado não grudar nela.</td></tr>
+<tr><td><code>float(…)</code></td><td>Converte o texto em número: <code>"10"</code> vira <code>10.0</code>, <code>"7.5"</code> vira <code>7.5</code>. Um <code>input()</code> dentro de um <code>float()</code>: o Python faz primeiro o de dentro (pergunta) e depois o de fora (converte).</td></tr>
+<tr><td><code>op = input("Operação (+ - * /): ")</code></td><td>A operação, sem conversão: <code>"+"</code> é um texto e assim fica.</td></tr>
+<tr><td><code>if op == "+":</code></td><td>"Se a operação for igual a <code>"+"</code>". O <code>==</code> compara (um <code>=</code> só guarda valor numa variável; veja <a href="operadores-comparacao.html">Comparações</a>).</td></tr>
+<tr><td><code>elif op == "-":</code></td><td>"Senão, se…": só é testado quando o <code>if</code> de cima deu falso. O Python testa de cima para baixo e faz <strong>só o primeiro</strong> que combinar.</td></tr>
+<tr><td><code>else:</code></td><td>Pega tudo o que não combinou com nenhum dos de cima: <code>x</code>, <code>%</code>, uma palavra qualquer.</td></tr>
+<tr><td><code>f"{a} + {b} = {a + b}"</code></td><td>Uma <a href="f-strings.html">f-string</a>: o que está entre chaves é calculado e entra no texto. O <code>{a + b}</code> faz a conta ali mesmo.</td></tr>
+</table>
+</div>
+
+<p>Rodando no terminal da Ana, duas vezes:</p>
+
+<pre class="term" data-cwd="~/projetos/calculadora">$ python3 calculadora.py
+=== Calculadora da Ana ===
+Primeiro número: 10
+Operação (+ - * /): +
+Segundo número: 5
+10.0 + 5.0 = 15.0
+$ python3 calculadora.py
+=== Calculadora da Ana ===
+Primeiro número: 7.5
+Operação (+ - * /): /
+Segundo número: 2
+7.5 / 2.0 = 3.75</pre>
+
+<p>Agora a conta está certa. Repare no <code>10.0 + 5.0 = 15.0</code>: como os números passaram pelo <code>float()</code>, o Python os mostra com o <code>.0</code> no fim. Está correto, só não é bonito; na versão 4 a calculadora vai mostrar <code>10 + 5 = 15</code>. E uma operação que não existe cai no <code>else</code>:</p>
+
+<pre class="term" data-cwd="~/projetos/calculadora">$ python3 calculadora.py
+=== Calculadora da Ana ===
+Primeiro número: 3
+Operação (+ - * /): x
+Segundo número: 4
+Operação desconhecida: x</pre>
+
+<div class="note">
+<strong>Por que <code>float</code> e não <code>int</code>?</strong>
+<p>O <code>int()</code> converte para número <strong>inteiro</strong>, e recusa <code>"7.5"</code> (dá erro). Com <code>float()</code>, a calculadora aceita as duas coisas: <code>"10"</code> vira <code>10.0</code> e <code>"7.5"</code> vira <code>7.5</code>. Mais em <a href="conversao.html">Conversão de Tipos</a>.</p>
+</div>
+
+<div class="warning">
+<strong>0.1 + 0.2 não dá exatamente 0.3</strong>
+<pre class="term" data-cwd="~/projetos/calculadora">$ python3 calculadora.py
+=== Calculadora da Ana ===
+Primeiro número: 0.1
+Operação (+ - * /): +
+Segundo número: 0.2
+0.1 + 0.2 = 0.30000000000000004</pre>
+<p>Não é defeito da calculadora nem do Python: o computador guarda os números com casas decimais em binário, e alguns, como <code>0.1</code>, não têm representação exata (como 1/3 não tem em decimal: 0,3333…). Sobra um erro minúsculo na 17ª casa. Quase toda linguagem de programação dá o mesmo resultado. A aula <a href="numeros.html">Números</a> explica; na versão 4, a calculadora arredonda o resultado na hora de mostrar.</p>
+</div>
+
+<h3>Quando dá errado na versão 1</h3>
+
+<div class="cenario">
+<strong>Texto no lugar de número: <code>ValueError</code></strong>
+<pre class="term" data-cwd="~/projetos/calculadora">$ python3 calculadora.py
+=== Calculadora da Ana ===
+Primeiro número: seis
+Traceback (most recent call last):
+  File "/home/ana/projetos/calculadora/calculadora.py", line 2, in &lt;module&gt;
+    a = float(input("Primeiro número: "))
+        ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: could not convert string to float: 'seis'</pre>
+<p>Esta é a primeira mensagem de erro do projeto. Linha por linha:</p>
+<dl class="anatomy">
+  <dt>Traceback (most recent call last):</dt><dd>"Rastro (a chamada mais recente por último)". O Python vai mostrar o caminho até o erro.</dd>
+  <dt>File "…/calculadora.py", line 2, in &lt;module&gt;</dt><dd>O erro aconteceu no arquivo <code>calculadora.py</code>, na <strong>linha 2</strong>. O <code>&lt;module&gt;</code> quer dizer "no corpo principal do programa", fora de qualquer função.</dd>
+  <dt>a = float(input("Primeiro número: "))</dt><dd>A linha culpada, copiada do arquivo.</dd>
+  <dt>~~~~~^^^^^^^^^^^</dt><dd>O sublinhado aponta o pedaço da linha que deu erro: o <code>float(…)</code> (o <code>input</code> deu certo; quem falhou foi a conversão).</dd>
+  <dt>ValueError: could not convert string to float: 'seis'</dt><dd>O tipo do erro e a explicação: "erro de valor: não consegui converter o texto <code>'seis'</code> em float". O <code>float()</code> só entende algarismos, não números por extenso.</dd>
+</dl>
+<p>O programa <strong>parou</strong> ali: nem chegou a perguntar a operação. A versão 4 conserta isso com <code>try</code>/<code>except</code>. A aula <a href="erros.html">Lendo uma Mensagem de Erro</a> mostra mais tracebacks.</p>
+</div>
+
+<div class="cenario">
+<strong>Vírgula no lugar do ponto</strong>
+<pre class="term" data-cwd="~/projetos/calculadora">$ python3 calculadora.py
+=== Calculadora da Ana ===
+Primeiro número: 2,5
+Traceback (most recent call last):
+  File "/home/ana/projetos/calculadora/calculadora.py", line 2, in &lt;module&gt;
+    a = float(input("Primeiro número: "))
+        ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: could not convert string to float: '2,5'</pre>
+<p>Em português escrevemos 2,5; no Python, o decimal é com <strong>ponto</strong>: <code>2.5</code>. Para o <code>float()</code>, <code>"2,5"</code> é um texto qualquer, como <code>"seis"</code>. Na versão 4, a calculadora troca a vírgula pelo ponto antes de converter.</p>
+</div>
+
+<div class="cenario">
+<strong>Divisão por zero: <code>ZeroDivisionError</code></strong>
+<pre class="term" data-cwd="~/projetos/calculadora">$ python3 calculadora.py
+=== Calculadora da Ana ===
+Primeiro número: 1
+Operação (+ - * /): /
+Segundo número: 0
+Traceback (most recent call last):
+  File "/home/ana/projetos/calculadora/calculadora.py", line 13, in &lt;module&gt;
+    print(f"{a} / {b} = {a / b}")
+                         ~~^~~
+ZeroDivisionError: division by zero</pre>
+<p>Agora o erro está na <strong>linha 13</strong>, e o <code>^</code> aponta exatamente a barra de <code>a / b</code>. <code>ZeroDivisionError: division by zero</code> = "erro de divisão por zero". Na matemática, dividir por zero não tem resposta, e o Python se recusa a inventar uma: ele para o programa. A versão 2 cuida disso.</p>
+</div>
+
+<div class="trypy" data-stdin="10\n-\n4" data-goal="out:10.0 - 4.0 = 6.0">
+<p class="try-task"><strong>Missão (versão 1):</strong> o programa ainda não pede o segundo número e não sabe subtrair. Onde está o comentário, peça e leia <code>b</code> com <code>float(input("Segundo número: "))</code>, e acrescente um <code>elif</code> para a operação <code>"-"</code>. A entrada da missão é <code>10</code>, <code>-</code>, <code>4</code>: o resultado deve ser <code>10.0 - 4.0 = 6.0</code>.</p>
+<pre class="script" data-file="calculadora.py">print("=== Calculadora da Ana ===")
+a = float(input("Primeiro número: "))
+op = input("Operação (+ - * /): ")
+# peça e leia o segundo número
+
+if op == "+":
+    print(f"{a} + {b} = {a + b}")
+elif op == "*":
+    print(f"{a} * {b} = {a * b}")
+elif op == "/":
+    print(f"{a} / {b} = {a / b}")
+else:
+    print(f"Operação desconhecida: {op}")
+</pre>
+<pre class="solucao" data-file="calculadora.py">print("=== Calculadora da Ana ===")
+a = float(input("Primeiro número: "))
+op = input("Operação (+ - * /): ")
+b = float(input("Segundo número: "))
+
+if op == "+":
+    print(f"{a} + {b} = {a + b}")
+elif op == "-":
+    print(f"{a} - {b} = {a - b}")
+elif op == "*":
+    print(f"{a} * {b} = {a * b}")
+elif op == "/":
+    print(f"{a} / {b} = {a / b}")
+else:
+    print(f"Operação desconhecida: {op}")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao2">Versão 2 · match e a divisão por zero</h2>
+<p>Duas mudanças. A primeira é só de forma: a escada de <code>if</code>/<code>elif</code> que compara a <strong>mesma variável</strong> com vários valores fica mais fácil de ler com <a href="match.html">match e case</a> ("combinar" e "caso"). A segunda conserta um defeito: antes de dividir, a calculadora confere se o segundo número é zero.</p>
+
+<pre class="file" data-file="calculadora.py">print("=== Calculadora da Ana ===")
+a = float(input("Primeiro número: "))
+op = input("Operação (+ - * /): ")
+b = float(input("Segundo número: "))
+
+match op:
+    case "+":
+        print(f"{a} + {b} = {a + b}")
+    case "-":
+        print(f"{a} - {b} = {a - b}")
+    case "*":
+        print(f"{a} * {b} = {a * b}")
+    case "/":
+        if b == 0:
+            print("Não dá para dividir por zero.")
+        else:
+            print(f"{a} / {b} = {a / b}")
+    case _:
+        print(f"Operação desconhecida: {op}")
+</pre>
+
+<dl class="anatomy">
+  <dt>match op:</dt><dd>"Compare o valor de <code>op</code> com os casos abaixo." O <code>match</code> existe desde o Python 3.10.</dd>
+  <dt>case "+":</dt><dd>Se <code>op</code> for <code>"+"</code>, faz o bloco de baixo (indentado com mais 4 espaços) e <strong>pula todos os outros casos</strong>.</dd>
+  <dt>if b == 0:</dt><dd>Dentro do caso da divisão, um <code>if</code> comum: se o divisor for zero, avisa em vez de dividir. Um bloco pode ter qualquer coisa dentro, inclusive outro <code>if</code> (veja <a href="condicoes-aninhadas.html">Condições Aninhadas</a>).</dd>
+  <dt>case _:</dt><dd>O sublinhado é o "qualquer outra coisa": combina com tudo, por isso fica por último. Faz o papel do <code>else</code>.</dd>
+</dl>
+
+<pre class="term" data-cwd="~/projetos/calculadora">$ python3 calculadora.py
+=== Calculadora da Ana ===
+Primeiro número: 1
+Operação (+ - * /): /
+Segundo número: 0
+Não dá para dividir por zero.
+$ python3 calculadora.py
+=== Calculadora da Ana ===
+Primeiro número: 9
+Operação (+ - * /): -
+Segundo número: 12
+9.0 - 12.0 = -3.0</pre>
+
+<p>Em vez do traceback da versão 1, uma frase que a Ana entende. Isso é <strong>prevenir</strong> o erro: o programa confere antes de fazer a conta perigosa. (A outra estratégia, <strong>tratar</strong> o erro depois que ele acontece, com <code>try</code>/<code>except</code>, aparece na versão 4.)</p>
+
+<div class="tip">
+<strong>Comparar com <code>0</code> funciona com <code>0.0</code></strong>
+<p>Depois do <code>float()</code>, o <code>b</code> vale <code>0.0</code>, e não <code>0</code>. Mesmo assim, <code>b == 0</code> dá <code>True</code>: o Python compara o <strong>valor</strong> dos números, não o tipo. <code>0.0 == 0</code> é verdadeiro.</p>
+</div>
+
+<div class="cenario">
+<strong>Esquecer o <code>case _</code></strong>
+<p>Se o <code>case _:</code> sair do programa e a Ana digitar <code>x</code>, nenhum caso combina e o <code>match</code> simplesmente não faz nada: o programa termina sem mostrar resultado nem aviso. Não é um erro para o Python (por isso não há traceback), mas para quem usa parece que a calculadora "travou calada". Sempre que os casos não cobrirem tudo, ponha um <code>case _</code> no fim.</p>
+</div>
+
+<div class="trypy" data-stdin="1\n/\n0" data-goal="out:Não dá para dividir por zero.;;semerro">
+<p class="try-task"><strong>Missão (versão 2):</strong> o caso da divisão ainda divide sem olhar, e a entrada da missão (<code>1</code>, <code>/</code>, <code>0</code>) derruba o programa com <code>ZeroDivisionError</code>. Dentro do <code>case "/"</code>, confira se <code>b == 0</code>: se for, mostre <code>Não dá para dividir por zero.</code>; senão, faça a conta.</p>
+<pre class="script" data-file="calculadora.py">print("=== Calculadora da Ana ===")
+a = float(input("Primeiro número: "))
+op = input("Operação (+ - * /): ")
+b = float(input("Segundo número: "))
+
+match op:
+    case "+":
+        print(f"{a} + {b} = {a + b}")
+    case "-":
+        print(f"{a} - {b} = {a - b}")
+    case "*":
+        print(f"{a} * {b} = {a * b}")
+    case "/":
+        print(f"{a} / {b} = {a / b}")
+    case _:
+        print(f"Operação desconhecida: {op}")
+</pre>
+<pre class="solucao" data-file="calculadora.py">print("=== Calculadora da Ana ===")
+a = float(input("Primeiro número: "))
+op = input("Operação (+ - * /): ")
+b = float(input("Segundo número: "))
+
+match op:
+    case "+":
+        print(f"{a} + {b} = {a + b}")
+    case "-":
+        print(f"{a} - {b} = {a - b}")
+    case "*":
+        print(f"{a} * {b} = {a * b}")
+    case "/":
+        if b == 0:
+            print("Não dá para dividir por zero.")
+        else:
+            print(f"{a} / {b} = {a / b}")
+    case _:
+        print(f"Operação desconhecida: {op}")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao3">Versão 3 · Repetir até a pessoa sair</h2>
+<p>Até agora, cada conta exige rodar o programa de novo. A Ana quer fazer várias contas seguidas. A solução é colocar tudo dentro de um laço <a href="while.html">while</a> ("enquanto") e, no fim de cada volta, perguntar se ela quer continuar.</p>
+
+<pre class="file" data-file="calculadora.py">print("=== Calculadora da Ana ===")
+
+while True:
+    a = float(input("Primeiro número: "))
+    op = input("Operação (+ - * /): ")
+    b = float(input("Segundo número: "))
+
+    match op:
+        case "+":
+            print(f"{a} + {b} = {a + b}")
+        case "-":
+            print(f"{a} - {b} = {a - b}")
+        case "*":
+            print(f"{a} * {b} = {a * b}")
+        case "/":
+            if b == 0:
+                print("Não dá para dividir por zero.")
+            else:
+                print(f"{a} / {b} = {a / b}")
+        case _:
+            print(f"Operação desconhecida: {op}")
+
+    continuar = input("Outra conta? (s/n): ").strip().lower()
+    if continuar != "s":
+        break
+
+print("Até logo!")
+</pre>
+
+<dl class="anatomy">
+  <dt>while True:</dt><dd>"Enquanto verdadeiro": um laço que, sozinho, nunca termina. Tudo o que está indentado embaixo dele se repete. Quem decide a hora de parar é o <code>break</code> lá dentro.</dd>
+  <dt>(o bloco inteiro andou 4 espaços)</dt><dd>As perguntas e o <code>match</code> agora estão <strong>dentro</strong> do <code>while</code>, por isso ganharam mais um nível de indentação. É a indentação que diz ao Python o que faz parte do laço (veja <a href="sintaxe.html">Sintaxe e Indentação</a>).</dd>
+  <dt>input("Outra conta? (s/n): ").strip().lower()</dt><dd>Três passos em fila: pergunta, tira os espaços das pontas (<code>strip</code>, "aparar") e passa para minúsculas (<code>lower</code>, "mais baixo"). Assim, <code>S</code>, <code>s</code> e <code>" s "</code> viram todos <code>"s"</code>. Veja <a href="strings-metodos.html">Métodos de Texto</a>.</dd>
+  <dt>if continuar != "s":</dt><dd>"Se a resposta for diferente de <code>s</code>". Qualquer outra coisa (<code>n</code>, <code>não</code>, só <kbd>Enter</kbd>) encerra.</dd>
+  <dt>break</dt><dd>"Quebrar": sai do laço na hora. O programa continua na primeira linha <strong>depois</strong> do <code>while</code> (veja <a href="break-continue.html">break e continue</a>).</dd>
+  <dt>print("Até logo!")</dt><dd>Fora do laço (sem indentação): roda uma vez só, quando o <code>break</code> acontece.</dd>
+</dl>
+
+<pre class="term" data-cwd="~/projetos/calculadora">$ python3 calculadora.py
+=== Calculadora da Ana ===
+Primeiro número: 10
+Operação (+ - * /): +
+Segundo número: 5
+10.0 + 5.0 = 15.0
+Outra conta? (s/n): s
+Primeiro número: 3
+Operação (+ - * /): *
+Segundo número: 4
+3.0 * 4.0 = 12.0
+Outra conta? (s/n): S                « maiúsculo também vale, graças ao lower()
+Primeiro número: 100
+Operação (+ - * /): /
+Segundo número: 8
+100.0 / 8.0 = 12.5
+Outra conta? (s/n): n
+Até logo!</pre>
+
+<div class="note">
+<strong>Por que <code>while True</code> com <code>break</code>?</strong>
+<p>Dava para escrever <code>while continuar == "s":</code>, mas aí a variável <code>continuar</code> teria de existir <strong>antes</strong> do laço (com um <code>continuar = "s"</code> só para entrar na primeira volta). O <code>while True</code> com <code>break</code> no fim deixa a ordem natural: primeiro faz a conta, depois pergunta. É um padrão muito comum em programas que conversam com a pessoa.</p>
+</div>
+
+<div class="cenario">
+<strong>Sair no meio com <kbd>Ctrl</kbd>+<kbd>C</kbd></strong>
+<p>Se a Ana desistir no meio de uma conta, ela pode apertar <kbd>Ctrl</kbd>+<kbd>C</kbd>, que interrompe qualquer programa no terminal:</p>
+<pre class="term" data-cwd="~/projetos/calculadora">$ python3 calculadora.py
+=== Calculadora da Ana ===
+Primeiro número: 10
+Operação (+ - * /): ^CTraceback (most recent call last):
+  File "/home/ana/projetos/calculadora/calculadora.py", line 5, in &lt;module&gt;
+    op = input("Operação (+ - * /): ")
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt
+</pre>
+<p>O <code>^C</code> é o terminal mostrando a tecla. O Python responde com <code>KeyboardInterrupt</code> ("interrupção pelo teclado") e o traceback mostra em que linha o programa estava esperando: a linha 5, a pergunta da operação. Não é defeito do programa: é o jeito normal de interromper. Mas assusta quem usa; a aula <a href="try-except.html">try e except</a> mostra como trocar esse traceback por um "Até logo!".</p>
+</div>
+
+<div class="trypy" data-stdin="10\n+\n5\ns\n3\n*\n4\nn" data-goal="out:3.0 * 4.0 = 12.0;;out:Até logo!;;src:\bwhile\b">
+<p class="try-task"><strong>Missão (versão 3):</strong> o programa faz uma conta, pergunta "Outra conta?", mas não repete. Coloque as perguntas, o <code>match</code> e a pergunta "Outra conta?" dentro de um <code>while True:</code> (indente tudo com mais 4 espaços) e saia com <code>break</code> quando a resposta não for <code>s</code>. A entrada da missão faz <code>10 + 5</code>, responde <code>s</code>, faz <code>3 * 4</code> e responde <code>n</code>.</p>
+<pre class="script" data-file="calculadora.py">print("=== Calculadora da Ana ===")
+
+a = float(input("Primeiro número: "))
+op = input("Operação (+ - * /): ")
+b = float(input("Segundo número: "))
+
+match op:
+    case "+":
+        print(f"{a} + {b} = {a + b}")
+    case "-":
+        print(f"{a} - {b} = {a - b}")
+    case "*":
+        print(f"{a} * {b} = {a * b}")
+    case "/":
+        if b == 0:
+            print("Não dá para dividir por zero.")
+        else:
+            print(f"{a} / {b} = {a / b}")
+    case _:
+        print(f"Operação desconhecida: {op}")
+
+continuar = input("Outra conta? (s/n): ").strip().lower()
+
+print("Até logo!")
+</pre>
+<pre class="solucao" data-file="calculadora.py">print("=== Calculadora da Ana ===")
+
+while True:
+    a = float(input("Primeiro número: "))
+    op = input("Operação (+ - * /): ")
+    b = float(input("Segundo número: "))
+
+    match op:
+        case "+":
+            print(f"{a} + {b} = {a + b}")
+        case "-":
+            print(f"{a} - {b} = {a - b}")
+        case "*":
+            print(f"{a} * {b} = {a * b}")
+        case "/":
+            if b == 0:
+                print("Não dá para dividir por zero.")
+            else:
+                print(f"{a} / {b} = {a / b}")
+        case _:
+            print(f"Operação desconhecida: {op}")
+
+    continuar = input("Outra conta? (s/n): ").strip().lower()
+    if continuar != "s":
+        break
+
+print("Até logo!")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao4">Versão 4 · Funções e entrada validada</h2>
+<p>A versão 3 já faz várias contas, mas ainda quebra com <code>seis</code>, com <code>2,5</code> e com qualquer coisa que não seja número. E o programa ficou comprido: está tudo misturado num bloco só. A versão 4 resolve as duas coisas de uma vez: cada tarefa vira uma <a href="funcoes.html">função</a> com nome, e a função que lê números <strong>insiste</strong> até receber um número de verdade.</p>
+
+<pre class="file" data-file="calculadora.py">OPERACOES = "+-*/"
+
+
+def ler_numero(pergunta):
+    """Pergunta até a pessoa digitar um número; aceita vírgula ou ponto."""
+    while True:
+        texto = input(pergunta).strip()
+        try:
+            return float(texto.replace(",", "."))
+        except ValueError:
+            print(f'"{texto}" não é um número. Tente de novo.')
+
+
+def ler_operacao():
+    """Pergunta até a pessoa digitar uma das quatro operações."""
+    while True:
+        op = input("Operação (+ - * /): ").strip()
+        if len(op) == 1 and op in OPERACOES:
+            return op
+        print(f"Operação desconhecida: {op}")
+
+
+def formatar(numero):
+    """Mostra 15 em vez de 15.0, com no máximo 6 casas decimais."""
+    numero = round(numero, 6)
+    if numero.is_integer():
+        return str(int(numero))
+    return str(numero)
+
+
+def calcular(a, op, b):
+    """Faz a conta e devolve o resultado (ou None, se for dividir por zero)."""
+    match op:
+        case "+":
+            return a + b
+        case "-":
+            return a - b
+        case "*":
+            return a * b
+        case "/":
+            if b == 0:
+                return None
+            return a / b
+
+
+print("=== Calculadora da Ana ===")
+
+while True:
+    a = ler_numero("Primeiro número: ")
+    op = ler_operacao()
+    b = ler_numero("Segundo número: ")
+
+    resultado = calcular(a, op, b)
+    if resultado is None:
+        print("Não dá para dividir por zero.")
+    else:
+        print(f"{formatar(a)} {op} {formatar(b)} = {formatar(resultado)}")
+
+    continuar = input("Outra conta? (s/n): ").strip().lower()
+    if continuar != "s":
+        break
+
+print("Até logo!")
+</pre>
+
+<p>Parece muito código novo, mas o "programa principal" (do <code>print</code> do título até o fim) ficou <strong>mais curto</strong> e mais fácil de ler do que na versão 3: ele só chama funções com nomes que dizem o que fazem. Vamos às peças.</p>
+
+<h3>As funções, uma por uma</h3>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Peça</th><th>O que faz</th></tr>
+<tr><td><code>OPERACOES = "+-*/"</code></td><td>As operações aceitas, num lugar só. O nome em MAIÚSCULAS é o costume do Python para um valor que não muda durante o programa (uma "constante").</td></tr>
+<tr><td><code>def ler_numero(pergunta):</code></td><td>Cria a função <code>ler_numero</code>, que recebe o texto da pergunta. Assim, a mesma função serve para o primeiro e para o segundo número (veja <a href="parametros.html">Parâmetros e Argumentos</a>).</td></tr>
+<tr><td><code>"""Pergunta até…"""</code></td><td>A <a href="docstrings.html">docstring</a>: uma frase dizendo o que a função faz. Não muda nada na execução, mas ajuda quem lê.</td></tr>
+<tr><td><code>texto.replace(",", ".")</code></td><td>Troca a vírgula pelo ponto: <code>"2,5"</code> vira <code>"2.5"</code>, que o <code>float()</code> entende.</td></tr>
+<tr><td><code>try:</code> … <code>return float(…)</code></td><td>"Tente": tenta converter. Se der certo, o <code>return</code> devolve o número e <strong>sai da função</strong> (e, com ela, do <code>while</code>).</td></tr>
+<tr><td><code>except ValueError:</code></td><td>Se a conversão der o <code>ValueError</code> que você viu na versão 1, em vez de parar o programa o Python vem para cá: mostra o aviso, e o <code>while True</code> pergunta de novo. Veja <a href="try-except.html">try e except</a>.</td></tr>
+<tr><td><code>len(op) == 1 and op in OPERACOES</code></td><td>A operação tem de ter <strong>um</strong> caractere e estar dentro de <code>"+-*/"</code>. O <code>in</code> procura um texto dentro de outro (veja <a href="operadores-is-in.html">is e in</a>). Por que o <code>len</code>? Veja logo abaixo.</td></tr>
+<tr><td><code>round(numero, 6)</code></td><td>Arredonda para 6 casas: <code>0.30000000000000004</code> vira <code>0.3</code>.</td></tr>
+<tr><td><code>numero.is_integer()</code></td><td>"É inteiro?": <code>True</code> para <code>15.0</code>, <code>False</code> para <code>3.75</code>. Se for, <code>int()</code> tira o <code>.0</code>.</td></tr>
+<tr><td><code>def calcular(a, op, b):</code></td><td>Só faz a conta e <strong>devolve</strong> o resultado com <a href="return.html">return</a>; quem mostra é o programa principal. Para a divisão por zero, devolve <code>None</code> ("nada", veja <a href="none.html">O Valor None</a>).</td></tr>
+<tr><td><code>if resultado is None:</code></td><td>Confere se veio "nada". Para comparar com <code>None</code>, o costume é <code>is</code>, e não <code>==</code>.</td></tr>
+</table>
+</div>
+
+<p>Conferindo no modo interativo as peças novas, uma de cada vez:</p>
+
+<pre class="term" data-cwd="~/projetos/calculadora">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; float("2,5".replace(",", "."))
+2.5
+&gt;&gt;&gt; float("  7.5  ")
+7.5
+&gt;&gt;&gt; round(0.1 + 0.2, 6)
+0.3
+&gt;&gt;&gt; (15.0).is_integer()
+True
+&gt;&gt;&gt; "%" in "+-*/"
+False
+&gt;&gt;&gt; "+-" in "+-*/"
+True
+&gt;&gt;&gt; exit()</pre>
+
+<p>A última linha explica o <code>len(op) == 1</code>: o <code>in</code>, entre textos, procura um <strong>pedaço</strong>. <code>"+-"</code> é um pedaço de <code>"+-*/"</code>, então daria <code>True</code>, e a calculadora aceitaria a "operação" <code>+-</code>. Exigir um caractere só fecha essa porta. (O <code>float()</code> já ignora espaços nas pontas, como mostra o <code>"  7.5  "</code>; o <code>strip()</code> em <code>ler_numero</code> serve para a mensagem de erro mostrar o texto sem eles.)</p>
+
+<pre class="term" data-cwd="~/projetos/calculadora">$ python3 calculadora.py
+=== Calculadora da Ana ===
+Primeiro número: 10
+Operação (+ - * /): +
+Segundo número: 5
+10 + 5 = 15
+Outra conta? (s/n): s
+Primeiro número: seis
+"seis" não é um número. Tente de novo.
+Primeiro número: 6
+Operação (+ - * /): %
+Operação desconhecida: %
+Operação (+ - * /): *
+Segundo número: 1.5
+6 * 1.5 = 9
+Outra conta? (s/n): s
+Primeiro número: 2,5
+Operação (+ - * /): /
+Segundo número: 0
+Não dá para dividir por zero.
+Outra conta? (s/n): s
+Primeiro número: 0.1
+Operação (+ - * /): +
+Segundo número: 0.2
+0.1 + 0.2 = 0.3
+Outra conta? (s/n): s
+Primeiro número: 10
+Operação (+ - * /): /
+Segundo número: 3
+10 / 3 = 3.333333
+Outra conta? (s/n): n
+Até logo!</pre>
+
+<p>É a sessão do começo da página. Tudo o que derrubava a versão 1 agora tem resposta.</p>
+
+<div class="cenario">
+<strong>Usar a função antes de criá-la: <code>NameError</code></strong>
+<p>Se o programa principal ficar <strong>em cima</strong> das funções (o <code>while</code> primeiro, os <code>def</code> depois), acontece isto:</p>
+<pre class="term" data-cwd="~/projetos/calculadora">$ python3 calculadora.py
+=== Calculadora da Ana ===
+Traceback (most recent call last):
+  File "/home/ana/projetos/calculadora/calculadora.py", line 4, in &lt;module&gt;
+    a = ler_numero("Primeiro número: ")
+        ^^^^^^^^^^
+NameError: name 'ler_numero' is not defined</pre>
+<p><code>NameError: name 'ler_numero' is not defined</code> = "o nome <code>ler_numero</code> não está definido". O Python lê e executa o arquivo <strong>de cima para baixo</strong>. O <code>def</code> é uma instrução como outra qualquer: só depois que ela roda a função passa a existir. Quando a linha 4 chamou <code>ler_numero</code>, o <code>def</code> ainda estava lá embaixo, sem ter rodado. <strong>Como consertar:</strong> as funções primeiro, o programa principal no fim, como na versão 4.</p>
+</div>
+
+<div class="trypy" data-stdin="abc\n10\n+\n5\nn" data-goal="out:&quot;abc&quot; não é um número. Tente de novo.;;out:10 + 5 = 15;;semerro">
+<p class="try-task"><strong>Missão (versão 4):</strong> a função <code>ler_numero</code> ainda não se protege: com a entrada da missão (<code>abc</code>, <code>10</code>, <code>+</code>, <code>5</code>, <code>n</code>), o <code>abc</code> derruba o programa com <code>ValueError</code>. Coloque o <code>return float(…)</code> dentro de um <code>try:</code> e, no <code>except ValueError:</code>, mostre <code>"abc" não é um número. Tente de novo.</code> (com o texto que a pessoa digitou). O <code>while True</code> que já existe faz a pergunta de novo.</p>
+<pre class="script" data-file="calculadora.py">OPERACOES = "+-*/"
+
+
+def ler_numero(pergunta):
+    """Pergunta até a pessoa digitar um número; aceita vírgula ou ponto."""
+    while True:
+        texto = input(pergunta).strip()
+        return float(texto.replace(",", "."))
+
+
+def ler_operacao():
+    """Pergunta até a pessoa digitar uma das quatro operações."""
+    while True:
+        op = input("Operação (+ - * /): ").strip()
+        if len(op) == 1 and op in OPERACOES:
+            return op
+        print(f"Operação desconhecida: {op}")
+
+
+def formatar(numero):
+    """Mostra 15 em vez de 15.0, com no máximo 6 casas decimais."""
+    numero = round(numero, 6)
+    if numero.is_integer():
+        return str(int(numero))
+    return str(numero)
+
+
+def calcular(a, op, b):
+    """Faz a conta e devolve o resultado (ou None, se for dividir por zero)."""
+    match op:
+        case "+":
+            return a + b
+        case "-":
+            return a - b
+        case "*":
+            return a * b
+        case "/":
+            if b == 0:
+                return None
+            return a / b
+
+
+print("=== Calculadora da Ana ===")
+
+while True:
+    a = ler_numero("Primeiro número: ")
+    op = ler_operacao()
+    b = ler_numero("Segundo número: ")
+
+    resultado = calcular(a, op, b)
+    if resultado is None:
+        print("Não dá para dividir por zero.")
+    else:
+        print(f"{formatar(a)} {op} {formatar(b)} = {formatar(resultado)}")
+
+    continuar = input("Outra conta? (s/n): ").strip().lower()
+    if continuar != "s":
+        break
+
+print("Até logo!")
+</pre>
+<pre class="solucao" data-file="calculadora.py">OPERACOES = "+-*/"
+
+
+def ler_numero(pergunta):
+    """Pergunta até a pessoa digitar um número; aceita vírgula ou ponto."""
+    while True:
+        texto = input(pergunta).strip()
+        try:
+            return float(texto.replace(",", "."))
+        except ValueError:
+            print(f'"{texto}" não é um número. Tente de novo.')
+
+
+def ler_operacao():
+    """Pergunta até a pessoa digitar uma das quatro operações."""
+    while True:
+        op = input("Operação (+ - * /): ").strip()
+        if len(op) == 1 and op in OPERACOES:
+            return op
+        print(f"Operação desconhecida: {op}")
+
+
+def formatar(numero):
+    """Mostra 15 em vez de 15.0, com no máximo 6 casas decimais."""
+    numero = round(numero, 6)
+    if numero.is_integer():
+        return str(int(numero))
+    return str(numero)
+
+
+def calcular(a, op, b):
+    """Faz a conta e devolve o resultado (ou None, se for dividir por zero)."""
+    match op:
+        case "+":
+            return a + b
+        case "-":
+            return a - b
+        case "*":
+            return a * b
+        case "/":
+            if b == 0:
+                return None
+            return a / b
+
+
+print("=== Calculadora da Ana ===")
+
+while True:
+    a = ler_numero("Primeiro número: ")
+    op = ler_operacao()
+    b = ler_numero("Segundo número: ")
+
+    resultado = calcular(a, op, b)
+    if resultado is None:
+        print("Não dá para dividir por zero.")
+    else:
+        print(f"{formatar(a)} {op} {formatar(b)} = {formatar(resultado)}")
+
+    continuar = input("Outra conta? (s/n): ").strip().lower()
+    if continuar != "s":
+        break
+
+print("Até logo!")
+</pre>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de escolher a conta</h2>
+<p>A calculadora usou <code>if</code>/<code>elif</code> e depois <code>match</code>. Há um terceiro jeito, que você vai encontrar em programas prontos: um <a href="dicionarios.html">dicionário</a> que liga cada símbolo a uma função. O módulo <code>operator</code> (da biblioteca do Python) já traz as funções das contas: <code>operator.add</code> soma, <code>operator.mul</code> multiplica, e assim por diante.</p>
+
+<pre class="file" data-file="formas.py">import operator
+
+a, op, b = 10.0, "*", 3.0
+
+# Forma 1: if/elif
+if op == "+":
+    print("if/elif:", a + b)
+elif op == "*":
+    print("if/elif:", a * b)
+
+# Forma 2: match/case
+match op:
+    case "+":
+        print("match:", a + b)
+    case "*":
+        print("match:", a * b)
+
+# Forma 3: um dicionário de funções
+contas = {
+    "+": operator.add,
+    "-": operator.sub,
+    "*": operator.mul,
+    "/": operator.truediv,
+}
+print("dicionário:", contas[op](a, b))
+</pre>
+
+<pre class="term" data-cwd="~/projetos/calculadora">$ python3 formas.py
+if/elif: 30.0
+match: 30.0
+dicionário: 30.0</pre>
+
+<p>Na forma 3, <code>contas[op]</code> busca no dicionário a função ligada a <code>"*"</code> (a <code>operator.mul</code>), e o <code>(a, b)</code> logo depois a chama com os dois números.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>if</code> / <code>elif</code></td><td>Poucas opções, ou condições diferentes entre si (<code>op == "/" and b == 0</code>). Funciona em qualquer versão do Python.</td></tr>
+<tr><td><code>match</code> / <code>case</code></td><td>Comparar <strong>uma</strong> variável com vários valores fixos. Fica limpo de ler. Precisa do Python 3.10 ou mais novo.</td></tr>
+<tr><td>Dicionário de funções</td><td>Muitas opções que fazem coisas do mesmo formato. Acrescentar uma operação é acrescentar uma linha no dicionário. Exige já conhecer dicionários e funções.</td></tr>
+</table>
+</div>
+
+<div class="warning">
+<strong>E o <code>eval()</code>?</strong>
+<p>Na internet você vai achar calculadoras de uma linha só: <code>print(eval(input()))</code>. O <code>eval()</code> ("avaliar") executa um texto como se fosse código Python:</p>
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; eval("10 + 5")
+15
+&gt;&gt;&gt; eval("2,5")
+(2, 5)
+&gt;&gt;&gt; exit()</pre>
+<p>Parece prático, mas repare no segundo: <code>2,5</code> não deu erro nem 2.5; virou um par de números (uma <a href="tuplas.html">tupla</a>). E o pior: o <code>eval()</code> executa <strong>qualquer</strong> código que a pessoa digitar, inclusive um que apague arquivos. Nunca use <code>eval()</code> em algo que veio do teclado, de um arquivo ou da internet. A calculadora da Ana é mais longa, mas ela sabe exatamente o que aceita.</p>
+</div>
+
+<hr>
+
+<h2>Desafio extra: resto e potência</h2>
+<p>A Ana quer mais duas operações: o resto da divisão (<code>%</code>) e a potência (<code>**</code>, "elevado a"), que você conhece da aula <a href="operadores-aritmeticos.html">Operadores Aritméticos</a>. O <code>**</code> tem <strong>dois</strong> caracteres, então o teste <code>len(op) == 1 and op in OPERACOES</code> não serve mais. Com uma <a href="listas.html">lista</a> de operações, o <code>in</code> compara itens inteiros (e não pedaços de texto), e o <code>len</code> deixa de ser necessário:</p>
+
+<pre class="file" data-file="calculadora.py">OPERACOES = ["+", "-", "*", "/", "%", "**"]
+</pre>
+
+<p>Com as mudanças da missão abaixo, a Ana testou assim:</p>
+
+<pre class="term" data-cwd="~/projetos/calculadora">$ python3 calculadora.py
+=== Calculadora da Ana ===
+Primeiro número: 10
+Operação (+ - * / % **): %
+Segundo número: 3
+10 % 3 = 1
+Outra conta? (s/n): s
+Primeiro número: 2
+Operação (+ - * / % **): **
+Segundo número: 10
+2 ** 10 = 1024
+Outra conta? (s/n): s
+Primeiro número: 7
+Operação (+ - * / % **): %
+Segundo número: 0
+Não dá para dividir por zero.
+Outra conta? (s/n): n
+Até logo!</pre>
+
+<p>O resto também é uma divisão: <code>7 % 0</code> dá o mesmo <code>ZeroDivisionError</code> que <code>7 / 0</code>, por isso o caso <code>"%"</code> também confere o zero.</p>
+
+<div class="trypy" data-stdin="10\n%\n3\ns\n2\n**\n10\ns\n7\n%\n0\nn" data-goal="out:10 % 3 = 1;;out:2 ** 10 = 1024;;out:Não dá para dividir por zero.;;semerro">
+<p class="try-task"><strong>Desafio no editor:</strong> acrescente <code>%</code> e <code>**</code> à calculadora. Mude três lugares: <code>OPERACOES</code> vira a lista <code>["+", "-", "*", "/", "%", "**"]</code>; o <code>if</code> de <code>ler_operacao</code> fica só <code>if op in OPERACOES:</code> (e a pergunta, <code>"Operação (+ - * / % **): "</code>); e o <code>match</code> de <code>calcular</code> ganha <code>case "%":</code> (recusando o zero, como a divisão) e <code>case "**":</code>. Com a entrada da missão, deve aparecer <code>10 % 3 = 1</code>, <code>2 ** 10 = 1024</code> e a recusa de <code>7 % 0</code>.</p>
+<pre class="script" data-file="calculadora.py">OPERACOES = "+-*/"
+
+
+def ler_numero(pergunta):
+    """Pergunta até a pessoa digitar um número; aceita vírgula ou ponto."""
+    while True:
+        texto = input(pergunta).strip()
+        try:
+            return float(texto.replace(",", "."))
+        except ValueError:
+            print(f'"{texto}" não é um número. Tente de novo.')
+
+
+def ler_operacao():
+    """Pergunta até a pessoa digitar uma das operações."""
+    while True:
+        op = input("Operação (+ - * /): ").strip()
+        if len(op) == 1 and op in OPERACOES:
+            return op
+        print(f"Operação desconhecida: {op}")
+
+
+def formatar(numero):
+    """Mostra 15 em vez de 15.0, com no máximo 6 casas decimais."""
+    numero = round(numero, 6)
+    if numero.is_integer():
+        return str(int(numero))
+    return str(numero)
+
+
+def calcular(a, op, b):
+    """Faz a conta e devolve o resultado (ou None, se for dividir por zero)."""
+    match op:
+        case "+":
+            return a + b
+        case "-":
+            return a - b
+        case "*":
+            return a * b
+        case "/":
+            if b == 0:
+                return None
+            return a / b
+
+
+print("=== Calculadora da Ana ===")
+
+while True:
+    a = ler_numero("Primeiro número: ")
+    op = ler_operacao()
+    b = ler_numero("Segundo número: ")
+
+    resultado = calcular(a, op, b)
+    if resultado is None:
+        print("Não dá para dividir por zero.")
+    else:
+        print(f"{formatar(a)} {op} {formatar(b)} = {formatar(resultado)}")
+
+    continuar = input("Outra conta? (s/n): ").strip().lower()
+    if continuar != "s":
+        break
+
+print("Até logo!")
+</pre>
+<pre class="solucao" data-file="calculadora.py">OPERACOES = ["+", "-", "*", "/", "%", "**"]
+
+
+def ler_numero(pergunta):
+    """Pergunta até a pessoa digitar um número; aceita vírgula ou ponto."""
+    while True:
+        texto = input(pergunta).strip()
+        try:
+            return float(texto.replace(",", "."))
+        except ValueError:
+            print(f'"{texto}" não é um número. Tente de novo.')
+
+
+def ler_operacao():
+    """Pergunta até a pessoa digitar uma das operações."""
+    while True:
+        op = input("Operação (+ - * / % **): ").strip()
+        if op in OPERACOES:
+            return op
+        print(f"Operação desconhecida: {op}")
+
+
+def formatar(numero):
+    """Mostra 15 em vez de 15.0, com no máximo 6 casas decimais."""
+    numero = round(numero, 6)
+    if numero.is_integer():
+        return str(int(numero))
+    return str(numero)
+
+
+def calcular(a, op, b):
+    """Faz a conta e devolve o resultado (ou None, se for dividir por zero)."""
+    match op:
+        case "+":
+            return a + b
+        case "-":
+            return a - b
+        case "*":
+            return a * b
+        case "/":
+            if b == 0:
+                return None
+            return a / b
+        case "%":
+            if b == 0:
+                return None
+            return a % b
+        case "**":
+            return a ** b
+
+
+print("=== Calculadora da Ana ===")
+
+while True:
+    a = ler_numero("Primeiro número: ")
+    op = ler_operacao()
+    b = ler_numero("Segundo número: ")
+
+    resultado = calcular(a, op, b)
+    if resultado is None:
+        print("Não dá para dividir por zero.")
+    else:
+        print(f"{formatar(a)} {op} {formatar(b)} = {formatar(resultado)}")
+
+    continuar = input("Outra conta? (s/n): ").strip().lower()
+    if continuar != "s":
+        break
+
+print("Até logo!")
+</pre>
+</div>
+
+<p>Outras ideias para continuar sozinho: guardar cada conta numa lista e mostrar o histórico quando a Ana sair; aceitar a conta inteira numa linha só (<code>10 + 5</code>), separando as partes com <code>split()</code>.</p>
+
+<hr>
+
+<h2>Referência rápida do projeto</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Para que serviu</th></tr>
+<tr><td><code>float(input("…"))</code></td><td>Perguntar e converter o texto em número</td></tr>
+<tr><td><code>if</code> / <code>elif</code> / <code>else</code></td><td>Escolher a conta (versão 1)</td></tr>
+<tr><td><code>match op:</code> / <code>case "+":</code> / <code>case _:</code></td><td>Escolher a conta comparando uma variável com valores fixos (versão 2)</td></tr>
+<tr><td><code>if b == 0:</code></td><td>Prevenir a divisão por zero</td></tr>
+<tr><td><code>while True:</code> … <code>break</code></td><td>Repetir até a pessoa pedir para sair (versão 3)</td></tr>
+<tr><td><code>.strip().lower()</code></td><td>Aceitar <code>S</code>, <code>s</code> e <code>" s "</code> como a mesma resposta</td></tr>
+<tr><td><code>texto.replace(",", ".")</code></td><td>Aceitar o decimal com vírgula</td></tr>
+<tr><td><code>try:</code> … <code>except ValueError:</code></td><td>Não deixar um texto inválido derrubar o programa (versão 4)</td></tr>
+<tr><td><code>def</code> / <code>return</code></td><td>Separar o programa em tarefas com nome</td></tr>
+<tr><td><code>round(x, 6)</code>, <code>x.is_integer()</code>, <code>int(x)</code></td><td>Mostrar <code>15</code> em vez de <code>15.0</code> e <code>0.3</code> em vez de <code>0.30000000000000004</code></td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>10 + 5 = 105</code></td><td>Faltou converter: o <code>input()</code> devolve texto, e <code>+</code> junta textos</td></tr>
+<tr><td><code>ValueError: could not convert string to float: 'seis'</code></td><td>O texto digitado não é um número (ou usa vírgula): trate com <code>try</code>/<code>except</code></td></tr>
+<tr><td><code>ZeroDivisionError: division by zero</code></td><td>Divisão (ou resto) por zero: confira o divisor antes</td></tr>
+<tr><td><code>KeyboardInterrupt</code></td><td>A pessoa apertou <kbd>Ctrl</kbd>+<kbd>C</kbd></td></tr>
+<tr><td><code>NameError: name 'ler_numero' is not defined</code></td><td>A função foi chamada antes do <code>def</code> (ou o nome está escrito diferente)</td></tr>
+<tr><td>Uma operação inválida não mostra nada</td><td>Faltou o <code>case _:</code> no <code>match</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A conversão</h3>
+<p>Complete para que <code>a</code> guarde um número, e não um texto:</p>
+<div class="ex-code">a = <input data-answer="float" aria-label="função"> (input("Primeiro número: "))</div>
+</div>
+
+<div class="exercise">
+<h3>2. O caso que pega o resto</h3>
+<p>Complete o caso do <code>match</code> que combina com qualquer operação:</p>
+<div class="ex-code">case <input data-answer="_" aria-label="padrão">:</div>
+</div>
+
+<div class="exercise">
+<h3>3. Sair do laço</h3>
+<p>Complete a palavra que encerra o <code>while True</code>:</p>
+<div class="ex-code">if continuar != "s":<br>&nbsp;&nbsp;&nbsp;&nbsp;<input data-answer="break" aria-label="palavra-chave"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Sem <code>float()</code>, a Ana digitou <code>10</code> e <code>5</code> e a calculadora mostrou <code>10 + 5 = 105</code>. Por quê?</p>
+<label><input type="radio" name="q4"> O Python erra contas com números pequenos</label>
+<label><input type="radio" name="q4"> O <code>input()</code> devolve texto, e o <code>+</code> entre textos junta os textos</label>
+<label><input type="radio" name="q4"> Faltou o <code>match</code></label>
+<label><input type="radio" name="q4"> O <code>print</code> juntou os números</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. Na versão 4, o que acontece quando a Ana digita <code>seis</code> no primeiro número?</p>
+<label><input type="radio" name="q5"> O programa para com <code>ValueError</code></label>
+<label><input type="radio" name="q5"> O número vira 0 e a conta continua</label>
+<label><input type="radio" name="q5"> O <code>except ValueError</code> mostra um aviso e o <code>while True</code> pergunta de novo</label>
+<label><input type="radio" name="q5"> O programa pula para a pergunta da operação</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Por que <code>ler_operacao</code> confere <code>len(op) == 1</code> antes do <code>op in OPERACOES</code>?</p>
+<label><input type="radio" name="q6"> Porque <code>"+-" in "+-*/"</code> dá <code>True</code>: o <code>in</code> entre textos procura um pedaço</label>
+<label><input type="radio" name="q6"> Porque o <code>in</code> não funciona com textos</label>
+<label><input type="radio" name="q6"> Para o programa ficar mais rápido</label>
+<label><input type="radio" name="q6"> Porque o <code>input()</code> devolve uma lista</label>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>O <code>input()</code> sempre devolve <strong>texto</strong>. Para fazer conta, converta com <code>float()</code> (ou <code>int()</code>); sem isso, <code>"10" + "5"</code> dá <code>"105"</code>.</li>
+  <li><code>if</code>/<code>elif</code> e <code>match</code>/<code>case</code> escolhem a conta; o <code>case _</code> pega o que sobrou.</li>
+  <li>A divisão por zero dá <code>ZeroDivisionError</code>: <strong>previna</strong> com <code>if b == 0</code>.</li>
+  <li><code>while True</code> com <code>break</code> repete até a pessoa pedir para sair; <code>.strip().lower()</code> deixa a resposta tolerante.</li>
+  <li>Texto que não é número dá <code>ValueError</code>: <strong>trate</strong> com <code>try</code>/<code>except</code> dentro de um laço que pergunta de novo.</li>
+  <li>Funções com nomes claros deixam o programa principal curto. Elas precisam ser criadas (<code>def</code>) <strong>antes</strong> de serem chamadas.</li>
+  <li>Nunca use <code>eval()</code> no que a pessoa digita.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
