@@ -1,0 +1,993 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Projeto Jogo de Adivinhação — random, while, for/else e recorde passo a passo | Guia Python</title>
+<meta name="description" content="Projeto passo a passo: o jogo de adivinhar o número em Python. Sorteio com random.randint, dicas de mais alto e mais baixo com while, limite de tentativas com for e else, palpites validados com try/except e partidas repetidas com recorde. Cinco versões com sessões reais no Python 3.14, a semente random.seed para testar, e missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Projeto <span class="hl">Jogo de Adivinhação</span></h1>
+
+<p class="intro">O computador pensa num número de 1 a 100 e você tenta adivinhar. A cada palpite, ele diz "mais alto" ou "mais baixo", até você acertar ou as tentativas acabarem. É um jogo pequeno, mas tem tudo o que um programa de verdade tem: um sorteio, um laço, decisões, uma conta de tentativas e a obrigação de não quebrar quando alguém digita "sete" no lugar de 7.</p>
+
+<div class="note">
+<strong>Você vai praticar</strong>
+<ul>
+  <li>Sortear números com o módulo <a href="random.html">random</a> (<code>randint</code> e a semente <code>seed</code>) e usar <a href="modulos.html">import</a>.</li>
+  <li>Converter o palpite com <a href="conversao.html">int()</a> e comparar com <a href="operadores-comparacao.html">&lt; e ==</a>.</li>
+  <li>Repetir até acertar com <a href="while.html">while</a>.</li>
+  <li>Contar e limitar as tentativas com <a href="for.html">for</a>, <a href="range.html">range()</a>, <a href="break-continue.html">break</a> e o <a href="lacos-else.html">else dos laços</a>.</li>
+  <li>Validar o palpite com <a href="try-except.html">try e except</a> e <code>continue</code>.</li>
+  <li>Organizar a partida numa <a href="funcoes.html">função</a> que devolve um resultado com <a href="return.html">return</a>, e guardar o recorde.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>O que vamos construir</h2>
+<p>O jogo pronto, no terminal da Ana. <strong>Os números depois dos dois-pontos foram digitados por ela</strong>; o resto é o programa:</p>
+
+<pre class="term" data-cwd="~/projetos/adivinhacao">$ python3 adivinhacao.py
+=== Jogo de Adivinhação ===
+Pensei num número de 1 a 100. Você tem 7 tentativas.
+Tentativa 1/7: 50
+Mais alto!
+Tentativa 2/7: 75
+Mais baixo!
+Tentativa 3/7: 62
+Mais alto!
+Tentativa 4/7: 68
+Mais baixo!
+Tentativa 5/7: 65
+Mais baixo!
+Tentativa 6/7: 63
+Acertou em 6 tentativa(s)!
+Novo recorde!
+Seu recorde: 6 tentativa(s).
+Jogar de novo? (s/n): s
+Pensei num número de 1 a 100. Você tem 7 tentativas.
+Tentativa 1/7: 50
+Mais baixo!
+Tentativa 2/7: 25
+Mais baixo!
+Tentativa 3/7: 12
+Mais baixo!
+Tentativa 4/7: 6
+Mais alto!
+Tentativa 5/7: 9
+Mais baixo!
+Tentativa 6/7: 7
+Mais alto!
+Tentativa 7/7: 8
+Acertou em 7 tentativa(s)!                     « 7 não bate o recorde de 6
+Seu recorde: 6 tentativa(s).
+Jogar de novo? (s/n): s
+Pensei num número de 1 a 100. Você tem 7 tentativas.
+Tentativa 1/7: 10
+Mais alto!
+Tentativa 2/7: 20
+Mais alto!
+Tentativa 3/7: 30
+Mais alto!
+Tentativa 4/7: 40
+Mais baixo!
+Tentativa 5/7: 39
+Mais baixo!
+Tentativa 6/7: 38
+Mais baixo!
+Tentativa 7/7: 37
+Mais baixo!
+Suas tentativas acabaram. O número era 36.     « desta vez ela perdeu
+Seu recorde: 6 tentativa(s).
+Jogar de novo? (s/n): n
+Até a próxima!</pre>
+
+<p>Cinco versões, uma novidade em cada:</p>
+
+<ol class="passo">
+  <li><a href="#versao1">Um sorteio, um palpite</a> (<code>import random</code>, <code>randint</code>, <code>int</code>).</li>
+  <li><a href="#versao2">Dicas até acertar</a> (<code>while</code>).</li>
+  <li><a href="#versao3">Tentativas contadas e limitadas</a> (<code>for</code>, <code>range</code>, <code>break</code>, <code>else</code>).</li>
+  <li><a href="#versao4">Palpite validado</a> (<code>try</code>/<code>except</code>, <code>continue</code>).</li>
+  <li><a href="#versao5">Várias partidas e recorde</a> (<code>def</code>, <code>return</code>, <code>None</code>).</li>
+</ol>
+
+<h3>Antes de começar</h3>
+<p>Este projeto usa o que você viu na <a href="projeto-calculadora.html">Calculadora</a>: <code>input()</code>, conversão, <code>if</code>/<code>elif</code> e <code>while</code>. Crie a pasta do jogo; o arquivo vai se chamar <code>adivinhacao.py</code> (sem acento e sem cedilha no nome do arquivo, que é o costume):</p>
+
+<pre class="term">$ mkdir -p projetos/adivinhacao
+$ cd projetos/adivinhacao</pre>
+
+<hr>
+
+<h2>Antes de tudo: sorteio e semente</h2>
+<p>O sorteio vem do módulo <code>random</code> ("aleatório"), que faz parte do Python: basta um <code>import random</code> no começo do programa. A função <code>random.randint(1, 100)</code> sorteia um número inteiro de 1 a 100, <strong>com</strong> o 1 e o 100 incluídos. No modo interativo:</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; import random
+&gt;&gt;&gt; random.randint(1, 100)
+81
+&gt;&gt;&gt; random.randint(1, 100)
+49
+&gt;&gt;&gt; random.seed(42)
+&gt;&gt;&gt; random.randint(1, 100)
+82
+&gt;&gt;&gt; random.randint(1, 100)
+15
+&gt;&gt;&gt; random.seed(42)
+&gt;&gt;&gt; random.randint(1, 100)
+82
+&gt;&gt;&gt; exit()</pre>
+
+<p>Os dois primeiros sorteios deram 81 e 49 no computador da Ana; no seu, vão dar outros números, e a cada vez outros. Agora repare no <code>random.seed(42)</code>: depois dele, o primeiro sorteio deu <strong>82</strong>, o segundo <strong>15</strong>, e quando a Ana chamou <code>random.seed(42)</code> de novo, o sorteio voltou a dar 82.</p>
+
+<div class="note">
+<strong>O que é a semente (<code>seed</code>)</strong>
+<p>O computador não "joga dados" de verdade: ele calcula uma sequência de números que <strong>parecem</strong> aleatórios, a partir de um número inicial, a <strong>semente</strong> (em inglês, <em>seed</em>). Sem <code>seed</code>, o Python escolhe uma semente diferente a cada execução, e o jogo é imprevisível. Com <code>random.seed(42)</code>, a semente é sempre 42, e a sequência é sempre a mesma: 82, 15, 4, 95…</p>
+<p>Isso é ótimo para <strong>testar</strong>: se o número secreto é sempre 82, dá para conferir se o programa responde certo. Por isso, <strong>todas as missões desta página começam com <code>random.seed(42)</code></strong>, e o número secreto delas é sempre 82 (e, numa segunda partida, 15). No jogo de verdade, a linha do <code>seed</code> sai: senão a Ana decoraria a resposta.</p>
+</div>
+
+<pre class="file" data-file="semente.py">import random
+
+random.seed(42)
+print(random.randint(1, 100), random.randint(1, 100), random.randint(1, 100))
+</pre>
+
+<pre class="term" data-cwd="~/projetos/adivinhacao">$ python3 semente.py
+82 15 4
+$ python3 semente.py
+82 15 4</pre>
+
+<hr>
+
+<h2 id="versao1">Versão 1 · Um sorteio, um palpite</h2>
+<p>A versão mais simples: o programa sorteia, a pessoa dá <strong>um</strong> palpite, e o programa diz se ela acertou.</p>
+
+<pre class="file" data-file="adivinhacao.py">import random
+
+secreto = random.randint(1, 100)
+print("Pensei num número de 1 a 100.")
+palpite = int(input("Seu palpite: "))
+
+if palpite == secreto:
+    print("Acertou!")
+else:
+    print(f"Errou! O número era {secreto}.")
+</pre>
+
+<dl class="anatomy">
+  <dt>import random</dt><dd>Traz o módulo <code>random</code> para o programa. Fica sempre no começo do arquivo (veja <a href="modulos.html">Módulos e import</a>).</dd>
+  <dt>secreto = random.randint(1, 100)</dt><dd>Sorteia o número e guarda na variável <code>secreto</code>. O <code>random.</code> na frente diz de qual módulo vem a função.</dd>
+  <dt>int(input("Seu palpite: "))</dt><dd>Pergunta e converte o texto em número <strong>inteiro</strong>. Aqui é <code>int</code>, e não <code>float</code>: o número secreto não tem casas decimais.</dd>
+  <dt>if palpite == secreto:</dt><dd>Compara os dois números.</dd>
+  <dt>f"Errou! O número era {secreto}."</dt><dd>Quando erra, a pessoa merece saber qual era.</dd>
+</dl>
+
+<pre class="term" data-cwd="~/projetos/adivinhacao">$ python3 adivinhacao.py
+Pensei num número de 1 a 100.
+Seu palpite: 50
+Errou! O número era 81.
+$ python3 adivinhacao.py
+Pensei num número de 1 a 100.
+Seu palpite: 50
+Errou! O número era 39.</pre>
+
+<p>O mesmo palpite, dois números secretos diferentes: o sorteio funciona. Mas com um palpite só, acertar é questão de sorte (uma chance em cem). A versão 2 dá dicas.</p>
+
+<div class="cenario">
+<strong>Esquecer o <code>import</code></strong>
+<pre class="term" data-cwd="~/projetos/adivinhacao">$ python3 adivinhacao.py
+Traceback (most recent call last):
+  File "/home/ana/projetos/adivinhacao/adivinhacao.py", line 1, in &lt;module&gt;
+    secreto = random.randint(1, 100)
+              ^^^^^^
+NameError: name 'random' is not defined. Did you forget to import 'random'?</pre>
+<p><code>NameError: name 'random' is not defined</code> = "o nome <code>random</code> não está definido". Sem o <code>import random</code>, o Python não sabe o que é <code>random</code>; o <code>^^^^^^</code> aponta exatamente essa palavra. E o próprio Python dá a dica: "Did you forget to import 'random'?" = "Você esqueceu de importar <code>random</code>?". <strong>Como consertar:</strong> <code>import random</code> na primeira linha.</p>
+</div>
+
+<div class="cenario">
+<strong>Um arquivo chamado <code>random.py</code> na pasta</strong>
+<p>A Ana quis testar o sorteio num arquivo à parte e o chamou de <code>random.py</code>, na mesma pasta do jogo (o arquivo só tinha um <code>print("testando o sorteio")</code>). Depois disso, o jogo parou de funcionar:</p>
+<pre class="term" data-cwd="~/projetos/adivinhacao">$ python3 adivinhacao.py
+testando o sorteio
+Traceback (most recent call last):
+  File "/home/ana/projetos/adivinhacao/adivinhacao.py", line 3, in &lt;module&gt;
+    secreto = random.randint(1, 100)
+              ^^^^^^^^^^^^^^
+AttributeError: module 'random' has no attribute 'randint' (consider renaming '/home/ana/projetos/adivinhacao/random.py' since it has the same name as the standard library module named 'random' and prevents importing that standard library module)</pre>
+<p>Repare no <code>testando o sorteio</code> logo no começo: o <code>import random</code> rodou o arquivo <strong>dela</strong>, e não o módulo do Python. Quando um programa faz <code>import random</code>, o Python procura primeiro na pasta do programa, e só depois na sua própria biblioteca. O arquivo dela não tem nenhuma função <code>randint</code>, daí o <code>AttributeError</code> ("erro de atributo": o módulo <code>random</code> não tem o atributo <code>randint</code>). A mensagem até sugere a solução: "consider renaming…" = "considere renomear o seu <code>random.py</code>, que tem o mesmo nome do módulo <code>random</code> da biblioteca padrão e impede que ele seja importado". <strong>Como consertar:</strong> dê outro nome ao arquivo de teste (<code>teste_sorteio.py</code>). Nunca chame um arquivo seu de <code>random.py</code>, <code>math.py</code>, <code>csv.py</code>…</p>
+</div>
+
+<div class="trypy" data-stdin="82" data-goal="out:Acertou!;;semerro">
+<p class="try-task"><strong>Missão (versão 1):</strong> com a semente 42, o número secreto é 82, e a entrada da missão é justamente <code>82</code>. Mesmo assim, o programa diz "Errou!". Descubra por quê (dica: o que o <code>input()</code> devolve?) e conserte para aparecer <code>Acertou!</code>.</p>
+<pre class="script" data-file="adivinhacao.py">import random
+
+random.seed(42)  # só para a missão: o número secreto é sempre 82
+secreto = random.randint(1, 100)
+print("Pensei num número de 1 a 100.")
+palpite = input("Seu palpite: ")
+
+if palpite == secreto:
+    print("Acertou!")
+else:
+    print(f"Errou! O número era {secreto}.")
+</pre>
+<pre class="solucao" data-file="adivinhacao.py">import random
+
+random.seed(42)  # só para a missão: o número secreto é sempre 82
+secreto = random.randint(1, 100)
+print("Pensei num número de 1 a 100.")
+palpite = int(input("Seu palpite: "))
+
+if palpite == secreto:
+    print("Acertou!")
+else:
+    print(f"Errou! O número era {secreto}.")
+</pre>
+</div>
+
+<p>O <code>input()</code> devolveu o <strong>texto</strong> <code>"82"</code>, e o texto <code>"82"</code> não é igual ao número <code>82</code>: para o Python, são coisas de tipos diferentes, e o <code>==</code> entre elas dá <code>False</code>, sem erro nenhum. Esse é um dos enganos mais comuns de quem começa.</p>
+
+<hr>
+
+<h2 id="versao2">Versão 2 · Dicas até acertar</h2>
+<p>Agora o jogo fica de verdade: enquanto o palpite for diferente do número secreto, o programa dá uma dica e pede outro palpite. "Enquanto" é <a href="while.html">while</a>.</p>
+
+<pre class="file" data-file="adivinhacao.py">import random
+
+secreto = random.randint(1, 100)
+print("Pensei num número de 1 a 100. Tente adivinhar!")
+
+palpite = int(input("Seu palpite: "))
+while palpite != secreto:
+    if palpite &lt; secreto:
+        print("Mais alto!")
+    else:
+        print("Mais baixo!")
+    palpite = int(input("Seu palpite: "))
+
+print(f"Acertou! O número era {secreto}.")
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Linha</th><th>O que faz</th></tr>
+<tr><td><code>palpite = int(input(…))</code> (antes do laço)</td><td>O primeiro palpite. Ele precisa existir antes do <code>while</code>, porque a condição do laço usa <code>palpite</code>.</td></tr>
+<tr><td><code>while palpite != secreto:</code></td><td>"Enquanto o palpite for diferente do secreto". O <code>!=</code> é "diferente de". Se a pessoa acertar de primeira, o laço nem roda.</td></tr>
+<tr><td><code>if palpite &lt; secreto:</code></td><td>Palpite menor que o secreto: a resposta está mais para cima.</td></tr>
+<tr><td><code>palpite = int(input(…))</code> (dentro do laço)</td><td>O próximo palpite. É ele que muda a condição; sem esta linha, o laço repetiria a mesma dica para sempre (veja o cenário abaixo).</td></tr>
+<tr><td><code>print(f"Acertou! …")</code></td><td>Fora do laço: só chega aqui quando <code>palpite != secreto</code> ficar falso, ou seja, quando acertar.</td></tr>
+</table>
+</div>
+
+<pre class="term" data-cwd="~/projetos/adivinhacao">$ python3 adivinhacao.py
+Pensei num número de 1 a 100. Tente adivinhar!
+Seu palpite: 50
+Mais alto!
+Seu palpite: 75
+Mais alto!
+Seu palpite: 88
+Mais baixo!
+Seu palpite: 81
+Mais baixo!
+Seu palpite: 78
+Mais alto!
+Seu palpite: 79
+Mais alto!
+Seu palpite: 80
+Acertou! O número era 80.</pre>
+
+<div class="tip">
+<strong>A estratégia da Ana: sempre o meio</strong>
+<p>Repare nos palpites: 50 (o meio de 1 a 100), depois 75 (o meio de 51 a 100), depois 88… A cada dica, ela chuta o meio do que sobrou, e a quantidade de números possíveis cai pela metade: 100, 50, 25, 12, 6, 3, 1. Com essa estratégia (em programação ela se chama <strong>busca binária</strong>), 7 palpites sempre bastam para 100 números, porque 2 elevado a 7 é 128, mais que 100. É por isso que a versão 3 vai dar 7 tentativas.</p>
+</div>
+
+<div class="cenario">
+<strong>Esquecer o <code>int()</code>: <code>TypeError</code></strong>
+<p>Sem o <code>int()</code> nos dois <code>input()</code>, o primeiro palpite já derruba o jogo:</p>
+<pre class="term" data-cwd="~/projetos/adivinhacao">$ python3 adivinhacao.py
+Pensei num número de 1 a 100. Tente adivinhar!
+Seu palpite: 50
+Traceback (most recent call last):
+  File "/home/ana/projetos/adivinhacao/adivinhacao.py", line 8, in &lt;module&gt;
+    if palpite &lt; secreto:
+       ^^^^^^^^^^^^^^^^^
+TypeError: '&lt;' not supported between instances of 'str' and 'int'</pre>
+<p><code>TypeError: '&lt;' not supported between instances of 'str' and 'int'</code> = "erro de tipo: o <code>&lt;</code> não funciona entre um texto (<code>str</code>) e um inteiro (<code>int</code>)". Na versão 1, a comparação <code>==</code> entre texto e número só dava <code>False</code>, calada; o <code>&lt;</code> não aceita a mistura e para o programa. Pelo menos aqui o erro aparece. Repare que o <code>while palpite != secreto</code> da linha 7 passou sem erro (e deu verdadeiro, porque <code>"50"</code> é diferente de qualquer número): o problema só apareceu na linha 8. <strong>Como consertar:</strong> <code>int(input(…))</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Esquecer o novo palpite dentro do laço</strong>
+<p>Se a última linha de dentro do <code>while</code> (o segundo <code>palpite = int(input(…))</code>) sumir, o palpite nunca muda. A condição <code>palpite != secreto</code> continua verdadeira para sempre, e o programa fica escrevendo "Mais alto!" sem parar, sem nunca mais perguntar nada. É um <strong>laço infinito</strong>. Para interromper, aperte <kbd>Ctrl</kbd>+<kbd>C</kbd> (o Python mostra um <code>KeyboardInterrupt</code>). Regra prática: dentro de um <code>while</code>, sempre tem de haver alguma linha que mude a condição.</p>
+</div>
+
+<div class="trypy" data-stdin="50\n75\n88\n82" data-goal="out:Acertou! O número era 82.;;src:\bwhile\b;;semerro">
+<p class="try-task"><strong>Missão (versão 2):</strong> o programa dá a dica, mas só aceita um palpite. Troque o <code>if</code> por um <code>while palpite != secreto:</code> que dê a dica e peça outro palpite, e deixe o <code>Acertou!</code> para depois do laço. A entrada da missão é <code>50</code>, <code>75</code>, <code>88</code>, <code>82</code> (o secreto é 82).</p>
+<pre class="script" data-file="adivinhacao.py">import random
+
+random.seed(42)  # só para a missão: o número secreto é sempre 82
+secreto = random.randint(1, 100)
+print("Pensei num número de 1 a 100. Tente adivinhar!")
+
+palpite = int(input("Seu palpite: "))
+if palpite == secreto:
+    print("Acertou!")
+elif palpite &lt; secreto:
+    print("Mais alto!")
+else:
+    print("Mais baixo!")
+</pre>
+<pre class="solucao" data-file="adivinhacao.py">import random
+
+random.seed(42)  # só para a missão: o número secreto é sempre 82
+secreto = random.randint(1, 100)
+print("Pensei num número de 1 a 100. Tente adivinhar!")
+
+palpite = int(input("Seu palpite: "))
+while palpite != secreto:
+    if palpite &lt; secreto:
+        print("Mais alto!")
+    else:
+        print("Mais baixo!")
+    palpite = int(input("Seu palpite: "))
+
+print(f"Acertou! O número era {secreto}.")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao3">Versão 3 · Tentativas contadas e limitadas</h2>
+<p>Com tentativas infinitas, ninguém perde. A versão 3 dá <strong>7 tentativas</strong> e mostra em qual a pessoa está. Quando já se sabe <strong>quantas vezes no máximo</strong> algo vai se repetir, o laço natural é o <a href="for.html">for</a> com <a href="range.html">range()</a>.</p>
+
+<pre class="file" data-file="adivinhacao.py">import random
+
+MAXIMO = 7
+secreto = random.randint(1, 100)
+print(f"Pensei num número de 1 a 100. Você tem {MAXIMO} tentativas.")
+
+for tentativa in range(1, MAXIMO + 1):
+    palpite = int(input(f"Tentativa {tentativa}/{MAXIMO}: "))
+    if palpite == secreto:
+        print(f"Acertou em {tentativa} tentativa(s)!")
+        break
+    elif palpite &lt; secreto:
+        print("Mais alto!")
+    else:
+        print("Mais baixo!")
+else:
+    print(f"Suas tentativas acabaram. O número era {secreto}.")
+</pre>
+
+<dl class="anatomy">
+  <dt>MAXIMO = 7</dt><dd>O limite num lugar só, em MAIÚSCULAS (o costume para um valor fixo). Para mudar a dificuldade, basta mudar esta linha.</dd>
+  <dt>for tentativa in range(1, MAXIMO + 1):</dt><dd>A variável <code>tentativa</code> vale 1, 2, 3… até 7. O <code>range(1, 8)</code> <strong>não inclui</strong> o 8: por isso o <code>+ 1</code> (veja <a href="range.html">range()</a>).</dd>
+  <dt>f"Tentativa {tentativa}/{MAXIMO}: "</dt><dd>A pergunta mostra o número da tentativa: <code>Tentativa 3/7:</code>.</dd>
+  <dt>break</dt><dd>Acertou: sai do <code>for</code> na hora, sem gastar as tentativas que sobraram.</dd>
+  <dt>else: (alinhado com o for)</dt><dd>O <code>else</code> de um laço roda <strong>só se o laço terminar sem <code>break</code></strong>, ou seja, se as 7 tentativas passaram sem acerto. É exatamente o "perdeu". Repare na indentação: ele está na mesma coluna do <code>for</code>, e não do <code>if</code>. Mais em <a href="lacos-else.html">else nos Laços</a>.</dd>
+</dl>
+
+<p>Uma vitória e uma derrota no terminal da Ana. Na segunda, ela tentou ir de 10 em 10:</p>
+
+<pre class="term" data-cwd="~/projetos/adivinhacao">$ python3 adivinhacao.py
+Pensei num número de 1 a 100. Você tem 7 tentativas.
+Tentativa 1/7: 50
+Mais baixo!
+Tentativa 2/7: 25
+Mais baixo!
+Tentativa 3/7: 12
+Mais baixo!
+Tentativa 4/7: 6
+Mais alto!
+Tentativa 5/7: 9
+Mais alto!
+Tentativa 6/7: 10
+Mais alto!
+Tentativa 7/7: 11
+Acertou em 7 tentativa(s)!                     « por pouco
+$ python3 adivinhacao.py
+Pensei num número de 1 a 100. Você tem 7 tentativas.
+Tentativa 1/7: 10
+Mais alto!
+Tentativa 2/7: 20
+Mais alto!
+Tentativa 3/7: 30
+Mais alto!
+Tentativa 4/7: 40
+Mais alto!
+Tentativa 5/7: 50
+Mais alto!
+Tentativa 6/7: 60
+Mais alto!
+Tentativa 7/7: 70
+Mais baixo!
+Suas tentativas acabaram. O número era 67.     « o else do for</pre>
+
+<div class="note">
+<strong><code>while</code> ou <code>for</code>?</strong>
+<p>A versão 2 não sabia quantas voltas ia dar ("até acertar"): <code>while</code>. A versão 3 sabe o máximo ("no máximo 7"): <code>for</code> com <code>range</code>, e ainda ganha o contador <code>tentativa</code> de graça. Dá para fazer a versão 3 com <code>while</code> também, com um contador manual; compare em <a href="#formas">Formas diferentes</a>.</p>
+</div>
+
+<div class="cenario">
+<strong>Palpite que não é número: <code>ValueError</code></strong>
+<pre class="term" data-cwd="~/projetos/adivinhacao">$ python3 adivinhacao.py
+Pensei num número de 1 a 100. Você tem 7 tentativas.
+Tentativa 1/7: sete
+Traceback (most recent call last):
+  File "/home/ana/projetos/adivinhacao/adivinhacao.py", line 8, in &lt;module&gt;
+    palpite = int(input(f"Tentativa {tentativa}/{MAXIMO}: "))
+ValueError: invalid literal for int() with base 10: 'sete'</pre>
+<p>A mensagem do <code>int()</code> é diferente da do <code>float()</code>: "invalid literal for int() with base 10: 'sete'" = "texto inválido para o <code>int()</code> na base 10: <code>'sete'</code>". A base 10 é a nossa, de algarismos de 0 a 9. O jogo inteiro acabou por causa de um palpite digitado por extenso. A versão 4 conserta.</p>
+</div>
+
+<div class="trypy" data-stdin="10\n20\n30\n40\n50\n60\n70" data-goal="out:Suas tentativas acabaram. O número era 82.">
+<p class="try-task"><strong>Missão (versão 3):</strong> quando as 7 tentativas acabam sem acerto, o programa termina calado. Acrescente o <code>else</code> do <code>for</code> (alinhado com o <code>for</code>, não com o <code>if</code>) mostrando <code>Suas tentativas acabaram. O número era 82.</code> (use <code>{secreto}</code>). A entrada da missão vai de 10 em 10, de 10 a 70, e o secreto é 82: ela perde.</p>
+<pre class="script" data-file="adivinhacao.py">import random
+
+random.seed(42)  # só para a missão: o número secreto é sempre 82
+MAXIMO = 7
+secreto = random.randint(1, 100)
+print(f"Pensei num número de 1 a 100. Você tem {MAXIMO} tentativas.")
+
+for tentativa in range(1, MAXIMO + 1):
+    palpite = int(input(f"Tentativa {tentativa}/{MAXIMO}: "))
+    if palpite == secreto:
+        print(f"Acertou em {tentativa} tentativa(s)!")
+        break
+    elif palpite &lt; secreto:
+        print("Mais alto!")
+    else:
+        print("Mais baixo!")
+</pre>
+<pre class="solucao" data-file="adivinhacao.py">import random
+
+random.seed(42)  # só para a missão: o número secreto é sempre 82
+MAXIMO = 7
+secreto = random.randint(1, 100)
+print(f"Pensei num número de 1 a 100. Você tem {MAXIMO} tentativas.")
+
+for tentativa in range(1, MAXIMO + 1):
+    palpite = int(input(f"Tentativa {tentativa}/{MAXIMO}: "))
+    if palpite == secreto:
+        print(f"Acertou em {tentativa} tentativa(s)!")
+        break
+    elif palpite &lt; secreto:
+        print("Mais alto!")
+    else:
+        print("Mais baixo!")
+else:
+    print(f"Suas tentativas acabaram. O número era {secreto}.")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao4">Versão 4 · Palpite validado</h2>
+<p>A leitura do palpite vira uma função, <code>ler_palpite</code>, que só devolve um palpite quando ele é um inteiro <strong>e</strong> está entre 1 e 100. Palpite inválido não gasta tentativa: a função simplesmente pergunta de novo.</p>
+
+<pre class="file" data-file="adivinhacao.py">import random
+
+MENOR = 1
+MAIOR = 100
+MAXIMO = 7
+
+
+def ler_palpite(pergunta):
+    """Pergunta até a pessoa digitar um inteiro entre MENOR e MAIOR."""
+    while True:
+        texto = input(pergunta).strip()
+        try:
+            palpite = int(texto)
+        except ValueError:
+            print(f'"{texto}" não é um número inteiro.')
+            continue
+        if MENOR &lt;= palpite &lt;= MAIOR:
+            return palpite
+        print(f"O número é de {MENOR} a {MAIOR}.")
+
+
+secreto = random.randint(MENOR, MAIOR)
+print(f"Pensei num número de {MENOR} a {MAIOR}. Você tem {MAXIMO} tentativas.")
+
+for tentativa in range(1, MAXIMO + 1):
+    palpite = ler_palpite(f"Tentativa {tentativa}/{MAXIMO}: ")
+    if palpite == secreto:
+        print(f"Acertou em {tentativa} tentativa(s)!")
+        break
+    elif palpite &lt; secreto:
+        print("Mais alto!")
+    else:
+        print("Mais baixo!")
+else:
+    print(f"Suas tentativas acabaram. O número era {secreto}.")
+</pre>
+
+<dl class="anatomy">
+  <dt>MENOR = 1 e MAIOR = 100</dt><dd>Os limites do sorteio também viraram constantes: o <code>randint</code>, a mensagem e a validação usam os mesmos valores. Para jogar de 1 a 1000, muda-se um lugar só.</dd>
+  <dt>try: palpite = int(texto)</dt><dd>Tenta converter. Se der <code>ValueError</code>, o Python pula para o <code>except</code>.</dd>
+  <dt>continue</dt><dd>"Continuar": volta direto para o começo do <code>while</code>, pulando o resto da volta. Sem ele, o programa seguiria para o <code>if</code> com uma variável <code>palpite</code> que não foi criada (veja <a href="break-continue.html">break e continue</a>).</dd>
+  <dt>if MENOR &lt;= palpite &lt;= MAIOR:</dt><dd>Uma comparação "encadeada": <code>1 &lt;= palpite &lt;= 100</code> quer dizer "palpite maior ou igual a 1 <strong>e</strong> menor ou igual a 100", como na matemática. Poucas linguagens deixam escrever assim.</dd>
+  <dt>return palpite</dt><dd>Palpite bom: devolve e sai da função (e do <code>while True</code>).</dd>
+  <dt>print(f"O número é de …")</dt><dd>Só chega aqui um inteiro fora da faixa. Depois do aviso, o <code>while True</code> pergunta de novo.</dd>
+</dl>
+
+<pre class="term" data-cwd="~/projetos/adivinhacao">$ python3 adivinhacao.py
+Pensei num número de 1 a 100. Você tem 7 tentativas.
+Tentativa 1/7: abc
+"abc" não é um número inteiro.
+Tentativa 1/7: 150
+O número é de 1 a 100.
+Tentativa 1/7: 7.5
+"7.5" não é um número inteiro.                 « int() não aceita casas decimais
+Tentativa 1/7: 50
+Mais alto!
+Tentativa 2/7: 75
+Mais baixo!
+Tentativa 3/7: 62
+Mais baixo!
+Tentativa 4/7: 56
+Mais baixo!
+Tentativa 5/7: 53
+Mais alto!
+Tentativa 6/7: 54
+Acertou em 6 tentativa(s)!</pre>
+
+<p>Os três palpites inválidos ficaram todos na "Tentativa 1/7": nenhum foi contado. O <code>for</code> só avança quando <code>ler_palpite</code> devolve um palpite válido.</p>
+
+<div class="trypy" data-stdin="abc\n150\n82" data-goal="out:&quot;abc&quot; não é um número inteiro.;;out:O número é de 1 a 100.;;out:Acertou em 1 tentativa(s)!;;semerro">
+<p class="try-task"><strong>Missão (versão 4):</strong> a função <code>ler_palpite</code> ainda aceita qualquer coisa, e o <code>abc</code> da entrada da missão (<code>abc</code>, <code>150</code>, <code>82</code>) derruba o jogo. Escreva o corpo da função como na versão 4: <code>while True</code>, <code>try</code>/<code>except ValueError</code> com <code>continue</code>, e o teste <code>MENOR &lt;= palpite &lt;= MAIOR</code>. O resultado deve ser <code>Acertou em 1 tentativa(s)!</code>, porque os dois palpites inválidos não contam.</p>
+<pre class="script" data-file="adivinhacao.py">import random
+
+random.seed(42)  # só para a missão: o número secreto é sempre 82
+MENOR = 1
+MAIOR = 100
+MAXIMO = 7
+
+
+def ler_palpite(pergunta):
+    """Pergunta até a pessoa digitar um inteiro entre MENOR e MAIOR."""
+    return int(input(pergunta))
+
+
+secreto = random.randint(MENOR, MAIOR)
+print(f"Pensei num número de {MENOR} a {MAIOR}. Você tem {MAXIMO} tentativas.")
+
+for tentativa in range(1, MAXIMO + 1):
+    palpite = ler_palpite(f"Tentativa {tentativa}/{MAXIMO}: ")
+    if palpite == secreto:
+        print(f"Acertou em {tentativa} tentativa(s)!")
+        break
+    elif palpite &lt; secreto:
+        print("Mais alto!")
+    else:
+        print("Mais baixo!")
+else:
+    print(f"Suas tentativas acabaram. O número era {secreto}.")
+</pre>
+<pre class="solucao" data-file="adivinhacao.py">import random
+
+random.seed(42)  # só para a missão: o número secreto é sempre 82
+MENOR = 1
+MAIOR = 100
+MAXIMO = 7
+
+
+def ler_palpite(pergunta):
+    """Pergunta até a pessoa digitar um inteiro entre MENOR e MAIOR."""
+    while True:
+        texto = input(pergunta).strip()
+        try:
+            palpite = int(texto)
+        except ValueError:
+            print(f'"{texto}" não é um número inteiro.')
+            continue
+        if MENOR &lt;= palpite &lt;= MAIOR:
+            return palpite
+        print(f"O número é de {MENOR} a {MAIOR}.")
+
+
+secreto = random.randint(MENOR, MAIOR)
+print(f"Pensei num número de {MENOR} a {MAIOR}. Você tem {MAXIMO} tentativas.")
+
+for tentativa in range(1, MAXIMO + 1):
+    palpite = ler_palpite(f"Tentativa {tentativa}/{MAXIMO}: ")
+    if palpite == secreto:
+        print(f"Acertou em {tentativa} tentativa(s)!")
+        break
+    elif palpite &lt; secreto:
+        print("Mais alto!")
+    else:
+        print("Mais baixo!")
+else:
+    print(f"Suas tentativas acabaram. O número era {secreto}.")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="versao5">Versão 5 · Várias partidas e recorde</h2>
+<p>Para jogar de novo sem rodar o programa outra vez, a partida inteira vira uma função, <code>jogar()</code>, e o programa principal chama essa função dentro de um <code>while True</code>. A função <strong>devolve</strong> o resultado da partida: quantas tentativas a pessoa usou, ou <code>None</code> se ela perdeu. Com isso, o programa principal guarda o <strong>recorde</strong>: o menor número de tentativas numa vitória.</p>
+
+<pre class="file" data-file="adivinhacao.py">import random
+
+MENOR = 1
+MAIOR = 100
+MAXIMO = 7
+
+
+def ler_palpite(pergunta):
+    """Pergunta até a pessoa digitar um inteiro entre MENOR e MAIOR."""
+    while True:
+        texto = input(pergunta).strip()
+        try:
+            palpite = int(texto)
+        except ValueError:
+            print(f'"{texto}" não é um número inteiro.')
+            continue
+        if MENOR &lt;= palpite &lt;= MAIOR:
+            return palpite
+        print(f"O número é de {MENOR} a {MAIOR}.")
+
+
+def jogar():
+    """Uma partida. Devolve quantas tentativas a pessoa usou, ou None se ela perdeu."""
+    secreto = random.randint(MENOR, MAIOR)
+    print(f"Pensei num número de {MENOR} a {MAIOR}. Você tem {MAXIMO} tentativas.")
+    for tentativa in range(1, MAXIMO + 1):
+        palpite = ler_palpite(f"Tentativa {tentativa}/{MAXIMO}: ")
+        if palpite == secreto:
+            print(f"Acertou em {tentativa} tentativa(s)!")
+            return tentativa
+        if palpite &lt; secreto:
+            print("Mais alto!")
+        else:
+            print("Mais baixo!")
+    print(f"Suas tentativas acabaram. O número era {secreto}.")
+    return None
+
+
+print("=== Jogo de Adivinhação ===")
+recorde = None
+
+while True:
+    resultado = jogar()
+    if resultado is not None and (recorde is None or resultado &lt; recorde):
+        recorde = resultado
+        print("Novo recorde!")
+    if recorde is not None:
+        print(f"Seu recorde: {recorde} tentativa(s).")
+
+    if input("Jogar de novo? (s/n): ").strip().lower() != "s":
+        break
+
+print("Até a próxima!")
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Peça</th><th>O que mudou</th></tr>
+<tr><td><code>def jogar():</code></td><td>O que era o programa da versão 4 (sorteio, mensagem e <code>for</code>) foi para dentro da função. A cada chamada, um sorteio novo.</td></tr>
+<tr><td><code>return tentativa</code></td><td>No lugar do <code>break</code>: o <code>return</code> sai do <code>for</code> <strong>e</strong> da função de uma vez, levando o número de tentativas.</td></tr>
+<tr><td><code>print(…acabaram…)</code> e <code>return None</code></td><td>No lugar do <code>else</code> do <code>for</code>: se o laço terminou, é porque ninguém deu <code>return</code> lá dentro, ou seja, perdeu. O <code>return None</code> deixa isso explícito (uma função sem <code>return</code> já devolveria <code>None</code>, mas escrito fica mais claro).</td></tr>
+<tr><td><code>recorde = None</code></td><td>Antes da primeira partida, ainda não há recorde: <code>None</code> é o "nada ainda" (veja <a href="none.html">O Valor None</a>).</td></tr>
+<tr><td><code>resultado is not None and (recorde is None or resultado &lt; recorde)</code></td><td>"Ganhou, e (é o primeiro recorde ou é melhor que o antigo)". Os parênteses importam: sem eles, o <code>and</code> seria feito antes do <code>or</code> (veja <a href="precedencia.html">Precedência</a>).</td></tr>
+<tr><td><code>if input(…).strip().lower() != "s":</code></td><td>Pergunta e decide na mesma linha, sem guardar a resposta numa variável, porque ela só é usada ali.</td></tr>
+</table>
+</div>
+
+<pre class="term" data-cwd="~/projetos/adivinhacao">$ python3 adivinhacao.py
+=== Jogo de Adivinhação ===
+Pensei num número de 1 a 100. Você tem 7 tentativas.
+Tentativa 1/7: 50
+Mais alto!
+Tentativa 2/7: 75
+Mais baixo!
+Tentativa 3/7: 62
+Mais alto!
+Tentativa 4/7: 68
+Mais baixo!
+Tentativa 5/7: 65
+Mais baixo!
+Tentativa 6/7: 63
+Acertou em 6 tentativa(s)!
+Novo recorde!
+Seu recorde: 6 tentativa(s).
+Jogar de novo? (s/n): s
+Pensei num número de 1 a 100. Você tem 7 tentativas.
+Tentativa 1/7: 50
+Mais baixo!
+Tentativa 2/7: 25
+Mais baixo!
+Tentativa 3/7: 12
+Mais baixo!
+Tentativa 4/7: 6
+Mais alto!
+Tentativa 5/7: 9
+Mais baixo!
+Tentativa 6/7: 7
+Mais alto!
+Tentativa 7/7: 8
+Acertou em 7 tentativa(s)!
+Seu recorde: 6 tentativa(s).
+Jogar de novo? (s/n): n
+Até a próxima!</pre>
+
+<p>Na primeira partida, 6 tentativas: como ainda não havia recorde, <code>recorde is None</code> deu verdadeiro, e veio o "Novo recorde!". Na segunda, 7 tentativas: <code>7 &lt; 6</code> é falso, e o recorde continuou 6.</p>
+
+<div class="trypy" data-stdin="50\n75\n88\n82\ns\n15\nn" data-goal="out:Seu recorde: 4 tentativa(s).;;out:Seu recorde: 1 tentativa(s).;;semerro">
+<p class="try-task"><strong>Missão (versão 5):</strong> o jogo já repete as partidas, mas nunca atualiza o recorde. No lugar do comentário, escreva o <code>if</code> que guarda o resultado em <code>recorde</code> (e mostra <code>Novo recorde!</code>) quando a pessoa ganhou e o resultado é o primeiro ou é menor que o recorde. Com a semente 42, a primeira partida tem o secreto 82 (a entrada acerta em 4) e a segunda tem o 15 (a entrada acerta em 1): devem aparecer <code>Seu recorde: 4 tentativa(s).</code> e depois <code>Seu recorde: 1 tentativa(s).</code></p>
+<pre class="script" data-file="adivinhacao.py">import random
+
+random.seed(42)  # só para a missão: os secretos são 82 e depois 15
+MENOR = 1
+MAIOR = 100
+MAXIMO = 7
+
+
+def ler_palpite(pergunta):
+    """Pergunta até a pessoa digitar um inteiro entre MENOR e MAIOR."""
+    while True:
+        texto = input(pergunta).strip()
+        try:
+            palpite = int(texto)
+        except ValueError:
+            print(f'"{texto}" não é um número inteiro.')
+            continue
+        if MENOR &lt;= palpite &lt;= MAIOR:
+            return palpite
+        print(f"O número é de {MENOR} a {MAIOR}.")
+
+
+def jogar():
+    """Uma partida. Devolve quantas tentativas a pessoa usou, ou None se ela perdeu."""
+    secreto = random.randint(MENOR, MAIOR)
+    print(f"Pensei num número de {MENOR} a {MAIOR}. Você tem {MAXIMO} tentativas.")
+    for tentativa in range(1, MAXIMO + 1):
+        palpite = ler_palpite(f"Tentativa {tentativa}/{MAXIMO}: ")
+        if palpite == secreto:
+            print(f"Acertou em {tentativa} tentativa(s)!")
+            return tentativa
+        if palpite &lt; secreto:
+            print("Mais alto!")
+        else:
+            print("Mais baixo!")
+    print(f"Suas tentativas acabaram. O número era {secreto}.")
+    return None
+
+
+print("=== Jogo de Adivinhação ===")
+recorde = None
+
+while True:
+    resultado = jogar()
+    # atualize o recorde aqui
+
+    if recorde is not None:
+        print(f"Seu recorde: {recorde} tentativa(s).")
+
+    if input("Jogar de novo? (s/n): ").strip().lower() != "s":
+        break
+
+print("Até a próxima!")
+</pre>
+<pre class="solucao" data-file="adivinhacao.py">import random
+
+random.seed(42)  # só para a missão: os secretos são 82 e depois 15
+MENOR = 1
+MAIOR = 100
+MAXIMO = 7
+
+
+def ler_palpite(pergunta):
+    """Pergunta até a pessoa digitar um inteiro entre MENOR e MAIOR."""
+    while True:
+        texto = input(pergunta).strip()
+        try:
+            palpite = int(texto)
+        except ValueError:
+            print(f'"{texto}" não é um número inteiro.')
+            continue
+        if MENOR &lt;= palpite &lt;= MAIOR:
+            return palpite
+        print(f"O número é de {MENOR} a {MAIOR}.")
+
+
+def jogar():
+    """Uma partida. Devolve quantas tentativas a pessoa usou, ou None se ela perdeu."""
+    secreto = random.randint(MENOR, MAIOR)
+    print(f"Pensei num número de {MENOR} a {MAIOR}. Você tem {MAXIMO} tentativas.")
+    for tentativa in range(1, MAXIMO + 1):
+        palpite = ler_palpite(f"Tentativa {tentativa}/{MAXIMO}: ")
+        if palpite == secreto:
+            print(f"Acertou em {tentativa} tentativa(s)!")
+            return tentativa
+        if palpite &lt; secreto:
+            print("Mais alto!")
+        else:
+            print("Mais baixo!")
+    print(f"Suas tentativas acabaram. O número era {secreto}.")
+    return None
+
+
+print("=== Jogo de Adivinhação ===")
+recorde = None
+
+while True:
+    resultado = jogar()
+    if resultado is not None and (recorde is None or resultado &lt; recorde):
+        recorde = resultado
+        print("Novo recorde!")
+    if recorde is not None:
+        print(f"Seu recorde: {recorde} tentativa(s).")
+
+    if input("Jogar de novo? (s/n): ").strip().lower() != "s":
+        break
+
+print("Até a próxima!")
+</pre>
+</div>
+
+<hr>
+
+<h2 id="formas">Formas diferentes de fazer</h2>
+
+<h3>Contar as tentativas: <code>for</code> ou <code>while</code></h3>
+<p>A versão 3 usou <code>for</code> com <code>break</code> e <code>else</code>. O mesmo jogo com <code>while</code> precisa de um contador feito à mão (abaixo, só o trecho do laço):</p>
+
+<pre class="file" data-file="com_while.py">tentativa = 1
+acertou = False
+while tentativa &lt;= MAXIMO and not acertou:
+    palpite = int(input(f"Tentativa {tentativa}/{MAXIMO}: "))
+    if palpite == secreto:
+        acertou = True
+    # … as dicas …
+    tentativa += 1
+</pre>
+
+<p>Funciona, mas há mais coisas para lembrar: criar o contador, somar 1 no fim de cada volta (esquecer o <code>tentativa += 1</code> dá um laço infinito) e criar uma variável <code>acertou</code> só para sair. O <code>for</code> faz a contagem sozinho.</p>
+
+<h3>Sortear o número</h3>
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; import random
+&gt;&gt;&gt; random.seed(42)
+&gt;&gt;&gt; random.randint(1, 100)
+82
+&gt;&gt;&gt; random.seed(42)
+&gt;&gt;&gt; random.randrange(1, 101)
+82
+&gt;&gt;&gt; exit()</pre>
+<p>O <code>randrange(1, 101)</code> funciona como o <code>range</code>: o fim (101) fica de fora. Com a mesma semente, ele dá o mesmo 82 que o <code>randint(1, 100)</code>, porque, por dentro, o <code>randint(a, b)</code> chama o <code>randrange(a, b + 1)</code>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>for tentativa in range(1, MAXIMO + 1)</code> com <code>break</code>/<code>else</code></td><td>Número máximo de voltas conhecido. O contador vem pronto.</td></tr>
+<tr><td><code>while</code> com contador</td><td>Quando a condição de parar é mais complicada que "no máximo N vezes". Cuidado com o contador.</td></tr>
+<tr><td><code>while palpite != secreto</code></td><td>Repetir até acontecer algo, sem limite (versão 2).</td></tr>
+<tr><td><code>random.randint(1, 100)</code></td><td>Sortear um inteiro com os dois extremos incluídos. O mais fácil de ler.</td></tr>
+<tr><td><code>random.randrange(1, 101)</code></td><td>Mesma coisa, no estilo do <code>range</code> (o fim fica de fora). Aceita um passo: <code>randrange(0, 101, 10)</code> sorteia 0, 10, 20…</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Ideias para continuar</h2>
+<ul>
+  <li>Níveis de dificuldade: antes de começar, pergunte "fácil, médio ou difícil" e mude <code>MAIOR</code> e <code>MAXIMO</code> (1 a 10 com 4 tentativas, 1 a 100 com 7, 1 a 1000 com 10).</li>
+  <li>Avise quando a pessoa repetir um palpite que já deu (guarde os palpites numa <a href="listas.html">lista</a>).</li>
+  <li>Dica de "quente" e "frio": se a diferença entre o palpite e o secreto for menor que 5, diga "Está quente!" (use <code>abs()</code>, veja <a href="funcoes-embutidas.html">Funções Embutidas</a>).</li>
+</ul>
+
+<hr>
+
+<h2>Referência rápida do projeto</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>Para que serviu</th></tr>
+<tr><td><code>import random</code></td><td>Trazer o módulo do sorteio</td></tr>
+<tr><td><code>random.randint(1, 100)</code></td><td>Sortear um inteiro de 1 a 100 (os dois incluídos)</td></tr>
+<tr><td><code>random.seed(42)</code></td><td>Fixar a semente: o sorteio passa a dar sempre a mesma sequência (para testar)</td></tr>
+<tr><td><code>while palpite != secreto:</code></td><td>Repetir até acertar</td></tr>
+<tr><td><code>for tentativa in range(1, MAXIMO + 1):</code></td><td>Repetir no máximo <code>MAXIMO</code> vezes, contando</td></tr>
+<tr><td><code>break</code> / <code>else:</code> do laço</td><td>Sair ao acertar / fazer algo só se o laço terminou sem <code>break</code></td></tr>
+<tr><td><code>continue</code></td><td>Voltar ao começo do laço (palpite inválido)</td></tr>
+<tr><td><code>MENOR &lt;= palpite &lt;= MAIOR</code></td><td>Conferir se está na faixa</td></tr>
+<tr><td><code>return tentativa</code> / <code>return None</code></td><td>A partida devolve o resultado</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td>Digitou o número certo e o jogo disse "Errou!"</td><td>Faltou o <code>int()</code>: o texto <code>"82"</code> não é igual ao número <code>82</code></td></tr>
+<tr><td><code>TypeError: '&lt;' not supported between instances of 'str' and 'int'</code></td><td>Faltou o <code>int()</code> e o programa comparou texto com número</td></tr>
+<tr><td><code>NameError: name 'random' is not defined. Did you forget to import 'random'?</code></td><td>Faltou o <code>import random</code></td></tr>
+<tr><td><code>AttributeError: module 'random' has no attribute 'randint' (consider renaming …)</code></td><td>Há um arquivo seu chamado <code>random.py</code> na pasta</td></tr>
+<tr><td><code>ValueError: invalid literal for int() with base 10: 'sete'</code></td><td>Palpite que não é inteiro, sem <code>try</code>/<code>except</code></td></tr>
+<tr><td>A mesma dica aparece sem parar</td><td>Laço infinito: faltou pedir o novo palpite dentro do <code>while</code></td></tr>
+<tr><td>As tentativas acabam e nada aparece</td><td>Faltou o <code>else</code> do <code>for</code> (ou ele está alinhado com o <code>if</code>)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O sorteio</h3>
+<p>Complete para sortear um número de 1 a 6, como um dado:</p>
+<div class="ex-code">lado = random.<input data-answer="randint" aria-label="função">(1, 6)</div>
+</div>
+
+<div class="exercise">
+<h3>2. O range das tentativas</h3>
+<p>Complete para a variável <code>tentativa</code> valer 1, 2, 3, 4 e 5:</p>
+<div class="ex-code">for tentativa in range(1, <input data-answer="6" aria-label="fim">):</div>
+</div>
+
+<div class="exercise">
+<h3>3. Pular o resto da volta</h3>
+<p>Complete a palavra que volta para o começo do laço depois de um palpite inválido:</p>
+<div class="ex-code">except ValueError:<br>&nbsp;&nbsp;&nbsp;&nbsp;print("Não é um número.")<br>&nbsp;&nbsp;&nbsp;&nbsp;<input data-answer="continue" aria-label="palavra-chave"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Quando roda o <code>else</code> que está alinhado com o <code>for</code>?</p>
+<label><input type="radio" name="q4"> Sempre que o <code>if</code> de dentro do laço dá falso</label>
+<label><input type="radio" name="q4"> Antes da primeira volta</label>
+<label><input type="radio" name="q4"> Quando o laço termina sem passar por um <code>break</code></label>
+<label><input type="radio" name="q4"> Nunca: <code>else</code> só existe com <code>if</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. Para que servem as missões começarem com <code>random.seed(42)</code>?</p>
+<label><input type="radio" name="q5"> Para o sorteio ficar mais aleatório</label>
+<label><input type="radio" name="q5"> Para o sorteio dar sempre o mesmo número, e a missão poder conferir a resposta</label>
+<label><input type="radio" name="q5"> Para limitar o sorteio a 42 números</label>
+<label><input type="radio" name="q5"> É obrigatório antes de usar <code>randint</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. A Ana salvou um teste como <code>random.py</code> na pasta do jogo, e o jogo passou a dar <code>AttributeError</code>. Por quê?</p>
+<label><input type="radio" name="q6"> O <code>import random</code> encontrou primeiro o arquivo dela, que não tem <code>randint</code></label>
+<label><input type="radio" name="q6"> Arquivos <code>.py</code> não podem ter nomes em inglês</label>
+<label><input type="radio" name="q6"> O módulo <code>random</code> foi apagado do Python</label>
+<label><input type="radio" name="q6"> Faltou o <code>random.seed</code></label>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>import random</code> e <code>random.randint(1, 100)</code> sorteiam um inteiro de 1 a 100, com os dois extremos.</li>
+  <li><code>random.seed(42)</code> fixa a semente: a sequência sorteada passa a ser sempre a mesma. Ótimo para testar; no jogo de verdade, sem semente.</li>
+  <li>O texto <code>"82"</code> não é igual ao número <code>82</code>: converta o palpite com <code>int()</code>.</li>
+  <li><code>while</code> repete "até acontecer"; <code>for</code> com <code>range</code> repete "no máximo N vezes" e já conta as voltas.</li>
+  <li>O <code>else</code> de um laço roda só quando o laço termina sem <code>break</code>: é o "perdeu" do jogo.</li>
+  <li><code>try</code>/<code>except</code> com <code>continue</code> pede de novo sem gastar tentativa; <code>MENOR &lt;= x &lt;= MAIOR</code> confere a faixa.</li>
+  <li>Uma função que devolve o resultado (<code>return tentativa</code> ou <code>None</code>) deixa o programa principal cuidar do recorde.</li>
+  <li>Nunca dê a um arquivo seu o nome de um módulo do Python (<code>random.py</code>).</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
