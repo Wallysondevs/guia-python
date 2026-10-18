@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python if em uma Linha — a expressão condicional | Guia Python</title>
+<meta name="description" content="O if em uma linha do Python para quem nunca programou: a expressão condicional valor_se_sim if condição else valor_se_não (o 'ternário'), escolher um valor numa variável, no print e na f-string, por que o else é obrigatório, a ordem diferente do ?: de outras linguagens, encadear (e por que evitar), o if com o bloco na mesma linha, e os erros reais do Python 3.14: expected 'else' after 'if' expression, ?:, dois-pontos e atribuição no meio. Com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">if em uma Linha</span></h1>
+
+<p class="intro">Muitas vezes, o <code>if</code>/<code>else</code> serve só para <strong>escolher um valor</strong>: "Aprovada" ou "Reprovada", frete 0 ou 15, "ano" ou "anos". Escrever quatro linhas para isso parece demais. O Python tem um jeito de fazer essa escolha <strong>numa linha só</strong>: a <strong>expressão condicional</strong>, que muita gente chama de "if ternário" (ternário porque tem três partes). Nesta aula você aprende a usá-la, quando ela deixa o código mais claro e quando é melhor voltar ao <code>if</code> de várias linhas.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A escrever <code>valor_se_sim if condição else valor_se_não</code>, e a ler essa frase em português.</li>
+  <li>A usar a escolha numa variável, dentro de um <code>print</code> e dentro de uma f-string.</li>
+  <li>A diferença entre o <code>if</code> que <strong>faz</strong> coisas (o comando) e o <code>if</code> que <strong>vale</strong> alguma coisa (a expressão).</li>
+  <li>Por que o <code>else</code> é obrigatório, e por que encadear vários é má ideia.</li>
+  <li>O outro "if em uma linha": o bloco na mesma linha dos dois-pontos.</li>
+  <li>Os erros reais: <code>expected 'else' after 'if' expression</code>, o <code>? :</code> de outras linguagens, dois-pontos e <code>=</code> no meio da expressão.</li>
+</ul>
+</div>
+
+<p>Todos os programas desta aula rodaram no <strong>Python 3.14</strong> do computador fictício da Ana (usuária <code>ana</code>, computador <code>notebook</code>), na pasta pessoal dela, com <code>python3 arquivo.py</code>.</p>
+
+<hr>
+
+<h2>A ideia: uma frase só</h2>
+<p>A Ana pergunta para a amiga o que levar no passeio, e a resposta vem numa frase: "<strong>guarda-chuva se</strong> estiver chovendo, <strong>senão</strong> óculos escuros". A frase inteira é a <strong>resposta</strong>: ela vale "guarda-chuva" ou "óculos escuros", dependendo do tempo.</p>
+<p>A expressão condicional do Python é escrita nessa mesma ordem:</p>
+
+<pre class="file">"guarda-chuva" if chovendo else "óculos escuros"
+</pre>
+
+<p>Leia em voz alta: "guarda-chuva <strong>se</strong> chovendo, <strong>senão</strong> óculos escuros". O resultado é um <strong>valor</strong>, que você pode guardar numa variável, mostrar ou usar numa conta.</p>
+
+<hr>
+
+<h2>1. A primeira expressão condicional</h2>
+<p>Na aula <a href="if-else.html">if e else</a>, a situação da aluna era escolhida assim:</p>
+
+<pre class="file" data-file="situacao_longa.py">nota = float(input("Nota da prova: "))
+if nota &gt;= 7:
+    situacao = "Aprovada"
+else:
+    situacao = "Reprovada"
+print("Situação:", situacao)
+</pre>
+
+<p>Os dois blocos só dão um valor à mesma variável. Com a expressão condicional, as quatro linhas viram uma:</p>
+
+<pre class="file" data-file="situacao.py">nota = float(input("Nota da prova: "))
+situacao = "Aprovada" if nota &gt;= 7 else "Reprovada"
+print("Situação:", situacao)
+</pre>
+
+<pre class="term">$ python3 situacao.py
+Nota da prova: 8
+Situação: Aprovada
+$ python3 situacao.py
+Nota da prova: 4.5
+Situação: Reprovada</pre>
+
+<p>A versão longa, com 8, também mostrou <code>Situação: Aprovada</code>: as duas fazem exatamente a mesma coisa.</p>
+
+<dl class="anatomy">
+  <dt>situacao =</dt><dd>Uma atribuição comum: guarda o valor da direita na variável.</dd>
+  <dt>"Aprovada"</dt><dd>O valor <strong>se a condição for verdadeira</strong>. Vem <strong>primeiro</strong>, antes do <code>if</code>.</dd>
+  <dt>if nota &gt;= 7</dt><dd>A condição, no meio. <strong>Sem dois-pontos</strong>: aqui o <code>if</code> não abre bloco nenhum.</dd>
+  <dt>else "Reprovada"</dt><dd>O valor <strong>se a condição for falsa</strong>. O <code>else</code> é <strong>obrigatório</strong>: a expressão tem de valer alguma coisa nos dois casos.</dd>
+</dl>
+
+<div class="tip">
+<strong>Comando × expressão</strong>
+<p>O <code>if</code> das aulas anteriores é um <strong>comando</strong>: ele <strong>faz</strong> coisas (roda um bloco ou não). A expressão condicional <strong>vale</strong> uma coisa, como <code>2 + 3</code> vale 5. Por isso ela pode aparecer em qualquer lugar onde caberia um valor: à direita do <code>=</code>, dentro do <code>print()</code>, numa conta, numa f-string.</p>
+</div>
+
+<hr>
+
+<h2>2. Números também: o frete</h2>
+
+<pre class="file" data-file="frete.py">total = float(input("Total da compra: R$ "))
+frete = 0.0 if total &gt;= 100 else 15.0
+print(f"Frete: R$ {frete:.2f}")
+print(f"Total a pagar: R$ {total + frete:.2f}")
+</pre>
+
+<pre class="term">$ python3 frete.py
+Total da compra: R$ 150
+Frete: R$ 0.00
+Total a pagar: R$ 150.00
+$ python3 frete.py
+Total da compra: R$ 60
+Frete: R$ 15.00
+Total a pagar: R$ 75.00</pre>
+
+<p>Os dois valores podem ser de qualquer tipo: textos, números, <code>True</code>/<code>False</code>, <code>None</code>. O costume é que sejam do <strong>mesmo</strong> tipo (aqui, dois <code>float</code>), para que o resto do programa saiba o que esperar.</p>
+
+<div class="trypy">
+<p class="try-task"><strong>Experimente:</strong> rode e digite valores acima e abaixo de 100 no terminal da caixa (e exatamente 100). Depois mude a regra: frete de R$ 9.90 para compras abaixo de R$ 50 e grátis a partir disso. Só a linha do meio precisa mudar.</p>
+<pre class="script" data-file="main.py">total = float(input("Total da compra: R$ "))
+frete = 0.0 if total &gt;= 100 else 15.0
+print(f"Frete: R$ {frete:.2f}")
+print(f"Total a pagar: R$ {total + frete:.2f}")
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Singular ou plural</h2>
+<p>Um uso clássico: escolher entre "ano" e "anos", "mensagem" e "mensagens". Sem isso, o programa escreve coisas como "1 anos".</p>
+
+<pre class="file" data-file="anos.py">idade = int(input("Sua idade: "))
+falta = 18 - idade
+palavra = "ano" if falta == 1 else "anos"
+print(f"Tempo até a carteira de motorista: {falta} {palavra}.")
+</pre>
+
+<pre class="term">$ python3 anos.py
+Sua idade: 17
+Tempo até a carteira de motorista: 1 ano.
+$ python3 anos.py
+Sua idade: 15
+Tempo até a carteira de motorista: 3 anos.</pre>
+
+<h3>Direto na f-string</h3>
+<p>Como a expressão vale um texto, ela pode ir dentro das chaves da <a href="f-strings.html">f-string</a>, sem a variável <code>palavra</code>:</p>
+
+<pre class="file" data-file="anos2.py">falta = 1
+print(f"Tempo até a carteira de motorista: {falta} {'ano' if falta == 1 else 'anos'}.")
+</pre>
+
+<pre class="term">$ python3 anos2.py
+Tempo até a carteira de motorista: 1 ano.</pre>
+
+<p>Repare nas <strong>aspas simples</strong> em <code>'ano'</code> e <code>'anos'</code>: a f-string já usa aspas duplas por fora, e as simples por dentro deixam claro onde cada texto começa e termina. A linha ficou bem comprida, porém; quando isso acontecer, a versão com a variável <code>palavra</code> é mais fácil de ler.</p>
+
+<div class="trypy" data-stdin="1" data-goal="out:Você tem 1 mensagem nova.;;src:\bif\b.*\belse\b">
+<p class="try-task"><strong>Missão:</strong> o celular da Ana diz <code>Você tem 1 mensagens novas.</code>, o que está errado. Use uma expressão condicional (numa linha só) para escolher entre <code>"mensagem nova"</code> e <code>"mensagens novas"</code>. A entrada preparada é <code>1</code>; a saída tem de ser <code>Você tem 1 mensagem nova.</code></p>
+<pre class="script" data-file="main.py">quantidade = int(input("Quantas mensagens? "))
+texto = "mensagens novas"
+print(f"Você tem {quantidade} {texto}.")
+</pre>
+<pre class="solucao" data-file="main.py">quantidade = int(input("Quantas mensagens? "))
+texto = "mensagem nova" if quantidade == 1 else "mensagens novas"
+print(f"Você tem {quantidade} {texto}.")
+</pre>
+</div>
+
+<hr>
+
+<h2>4. Dentro do <code>print</code></h2>
+
+<pre class="file" data-file="print_ternario.py">chovendo = True
+print("Leve o guarda-chuva." if chovendo else "Pode ir de óculos escuros.")
+resultado = print("oi") if chovendo else print("tchau")
+print(resultado)
+</pre>
+
+<pre class="term">$ python3 print_ternario.py
+Leve o guarda-chuva.
+oi
+None                               « o print("oi") devolveu None</pre>
+
+<p>A linha 2 é o uso certo: a expressão escolhe <strong>qual texto</strong> o <code>print</code> vai mostrar. A linha 3 também funciona, mas é um mau hábito: ela usa a expressão para escolher <strong>qual ação</strong> fazer, e o valor que sobra (<code>None</code>, o que o <code>print</code> devolve; aula <a href="none.html">O Valor None</a>) não serve para nada. Quando o que muda é a <strong>ação</strong>, use o <code>if</code>/<code>else</code> normal.</p>
+
+<hr>
+
+<h2>5. Encadear: dá, mas evite</h2>
+<p>O valor do <code>else</code> pode ser outra expressão condicional, e assim por diante:</p>
+
+<pre class="file" data-file="encadeado.py">nota = 7.5
+conceito = "A" if nota &gt;= 9 else "B" if nota &gt;= 7 else "C" if nota &gt;= 5 else "D"
+print("Conceito:", conceito)
+</pre>
+
+<pre class="term">$ python3 encadeado.py
+Conceito: B</pre>
+
+<p>Funciona, e é testado na mesma ordem de uma escada <a href="elif.html">elif</a>: da esquerda para a direita, parando na primeira condição verdadeira. Mas é difícil de ler, de conferir e de mudar. Com mais de <strong>duas opções</strong>, prefira a escada <code>if</code>/<code>elif</code>/<code>else</code>.</p>
+
+<hr>
+
+<h2>6. O outro "if em uma linha": o bloco na mesma linha</h2>
+<p>Existe mais uma coisa que às vezes é chamada de "if em uma linha": escrever o bloco <strong>logo depois dos dois-pontos</strong>, na mesma linha. Isso é o <code>if</code> comando de sempre, só que espremido:</p>
+
+<pre class="file" data-file="uma_linha.py">estoque = 2
+if estoque &lt; 5: print("Estoque baixo!")
+if estoque == 0: print("Esgotado!")
+else: print("Ainda tem", estoque)
+</pre>
+
+<pre class="term">$ python3 uma_linha.py
+Estoque baixo!
+Ainda tem 2</pre>
+
+<p>O Python aceita, quando o bloco tem uma instrução só. Mas o guia de estilo oficial (<a href="estilo-pep8.html">PEP 8</a>) recomenda <strong>não</strong> fazer isso: fica mais difícil de ver onde está a condição e onde está a ação, e para acrescentar uma segunda linha ao bloco você vai ter de reescrever tudo. No guia, usamos sempre o bloco recuado embaixo.</p>
+
+<hr>
+
+<h2>Formas diferentes de escolher um valor</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Exemplo</th><th>Quando usar</th></tr>
+<tr><td>Expressão condicional</td><td><code>frete = 0.0 if total &gt;= 100 else 15.0</code></td><td>Escolher entre <strong>dois valores</strong> curtos. É o caso perfeito</td></tr>
+<tr><td><code>if</code>/<code>else</code> de várias linhas</td><td><code>if total &gt;= 100:</code><br>&nbsp;&nbsp;&nbsp;&nbsp;<code>frete = 0.0</code><br><code>else:</code><br>&nbsp;&nbsp;&nbsp;&nbsp;<code>frete = 15.0</code></td><td>Quando os caminhos fazem <strong>mais de uma coisa</strong>, ou quando a condição é longa</td></tr>
+<tr><td>Escada <code>elif</code></td><td><code>if … elif … else</code></td><td>Mais de duas opções</td></tr>
+<tr><td>Uma função pronta</td><td><code>maior = max(a, b)</code></td><td>Quando já existe uma função para isso. <code>a if a &gt; b else b</code> e <code>max(a, b)</code> deram os dois 30 no lab, com <code>a = 12</code> e <code>b = 30</code> (aula <a href="funcoes-embutidas.html">Funções Embutidas</a>)</td></tr>
+</table>
+</div>
+
+<div class="note">
+<strong>Vindo de outra linguagem?</strong>
+<p>Em C, Java e JavaScript, o "ternário" se escreve <code>condição ? valor_se_sim : valor_se_não</code>, com a condição na frente. No Python, a ordem é outra (o valor "normal" primeiro, a condição no meio) e as palavras são <code>if</code> e <code>else</code>. O <code>? :</code> não existe no Python, como você vai ver logo abaixo.</p>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Esqueceu o <code>else</code></strong>
+<pre class="file" data-file="sem_else.py">nota = 9.5
+conceito = "A" if nota &gt;= 9
+print(conceito)
+</pre>
+<pre class="term">$ python3 sem_else.py
+  File "/home/ana/sem_else.py", line 2
+    conceito = "A" if nota &gt;= 9
+               ^^^^^^^^^^^^^^^^
+SyntaxError: expected 'else' after 'if' expression</pre>
+<p>"Era esperado um <code>else</code> depois da expressão <code>if</code>". Os <code>^^^^</code> sublinham a expressão inteira. Se a nota fosse 8, que valor <code>conceito</code> receberia? O Python não aceita uma expressão que pode ficar sem valor. <strong>Como consertar:</strong> acrescente o <code>else</code> com o valor do outro caso (<code>else "B"</code>, ou <code>else None</code> se não houver valor).</p>
+</div>
+
+<div class="cenario">
+<strong>O <code>? :</code> de outras linguagens</strong>
+<pre class="file" data-file="interrogacao.py">nota = 8
+situacao = nota &gt;= 7 ? "Aprovada" : "Reprovada"
+print(situacao)
+</pre>
+<pre class="term">$ python3 interrogacao.py
+  File "/home/ana/interrogacao.py", line 2
+    situacao = nota &gt;= 7 ? "Aprovada" : "Reprovada"
+                         ^
+SyntaxError: invalid syntax</pre>
+<p>A setinha aponta o <code>?</code>, que não tem significado nenhum no Python. <strong>Como consertar:</strong> <code>situacao = "Aprovada" if nota &gt;= 7 else "Reprovada"</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Dois-pontos no meio</strong>
+<pre class="file" data-file="dois_pontos.py">nota = 8
+situacao = "Aprovada" if nota &gt;= 7: else "Reprovada"
+print(situacao)
+</pre>
+<pre class="term">$ python3 dois_pontos.py
+  File "/home/ana/dois_pontos.py", line 2
+    situacao = "Aprovada" if nota &gt;= 7: else "Reprovada"
+                                      ^
+SyntaxError: invalid syntax</pre>
+<p>Costume do <code>if</code> de várias linhas. Na expressão condicional não há bloco, então não há dois-pontos. <strong>Como consertar:</strong> apague o <code>:</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Começar pelo <code>if</code></strong>
+<pre class="file" data-file="ordem.py">nota = 8
+situacao = if nota &gt;= 7 "Aprovada" else "Reprovada"
+print(situacao)
+</pre>
+<pre class="term">$ python3 ordem.py
+  File "/home/ana/ordem.py", line 2
+    situacao = if nota &gt;= 7 "Aprovada" else "Reprovada"
+               ^^
+SyntaxError: invalid syntax</pre>
+<p>Depois do <code>=</code>, o Python espera um valor, e um <code>if</code> não pode começar um valor. Na expressão condicional, o primeiro valor vem <strong>antes</strong> do <code>if</code>. <strong>Como consertar:</strong> <code>"Aprovada" if nota &gt;= 7 else "Reprovada"</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Uma atribuição dentro do <code>else</code></strong>
+<pre class="file" data-file="atribuicao.py">nota = 8
+situacao = "Aprovada" if nota &gt;= 7 else situacao = "Reprovada"
+print(situacao)
+</pre>
+<pre class="term">$ python3 atribuicao.py
+  File "/home/ana/atribuicao.py", line 2
+    situacao = "Aprovada" if nota &gt;= 7 else situacao = "Reprovada"
+    ^^^^^^^^^^^^^^^^^^^^^
+SyntaxError: invalid syntax. Maybe you meant '==' or ':=' instead of '='?</pre>
+<p>Os dois lados da expressão são <strong>valores</strong>, e <code>situacao = "Reprovada"</code> é um comando, não um valor. A dica do Python ("você quis dizer <code>==</code>?") aqui não ajuda: o problema é a ideia. <strong>Como consertar:</strong> o <code>situacao =</code> aparece uma vez só, no começo: <code>situacao = "Aprovada" if nota &gt;= 7 else "Reprovada"</code>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que vale / faz</th></tr>
+<tr><td><code>A if condição else B</code></td><td>Vale <code>A</code> se a condição for verdadeira; senão, <code>B</code></td></tr>
+<tr><td><code>x = A if c else B</code></td><td>Guarda a escolha numa variável</td></tr>
+<tr><td><code>print(A if c else B)</code></td><td>Mostra a escolha</td></tr>
+<tr><td><code>f"{'A' if c else 'B'}"</code></td><td>Escolha dentro de uma f-string (aspas simples por dentro)</td></tr>
+<tr><td><code>A if c1 else B if c2 else C</code></td><td>Encadeado: funciona, mas prefira <code>elif</code></td></tr>
+<tr><td><code>if c: comando</code></td><td>O <code>if</code> comando com o bloco na mesma linha: aceito, mas fora do estilo recomendado</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>SyntaxError: expected 'else' after 'if' expression</code></td><td>Faltou o <code>else</code> e o valor do outro caso</td></tr>
+<tr><td><code>SyntaxError: invalid syntax</code>, apontando o <code>?</code></td><td>Usou o <code>? :</code> de outra linguagem</td></tr>
+<tr><td><code>SyntaxError: invalid syntax</code>, apontando o <code>:</code></td><td>Dois-pontos depois da condição</td></tr>
+<tr><td><code>SyntaxError: invalid syntax</code>, apontando o <code>if</code></td><td>Começou pelo <code>if</code>: o primeiro valor vem antes</td></tr>
+<tr><td><code>Maybe you meant '==' or ':=' instead of '='?</code> numa expressão com <code>else</code></td><td>Uma atribuição dentro da expressão</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Complete as palavras</h3>
+<p>A variável <code>tipo</code> deve valer <code>"maior"</code> para 18 anos ou mais e <code>"menor"</code> para o resto:</p>
+<div class="ex-code">tipo = "maior" <input data-answer="if" aria-label="palavra 1"> idade &gt;= 18 <input data-answer="else" aria-label="palavra 2"> "menor"</div>
+</div>
+
+<div class="exercise">
+<h3>2. Qual o valor?</h3>
+<p>Com <code>estoque = 0</code>, quanto vale <code>"tem" if estoque &gt; 0 else "esgotado"</code>? Escreva sem aspas.</p>
+<div class="ex-code">Resposta: <input data-answer="esgotado" aria-label="valor"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. Qual linha está certa em Python?</p>
+<label><input type="radio" name="q3"> <code>x = nota &gt;= 7 ? "sim" : "não"</code></label>
+<label><input type="radio" name="q3"> <code>x = "sim" if nota &gt;= 7 else "não"</code></label>
+<label><input type="radio" name="q3"> <code>x = if nota &gt;= 7 "sim" else "não"</code></label>
+<label><input type="radio" name="q3"> <code>x = "sim" if nota &gt;= 7: else "não"</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">4. Por que <code>x = "A" if nota &gt;= 9</code> dá <code>SyntaxError</code>?</p>
+<label><input type="radio" name="q4"> Porque faltaram os dois-pontos</label>
+<label><input type="radio" name="q4"> Porque a condição deveria vir primeiro</label>
+<label><input type="radio" name="q4"> Porque <code>"A"</code> deveria estar entre parênteses</label>
+<label><input type="radio" name="q4"> Porque falta o <code>else</code>: a expressão precisa de um valor para os dois casos</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Em qual caso o <code>if</code>/<code>else</code> de várias linhas é melhor que a expressão condicional?</p>
+<label><input type="radio" name="q5"> Quando cada caminho precisa fazer várias coisas (mudar variáveis, mostrar mensagens)</label>
+<label><input type="radio" name="q5"> Quando só é preciso escolher entre dois textos curtos</label>
+<label><input type="radio" name="q5"> Quando o valor vai para dentro de uma f-string</label>
+<label><input type="radio" name="q5"> Nunca: a expressão condicional sempre é melhor</label>
+</div>
+
+<h3>Missão final: par ou ímpar em uma linha</h3>
+
+<div class="trypy" data-stdin="7" data-goal="out:7 é ímpar.;;src:=\s*\S.*\bif\b.*\belse\b">
+<p class="try-task"><strong>Missão:</strong> reescreva as quatro linhas do <code>if</code>/<code>else</code> como <strong>uma</strong> expressão condicional que dá valor à variável <code>tipo</code> (<code>"par"</code> ou <code>"ímpar"</code>). A entrada preparada é <code>7</code>, e a saída tem de continuar sendo <code>7 é ímpar.</code></p>
+<pre class="script" data-file="main.py">numero = int(input("Número: "))
+if numero % 2 == 0:
+    tipo = "par"
+else:
+    tipo = "ímpar"
+print(f"{numero} é {tipo}.")
+</pre>
+<pre class="solucao" data-file="main.py">numero = int(input("Número: "))
+tipo = "par" if numero % 2 == 0 else "ímpar"
+print(f"{numero} é {tipo}.")
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>A expressão condicional escolhe um <strong>valor</strong> numa linha: <code>valor_se_sim if condição else valor_se_não</code>. Leia: "isto <strong>se</strong> condição, <strong>senão</strong> aquilo".</li>
+  <li>Ela vale alguma coisa, então pode ir à direita do <code>=</code>, dentro do <code>print()</code>, numa conta ou numa f-string.</li>
+  <li>Sem dois-pontos, e com <code>else</code> obrigatório (senão: <code>expected 'else' after 'if' expression</code>).</li>
+  <li>A ordem é diferente do <code>? :</code> de outras linguagens, que não existe no Python.</li>
+  <li>Use para escolher entre <strong>dois valores curtos</strong>. Para ações, várias linhas ou mais de duas opções, volte ao <code>if</code>/<code>elif</code>/<code>else</code>.</li>
+  <li><code>if c: comando</code> numa linha só também existe, mas o estilo recomendado é o bloco recuado embaixo.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
