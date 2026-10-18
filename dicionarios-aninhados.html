@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Dicionários Aninhados — dicionários dentro de dicionários | Guia Python</title>
+<meta name="description" content="Dicionários aninhados em Python para quem está começando: o cadastro de alunos com idade, cidade e lista de notas, como ler alunos[&quot;Ana&quot;][&quot;notas&quot;][0] passo a passo, acrescentar e mudar dados por dentro, percorrer e calcular médias, lista de dicionários, pprint, get encadeado, e os erros reais KeyError, list indices must be integers e NoneType not subscriptable, com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Dicionários Aninhados</span></h1>
+
+<p class="intro">A Ana virou professora de reforço e precisa de um cadastro dos alunos: de cada um, a idade, a cidade e as notas. Um dicionário simples guarda <strong>um</strong> valor por chave. Mas o valor pode ser de qualquer tipo, inclusive outro dicionário. Quando um dicionário guarda outros dicionários (e listas) dentro dele, dizemos que eles estão <strong>aninhados</strong>, como caixas dentro de caixas. É assim que se monta um cadastro de verdade.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A montar um cadastro: um dicionário de alunos em que cada aluno é outro dicionário.</li>
+  <li>A ler um dado lá de dentro, um colchete por nível: <code>alunos["Ana"]["notas"][0]</code>.</li>
+  <li>A acrescentar alunos, mudar a idade e lançar notas por dentro.</li>
+  <li>A percorrer o cadastro e calcular a média de cada aluno.</li>
+  <li>A diferença entre dicionário de dicionários e lista de dicionários.</li>
+  <li>A mostrar o cadastro arrumado com <code>pprint</code>.</li>
+  <li>Os erros reais de cada nível, e uma armadilha sem erro: dois alunos que dividem a mesma ficha.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: o fichário</h2>
+<p>Imagine um fichário de escritório. Cada <strong>gaveta</strong> tem o nome de um aluno. Dentro da gaveta há uma <strong>ficha</strong> com campos: idade, cidade, notas. E o campo "notas" é uma <strong>lista</strong>, uma nota atrás da outra. Para achar a primeira nota da Ana, você abre a gaveta "Ana", pega a ficha, olha o campo "notas" e lê a primeira da lista. Três passos, um em cada nível.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Nível</th><th>No fichário</th><th>Em Python</th><th>Tipo</th></tr>
+<tr><td>1</td><td>O fichário inteiro</td><td><code>alunos</code></td><td>Dicionário (chave: nome do aluno)</td></tr>
+<tr><td>2</td><td>A ficha da Ana</td><td><code>alunos["Ana"]</code></td><td>Dicionário (chave: nome do campo)</td></tr>
+<tr><td>3</td><td>O campo notas</td><td><code>alunos["Ana"]["notas"]</code></td><td>Lista</td></tr>
+<tr><td>4</td><td>A primeira nota</td><td><code>alunos["Ana"]["notas"][0]</code></td><td>Número</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. O cadastro de alunos</h2>
+
+<pre class="file" data-file="n_cadastro.py">alunos = {
+    "Ana": {"idade": 15, "cidade": "Teresina", "notas": [9, 7, 10]},
+    "Bia": {"idade": 16, "cidade": "Picos", "notas": [6, 8, 7]},
+}
+print(alunos["Ana"])
+print(alunos["Ana"]["cidade"])
+print(alunos["Ana"]["notas"])
+print(alunos["Ana"]["notas"][0])
+print(len(alunos))
+</pre>
+
+<pre class="term">$ python3 n_cadastro.py
+{'idade': 15, 'cidade': 'Teresina', 'notas': [9, 7, 10]}
+Teresina
+[9, 7, 10]
+9
+2
+</pre>
+
+<dl class="anatomy">
+  <dt>alunos = { … }</dt><dd>O dicionário de fora. As chaves são os nomes dos alunos. Foi escrito com um aluno por linha, para dar para ler.</dd>
+  <dt>"Ana": { … }</dt><dd>O valor da chave <code>"Ana"</code> é <strong>outro dicionário</strong>: a ficha dela.</dd>
+  <dt>"notas": [9, 7, 10]</dt><dd>Dentro da ficha, o valor de <code>"notas"</code> é uma <strong>lista</strong>.</dd>
+  <dt>alunos["Ana"]</dt><dd>Um colchete: a ficha inteira da Ana.</dd>
+  <dt>alunos["Ana"]["cidade"]</dt><dd>Dois colchetes: da ficha da Ana, o campo cidade.</dd>
+  <dt>alunos["Ana"]["notas"][0]</dt><dd>Três colchetes: da ficha da Ana, a lista de notas, e dela a posição 0. Os dois primeiros são <strong>chaves</strong> (texto); o último é uma <strong>posição</strong> (número), porque ali já estamos numa lista.</dd>
+  <dt>len(alunos)</dt><dd>Conta só o nível de fora: 2 alunos.</dd>
+</dl>
+
+<h3>Lendo da esquerda para a direita</h3>
+<p>Uma linha como <code>alunos["Bia"]["notas"][-1]</code> assusta no começo, mas o Python a resolve <strong>da esquerda para a direita</strong>, um colchete de cada vez. Dá para fazer o mesmo em passos, guardando cada nível numa variável:</p>
+
+<pre class="file" data-file="n_passos.py">alunos = {
+    "Ana": {"idade": 15, "cidade": "Teresina", "notas": [9, 7, 10]},
+    "Bia": {"idade": 16, "cidade": "Picos", "notas": [6, 8, 7]},
+}
+ficha = alunos["Bia"]
+notas = ficha["notas"]
+print(ficha)
+print(notas)
+print(notas[-1])
+</pre>
+
+<pre class="term">$ python3 n_passos.py
+{'idade': 16, 'cidade': 'Picos', 'notas': [6, 8, 7]}
+[6, 8, 7]
+7
+</pre>
+
+<p><code>notas[-1]</code> é exatamente o mesmo que <code>alunos["Bia"]["notas"][-1]</code>. Quando uma linha com muitos colchetes não funcionar, quebrá-la assim, com um <code>print</code> em cada passo, mostra em qual nível está o problema.</p>
+
+<div class="trypy" data-goal="out:Segunda nota da Bia: 8;;out:Cidade da Ana: Teresina">
+<p class="try-task"><strong>Missão:</strong> troque cada <code>"?"</code> pela leitura certa no cadastro: a <strong>segunda</strong> nota da Bia (posição 1) e a cidade da Ana.</p>
+<pre class="script" data-file="main.py">alunos = {
+    "Ana": {"idade": 15, "cidade": "Teresina", "notas": [9, 7, 10]},
+    "Bia": {"idade": 16, "cidade": "Picos", "notas": [6, 8, 7]},
+}
+print("Segunda nota da Bia:", "?")
+print("Cidade da Ana:", "?")
+</pre>
+<pre class="solucao" data-file="main.py">alunos = {
+    "Ana": {"idade": 15, "cidade": "Teresina", "notas": [9, 7, 10]},
+    "Bia": {"idade": 16, "cidade": "Picos", "notas": [6, 8, 7]},
+}
+print("Segunda nota da Bia:", alunos["Bia"]["notas"][1])
+print("Cidade da Ana:", alunos["Ana"]["cidade"])
+</pre>
+</div>
+
+<hr>
+
+<h2>2. Mudando por dentro</h2>
+<p>Tudo o que você aprendeu em <a href="dicionarios-alterar.html">Adicionando e Removendo Chaves</a> e em <a href="listas-adicionar.html">Adicionando Itens</a> funciona em qualquer nível. Você só precisa "chegar" no nível certo com os colchetes e então usar a operação de sempre:</p>
+
+<pre class="file" data-file="n_mudar.py">alunos = {
+    "Ana": {"idade": 15, "cidade": "Teresina", "notas": [9, 7, 10]},
+    "Bia": {"idade": 16, "cidade": "Picos", "notas": [6, 8, 7]},
+}
+alunos["Caio"] = {"idade": 15, "cidade": "Parnaíba", "notas": []}
+alunos["Caio"]["notas"].append(10)
+alunos["Caio"]["notas"].append(9)
+alunos["Bia"]["idade"] = 17
+alunos["Ana"]["notas"][1] = 8
+alunos["Ana"]["email"] = "ana@exemplo.com"
+for nome in alunos:
+    print(nome, alunos[nome])
+</pre>
+
+<pre class="term">$ python3 n_mudar.py
+Ana {'idade': 15, 'cidade': 'Teresina', 'notas': [9, 8, 10], 'email': 'ana@exemplo.com'}
+Bia {'idade': 17, 'cidade': 'Picos', 'notas': [6, 8, 7]}
+Caio {'idade': 15, 'cidade': 'Parnaíba', 'notas': [10, 9]}
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Linha</th><th>Nível</th><th>O que fez</th></tr>
+<tr><td><code>alunos["Caio"] = {…}</code></td><td>1 (o cadastro)</td><td>Novo aluno, com uma ficha nova e a lista de notas vazia</td></tr>
+<tr><td><code>alunos["Caio"]["notas"].append(10)</code></td><td>3 (a lista)</td><td>Lançou uma nota no fim da lista do Caio</td></tr>
+<tr><td><code>alunos["Bia"]["idade"] = 17</code></td><td>2 (a ficha)</td><td>Trocou o valor de um campo que já existia</td></tr>
+<tr><td><code>alunos["Ana"]["notas"][1] = 8</code></td><td>4 (um item da lista)</td><td>Corrigiu a segunda nota da Ana, de 7 para 8</td></tr>
+<tr><td><code>alunos["Ana"]["email"] = "…"</code></td><td>2 (a ficha)</td><td>Criou um campo novo só na ficha da Ana</td></tr>
+</table>
+</div>
+
+<p>Repare na última: só a Ana ganhou o campo <code>email</code>. As fichas não precisam ter os mesmos campos, mas isso tem um preço: quem ler <code>alunos["Bia"]["email"]</code> leva um <code>KeyError</code>. Para campos que nem todo mundo tem, leia com <code>get</code> (seção 5).</p>
+
+<div class="trypy" data-goal="out:{'idade': 15, 'notas': [10]};;out:[6, 8, 7, 9]">
+<p class="try-task"><strong>Missão:</strong> antes dos <code>print</code>, cadastre o aluno <code>"Caio"</code>, de 15 anos, com a lista de notas <code>[10]</code>, e lance a nota <code>9</code> no fim da lista da Bia.</p>
+<pre class="script" data-file="main.py">alunos = {
+    "Ana": {"idade": 15, "notas": [9, 7, 10]},
+    "Bia": {"idade": 16, "notas": [6, 8, 7]},
+}
+# cadastre o Caio e lance a nota da Bia aqui
+print(alunos.get("Caio"))
+print(alunos["Bia"]["notas"])
+</pre>
+<pre class="solucao" data-file="main.py">alunos = {
+    "Ana": {"idade": 15, "notas": [9, 7, 10]},
+    "Bia": {"idade": 16, "notas": [6, 8, 7]},
+}
+alunos["Caio"] = {"idade": 15, "notas": [10]}
+alunos["Bia"]["notas"].append(9)
+print(alunos.get("Caio"))
+print(alunos["Bia"]["notas"])
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Percorrendo o cadastro</h2>
+<p>Com <code>items()</code> (aula <a href="dicionarios-percorrer.html">Percorrendo um Dicionário</a>), cada volta do <code>for</code> entrega o nome do aluno e a ficha dele. Da ficha você tira o que precisar, como a lista de notas para calcular a média:</p>
+
+<pre class="file" data-file="n_percorrer.py">alunos = {
+    "Ana": {"idade": 15, "cidade": "Teresina", "notas": [9, 7, 10]},
+    "Bia": {"idade": 16, "cidade": "Picos", "notas": [6, 8, 7]},
+    "Caio": {"idade": 15, "cidade": "Parnaíba", "notas": [10, 9]},
+}
+for nome, dados in alunos.items():
+    media = sum(dados["notas"]) / len(dados["notas"])
+    print(f"{nome} ({dados['cidade']}): média {media:.1f}")
+</pre>
+
+<pre class="term">$ python3 n_percorrer.py
+Ana (Teresina): média 8.7
+Bia (Picos): média 7.0
+Caio (Parnaíba): média 9.5
+</pre>
+
+<dl class="anatomy">
+  <dt>for nome, dados in alunos.items():</dt><dd>A cada volta, <code>nome</code> recebe a chave (<code>"Ana"</code>) e <code>dados</code> recebe a ficha inteira (o dicionário de dentro).</dd>
+  <dt>dados["notas"]</dt><dd>Como <code>dados</code> já é a ficha, basta um colchete para chegar às notas.</dd>
+  <dt>sum(…) / len(…)</dt><dd>A soma das notas dividida pela quantidade: a média. O Caio tem só duas notas, e a conta funciona do mesmo jeito.</dd>
+  <dt>{dados['cidade']}</dt><dd>Dentro da f-string com aspas duplas, a chave vai com aspas simples.</dd>
+</dl>
+
+<h3>Três níveis de dicionário</h3>
+<p>Nada impede mais níveis. Uma escola com turmas, cada turma com alunos, cada aluno com notas:</p>
+
+<pre class="file" data-file="n_tres.py">escola = {
+    "1A": {
+        "Ana": {"notas": [9, 7, 10]},
+        "Bia": {"notas": [6, 8, 7]},
+    },
+    "1B": {
+        "Caio": {"notas": [10, 9]},
+    },
+}
+print(escola["1A"]["Bia"]["notas"][1])
+for turma, alunos in escola.items():
+    print(f"Turma {turma}: {len(alunos)} aluno(s)")
+</pre>
+
+<pre class="term">$ python3 n_tres.py
+8
+Turma 1A: 2 aluno(s)
+Turma 1B: 1 aluno(s)
+</pre>
+
+<p>Funciona, mas cada nível a mais é um colchete a mais para lembrar. Dois ou três níveis costumam bastar; se passar disso, é sinal de que vale a pena organizar de outro jeito (as <a href="classes.html">classes</a>, mais adiante no guia, são uma forma).</p>
+
+<hr>
+
+<h2>4. Dicionário de dicionários ou lista de dicionários?</h2>
+<p>Há outra forma muito comum de guardar um cadastro: uma <strong>lista</strong> em que cada item é um dicionário. Em vez de o nome ser a chave, ele vira um campo da ficha:</p>
+
+<pre class="file" data-file="n_lista_dicts.py">turma = [
+    {"nome": "Ana", "nota": 9},
+    {"nome": "Bia", "nota": 6},
+    {"nome": "Caio", "nota": 10},
+]
+print(turma[0]["nome"])
+for aluno in turma:
+    print(aluno["nome"], "tirou", aluno["nota"])
+turma.append({"nome": "Davi", "nota": 7})
+print(len(turma))
+</pre>
+
+<pre class="term">$ python3 n_lista_dicts.py
+Ana
+Ana tirou 9
+Bia tirou 6
+Caio tirou 10
+4
+</pre>
+
+<p>Aqui <code>turma[0]</code> é uma <strong>posição</strong> (o primeiro da lista), e só depois vem a chave <code>["nome"]</code>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th>Dicionário de dicionários</th><th>Lista de dicionários</th></tr>
+<tr><td>Forma</td><td><code>{"Ana": {"nota": 9}, …}</code></td><td><code>[{"nome": "Ana", "nota": 9}, …]</code></td></tr>
+<tr><td>Achar a Ana</td><td>Direto: <code>alunos["Ana"]</code></td><td>Precisa percorrer a lista procurando</td></tr>
+<tr><td>Nomes repetidos (duas Anas)</td><td>Não pode: a chave é única</td><td>Pode</td></tr>
+<tr><td>Ordem</td><td>A de inserção</td><td>A da lista (dá para ordenar)</td></tr>
+<tr><td>Quando usar</td><td>Você procura por um nome ou código que não se repete</td><td>Você percorre todos, ordena, ou os itens não têm um nome único. É o formato que costuma vir de arquivos <a href="json.html">JSON</a> e <a href="csv.html">CSV</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>5. Mostrando arrumado e lendo com cuidado</h2>
+
+<h3>O <code>pprint</code></h3>
+<p>Com o <code>print</code> comum, um cadastro inteiro sai numa linha só, comprida. O Python tem uma ferramenta pronta para mostrar estruturas aninhadas arrumadas: o <code>pprint</code> ("<em>pretty print</em>", impressão bonita). Ele fica num <strong>módulo</strong> que você precisa trazer com <code>import</code> (o assunto da aula <a href="modulos.html">Módulos e import</a>); por enquanto, basta copiar a primeira linha:</p>
+
+<pre class="file" data-file="n_pprint.py">from pprint import pprint
+alunos = {
+    "Ana": {"idade": 15, "cidade": "Teresina", "notas": [9, 7, 10]},
+    "Bia": {"idade": 16, "cidade": "Picos", "notas": [6, 8, 7]},
+}
+print(alunos)
+pprint(alunos, width=40, sort_dicts=False)
+</pre>
+
+<pre class="term">$ python3 n_pprint.py
+{'Ana': {'idade': 15, 'cidade': 'Teresina', 'notas': [9, 7, 10]}, 'Bia': {'idade': 16, 'cidade': 'Picos', 'notas': [6, 8, 7]}}
+{'Ana': {'idade': 15,
+         'cidade': 'Teresina',
+         'notas': [9, 7, 10]},
+ 'Bia': {'idade': 16,
+         'cidade': 'Picos',
+         'notas': [6, 8, 7]}}
+</pre>
+
+<dl class="anatomy">
+  <dt>from pprint import pprint</dt><dd>"Do módulo <code>pprint</code>, traga a função <code>pprint</code>."</dd>
+  <dt>width=40</dt><dd>A largura máxima de cada linha. Quando não cabe, o <code>pprint</code> quebra e alinha os níveis.</dd>
+  <dt>sort_dicts=False</dt><dd>Sem isto, o <code>pprint</code> mostra as chaves em <strong>ordem alfabética</strong> (<code>cidade</code> antes de <code>idade</code>), e não na ordem em que você as criou. Com <code>False</code>, ele respeita a ordem do dicionário.</dd>
+</dl>
+
+<h3><code>get</code> em cada nível</h3>
+<p>Para um aluno que pode não existir, ou um campo que nem toda ficha tem, use <code>get</code>. E para encadear, dê como padrão um dicionário vazio <code>{}</code>, que aceita o próximo <code>get</code>:</p>
+
+<pre class="file" data-file="n_get.py">alunos = {
+    "Ana": {"idade": 15, "cidade": "Teresina", "notas": [9, 7, 10]},
+}
+print(alunos.get("Davi"))
+print(alunos.get("Davi", {}).get("cidade"))
+print(alunos.get("Ana", {}).get("cidade"))
+print(alunos["Ana"].get("email", "sem email"))
+</pre>
+
+<pre class="term">$ python3 n_get.py
+None
+None
+Teresina
+sem email
+</pre>
+
+<p>O Davi não existe: <code>alunos.get("Davi", {})</code> devolve <code>{}</code>, e <code>{}.get("cidade")</code> devolve <code>None</code>, sem erro nenhum. Sem o <code>{}</code> como padrão, o primeiro <code>get</code> devolveria <code>None</code> e o segundo passo daria erro; veja a seguir.</p>
+
+<hr>
+
+<h2>Formas diferentes de ler um dado lá de dentro</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Se a chave não existir</th><th>Quando usar</th></tr>
+<tr><td><code>alunos["Ana"]["cidade"]</code></td><td><code>KeyError</code></td><td>Quando você tem certeza de que tudo existe. É a forma mais curta</td></tr>
+<tr><td><code>ficha = alunos["Ana"]</code><br><code>ficha["cidade"]</code></td><td><code>KeyError</code></td><td>Quando vai usar a mesma ficha várias vezes, ou para achar em qual nível está o erro</td></tr>
+<tr><td><code>alunos.get("Ana", {}).get("cidade")</code></td><td><code>None</code>, sem erro</td><td>Quando o aluno ou o campo podem faltar</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+<p>Com vários níveis, a pergunta mais importante diante de um erro é: <strong>em qual colchete ele aconteceu?</strong> Os sinais <code>~~~^^^</code> que o Python mostra embaixo da linha respondem: os <code>^</code> ficam embaixo do colchete que falhou.</p>
+
+<div class="cenario">
+<strong>Campo com o nome errado</strong>
+<pre class="file" data-file="n_erro_chave.py">alunos = {
+    "Ana": {"idade": 15, "cidade": "Teresina", "notas": [9, 7, 10]},
+}
+print(alunos["Ana"]["nota"])
+</pre>
+<pre class="term">$ python3 n_erro_chave.py
+Traceback (most recent call last):
+  File "/home/ana/n_erro_chave.py", line 4, in &lt;module&gt;
+    print(alunos["Ana"]["nota"])
+          ~~~~~~~~~~~~~^^^^^^^^
+KeyError: 'nota'
+</pre>
+<dl class="anatomy">
+  <dt>~~~~~~~~~~~~~^^^^^^^^</dt><dd>Os tils cobrem <code>alunos["Ana"]</code> (essa parte deu certo) e os <code>^</code> ficam embaixo de <code>["nota"]</code>: foi no <strong>segundo</strong> nível, dentro da ficha da Ana.</dd>
+  <dt>KeyError: 'nota'</dt><dd>A ficha não tem o campo <code>'nota'</code>. Ela tem <code>'notas'</code>, no plural.</dd>
+</dl>
+<p><strong>Como consertar:</strong> <code>alunos["Ana"]["notas"]</code>. Na dúvida sobre os nomes dos campos, mostre a ficha: <code>print(alunos["Ana"].keys())</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Os níveis na ordem trocada</strong>
+<pre class="file" data-file="n_erro_ordem.py">alunos = {
+    "Ana": {"idade": 15, "cidade": "Teresina", "notas": [9, 7, 10]},
+}
+print(alunos["cidade"]["Ana"])
+</pre>
+<pre class="term">$ python3 n_erro_ordem.py
+Traceback (most recent call last):
+  File "/home/ana/n_erro_ordem.py", line 4, in &lt;module&gt;
+    print(alunos["cidade"]["Ana"])
+          ~~~~~~^^^^^^^^^^
+KeyError: 'cidade'
+</pre>
+<p>Agora os <code>^</code> estão embaixo do <strong>primeiro</strong> colchete. No nível de fora, as chaves são os nomes dos alunos; <code>'cidade'</code> é uma chave do nível de dentro. <strong>Como consertar:</strong> do mais de fora para o mais de dentro: primeiro o aluno, depois o campo: <code>alunos["Ana"]["cidade"]</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Usar uma chave numa lista</strong>
+<pre class="file" data-file="n_erro_lista.py">alunos = {
+    "Ana": {"idade": 15, "cidade": "Teresina", "notas": [9, 7, 10]},
+}
+print(alunos["Ana"]["notas"]["primeira"])
+</pre>
+<pre class="term">$ python3 n_erro_lista.py
+Traceback (most recent call last):
+  File "/home/ana/n_erro_lista.py", line 4, in &lt;module&gt;
+    print(alunos["Ana"]["notas"]["primeira"])
+          ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+TypeError: list indices must be integers or slices, not str
+</pre>
+<p>"Índices de lista precisam ser inteiros ou fatias, não <code>str</code>". O terceiro colchete já está numa <strong>lista</strong> (as notas), e lista não tem chave, tem posição. <strong>Como consertar:</strong> <code>alunos["Ana"]["notas"][0]</code>. Saber o <strong>tipo</strong> de cada nível evita este erro; a tabela do começo da aula ajuda.</p>
+</div>
+
+<div class="cenario">
+<strong><code>get</code> que devolveu <code>None</code>, e depois um colchete</strong>
+<pre class="file" data-file="n_erro_none.py">alunos = {
+    "Ana": {"idade": 15, "cidade": "Teresina", "notas": [9, 7, 10]},
+}
+print(alunos.get("Davi")["cidade"])
+</pre>
+<pre class="term">$ python3 n_erro_none.py
+Traceback (most recent call last):
+  File "/home/ana/n_erro_none.py", line 4, in &lt;module&gt;
+    print(alunos.get("Davi")["cidade"])
+          ~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+TypeError: 'NoneType' object is not subscriptable
+</pre>
+<p>O Davi não existe, então <code>alunos.get("Davi")</code> devolveu <code>None</code>. E <code>None["cidade"]</code> não faz sentido: "um objeto <code>NoneType</code> (o tipo do <code>None</code>) não aceita colchetes". O <code>get</code> evitou o erro no primeiro nível, mas ele apareceu no segundo. <strong>Como consertar:</strong> dê um dicionário vazio como padrão (<code>alunos.get("Davi", {}).get("cidade")</code>) ou pergunte antes: <code>if "Davi" in alunos:</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Dois alunos com a mesma ficha: sem erro, resultado errado</strong>
+<p>Para não repetir, a Ana criou uma ficha "modelo" e usou para os dois alunos novos:</p>
+<pre class="file" data-file="n_compartilhado.py">modelo = {"idade": 15, "notas": []}
+alunos = {}
+alunos["Ana"] = modelo
+alunos["Bia"] = modelo
+alunos["Ana"]["notas"].append(9)
+print(alunos)
+</pre>
+<pre class="term">$ python3 n_compartilhado.py
+{'Ana': {'idade': 15, 'notas': [9]}, 'Bia': {'idade': 15, 'notas': [9]}}
+</pre>
+<p>Ela lançou a nota só para a Ana, e a Bia também ganhou um 9! <code>alunos["Ana"] = modelo</code> não copiou a ficha: guardou <strong>a mesma ficha</strong> nas duas gavetas. É uma ficha só, com dois nomes na etiqueta; mexeu por uma gaveta, aparece pela outra. <strong>Como consertar:</strong> crie uma ficha <strong>nova</strong> para cada aluno, por exemplo dentro de um <code>for</code>:</p>
+<pre class="file" data-file="n_compartilhado_ok.py">alunos = {}
+for nome in ["Ana", "Bia"]:
+    alunos[nome] = {"idade": 15, "notas": []}
+alunos["Ana"]["notas"].append(9)
+print(alunos)
+</pre>
+<pre class="term">$ python3 n_compartilhado_ok.py
+{'Ana': {'idade': 15, 'notas': [9]}, 'Bia': {'idade': 15, 'notas': []}}
+</pre>
+<p>A cada volta, <code>{"idade": 15, "notas": []}</code> cria um dicionário e uma lista novos. Por que isso acontece, e por que até <code>modelo.copy()</code> não resolveria (a lista de notas continuaria dividida), é o assunto da aula <a href="copias.html">Cópia Rasa e Cópia Profunda</a>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>d["a"]["b"]</code></td><td>Do dicionário <code>d</code>, a chave <code>"a"</code>; dela, a chave <code>"b"</code></td></tr>
+<tr><td><code>d["a"]["lista"][0]</code></td><td>Chave, chave e, no fim, a posição de uma lista</td></tr>
+<tr><td><code>d["novo"] = {…}</code></td><td>Acrescenta um item com o seu próprio dicionário</td></tr>
+<tr><td><code>d["a"]["b"] = v</code></td><td>Cria ou troca um campo lá de dentro</td></tr>
+<tr><td><code>d["a"]["lista"].append(x)</code></td><td>Acrescenta numa lista lá de dentro</td></tr>
+<tr><td><code>for chave, dentro in d.items():</code></td><td>Percorre o nível de fora; <code>dentro</code> é o dicionário de cada um</td></tr>
+<tr><td><code>d.get("a", {}).get("b")</code></td><td>Lê dois níveis sem erro (devolve <code>None</code> se faltar)</td></tr>
+<tr><td><code>pprint(d, sort_dicts=False)</code></td><td>Mostra arrumado, na ordem do dicionário (precisa de <code>from pprint import pprint</code>)</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>KeyError: 'nota'</code></td><td>Nome de chave errado no nível marcado pelos <code>^</code></td></tr>
+<tr><td><code>KeyError: 'cidade'</code> logo no primeiro colchete</td><td>Níveis na ordem trocada</td></tr>
+<tr><td><code>TypeError: list indices must be integers or slices, not str</code></td><td>Chave de texto num nível que é lista</td></tr>
+<tr><td><code>TypeError: 'NoneType' object is not subscriptable</code></td><td>Colchete depois de um <code>get</code> que devolveu <code>None</code></td></tr>
+<tr><td>Mudou um aluno e o outro mudou junto</td><td>Os dois apontam para o mesmo dicionário</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A idade da Bia</h3>
+<p>Complete para ler a idade da Bia no cadastro <code>alunos</code>:</p>
+<div class="ex-code">print(alunos["Bia"]<input data-answer="[&quot;idade&quot;]|['idade']" aria-label="o que falta">)</div>
+</div>
+
+<div class="exercise">
+<h3>2. A última nota</h3>
+<p>Complete o índice para ler a <strong>última</strong> nota da Ana:</p>
+<div class="ex-code">alunos["Ana"]["notas"][<input data-answer="-1" aria-label="índice">]</div>
+</div>
+
+<div class="exercise">
+<h3>3. Lançando uma nota</h3>
+<p>Complete o método que põe a nota 8 no fim da lista do Caio:</p>
+<div class="ex-code">alunos["Caio"]["notas"].<input data-answer="append" aria-label="método">(8)</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Em <code>alunos["Ana"]["notas"][0]</code>, o que são os três valores entre colchetes?</p>
+<label><input type="radio" name="q4"> Três posições</label>
+<label><input type="radio" name="q4"> Uma chave, outra chave e uma posição</label>
+<label><input type="radio" name="q4"> Três chaves</label>
+<label><input type="radio" name="q4"> Uma posição e duas chaves</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">5. <code>alunos["Ana"]["notas"]["primeira"]</code> dá qual erro?</p>
+<label><input type="radio" name="q5"> <code>KeyError: 'primeira'</code></label>
+<label><input type="radio" name="q5"> <code>NameError</code></label>
+<label><input type="radio" name="q5"> <code>IndexError</code></label>
+<label><input type="radio" name="q5"> <code>TypeError: list indices must be integers or slices, not str</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Você precisa achar rapidamente a ficha de um aluno pelo número de matrícula, que nunca se repete. O que é mais adequado?</p>
+<label><input type="radio" name="q6"> Um dicionário de dicionários, com a matrícula como chave</label>
+<label><input type="radio" name="q6"> Uma lista de dicionários, percorrida até achar</label>
+<label><input type="radio" name="q6"> Uma tupla de listas</label>
+<label><input type="radio" name="q6"> Um conjunto de dicionários</label>
+</div>
+
+<h3>Missão final: o boletim da turma</h3>
+
+<div class="trypy" data-goal="out:Ana: 8.7 (passou);;out:Bia: 6.0 (recuperação);;out:Caio: 9.5 (passou)">
+<p class="try-task"><strong>Missão:</strong> percorra o cadastro e, para cada aluno, calcule a média das notas. Mostre uma linha como <code>Ana: 8.7 (passou)</code>, com uma casa decimal; quem tiver média menor que 7 fica de <code>(recuperação)</code>.</p>
+<pre class="script" data-file="main.py">alunos = {
+    "Ana": {"idade": 15, "notas": [9, 7, 10]},
+    "Bia": {"idade": 16, "notas": [6, 5, 7]},
+    "Caio": {"idade": 15, "notas": [10, 9]},
+}
+for nome, dados in alunos.items():
+    print(nome)
+</pre>
+<pre class="solucao" data-file="main.py">alunos = {
+    "Ana": {"idade": 15, "notas": [9, 7, 10]},
+    "Bia": {"idade": 16, "notas": [6, 5, 7]},
+    "Caio": {"idade": 15, "notas": [10, 9]},
+}
+for nome, dados in alunos.items():
+    media = sum(dados["notas"]) / len(dados["notas"])
+    if media &gt;= 7:
+        situacao = "passou"
+    else:
+        situacao = "recuperação"
+    print(f"{nome}: {media:.1f} ({situacao})")
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Um dicionário pode guardar outros dicionários e listas: é um dicionário <strong>aninhado</strong>, como um fichário com fichas e campos.</li>
+  <li>Para ler lá de dentro, um colchete por nível, da esquerda para a direita: <code>alunos["Ana"]["notas"][0]</code>. Chave onde é dicionário, posição onde é lista.</li>
+  <li>Para mudar, chegue ao nível certo e use a operação de sempre: <code>= valor</code>, <code>.append()</code>, <code>del</code>.</li>
+  <li><code>for nome, dados in alunos.items():</code> entrega cada ficha inteira em <code>dados</code>.</li>
+  <li>Dicionário de dicionários para achar por uma chave única; lista de dicionários para percorrer e ordenar.</li>
+  <li><code>pprint(d, sort_dicts=False)</code> mostra arrumado; <code>d.get("a", {}).get("b")</code> lê sem erro.</li>
+  <li>Num erro, os <code>^</code> mostram qual colchete falhou. E cuidado: usar o mesmo dicionário para dois itens faz os dois mudarem juntos.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
