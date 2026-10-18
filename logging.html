@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python logging — o diário de bordo do programa | Guia Python</title>
+<meta name="description" content="O módulo logging para quem está começando: por que registrar em vez de só usar print, os cinco níveis (DEBUG, INFO, WARNING, ERROR, CRITICAL), basicConfig com level e format, gravar num arquivo de log, loggers com nome, logging.exception, e os erros reais: basicConfig que não faz nada, a vírgula do print e o --- Logging error ---.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">logging</span></h1>
+
+<p class="intro">Todo mundo que programa já espalhou <code>print("chegou aqui")</code> pelo código para descobrir o que estava acontecendo. Funciona, mas depois é preciso apagar tudo, e no dia em que o problema volta, é preciso escrever tudo de novo. O módulo <code>logging</code> ("registro", como no "diário de bordo" de um navio) resolve isso: o programa anota o que está fazendo, cada anotação com um <strong>nível de importância</strong>, e você decide, numa linha só, quais anotações aparecem e para onde elas vão: a tela ou um arquivo.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>Por que usar <code>logging</code> em vez de <code>print</code> para as mensagens "de bastidor".</li>
+  <li>Os cinco níveis: <code>DEBUG</code>, <code>INFO</code>, <code>WARNING</code>, <code>ERROR</code> e <code>CRITICAL</code>, e por que só três aparecem no começo.</li>
+  <li>A configurar com <code>logging.basicConfig</code>: o nível (<code>level</code>) e o formato (<code>format</code>), com data e hora.</li>
+  <li>A gravar as mensagens num <strong>arquivo de log</strong> (<code>filename</code>, <code>filemode</code>).</li>
+  <li>A dar nome às mensagens com <code>logging.getLogger</code> e a registrar um erro com o traceback (<code>logging.exception</code>).</li>
+  <li>Os erros reais: o <code>basicConfig</code> que não faz nada, a vírgula do <code>print</code>, o nível com nome errado.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: o caderno de ocorrências da padaria</h2>
+<p>A padaria da Ana tem um caderno no balcão. Quem trabalha lá anota o que acontece, e cada anotação tem uma etiqueta colorida:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Etiqueta no caderno</th><th>Nível do <code>logging</code></th><th>Número</th><th>Para quê</th></tr>
+<tr><td>Cinza: detalhe miúdo</td><td><code>DEBUG</code> ("depuração")</td><td>10</td><td>Detalhes para quem está caçando um problema: "abrindo o arquivo", "a variável vale 3"</td></tr>
+<tr><td>Azul: aconteceu algo normal</td><td><code>INFO</code> ("informação")</td><td>20</td><td>O programa funcionando como deveria: "encomenda anotada", "padaria aberta"</td></tr>
+<tr><td>Amarelo: atenção</td><td><code>WARNING</code> ("aviso")</td><td>30</td><td>Ainda funciona, mas algo merece atenção: "estoque de ovos baixo"</td></tr>
+<tr><td>Vermelho: deu errado</td><td><code>ERROR</code> ("erro")</td><td>40</td><td>Uma tarefa falhou: "não deu para salvar a encomenda"</td></tr>
+<tr><td>Preto: emergência</td><td><code>CRITICAL</code> ("crítico")</td><td>50</td><td>O programa (ou a padaria) não tem como continuar: "o forno parou!"</td></tr>
+</table>
+</div>
+
+<p>No fim do dia, a Ana não lê o caderno inteiro: ela lê só as amarelas para cima. Quando alguma coisa está muito estranha, aí sim ela lê tudo, até as cinzas. O <code>logging</code> funciona assim: você escolhe um <strong>nível mínimo</strong>, e só aparecem as mensagens daquele nível para cima. O número de cada nível é o que o Python compara.</p>
+
+<hr>
+
+<h2>1. As cinco funções, sem configurar nada</h2>
+
+<pre class="file" data-file="niveis.py">import logging
+
+logging.debug("Detalhe: abrindo o arquivo de encomendas")
+logging.info("Encomenda da Bia anotada")
+logging.warning("Estoque de ovos baixo: 3")
+logging.error("Não deu para salvar a encomenda")
+logging.critical("O forno parou!")
+print("Fim do programa")
+</pre>
+
+<pre class="term" data-cwd="~/padaria">$ python3 niveis.py
+WARNING:root:Estoque de ovos baixo: 3
+ERROR:root:Não deu para salvar a encomenda
+CRITICAL:root:O forno parou!
+Fim do programa
+</pre>
+
+<p>Cinco mensagens no código, três na tela. O <code>debug</code> e o <code>info</code> sumiram. Não é defeito: sem configuração, o nível mínimo é <code>WARNING</code>. A ideia é que um programa "quieto" só fale quando há algo a avisar.</p>
+
+<dl class="anatomy">
+  <dt>WARNING</dt><dd>O nível da mensagem.</dd>
+  <dt>root</dt><dd>O nome de quem registrou. <code>root</code> ("raiz") é o registrador principal, o que você usa quando chama <code>logging.warning(...)</code> direto. Na seção 5 você vai criar outros, com nome.</dd>
+  <dt>Estoque de ovos baixo: 3</dt><dd>A sua mensagem.</dd>
+</dl>
+
+<h3>As mensagens vão para a saída de erros</h3>
+<p>Outra diferença para o <code>print</code>: o <code>logging</code> escreve na <strong>saída de erros</strong> (<code>stderr</code>), não na saída normal. Na tela, as duas aparecem juntas. Mas, jogando fora a saída de erros com <code>2&gt;/dev/null</code>, só sobra o <code>print</code>:</p>
+
+<pre class="term" data-cwd="~/padaria">$ python3 niveis.py 2&gt;/dev/null
+Fim do programa
+</pre>
+
+<p>Isso é ótimo: o <strong>resultado</strong> do programa (o que ele imprime com <code>print</code>) fica separado das <strong>anotações</strong> sobre o que ele fez. Quem usa o programa pode guardar um e jogar fora o outro (a aula <a href="os-sys.html">os e sys</a> fala dos dois canais).</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th></th><th><code>print</code></th><th><code>logging</code></th></tr>
+<tr><td>Para quê</td><td>O resultado do programa, o que a pessoa veio ver</td><td>Anotações sobre o que o programa está fazendo</td></tr>
+<tr><td>Para onde vai</td><td>Saída normal (<code>stdout</code>)</td><td>Saída de erros (<code>stderr</code>), ou um arquivo</td></tr>
+<tr><td>Ligar e desligar</td><td>Só apagando a linha</td><td>Mudando o nível, numa linha só</td></tr>
+<tr><td>Hora, nível, quem registrou</td><td>Você escreve à mão</td><td>Automático, com o <code>format</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>2. <code>basicConfig(level=…)</code>: escolhendo o nível mínimo</h2>
+<p>A configuração fica numa chamada só, <code>logging.basicConfig</code> ("configuração básica"), feita <strong>uma vez</strong>, no começo do programa, antes de qualquer mensagem:</p>
+
+<pre class="file" data-file="config.py">import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
+logging.debug("Detalhe: abrindo o arquivo de encomendas")
+logging.info("Encomenda da Bia anotada")
+logging.warning("Estoque de ovos baixo: 3")
+</pre>
+
+<pre class="term" data-cwd="~/padaria">$ python3 config.py
+DEBUG:root:Detalhe: abrindo o arquivo de encomendas
+INFO:root:Encomenda da Bia anotada
+WARNING:root:Estoque de ovos baixo: 3
+</pre>
+
+<dl class="anatomy">
+  <dt>logging.basicConfig(…)</dt><dd>Configura o registrador principal.</dd>
+  <dt>level=logging.DEBUG</dt><dd>O nível mínimo. <code>logging.DEBUG</code> é a constante que vale 10; com ela, tudo aparece. As outras: <code>logging.INFO</code>, <code>logging.WARNING</code>, <code>logging.ERROR</code>, <code>logging.CRITICAL</code>. O nome como texto também vale: <code>level="DEBUG"</code>.</dd>
+</dl>
+
+<p>Esse é o grande truque: enquanto você está consertando o programa, <code>level=logging.DEBUG</code>; quando está tudo certo, troque para <code>logging.WARNING</code>, e os detalhes somem, sem apagar uma linha sequer.</p>
+
+<div class="trypy" data-goal="out:INFO:root:Encomenda da Bia anotada;;src:basicConfig">
+<p class="try-task"><strong>Missão:</strong> rode e repare que a mensagem não aparece. Acrescente um <code>logging.basicConfig</code> com o nível <code>INFO</code>, antes da mensagem, para ela aparecer.</p>
+<pre class="script" data-file="main.py">import logging
+
+logging.info("Encomenda da Bia anotada")
+print("Pronto.")
+</pre>
+<pre class="solucao" data-file="main.py">import logging
+
+logging.basicConfig(level=logging.INFO)
+
+logging.info("Encomenda da Bia anotada")
+print("Pronto.")
+</pre>
+</div>
+
+<hr>
+
+<h2>3. <code>format</code>: o jeito de cada linha</h2>
+<p><code>WARNING:root:…</code> é o formato padrão, e é feio. Com <code>format</code>, você monta a linha como quiser, com "lacunas" que o <code>logging</code> preenche:</p>
+
+<pre class="file" data-file="formato.py">import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%d/%m/%Y %H:%M:%S",
+)
+
+logging.info("Padaria aberta")
+ovos = 3
+logging.warning("Estoque de ovos baixo: %d", ovos)
+</pre>
+
+<pre class="term" data-cwd="~/padaria">$ python3 formato.py
+18/10/2026 12:04:37 [INFO] Padaria aberta
+18/10/2026 12:04:37 [WARNING] Estoque de ovos baixo: 3
+</pre>
+
+<dl class="anatomy">
+  <dt>%(asctime)s</dt><dd>A data e a hora da mensagem (<em>ASCII time</em>, "hora em texto"). Cada vez que você rodar, vai sair a sua hora.</dd>
+  <dt>[%(levelname)s]</dt><dd>O nome do nível, entre colchetes (os colchetes são texto seu, como o espaço).</dd>
+  <dt>%(message)s</dt><dd>A mensagem.</dd>
+  <dt>datefmt="%d/%m/%Y %H:%M:%S"</dt><dd>O formato da data: dia/mês/ano e hora:minuto:segundo, com os mesmos códigos do <code>strftime</code> (aula <a href="datetime.html">Datas e Horas</a>).</dd>
+  <dt>"…: %d", ovos</dt><dd>A mensagem pode ter lacunas próprias, preenchidas pelos argumentos seguintes: <code>%d</code> para número inteiro, <code>%s</code> para qualquer coisa.</dd>
+</dl>
+
+<p>Cada lacuna tem o formato <code>%(nome)s</code>: um <code>%</code>, o nome entre parênteses e um <code>s</code> no fim (de <em>string</em>). Não confunda com as f-strings: aqui são <strong>parênteses</strong>, não chaves, e o texto não leva <code>f</code> na frente.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Lacuna</th><th>O que entra</th></tr>
+<tr><td><code>%(message)s</code></td><td>A mensagem</td></tr>
+<tr><td><code>%(levelname)s</code></td><td>O nível: <code>INFO</code>, <code>WARNING</code>…</td></tr>
+<tr><td><code>%(levelname)-8s</code></td><td>O nível, completado com espaços até 8 letras (as colunas ficam alinhadas)</td></tr>
+<tr><td><code>%(asctime)s</code></td><td>Data e hora (padrão: <code>2026-10-18 12:04:37,694</code>; os milésimos de segundo vêm depois da vírgula)</td></tr>
+<tr><td><code>%(name)s</code></td><td>O nome do registrador (<code>root</code>, ou o que você der)</td></tr>
+<tr><td><code>%(filename)s</code>, <code>%(lineno)d</code></td><td>O arquivo e a linha de onde a mensagem saiu</td></tr>
+<tr><td><code>%(funcName)s</code></td><td>A função de onde a mensagem saiu</td></tr>
+</table>
+</div>
+
+<h3>Mensagem com <code>%s</code> ou com f-string?</h3>
+<pre class="file" data-file="fstring.py">import logging
+
+ovos = 3
+logging.warning(f"Estoque de ovos: {ovos}")
+logging.warning("Estoque de ovos: %s", ovos)
+</pre>
+
+<pre class="term" data-cwd="~/padaria">$ python3 fstring.py
+WARNING:root:Estoque de ovos: 3
+WARNING:root:Estoque de ovos: 3
+</pre>
+
+<p>O resultado é o mesmo. A diferença é que, na segunda forma, o <code>logging</code> só monta o texto <strong>se a mensagem for aparecer</strong>; num <code>debug</code> desligado, ele nem perde tempo. A documentação oficial usa a forma com <code>%s</code>, e você vai encontrá-la em todo lugar. Para um programa pequeno, as duas servem; o que <strong>não</strong> serve é a vírgula do <code>print</code>, sem lacuna (veja <a href="#errado">Quando dá errado</a>).</p>
+
+<div class="trypy" data-goal="out:WARNING: Estoque de ovos baixo: 3;;src:format">
+<p class="try-task"><strong>Missão:</strong> a linha sai como <code>WARNING:root:Estoque de ovos baixo: 3</code>. Acrescente um <code>format</code> ao <code>basicConfig</code> para ela sair <code>WARNING: Estoque de ovos baixo: 3</code> (o nível, dois-pontos, espaço e a mensagem).</p>
+<pre class="script" data-file="main.py">import logging
+
+logging.basicConfig(level=logging.INFO)
+
+ovos = 3
+logging.warning("Estoque de ovos baixo: %d", ovos)
+</pre>
+<pre class="solucao" data-file="main.py">import logging
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+
+ovos = 3
+logging.warning("Estoque de ovos baixo: %d", ovos)
+</pre>
+</div>
+
+<hr>
+
+<h2>4. O arquivo de log: <code>filename</code></h2>
+<p>Um programa que roda sozinho (de madrugada, num servidor, todo dia às 6h) não tem ninguém olhando a tela. Aí as mensagens vão para um <strong>arquivo de log</strong>, que alguém lê depois. Basta dar o nome do arquivo:</p>
+
+<pre class="file" data-file="arquivo.py">import logging
+
+logging.basicConfig(
+    filename="padaria.log",
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)-8s %(message)s",
+    encoding="utf-8",
+)
+
+logging.info("Programa iniciado")
+logging.warning("Faltou fermento")
+print("Pronto. Veja o padaria.log")
+</pre>
+
+<pre class="term" data-cwd="~/padaria">$ python3 arquivo.py
+Pronto. Veja o padaria.log
+$ python3 arquivo.py
+Pronto. Veja o padaria.log
+$ cat padaria.log
+2026-10-18 12:04:37,694 INFO     Programa iniciado
+2026-10-18 12:04:37,694 WARNING  Faltou fermento
+2026-10-18 12:04:37,742 INFO     Programa iniciado
+2026-10-18 12:04:37,742 WARNING  Faltou fermento
+</pre>
+
+<dl class="anatomy">
+  <dt>filename="padaria.log"</dt><dd>As mensagens vão para esse arquivo, em vez da tela. Por isso, ao rodar, só apareceu o <code>print</code>.</dd>
+  <dt>encoding="utf-8"</dt><dd>A codificação do arquivo, para os acentos ficarem certos em qualquer computador (o mesmo cuidado do <code>open</code>, na aula <a href="arquivos.html">Abrindo Arquivos</a>).</dd>
+  <dt>%(levelname)-8s</dt><dd>O nível ocupando sempre 8 colunas: <code>INFO</code> ganha 4 espaços e as mensagens ficam alinhadas.</dd>
+  <dt>(as quatro linhas)</dt><dd>A Ana rodou duas vezes, e o arquivo tem as duas. Por padrão, o <code>logging</code> <strong>acrescenta</strong> no fim do arquivo: o log é um histórico.</dd>
+</dl>
+
+<p>Para começar o arquivo do zero a cada execução, use <code>filemode="w"</code> (o mesmo <code>"w"</code> do <code>open</code>, de <em>write</em>, "escrever"):</p>
+
+<pre class="file" data-file="novo.py">import logging
+
+logging.basicConfig(filename="hoje.log", filemode="w", level=logging.INFO, format="%(levelname)s %(message)s", encoding="utf-8")
+logging.info("Só a execução de agora fica no arquivo")
+</pre>
+
+<pre class="term" data-cwd="~/padaria">$ python3 novo.py
+$ python3 novo.py
+$ cat hoje.log
+INFO Só a execução de agora fica no arquivo
+</pre>
+
+<p>Duas execuções, uma linha só. O padrão (acrescentar) é o <code>filemode="a"</code>, de <em>append</em>.</p>
+
+<div class="trypy" data-goal="arquivo:padaria.log~Faltou fermento;;semerro">
+<p class="try-task"><strong>Missão:</strong> as mensagens estão saindo na tela. Faça elas irem para o arquivo <code>padaria.log</code> (acrescente <code>filename="padaria.log"</code> e <code>encoding="utf-8"</code> ao <code>basicConfig</code>). Depois de rodar, o próprio programa mostra o que ficou no arquivo.</p>
+<pre class="script" data-file="main.py">import logging
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+
+logging.info("Programa iniciado")
+logging.warning("Faltou fermento")
+
+try:
+    with open("padaria.log", encoding="utf-8") as arquivo:
+        print("No padaria.log:")
+        print(arquivo.read())
+except FileNotFoundError:
+    print("O padaria.log ainda não existe.")
+</pre>
+<pre class="solucao" data-file="main.py">import logging
+
+logging.basicConfig(filename="padaria.log", encoding="utf-8", level=logging.INFO, format="%(levelname)s %(message)s")
+
+logging.info("Programa iniciado")
+logging.warning("Faltou fermento")
+
+try:
+    with open("padaria.log", encoding="utf-8") as arquivo:
+        print("No padaria.log:")
+        print(arquivo.read())
+except FileNotFoundError:
+    print("O padaria.log ainda não existe.")
+</pre>
+</div>
+
+<hr>
+
+<h2>5. Registradores com nome: <code>getLogger</code></h2>
+<p>Num programa maior, com vários arquivos, ajuda saber <strong>de que parte</strong> veio cada mensagem. <code>logging.getLogger("nome")</code> ("pegue o registrador") cria um registrador com nome, que você usa no lugar do <code>logging.</code>:</p>
+
+<pre class="file" data-file="nomes.py">import logging
+
+logging.basicConfig(level=logging.INFO, format="%(name)s - %(levelname)s - %(message)s")
+log = logging.getLogger("estoque")
+
+log.info("Contando os ingredientes")
+log.warning("Açúcar acabando")
+logging.info("Esta veio do root")
+</pre>
+
+<pre class="term" data-cwd="~/padaria">$ python3 nomes.py
+estoque - INFO - Contando os ingredientes
+estoque - WARNING - Açúcar acabando
+root - INFO - Esta veio do root
+</pre>
+
+<p>O <code>%(name)s</code> mostra quem registrou. As mensagens do <code>log</code> saem com <code>estoque</code>; a do <code>logging.info</code>, com <code>root</code>. O registrador com nome segue a configuração do <code>basicConfig</code> (nível e formato), porque, no fim, as mensagens dele sobem para o <code>root</code>.</p>
+
+<div class="tip">
+<strong>O costume: <code>getLogger(__name__)</code></strong>
+<p>Em programas com vários módulos, cada arquivo começa com <code>log = logging.getLogger(__name__)</code>. O <code>__name__</code> é o nome do módulo (<code>estoque</code>, para o <code>estoque.py</code>; aula <a href="modulos-proprios.html">Criando seu Módulo</a>), e assim cada mensagem já diz de qual arquivo veio. O <code>basicConfig</code> fica só no programa principal.</p>
+</div>
+
+<hr>
+
+<h2>6. Registrando um erro com o traceback: <code>logging.exception</code></h2>
+<p>Dentro de um <code>except</code>, <code>logging.exception</code> registra uma mensagem de nível <code>ERROR</code> <strong>e</strong> o traceback do erro que foi pego, e o programa continua:</p>
+
+<pre class="file" data-file="excecao.py">import logging
+
+logging.basicConfig(format="%(levelname)s: %(message)s")
+
+precos = {"bolo": 35}
+try:
+    print(precos["torta"])
+except KeyError:
+    logging.exception("Produto sem preço")
+print("O programa continua.")
+</pre>
+
+<pre class="term" data-cwd="~/padaria">$ python3 excecao.py
+ERROR: Produto sem preço
+Traceback (most recent call last):
+  File "/home/ana/padaria/excecao.py", line 7, in &lt;module&gt;
+    print(precos["torta"])
+          ~~~~~~^^^^^^^^^
+KeyError: 'torta'
+O programa continua.
+</pre>
+
+<p>É o melhor dos dois mundos: o programa não quebrou (o <code>try</code> segurou o erro, aula <a href="try-except.html">try e except</a>), mas o traceback completo ficou registrado, com a linha exata, para alguém consertar depois. Num log em arquivo, isso vale ouro. Use <code>logging.exception</code> <strong>só</strong> dentro de um <code>except</code>.</p>
+
+<hr>
+
+<h2>Formas diferentes de mostrar uma mensagem</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Jeito</th><th>Quando usar</th></tr>
+<tr><td><code>print("…")</code></td><td>O resultado do programa, o que a pessoa veio ver</td></tr>
+<tr><td><code>print("…", file=sys.stderr)</code></td><td>Uma mensagem de erro rápida num script pequeno</td></tr>
+<tr><td><code>logging.debug/info/warning("…")</code></td><td>Anotações sobre o funcionamento, que você quer poder ligar, desligar ou mandar para um arquivo</td></tr>
+<tr><td><code>logging.getLogger(__name__)</code></td><td>Programas com vários arquivos (módulos)</td></tr>
+<tr><td><code>logging.exception("…")</code></td><td>Dentro de um <code>except</code>: registrar o erro com o traceback e seguir em frente</td></tr>
+<tr><td><code>raise</code> / <code>sys.exit</code></td><td>Quando o programa <strong>não deve</strong> seguir em frente (aulas <a href="raise.html">raise</a> e <a href="os-sys.html">os e sys</a>)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>O <code>basicConfig</code> que não faz nada</strong>
+<pre class="file" data-file="tarde.py">import logging
+
+logging.info("Começando")
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+logging.info("Encomenda da Bia anotada")
+logging.warning("Estoque de ovos baixo")
+</pre>
+<pre class="term" data-cwd="~/padaria">$ python3 tarde.py
+WARNING:root:Estoque de ovos baixo
+</pre>
+<p>Nem o nível <code>INFO</code> nem o formato valeram: a linha saiu no formato padrão, e o <code>info</code> sumiu. Nenhuma mensagem de erro avisa. O motivo: o primeiro <code>logging.info("Começando")</code> chegou antes da configuração, e o <code>logging</code>, para não perder a mensagem, se configurou sozinho, com o padrão. A partir daí, o <code>basicConfig</code> encontra o registrador já configurado e <strong>não faz nada</strong> (está assim na documentação: ele só age se nada foi configurado ainda).</p>
+<p><strong>Como consertar:</strong> ponha o <code>basicConfig</code> logo depois dos <code>import</code>, antes de qualquer mensagem. Se não der, <code>force=True</code> ("forçar") apaga a configuração anterior:</p>
+<pre class="term" data-cwd="~/padaria">$ python3 tarde2.py      « o mesmo tarde.py, com force=True no basicConfig
+INFO: Encomenda da Bia anotada
+WARNING: Estoque de ovos baixo
+</pre>
+</div>
+
+<div class="cenario">
+<strong>A vírgula do <code>print</code>: <code>--- Logging error ---</code></strong>
+<pre class="file" data-file="virgula.py">import logging
+
+ovos = 3
+logging.warning("Estoque de ovos:", ovos)
+print("O programa continua.")
+</pre>
+<pre class="term" data-cwd="~/padaria">$ python3 virgula.py
+--- Logging error ---
+Traceback (most recent call last):
+  File "/usr/lib/python3.14/logging/__init__.py", line 1151, in emit
+    msg = self.format(record)
+  File "/usr/lib/python3.14/logging/__init__.py", line 999, in format
+    return fmt.format(record)
+           ~~~~~~~~~~^^^^^^^^
+  File "/usr/lib/python3.14/logging/__init__.py", line 712, in format
+    record.message = record.getMessage()
+                     ~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/logging/__init__.py", line 400, in getMessage
+    msg = msg % self.args
+          ~~~~^~~~~~~~~~~
+TypeError: not all arguments converted during string formatting
+Call stack:
+  File "/home/ana/padaria/virgula.py", line 4, in &lt;module&gt;
+    logging.warning("Estoque de ovos:", ovos)
+Message: 'Estoque de ovos:'
+Arguments: (3,)
+O programa continua.
+$ echo $?
+0
+</pre>
+<p>Um susto comprido, mas leia com calma:</p>
+<dl class="anatomy">
+  <dt>--- Logging error ---</dt><dd>"Erro de registro": quem falhou foi o <code>logging</code> ao montar a mensagem, não o seu programa. Por isso ele não quebra: o <code>print</code> do fim rodou, e o código de saída foi 0.</dd>
+  <dt>Traceback … logging/__init__.py</dt><dd>As linhas de dentro do módulo <code>logging</code>. Não é ali que está o problema.</dd>
+  <dt>TypeError: not all arguments converted during string formatting</dt><dd>"Nem todos os argumentos foram usados na formatação": sobrou um argumento (o 3) e não havia lacuna (<code>%s</code>) para ele.</dd>
+  <dt>Call stack: … virgula.py, line 4</dt><dd>"Pilha de chamadas": <strong>aqui</strong> está a sua linha, a 4.</dd>
+  <dt>Message / Arguments</dt><dd>A mensagem e os argumentos que o <code>logging</code> recebeu.</dd>
+</dl>
+<p>No <code>print</code>, a vírgula separa coisas para mostrar lado a lado. No <code>logging</code>, os argumentos depois da mensagem servem para preencher lacunas <code>%s</code>, e a mensagem não tinha nenhuma. E a anotação se perdeu: o aviso do estoque não foi registrado. <strong>Como consertar:</strong> <code>logging.warning("Estoque de ovos: %s", ovos)</code> ou <code>logging.warning(f"Estoque de ovos: {ovos}")</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Uma lacuna com o nome errado no <code>format</code></strong>
+<pre class="file" data-file="chave.py">import logging
+
+logging.basicConfig(format="%(levelnome)s: %(message)s")
+logging.warning("Teste")
+</pre>
+<pre class="term" data-cwd="~/padaria">$ python3 chave.py
+--- Logging error ---
+Traceback (most recent call last):
+  File "/usr/lib/python3.14/logging/__init__.py", line 472, in format
+    return self._format(record)
+           ~~~~~~~~~~~~^^^^^^^^
+  File "/usr/lib/python3.14/logging/__init__.py", line 468, in _format
+    return self._fmt % values
+           ~~~~~~~~~~^~~~~~~~
+KeyError: 'levelnome'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3.14/logging/__init__.py", line 1151, in emit
+    msg = self.format(record)
+  File "/usr/lib/python3.14/logging/__init__.py", line 999, in format
+    return fmt.format(record)
+           ~~~~~~~~~~^^^^^^^^
+  File "/usr/lib/python3.14/logging/__init__.py", line 715, in format
+    s = self.formatMessage(record)
+  File "/usr/lib/python3.14/logging/__init__.py", line 684, in formatMessage
+    return self._style.format(record)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/usr/lib/python3.14/logging/__init__.py", line 474, in format
+    raise ValueError('Formatting field not found in record: %s' % e)
+ValueError: Formatting field not found in record: 'levelnome'
+Call stack:
+  File "/home/ana/padaria/chave.py", line 4, in &lt;module&gt;
+    logging.warning("Teste")
+Message: 'Teste'
+Arguments: ()
+</pre>
+<p>Dois tracebacks, ligados por "durante o tratamento da exceção acima, aconteceu outra". Vá direto às últimas linhas de cada um: <code>KeyError: 'levelnome'</code> e <code>Formatting field not found in record: 'levelnome'</code> ("campo de formatação não encontrado no registro"). O nome certo é <code>levelname</code>, em inglês. O erro aparece em <strong>toda</strong> mensagem, não só na primeira. <strong>Como consertar:</strong> confira os nomes das lacunas na tabela da seção 3.</p>
+</div>
+
+<div class="cenario">
+<strong>Um nível que não existe</strong>
+<pre class="file" data-file="nivel.py">import logging
+
+logging.basicConfig(level="DEBUGG")
+</pre>
+<pre class="term" data-cwd="~/padaria">$ python3 nivel.py
+Traceback (most recent call last):
+  File "/home/ana/padaria/nivel.py", line 3, in &lt;module&gt;
+    logging.basicConfig(level="DEBUGG")
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/logging/__init__.py", line 2120, in basicConfig
+    root.setLevel(level)
+    ~~~~~~~~~~~~~^^^^^^^
+  File "/usr/lib/python3.14/logging/__init__.py", line 1495, in setLevel
+    self.level = _checkLevel(level)
+                 ~~~~~~~~~~~^^^^^^^
+  File "/usr/lib/python3.14/logging/__init__.py", line 210, in _checkLevel
+    raise ValueError("Unknown level: %r" % level)
+ValueError: Unknown level: 'DEBUGG'
+</pre>
+<p>Desta vez é um erro de verdade, que para o programa: <code>ValueError: Unknown level: 'DEBUGG'</code>, "nível desconhecido". O nível como texto tem de ser um dos cinco nomes, em maiúsculas. <strong>Como evitar:</strong> prefira as constantes (<code>logging.DEBUG</code>): um nome errado nelas dá <code>AttributeError</code> na hora, com a sugestão do Python:</p>
+<pre class="term" data-cwd="~/padaria">$ python3 -c "import logging; logging.basicConfig(level=logging.DEBUGG)"
+Traceback (most recent call last):
+  File "&lt;string&gt;", line 1, in &lt;module&gt;
+    import logging; logging.basicConfig(level=logging.DEBUGG)
+                                              ^^^^^^^^^^^^^^
+AttributeError: module 'logging' has no attribute 'DEBUGG'. Did you mean: 'DEBUG'?
+</pre>
+</div>
+
+<div class="cenario">
+<strong>"Meu <code>debug</code> não aparece"</strong>
+<p>É o caso da seção 1: sem <code>basicConfig</code>, o nível mínimo é <code>WARNING</code>, e <code>debug</code> e <code>info</code> somem em silêncio. <strong>Como consertar:</strong> <code>logging.basicConfig(level=logging.DEBUG)</code> no começo do programa.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Código</th><th>O que faz</th></tr>
+<tr><td><code>logging.debug/info/warning/error/critical("msg")</code></td><td>Registra uma mensagem com aquele nível</td></tr>
+<tr><td><code>logging.warning("x = %s", x)</code></td><td>Mensagem com lacuna preenchida pelo argumento</td></tr>
+<tr><td><code>logging.exception("msg")</code></td><td>Dentro de um <code>except</code>: nível <code>ERROR</code> + o traceback</td></tr>
+<tr><td><code>logging.basicConfig(level=logging.INFO)</code></td><td>O nível mínimo (padrão: <code>WARNING</code>)</td></tr>
+<tr><td><code>format="%(asctime)s %(levelname)s %(message)s"</code></td><td>O formato de cada linha</td></tr>
+<tr><td><code>datefmt="%d/%m/%Y %H:%M:%S"</code></td><td>O formato da data e hora</td></tr>
+<tr><td><code>filename="x.log", encoding="utf-8"</code></td><td>Grava no arquivo (acrescentando no fim)</td></tr>
+<tr><td><code>filemode="w"</code></td><td>Começa o arquivo do zero a cada execução</td></tr>
+<tr><td><code>force=True</code></td><td>Refaz a configuração, mesmo que já exista uma</td></tr>
+<tr><td><code>log = logging.getLogger(__name__)</code></td><td>Um registrador com nome (use <code>log.info(…)</code>)</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>debug</code> e <code>info</code> não aparecem</td><td>Falta <code>basicConfig(level=…)</code>: o padrão é <code>WARNING</code></td></tr>
+<tr><td>O <code>basicConfig</code> não muda nada</td><td>Já houve uma mensagem antes dele: mova para o começo ou use <code>force=True</code></td></tr>
+<tr><td><code>--- Logging error ---</code> com <code>not all arguments converted</code></td><td>Argumento sem lacuna (a vírgula do <code>print</code>)</td></tr>
+<tr><td><code>Formatting field not found in record: '…'</code></td><td>Lacuna do <code>format</code> com nome errado</td></tr>
+<tr><td><code>ValueError: Unknown level: '…'</code></td><td>Nível como texto com nome errado</td></tr>
+<tr><td>Nada na tela, mas o programa rodou</td><td>Tem <code>filename=</code>: as mensagens foram para o arquivo</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O nível de aviso</h3>
+<p>Complete para registrar um aviso (o nível que aparece mesmo sem configurar nada):</p>
+<div class="ex-code">logging.<input data-answer="warning" aria-label="função">("Estoque de ovos baixo")</div>
+</div>
+
+<div class="exercise">
+<h3>2. Mostrar tudo</h3>
+<p>Complete para que até as mensagens de depuração apareçam:</p>
+<div class="ex-code">logging.basicConfig(level=logging.<input data-answer="DEBUG" aria-label="nível">)</div>
+</div>
+
+<div class="exercise">
+<h3>3. A lacuna da mensagem</h3>
+<p>Complete o formato para mostrar o nível e a mensagem:</p>
+<div class="ex-code">format="%(levelname)s: %(<input data-answer="message" aria-label="lacuna">)s"</div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Sem nenhuma configuração, quais destas mensagens aparecem?</p>
+<label><input type="radio" name="q4"> Todas</label>
+<label><input type="radio" name="q4"> Só <code>debug</code> e <code>info</code></label>
+<label><input type="radio" name="q4"> <code>warning</code>, <code>error</code> e <code>critical</code></label>
+<label><input type="radio" name="q4"> Só <code>critical</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. A Ana rodou três vezes um programa com <code>basicConfig(filename="padaria.log")</code>. O que tem no arquivo?</p>
+<label><input type="radio" name="q5"> Só as mensagens da última execução</label>
+<label><input type="radio" name="q5"> As mensagens das três execuções, uma depois da outra</label>
+<label><input type="radio" name="q5"> Nada: o log vai para a tela</label>
+<label><input type="radio" name="q5"> Um erro</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. Qual linha registra o estoque do jeito certo?</p>
+<label><input type="radio" name="q6"> <code>logging.warning("Estoque:", ovos)</code></label>
+<label><input type="radio" name="q6"> <code>logging.warning("Estoque: %(ovos)s")</code></label>
+<label><input type="radio" name="q6"> <code>logging.warning["Estoque", ovos]</code></label>
+<label><input type="radio" name="q6"> <code>logging.warning("Estoque: %s", ovos)</code></label>
+</div>
+
+<h3>Missão final: o erro registrado, o programa de pé</h3>
+
+<div class="trypy" data-goal="out:ERROR: Produto sem preço: torta;;out:KeyError: 'torta';;out:Total: R$ 35;;semerro">
+<p class="try-task"><strong>Missão:</strong> o caixa da padaria soma os preços, mas a <code>torta</code> não tem preço e o programa quebra. Coloque o <code>total += precos[item]</code> dentro de um <code>try</code> e, no <code>except KeyError:</code>, registre com <code>logging.exception("Produto sem preço: %s", item)</code>. O programa deve seguir até o fim e mostrar <code>Total: R$ 35</code>.</p>
+<pre class="script" data-file="main.py">import logging
+
+logging.basicConfig(format="%(levelname)s: %(message)s")
+
+precos = {"bolo": 35}
+pedido = ["bolo", "torta"]
+
+total = 0
+for item in pedido:
+    total += precos[item]
+print(f"Total: R$ {total}")
+</pre>
+<pre class="solucao" data-file="main.py">import logging
+
+logging.basicConfig(format="%(levelname)s: %(message)s")
+
+precos = {"bolo": 35}
+pedido = ["bolo", "torta"]
+
+total = 0
+for item in pedido:
+    try:
+        total += precos[item]
+    except KeyError:
+        logging.exception("Produto sem preço: %s", item)
+print(f"Total: R$ {total}")
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>logging</code> é o diário de bordo do programa: anotações com nível, que você liga, desliga e redireciona sem apagar código.</li>
+  <li>Cinco níveis, do menor ao maior: <code>DEBUG</code>, <code>INFO</code>, <code>WARNING</code>, <code>ERROR</code>, <code>CRITICAL</code>. Sem configurar, só aparecem de <code>WARNING</code> para cima.</li>
+  <li>As mensagens vão para a saída de erros (<code>stderr</code>), separadas do resultado do <code>print</code>.</li>
+  <li><code>logging.basicConfig(level=…, format=…, datefmt=…)</code>, uma vez, no começo, antes de qualquer mensagem (ou com <code>force=True</code>).</li>
+  <li><code>filename="x.log"</code> grava num arquivo, acrescentando; <code>filemode="w"</code> começa do zero.</li>
+  <li>Argumentos da mensagem preenchem lacunas <code>%s</code>: <code>logging.warning("x = %s", x)</code>. A vírgula do <code>print</code>, sem lacuna, dá <code>--- Logging error ---</code>.</li>
+  <li><code>logging.getLogger(__name__)</code> dá nome às mensagens; <code>logging.exception</code>, dentro de um <code>except</code>, registra o traceback e deixa o programa seguir.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
