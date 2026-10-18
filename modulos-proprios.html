@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python módulo próprio — criando e importando seus arquivos .py | Guia Python</title>
+<meta name="description" content="Criando seu próprio módulo em Python para quem está começando: separar funções num arquivo .py e importar no programa principal, as três formas de import com um módulo seu, constantes, docstring e help(), a pasta __pycache__, o if __name__ == &quot;__main__&quot; para testar, módulos numa pasta (pacotes) e os erros reais: import precos.py, hífen no nome, ModuleNotFoundError e AttributeError com dica.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Módulo Próprio</span></h1>
+
+<p class="intro">Na aula <a href="modulos.html">Módulos e import</a>, você usou as caixas de ferramentas que vêm com o Python. Agora a Ana quer a <strong>sua própria</strong> caixa. Ela tem três programas na lojinha (o caixa, o controle de estoque e o de entregas), e os três precisam das mesmas contas: aplicar desconto, mostrar o valor em reais. Copiar as funções nos três arquivos dá certo até o dia em que uma conta muda e ela esquece de mudar em um deles. A solução é escrever as funções <strong>uma vez</strong>, num arquivo só, e importar esse arquivo onde precisar. Esse arquivo é um módulo seu.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>Que <strong>todo arquivo <code>.py</code> é um módulo</strong>, e como importar um arquivo seu.</li>
+  <li>A separar o programa em dois arquivos: o módulo (as ferramentas) e o principal (que usa).</li>
+  <li>As formas de importar um módulo seu, e as constantes dentro dele.</li>
+  <li>A documentar o módulo com docstrings e ver tudo com <code>help()</code>.</li>
+  <li>O que é a pasta <code>__pycache__</code> que aparece sozinha.</li>
+  <li>A testar o módulo com <code>if __name__ == "__main__":</code>.</li>
+  <li>A guardar módulos numa pasta (um <strong>pacote</strong>).</li>
+  <li>Os erros reais: <code>import precos.py</code>, hífen no nome, o módulo na pasta errada e a função com nome errado.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a caixa de ferramentas da casa</h2>
+<p>A Ana tem uma caixinha onde guarda as ferramentas que ela mesma usa sempre: a trena, a chave de fenda pequena, a fita isolante. Quando precisa consertar algo na cozinha ou no quarto, ela leva <strong>a mesma caixinha</strong>. Se ela compra uma trena melhor, troca dentro da caixinha, e todos os consertos dali em diante já usam a trena nova.</p>
+
+<p>Em Python é igual, e mais fácil do que parece: <strong>qualquer arquivo <code>.py</code> já é um módulo</strong>. Se existe um arquivo <code>precos.py</code> na mesma pasta do seu programa, você escreve <code>import precos</code> (sem o <code>.py</code>) e usa o que está dentro dele. Não precisa instalar nada, nem registrar, nem configurar.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Arquivo</th><th>Papel</th><th>Tem</th></tr>
+<tr><td><code>precos.py</code></td><td>O <strong>módulo</strong>: a caixa de ferramentas</td><td>Funções e valores (constantes), e quase nada de <code>print</code></td></tr>
+<tr><td><code>main.py</code></td><td>O <strong>programa principal</strong>: quem usa as ferramentas</td><td><code>import precos</code> e a "história" do programa</td></tr>
+</table>
+</div>
+
+<p>O nome <code>main.py</code> (de <em>main</em>, "principal") é só um costume: o programa principal pode ter qualquer nome. O guia usa <code>main.py</code> porque é o mesmo nome da primeira aba nas caixas "Experimente".</p>
+
+<hr>
+
+<h2>1. O primeiro módulo</h2>
+<p>A Ana cria a pasta <code>lojinha</code> e, dentro dela, dois arquivos. Primeiro, a caixa de ferramentas:</p>
+
+<pre class="file" data-file="precos.py">"""Contas de preço da lojinha da Ana."""
+
+TAXA_ENTREGA = 7.50
+
+
+def com_desconto(preco, porcento):
+    """Devolve o preço com o desconto aplicado."""
+    return preco * (100 - porcento) / 100
+
+
+def em_reais(valor):
+    """Escreve o valor no jeito brasileiro: R$ 18,90."""
+    return f"R$ {valor:.2f}".replace(".", ",")
+</pre>
+
+<p>Depois, o programa que usa:</p>
+
+<pre class="file" data-file="main.py">import precos
+
+cafe = 18.90
+print("Café:", precos.em_reais(cafe))
+print("Com 10% de desconto:", precos.em_reais(precos.com_desconto(cafe, 10)))
+print("Entrega:", precos.em_reais(precos.TAXA_ENTREGA))
+</pre>
+
+<pre class="term">$ cd lojinha
+$ ls
+main.py
+precos.py
+$ python3 main.py
+Café: R$ 18,90
+Com 10% de desconto: R$ 17,01
+Entrega: R$ 7,50
+</pre>
+
+<dl class="anatomy">
+  <dt>"""Contas de preço…"""</dt><dd>A <a href="docstrings.html">docstring</a> do módulo: um texto logo na primeira linha do arquivo, dizendo para que ele serve.</dd>
+  <dt>TAXA_ENTREGA = 7.50</dt><dd>Uma <strong>constante</strong> do módulo: um valor que os outros programas podem ler. O nome todo em MAIÚSCULAS é o costume do Python para dizer "não mude este valor".</dd>
+  <dt>def com_desconto(…) / def em_reais(…)</dt><dd>As ferramentas: funções comuns, como as da aula <a href="funcoes.html">Funções</a>. O módulo só as <strong>define</strong>; não chama nenhuma.</dd>
+  <dt>import precos</dt><dd>No <code>main.py</code>: "traga o módulo <code>precos</code>". O Python procura um arquivo <code>precos.py</code> na pasta do programa, acha, e roda o arquivo (o que cria as funções e a constante).</dd>
+  <dt>precos.em_reais(cafe)</dt><dd>Exatamente como <code>math.sqrt</code>: o nome do módulo, um ponto e o nome da função.</dd>
+  <dt>precos.TAXA_ENTREGA</dt><dd>A constante, lida do mesmo jeito.</dd>
+</dl>
+
+<p>O ponto principal: o <code>main.py</code> não sabe <strong>como</strong> o desconto é calculado. Se amanhã a conta mudar, a Ana muda no <code>precos.py</code>, e o caixa, o estoque e as entregas passam a usar a conta nova sem mudar uma letra.</p>
+
+<h3>No editor do guia: abas</h3>
+<p>Nas caixas "Experimente", cada arquivo é uma <strong>aba</strong>. A primeira aba é o programa que roda (como <code>python3 main.py</code>), e as outras ficam na mesma pasta, prontas para o <code>import</code>. Clique na aba <code>precos.py</code> para ver e mudar o módulo.</p>
+
+<div class="trypy" data-goal="out:Com 10% de acréscimo: 110.0;;semerro">
+<p class="try-task"><strong>Missão:</strong> o <code>main.py</code> chama <code>precos.com_acrescimo(100, 10)</code>, mas essa função ainda não existe (rode e veja o erro). Vá na aba <code>precos.py</code> e crie a função <code>com_acrescimo(preco, porcento)</code>, parecida com a <code>com_desconto</code>, só que somando a porcentagem.</p>
+<pre class="script" data-file="main.py">import precos
+
+print("Com 10% de desconto:", precos.com_desconto(100, 10))
+print("Com 10% de acréscimo:", precos.com_acrescimo(100, 10))
+</pre>
+<pre class="script" data-file="precos.py">"""Contas de preço da lojinha da Ana."""
+
+
+def com_desconto(preco, porcento):
+    """Devolve o preço com o desconto aplicado."""
+    return preco * (100 - porcento) / 100
+</pre>
+<pre class="solucao" data-file="precos.py">"""Contas de preço da lojinha da Ana."""
+
+
+def com_desconto(preco, porcento):
+    """Devolve o preço com o desconto aplicado."""
+    return preco * (100 - porcento) / 100
+
+
+def com_acrescimo(preco, porcento):
+    """Devolve o preço com o acréscimo aplicado."""
+    return preco * (100 + porcento) / 100
+</pre>
+</div>
+
+<hr>
+
+<h2>2. As formas de importar valem para os seus módulos</h2>
+<p>Tudo o que você aprendeu com os módulos do Python funciona igual com os seus. Com <code>from … import</code>, os nomes ficam sem o <code>precos.</code> na frente:</p>
+
+<pre class="file" data-file="main2.py">from precos import com_desconto, em_reais
+
+pedido = [18.90, 2.50, 5.99]
+total = sum(pedido)
+print("Total:", em_reais(total))
+print("Com 5% de desconto:", em_reais(com_desconto(total, 5)))
+</pre>
+
+<pre class="term">$ python3 main2.py
+Total: R$ 27,39
+Com 5% de desconto: R$ 26,02
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Como se usa</th><th>Quando usar</th></tr>
+<tr><td><code>import precos</code></td><td><code>precos.em_reais(10)</code></td><td>O padrão: fica claro que a função é <strong>sua</strong>, do <code>precos</code></td></tr>
+<tr><td><code>from precos import em_reais</code></td><td><code>em_reais(10)</code></td><td>Poucas funções, usadas muitas vezes</td></tr>
+<tr><td><code>import precos as p</code></td><td><code>p.em_reais(10)</code></td><td>Raramente para módulos seus: dê ao arquivo um nome bom desde o começo</td></tr>
+<tr><td><code>from precos import *</code></td><td><code>em_reais(10)</code></td><td>Evite, pelos mesmos motivos da <a href="modulos.html">aula anterior</a></td></tr>
+</table>
+</div>
+
+<h3>Um bom nome para o módulo</h3>
+<p>O nome do arquivo vira um nome do Python (<code>import precos</code>), então ele segue as mesmas regras de um nome de variável (aula <a href="nomes-variaveis.html">Nomes de Variáveis</a>):</p>
+<ul>
+  <li>minúsculas, com <code>_</code> entre as palavras: <code>precos.py</code>, <code>loja_util.py</code>, <code>contas_casa.py</code>;</li>
+  <li>sem espaços, sem hífen (<code>loja-util.py</code> não dá para importar) e sem começar com número;</li>
+  <li>sem acento, por costume (<code>preços.py</code> funciona, mas complica a vida em alguns sistemas);</li>
+  <li><strong>nunca</strong> o nome de um módulo do Python (<code>random.py</code>, <code>json.py</code>, <code>math.py</code>): o seu passa na frente e esconde o de verdade, como você viu na aula <a href="modulos.html">Módulos e import</a>.</li>
+</ul>
+
+<div class="trypy" data-goal="out:Total: R$ 27,39;;out:Com 5% de desconto: R$ 26,02;;src:^from precos import">
+<p class="try-task"><strong>Missão:</strong> reescreva o <code>main.py</code> para usar <code>from precos import …</code> e chamar as duas funções <strong>sem</strong> o <code>precos.</code> na frente. A saída deve continuar a mesma.</p>
+<pre class="script" data-file="main.py">import precos
+
+pedido = [18.90, 2.50, 5.99]
+total = sum(pedido)
+print("Total:", precos.em_reais(total))
+print("Com 5% de desconto:", precos.em_reais(precos.com_desconto(total, 5)))
+</pre>
+<pre class="script" data-file="precos.py">"""Contas de preço da lojinha da Ana."""
+
+
+def com_desconto(preco, porcento):
+    """Devolve o preço com o desconto aplicado."""
+    return preco * (100 - porcento) / 100
+
+
+def em_reais(valor):
+    """Escreve o valor no jeito brasileiro: R$ 18,90."""
+    return f"R$ {valor:.2f}".replace(".", ",")
+</pre>
+<pre class="solucao" data-file="main.py">from precos import com_desconto, em_reais
+
+pedido = [18.90, 2.50, 5.99]
+total = sum(pedido)
+print("Total:", em_reais(total))
+print("Com 5% de desconto:", em_reais(com_desconto(total, 5)))
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Documentando: docstrings e <code>help()</code></h2>
+<p>As docstrings que a Ana escreveu no <code>precos.py</code> não são só enfeite. O <code>help()</code> junta todas elas num manual do módulo:</p>
+
+<pre class="file" data-file="ajuda.py">import precos
+
+help(precos)
+</pre>
+
+<pre class="term">$ python3 ajuda.py
+Help on module precos:
+
+NAME
+    precos - Contas de preço da lojinha da Ana.
+
+FUNCTIONS
+    com_desconto(preco, porcento)
+        Devolve o preço com o desconto aplicado.
+
+    em_reais(valor)
+        Escreve o valor no jeito brasileiro: R$ 18,90.
+
+DATA
+    TAXA_ENTREGA = 7.5
+
+FILE
+    /home/ana/lojinha/precos.py
+
+
+</pre>
+
+<p>O manual saiu em inglês nos títulos (<code>NAME</code> = nome, <code>FUNCTIONS</code> = funções, <code>DATA</code> = dados, <code>FILE</code> = arquivo), mas o conteúdo é o que a Ana escreveu: a docstring do módulo na primeira linha, cada função com os seus parâmetros e a sua docstring, a constante com o valor. É o mesmo manual que você vê com <code>help(math)</code>. Num terminal de verdade, ele abre numa tela própria; aperte <code>q</code> para sair.</p>
+
+<hr>
+
+<h2>4. A pasta <code>__pycache__</code></h2>
+<p>Depois de rodar o <code>main.py</code> pela primeira vez, apareceu uma pasta que a Ana não criou:</p>
+
+<pre class="term">$ ls
+__pycache__
+main.py
+precos.py
+$ tree
+.
+├── main.py
+├── precos.py
+└── __pycache__
+    └── precos.cpython-314.pyc
+
+2 directories, 3 files
+</pre>
+
+<p>Quando um módulo é importado, o Python o traduz para um formato próprio, mais rápido de carregar (o <em>bytecode</em>), e guarda o resultado em <code>__pycache__</code> (de <em>cache</em>, "esconderijo", um lugar para guardar coisas prontas). O nome <code>precos.cpython-314.pyc</code> diz: o <code>precos</code>, traduzido pelo CPython 3.14, em formato <code>.pyc</code> (<em>Python compiled</em>).</p>
+
+<ul>
+  <li>Na próxima vez, se o <code>precos.py</code> não mudou, o Python usa a tradução pronta. Se mudou, ele traduz de novo sozinho.</li>
+  <li>Repare que só o <strong>módulo</strong> ganhou <code>.pyc</code>: o programa principal (<code>main.py</code>) é traduzido toda vez e não fica guardado.</li>
+  <li>Pode apagar a pasta quando quiser: ela volta na próxima execução. E não precisa mandá-la junto quando passar o programa para alguém.</li>
+</ul>
+
+<hr>
+
+<h2>5. Testando o módulo com <code>if __name__ == "__main__":</code></h2>
+<p>Enquanto escreve um módulo, dá vontade de testar as funções ali mesmo, no fim do arquivo. Mas você viu na aula <a href="modulos.html">Módulos e import</a> que <strong>importar roda o arquivo</strong>: um <code>print</code> de teste solto no módulo aparece também no programa que o importa. A solução é guardar os testes no bloco que só roda quando o módulo é o principal:</p>
+
+<pre class="file" data-file="precos.py">"""Contas de preço da lojinha da Ana."""
+
+TAXA_ENTREGA = 7.50
+
+
+def com_desconto(preco, porcento):
+    """Devolve o preço com o desconto aplicado."""
+    return preco * (100 - porcento) / 100
+
+
+def em_reais(valor):
+    """Escreve o valor no jeito brasileiro: R$ 18,90."""
+    return f"R$ {valor:.2f}".replace(".", ",")
+
+
+if __name__ == "__main__":
+    print("Testando o módulo precos")
+    print(com_desconto(100, 10), "deveria ser 90.0")
+    print(em_reais(1234.5), "deveria ser R$ 1234,50")
+</pre>
+
+<pre class="term">$ python3 precos.py                     « rodando o módulo sozinho: os testes rodam
+Testando o módulo precos
+90.0 deveria ser 90.0
+R$ 1234,50 deveria ser R$ 1234,50
+$ python3 main.py                       « importado: os testes ficam quietos
+Café: R$ 18,90
+Com 10% de desconto: R$ 17,01
+Entrega: R$ 7,50
+</pre>
+
+<p>Com <code>python3 precos.py</code>, o <code>__name__</code> do módulo vale <code>"__main__"</code> e os testes rodam. Importado pelo <code>main.py</code>, ele vale <code>"precos"</code>, e o bloco é pulado. Os testes "de verdade", que conferem sozinhos se o resultado está certo, ficam para a aula <a href="testes.html">Testes</a>.</p>
+
+<hr>
+
+<h2>6. Módulos numa pasta: pacotes</h2>
+<p>Quando os módulos se multiplicam, a Ana pode guardá-los numa subpasta, como gavetas numa cômoda. Uma pasta de módulos se chama <strong>pacote</strong> (<em>package</em>). Ela cria a pasta <code>util</code> e coloca o <code>precos.py</code> lá dentro:</p>
+
+<pre class="term">$ mkdir util
+$ mv precos.py util/
+$ tree
+.
+├── main_pacote.py
+├── main.py
+└── util
+    └── precos.py
+
+2 directories, 3 files
+</pre>
+
+<p>Para importar, o caminho usa <strong>ponto</strong> no lugar da barra: "da pasta <code>util</code>, traga o <code>precos</code>":</p>
+
+<pre class="file" data-file="main_pacote.py">from util import precos
+
+print("Café:", precos.em_reais(18.90))
+</pre>
+
+<pre class="term">$ python3 main_pacote.py
+Café: R$ 18,90
+</pre>
+
+<p>Também valem <code>import util.precos</code> (e aí se usa <code>util.precos.em_reais(…)</code>) e <code>from util.precos import em_reais</code>. É assim que os pacotes grandes se organizam: <code>from os import path</code>, <code>import json.decoder</code>.</p>
+
+<div class="note">
+<strong>E o <code>__init__.py</code>?</strong>
+<p>Em muitos projetos, você vai ver dentro da pasta de um pacote um arquivo chamado <code>__init__.py</code>, quase sempre vazio. Ele marca a pasta como pacote "de verdade" e roda na primeira vez que o pacote é importado. Desde o Python 3.3 ele não é obrigatório (o exemplo acima funcionou sem ele), mas criar um <code>__init__.py</code> vazio continua sendo o costume, e algumas ferramentas esperam encontrá-lo.</p>
+</div>
+
+<div class="warning">
+<strong>As abas do editor ficam todas na mesma pasta</strong>
+<p>No editor do guia, os arquivos das abas vão todos para a pasta do programa, sem subpastas. Os pacotes, por isso, você experimenta no seu terminal; nas caixas "Experimente" desta aula, os módulos ficam ao lado do <code>main.py</code>.</p>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong><code>import precos.py</code>, com a extensão</strong>
+<pre class="file" data-file="main_ponto.py">import precos.py
+</pre>
+<pre class="term">$ python3 main_ponto.py
+Traceback (most recent call last):
+  File "/home/ana/lojinha/main_ponto.py", line 1, in &lt;module&gt;
+    import precos.py
+ModuleNotFoundError: No module named 'precos.py'; 'precos' is not a package
+</pre>
+<p>"Não existe módulo chamado <code>'precos.py'</code>; <code>'precos'</code> não é um pacote." O ponto, no <code>import</code>, quer dizer "de dentro de" (como no <code>from util import precos</code>). Então o Python achou o <code>precos</code> e foi procurar, <strong>dentro</strong> dele, um módulo chamado <code>py</code>. Como <code>precos</code> é um arquivo, e não uma pasta, ele reclama. <strong>Como consertar:</strong> <code>import precos</code>, sem o <code>.py</code>. O nome do módulo é o nome do arquivo <strong>sem</strong> a extensão.</p>
+</div>
+
+<div class="cenario">
+<strong>Hífen no nome do arquivo: <code>SyntaxError</code></strong>
+<pre class="file" data-file="main_hifen.py">import loja-util
+</pre>
+<pre class="term">$ python3 main_hifen.py
+  File "/home/ana/lojinha/main_hifen.py", line 1
+    import loja-util
+               ^
+SyntaxError: invalid syntax
+</pre>
+<p>"Sintaxe inválida", com o <code>^</code> embaixo do hífen. Para o Python, o <code>-</code> é o sinal de menos: ele leu "importe <code>loja</code>, menos <code>util</code>", o que não faz sentido. Repare que não há <code>Traceback</code>: o erro é de <strong>escrita</strong> (o programa nem começou a rodar). <strong>Como consertar:</strong> renomeie o arquivo para <code>loja_util.py</code>, com sublinhado, e importe com <code>import loja_util</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Nome do arquivo errado: <code>ModuleNotFoundError</code></strong>
+<pre class="file" data-file="main_errado.py">import preco
+
+print(preco.em_reais(10))
+</pre>
+<pre class="term">$ python3 main_errado.py
+Traceback (most recent call last):
+  File "/home/ana/lojinha/main_errado.py", line 1, in &lt;module&gt;
+    import preco
+ModuleNotFoundError: No module named 'preco'
+</pre>
+<p>O arquivo se chama <code>precos.py</code>, com <strong>s</strong>; não existe nenhum <code>preco.py</code>. <strong>Como consertar:</strong> o nome no <code>import</code> tem de ser igual ao nome do arquivo, letra por letra (inclusive maiúsculas: <code>Precos.py</code> e <code>precos.py</code> são arquivos diferentes no Linux).</p>
+</div>
+
+<div class="cenario">
+<strong>O módulo em outra pasta: <code>ModuleNotFoundError</code></strong>
+<p>Na seção 6, a Ana moveu o <code>precos.py</code> para a pasta <code>util</code>. E o <code>main.py</code> antigo, que fazia só <code>import precos</code>?</p>
+<pre class="term">$ python3 lojinha/main.py
+Traceback (most recent call last):
+  File "/home/ana/lojinha/main.py", line 1, in &lt;module&gt;
+    import precos
+ModuleNotFoundError: No module named 'precos'
+</pre>
+<p>O Python procura os módulos na pasta <strong>do programa</strong> (aqui, <code>lojinha</code>), na biblioteca padrão e nos pacotes instalados. Ele não vasculha as subpastas por conta própria. <strong>Como consertar:</strong> deixe o módulo ao lado do programa, ou importe com o caminho do pacote: <code>from util import precos</code>.</p>
+<p>Repare na primeira linha: a Ana rodou <code>python3 lojinha/main.py</code> de <strong>fora</strong> da pasta, e isso não importa. A pasta que conta é a do <code>main.py</code>, e não a pasta em que o terminal está. Antes de mover o módulo, rodar de fora funcionava normalmente:</p>
+<pre class="term">$ python3 lojinha/main.py
+Café: R$ 18,90
+Com 10% de desconto: R$ 17,01
+Entrega: R$ 7,50
+</pre>
+</div>
+
+<div class="cenario">
+<strong>Função com nome errado: <code>AttributeError</code> com dica</strong>
+<pre class="file" data-file="main_func.py">import precos
+
+print(precos.em_real(10))
+</pre>
+<pre class="term">$ python3 main_func.py
+Traceback (most recent call last):
+  File "/home/ana/lojinha/main_func.py", line 3, in &lt;module&gt;
+    print(precos.em_real(10))
+          ^^^^^^^^^^^^^^
+AttributeError: module 'precos' has no attribute 'em_real'. Did you mean: 'em_reais'?
+</pre>
+<p>"O módulo <code>precos</code> não tem o atributo <code>em_real</code>. Você quis dizer <code>'em_reais'</code>?" O Python olhou os nomes que existem no <strong>seu</strong> módulo e achou um parecido. <strong>Como consertar:</strong> <code>precos.em_reais(10)</code>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>precos.py</code> na pasta do programa</td><td>Já é um módulo: <code>import precos</code></td></tr>
+<tr><td><code>import precos</code></td><td>Roda o <code>precos.py</code> (uma vez) e dá acesso a <code>precos.nome</code></td></tr>
+<tr><td><code>from precos import em_reais</code></td><td>Traz só esse nome</td></tr>
+<tr><td><code>"""Docstring."""</code> na 1ª linha do arquivo</td><td>Explica o módulo; aparece no <code>help()</code></td></tr>
+<tr><td><code>NOME_EM_MAIUSCULAS = valor</code></td><td>Constante do módulo (por costume, não se muda)</td></tr>
+<tr><td><code>help(precos)</code></td><td>O manual do módulo, montado das docstrings</td></tr>
+<tr><td><code>if __name__ == "__main__":</code></td><td>Bloco que só roda com <code>python3 precos.py</code>, não no <code>import</code></td></tr>
+<tr><td><code>__pycache__/precos.cpython-314.pyc</code></td><td>A tradução pronta do módulo; pode apagar</td></tr>
+<tr><td><code>from util import precos</code></td><td>Importa o <code>util/precos.py</code> (pacote <code>util</code>)</td></tr>
+<tr><td><code>util/__init__.py</code></td><td>Marca a pasta como pacote (opcional, mas costume)</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>No module named 'precos.py'; 'precos' is not a package</code></td><td>Escreveu o <code>.py</code> no <code>import</code></td></tr>
+<tr><td><code>SyntaxError: invalid syntax</code> no <code>import</code></td><td>Hífen ou espaço no nome do arquivo</td></tr>
+<tr><td><code>ModuleNotFoundError: No module named 'x'</code></td><td>Nome diferente do arquivo, ou o arquivo está em outra pasta</td></tr>
+<tr><td><code>AttributeError: module 'precos' has no attribute 'x'</code></td><td>A função não existe no módulo (nome errado, ou ainda não foi criada)</td></tr>
+<tr><td>Os testes do módulo aparecem no programa principal</td><td>Faltou o <code>if __name__ == "__main__":</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Importando o arquivo</h3>
+<p>A Ana criou o arquivo <code>contas_casa.py</code>. Complete o <code>import</code>:</p>
+<div class="ex-code">import <input data-answer="contas_casa" aria-label="nome do módulo"></div>
+</div>
+
+<div class="exercise">
+<h3>2. Usando a função</h3>
+<p>Depois de <code>import precos</code>, complete para chamar a função <code>em_reais</code> do módulo:</p>
+<div class="ex-code">print(<input data-answer="precos.em_reais" aria-label="chamada">(10))</div>
+</div>
+
+<div class="exercise">
+<h3>3. Da subpasta</h3>
+<p>O módulo está em <code>util/precos.py</code>. Complete:</p>
+<div class="ex-code"><input data-answer="from" aria-label="palavra 1"> util <input data-answer="import" aria-label="palavra 2"> precos</div>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">4. Qual destes nomes de arquivo dá para importar sem problemas?</p>
+<label><input type="radio" name="q4"> <code>loja-util.py</code></label>
+<label><input type="radio" name="q4"> <code>2026_vendas.py</code></label>
+<label><input type="radio" name="q4"> <code>random.py</code></label>
+<label><input type="radio" name="q4"> <code>loja_util.py</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. A pasta <code>__pycache__</code> apareceu depois que a Ana rodou o programa. O que fazer com ela?</p>
+<label><input type="radio" name="q5"> Nunca apagar, ou o módulo para de funcionar</label>
+<label><input type="radio" name="q5"> Nada: é a tradução pronta dos módulos; pode apagar, que ela volta sozinha</label>
+<label><input type="radio" name="q5"> Apagar sempre antes de rodar</label>
+<label><input type="radio" name="q5"> Copiar para dentro de cada programa</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. O <code>precos.py</code> termina com <code>print("teste", com_desconto(100, 10))</code>, sem <code>if</code>. O que acontece quando o <code>main.py</code> faz <code>import precos</code>?</p>
+<label><input type="radio" name="q6"> O "teste" aparece na saída do <code>main.py</code>, porque importar roda o arquivo</label>
+<label><input type="radio" name="q6"> Nada aparece: o <code>import</code> só lê as funções</label>
+<label><input type="radio" name="q6"> Dá erro, porque módulos não podem ter <code>print</code></label>
+<label><input type="radio" name="q6"> O teste roda só na segunda vez</label>
+</div>
+
+<h3>Missão final: o módulo das notas</h3>
+
+<div class="trypy" data-goal="out:Bia: média 8.0, aprovada;;out:Caio: média 5.5, em recuperação;;semerro">
+<p class="try-task"><strong>Missão:</strong> o <code>main.py</code> está pronto e usa duas funções do módulo <code>notas</code>, que está vazio. Na aba <code>notas.py</code>, escreva:</p>
+<ul>
+  <li><code>media(lista)</code>: devolve a média da lista (a soma dividida pela quantidade);</li>
+  <li><code>situacao(valor)</code>: devolve <code>"aprovada"</code> se o valor for 7 ou mais, e <code>"em recuperação"</code> se for menos.</li>
+</ul>
+<pre class="script" data-file="main.py">import notas
+
+turma = {"Bia": [8.0, 7.5, 8.5], "Caio": [5.0, 6.0, 5.5]}
+
+for nome, lista in turma.items():
+    m = notas.media(lista)
+    print(f"{nome}: média {m:.1f}, {notas.situacao(m)}")
+</pre>
+<pre class="script" data-file="notas.py">"""Contas com as notas da turma."""
+
+# escreva as funções aqui
+</pre>
+<pre class="solucao" data-file="notas.py">"""Contas com as notas da turma."""
+
+
+def media(lista):
+    """Devolve a média dos números da lista."""
+    return sum(lista) / len(lista)
+
+
+def situacao(valor):
+    """Diz se a média aprova ou leva para a recuperação."""
+    if valor &gt;= 7:
+        return "aprovada"
+    return "em recuperação"
+</pre>
+</div>
+
+<p>Experimente também acrescentar um <code>if __name__ == "__main__":</code> com testes no fim do <code>notas.py</code>, e confira que eles não aparecem quando você roda a caixa.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Todo arquivo <code>.py</code> é um módulo. Com <code>precos.py</code> na pasta do programa, <code>import precos</code> (sem o <code>.py</code>) dá acesso a <code>precos.com_desconto</code>, <code>precos.TAXA_ENTREGA</code>…</li>
+  <li>Separe as <strong>ferramentas</strong> (funções e constantes, no módulo) da <strong>história</strong> (o programa principal). Uma conta escrita uma vez serve a vários programas.</li>
+  <li>Nomes de módulo: minúsculas com <code>_</code>, sem hífen, sem espaço, nunca o nome de um módulo do Python.</li>
+  <li>Docstrings no módulo e nas funções viram o manual do <code>help()</code>.</li>
+  <li>A pasta <code>__pycache__</code> guarda a tradução pronta dos módulos; pode apagar.</li>
+  <li>Testes do módulo vão dentro do <code>if __name__ == "__main__":</code>, para não vazar no programa que importa.</li>
+  <li>Uma pasta de módulos é um pacote: <code>from util import precos</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
