@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python venv — um ambiente virtual para cada projeto | Guia Python</title>
+<meta name="description" content="Ambientes virtuais (venv) para quem está começando: o que são, por que cada projeto tem o seu, como criar, ativar e desativar, o prompt (.venv), which python, o que tem dentro da pasta .venv, recriar a partir do requirements.txt e os erros reais do terminal.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">venv</span></h1>
+
+<p class="intro">Na aula <a href="pip.html">pip: Instalando Pacotes</a>, o Ubuntu recusou o <code>pip install</code> e sugeriu "crie um ambiente virtual". Lá você usou três comandos sem muita explicação. Nesta aula você vai entender o que é esse <strong>ambiente virtual</strong> (em inglês, <em>virtual environment</em>, abreviado <strong>venv</strong>), o que tem dentro dele, como ligar e desligar, e por que todo projeto Python sério tem o seu.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é um ambiente virtual e por que <strong>cada projeto tem o seu</strong>.</li>
+  <li>A criar um com <code>python3 -m venv .venv</code> e a ver o que tem dentro da pasta.</li>
+  <li>A <strong>ativar</strong> (<code>source .venv/bin/activate</code>), reconhecer o prompt <code>(.venv)</code> e <strong>desativar</strong> (<code>deactivate</code>).</li>
+  <li>A conferir qual Python está em uso: <code>which python</code> e <code>sys.prefix</code>.</li>
+  <li>A apagar e recriar o ambiente a partir do <code>requirements.txt</code>.</li>
+  <li>Os erros reais: ativar sem <code>source</code>, pasta errada, copiar o projeto com a <code>.venv</code> junto.</li>
+</ul>
+</div>
+
+<div class="warning">
+<strong>Esta é uma aula de terminal</strong>
+<p>Ambientes virtuais são criados e ativados no <strong>terminal</strong> do seu computador. As janelas de terminal mostram o que o Ubuntu 26.04 da Ana respondeu de verdade. O editor do guia (o "Experimente") roda o Python do navegador, que não tem ambientes virtuais; as caixas desta aula treinam a lógica com os arquivos do ambiente.</p>
+</div>
+
+<hr>
+
+<h2>A ideia: uma caixa de ferramentas para cada trabalho</h2>
+<p>A Ana faz bolos para fora e também conserta bicicletas no fim de semana. Ela não guarda as formas de bolo junto com as chaves de boca: cada atividade tem a sua caixa, com as ferramentas certas. Se um dia ela trocar a batedeira, a caixa da bicicleta nem fica sabendo.</p>
+
+<p>Com os programas Python é igual. A lojinha da Ana usa o <code>requests</code> na versão mais nova; a agenda, que ela escreveu no ano passado, só funciona com uma versão mais antiga. Se os dois projetos usassem o mesmo Python, com os mesmos pacotes, um deles ia quebrar. A solução é dar a cada projeto a sua caixa:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sem ambiente virtual</th><th>Com um ambiente virtual por projeto</th></tr>
+<tr><td>Todos os programas dividem os mesmos pacotes</td><td>Cada projeto tem os pacotes dele, numa pasta dele</td></tr>
+<tr><td>Uma versão de cada pacote no computador inteiro</td><td>A lojinha com o <code>requests</code> 2.34.2, a agenda com o 2.32.3, ao mesmo tempo</td></tr>
+<tr><td>No Ubuntu, o <code>pip install</code> nem funciona (PEP 668)</td><td>O <code>pip</code> funciona, sem <code>sudo</code></td></tr>
+<tr><td>Difícil saber do que o projeto precisa</td><td>O <code>pip freeze</code> do ambiente é a lista exata</td></tr>
+</table>
+</div>
+
+<p>Um ambiente virtual é só isso: uma <strong>pasta</strong> com um Python "particular" e um lugar para os pacotes daquele projeto. Nada é instalado no sistema, e apagar a pasta desfaz tudo.</p>
+
+<hr>
+
+<h2>1. Criando: <code>python3 -m venv .venv</code></h2>
+<p>A Ana vai começar um projeto novo, as encomendas da padaria. Primeiro a pasta do projeto, depois o ambiente dentro dela:</p>
+
+<pre class="term">$ mkdir padaria
+$ cd padaria
+$ python3 -m venv .venv
+$ ls -a
+.
+..
+.venv
+</pre>
+
+<dl class="anatomy">
+  <dt>python3</dt><dd>O Python que vai servir de base para o ambiente (o do sistema, o 3.14).</dd>
+  <dt>-m venv</dt><dd>"Rode o módulo <code>venv</code>": ele vem com o Python e sabe criar ambientes.</dd>
+  <dt>.venv</dt><dd>O nome da pasta do ambiente. Pode ser qualquer nome, mas <code>.venv</code> é o costume: os editores de código (como o VS Code) procuram por ele, e o ponto na frente deixa a pasta "escondida" no <code>ls</code> comum (por isso o <code>-a</code>, de "all", "todos").</dd>
+</dl>
+
+<p>O comando não imprime nada: no terminal, silêncio quer dizer que deu certo. Leva um ou dois segundos, porque ele também instala um <code>pip</code> novinho lá dentro.</p>
+
+<h3>O que tem dentro da <code>.venv</code></h3>
+<pre class="term" data-cwd="~/padaria">$ ls -a .venv
+.
+..
+.gitignore
+bin
+include
+lib
+lib64
+pyvenv.cfg
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Item</th><th>O que é</th></tr>
+<tr><td><code>bin/</code></td><td>Os programas do ambiente: <code>python</code>, <code>pip</code> e o script <code>activate</code> (de "binários")</td></tr>
+<tr><td><code>lib/python3.14/site-packages/</code></td><td>Onde o <code>pip</code> do ambiente instala os pacotes</td></tr>
+<tr><td><code>include/</code>, <code>lib64</code></td><td>Detalhes internos; você não mexe neles</td></tr>
+<tr><td><code>pyvenv.cfg</code></td><td>A "ficha" do ambiente: de qual Python ele saiu</td></tr>
+<tr><td><code>.gitignore</code></td><td>Um aviso para o git ignorar a pasta inteira (o ambiente não vai para o repositório)</td></tr>
+</table>
+</div>
+
+<pre class="term" data-cwd="~/padaria">$ cat .venv/pyvenv.cfg
+home = /usr/bin
+include-system-site-packages = false
+version = 3.14.4
+executable = /usr/bin/python3.14
+command = /usr/bin/python3 -m venv /home/ana/padaria/.venv
+$ cat .venv/.gitignore
+# Created by venv; see https://docs.python.org/3/library/venv.html
+*
+</pre>
+
+<dl class="anatomy">
+  <dt>home = /usr/bin</dt><dd>A pasta do Python original.</dd>
+  <dt>include-system-site-packages = false</dt><dd>"Incluir os pacotes do sistema? Não." O ambiente começa limpo e não enxerga os pacotes instalados pelo <code>apt</code>.</dd>
+  <dt>version = 3.14.4</dt><dd>A versão do Python do ambiente.</dd>
+  <dt>command = …</dt><dd>O comando que criou o ambiente, com o caminho completo da pasta. Guarde isso: o ambiente sabe <strong>onde</strong> foi criado.</dd>
+  <dt>*</dt><dd>No <code>.gitignore</code>, o asterisco quer dizer "ignore tudo nesta pasta".</dd>
+</dl>
+
+<p>E a pasta <code>bin</code>:</p>
+<pre class="term" data-cwd="~/padaria">$ ls -l .venv/bin
+total 36
+-rw-r--r-- 1 ana ana 9031 Oct 18 11:48 Activate.ps1
+-rw-r--r-- 1 ana ana 2158 Oct 18 11:48 activate
+-rw-r--r-- 1 ana ana  914 Oct 18 11:48 activate.csh
+-rw-r--r-- 1 ana ana 2185 Oct 18 11:48 activate.fish
+-rwxrwxr-x 1 ana ana  240 Oct 18 11:48 pip
+-rwxrwxr-x 1 ana ana  240 Oct 18 11:48 pip3
+-rwxrwxr-x 1 ana ana  240 Oct 18 11:48 pip3.14
+lrwxrwxrwx 1 ana ana    7 Oct 18 11:48 python -&gt; python3
+lrwxrwxrwx 1 ana ana   16 Oct 18 11:48 python3 -&gt; /usr/bin/python3
+lrwxrwxrwx 1 ana ana    7 Oct 18 11:48 python3.14 -&gt; python3
+lrwxrwxrwx 1 ana ana    7 Oct 18 11:48 𝜋thon -&gt; python3
+</pre>
+
+<dl class="anatomy">
+  <dt>activate</dt><dd>O script que liga o ambiente no bash (o terminal do Ubuntu). Os outros (<code>.csh</code>, <code>.fish</code>, <code>.ps1</code>) são para outros terminais, como o PowerShell do Windows.</dd>
+  <dt>pip, pip3, pip3.14</dt><dd>Três nomes para o mesmo <code>pip</code>, o do ambiente.</dd>
+  <dt>python3 -&gt; /usr/bin/python3</dt><dd>A seta indica um <strong>atalho</strong> (link simbólico): o Python do ambiente não é uma cópia inteira, é um atalho para o Python do sistema. O que muda é <strong>onde ele procura os pacotes</strong>.</dd>
+  <dt>python -&gt; python3</dt><dd>Dentro do ambiente existe o comando <code>python</code>, sem o 3. Fora dele, no Ubuntu, não existe.</dd>
+  <dt>𝜋thon</dt><dd>Uma brincadeira do Python <span class="versao">3.14</span> (o "pi" de 3,14…): mais um atalho, com a letra grega π. Funciona, mas ninguém usa no dia a dia.</dd>
+</dl>
+
+<hr>
+
+<h2>2. Ativando: <code>source .venv/bin/activate</code></h2>
+<p>Criar o ambiente não basta: o terminal continua usando o Python do sistema. Veja:</p>
+
+<pre class="term" data-cwd="~/padaria">$ which python3
+/usr/bin/python3
+$ python3 -c "import sys; print(sys.prefix)"
+/usr
+</pre>
+
+<p><code>which</code> ("qual") mostra qual programa roda quando você digita um nome. E <code>sys.prefix</code> é a pasta "de casa" do Python que está rodando (o módulo <code>sys</code> tem aula própria: <a href="os-sys.html">Os Módulos os e sys</a>). Os dois apontam para o sistema. Agora a Ana <strong>ativa</strong> o ambiente:</p>
+
+<pre class="term" data-cwd="~/padaria">$ source .venv/bin/activate
+(.venv) ana@notebook:~/padaria$ which python3
+/home/ana/padaria/.venv/bin/python3
+(.venv) ana@notebook:~/padaria$ which python
+/home/ana/padaria/.venv/bin/python
+(.venv) ana@notebook:~/padaria$ python -c "import sys; print(sys.prefix)"
+/home/ana/padaria/.venv
+(.venv) ana@notebook:~/padaria$ pip list
+Package Version
+------- -------
+pip     25.1.1
+</pre>
+
+<dl class="anatomy">
+  <dt>source</dt><dd>"Leia e execute este arquivo <strong>aqui</strong>, neste terminal". É obrigatório: o <code>activate</code> muda o terminal em que você está, e só o <code>source</code> deixa ele fazer isso.</dd>
+  <dt>.venv/bin/activate</dt><dd>O caminho do script, a partir da pasta do projeto.</dd>
+  <dt>(.venv)</dt><dd>O prompt ganhou o nome do ambiente na frente. É o sinal de que ele está <strong>ativo</strong>: olhe para ele sempre antes de rodar <code>pip install</code>.</dd>
+  <dt>which python3</dt><dd>Agora aponta para dentro da <code>.venv</code>.</dd>
+  <dt>pip list</dt><dd>Só o <code>pip</code>: o ambiente é novo e limpo.</dd>
+</dl>
+
+<p>O que o <code>activate</code> fez, por baixo, foi pôr a pasta <code>.venv/bin</code> na <strong>frente</strong> da lista de lugares onde o terminal procura os programas. Por isso <code>python</code> e <code>pip</code> agora são os do ambiente. Ele também criou a variável <code>VIRTUAL_ENV</code>, com o caminho do ambiente ativo (<code>echo $VIRTUAL_ENV</code> mostra).</p>
+
+<div class="note">
+<strong>Ativar vale só para aquele terminal</strong>
+<p>O ambiente fica ativo na janela (ou aba) de terminal em que você rodou o <code>source</code>, até você desativar ou fechar a janela. Abriu outro terminal? Ele começa com o ambiente desligado, e você ativa de novo. É normal rodar o <code>source .venv/bin/activate</code> toda vez que senta para trabalhar no projeto.</p>
+</div>
+
+<div class="note">
+<strong>No Windows</strong>
+<p>A criação é igual (<code>python -m venv .venv</code>), mas a pasta se chama <code>Scripts</code> em vez de <code>bin</code>, e a ativação, no PowerShell, é <code>.venv\Scripts\Activate.ps1</code>. O resto da aula vale igual.</p>
+</div>
+
+<hr>
+
+<h2>3. O próprio programa sabe se está num ambiente</h2>
+<p>Um programa Python consegue descobrir qual Python o está rodando. <code>sys.executable</code> é o caminho do Python em uso; <code>sys.base_prefix</code> é a pasta do Python original. Num ambiente virtual, <code>sys.prefix</code> (a pasta do ambiente) é diferente de <code>sys.base_prefix</code>:</p>
+
+<pre class="file" data-file="onde.py">import sys
+
+print("Python em uso:", sys.executable)
+print("Ambiente virtual?", sys.prefix != sys.base_prefix)
+</pre>
+
+<pre class="term" data-cwd="~/padaria">$ python3 onde.py
+Python em uso: /usr/bin/python3
+Ambiente virtual? False
+$ source .venv/bin/activate
+(.venv) ana@notebook:~/padaria$ python onde.py
+Python em uso: /home/ana/padaria/.venv/bin/python
+Ambiente virtual? True
+</pre>
+
+<p>O mesmo arquivo, dois resultados: o que muda é <strong>qual Python</strong> roda o programa.</p>
+
+<h3>Usar o ambiente sem ativar</h3>
+<p>Ativar é uma comodidade. Dá para chamar o Python do ambiente direto, pelo caminho, sem <code>source</code> nenhum. O resultado é o mesmo:</p>
+
+<pre class="term" data-cwd="~/padaria">$ .venv/bin/python onde.py
+Python em uso: /home/ana/padaria/.venv/bin/python
+Ambiente virtual? True
+</pre>
+
+<p>É assim que se roda um programa de um projeto a partir de outro script ou de um agendador, onde ninguém vai digitar <code>source</code>. O mesmo vale para o <code>pip</code>: <code>.venv/bin/pip install requests</code> instala no ambiente, ativo ou não. E por que o <code>.venv/bin/pip</code> sabe para qual Python instalar? Porque a primeira linha dele diz:</p>
+
+<pre class="term" data-cwd="~/padaria">$ cat .venv/bin/pip
+#!/home/ana/padaria/.venv/bin/python3
+# -*- coding: utf-8 -*-
+import re
+import sys
+from pip._internal.cli.main import main
+if __name__ == '__main__':
+    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+    sys.exit(main())
+</pre>
+
+<p>O <code>pip</code> é um programinha Python, e a linha <code>#!</code> do começo (o "shebang") diz qual Python roda ele: o da <code>.venv</code> da padaria, com o <strong>caminho completo</strong>. Isso vai ser importante no <a href="#errado">Quando dá errado</a>.</p>
+
+<div class="trypy" data-goal="out:Este ambiente usa o Python 3.14.4;;src:split;;semerro">
+<p class="try-task"><strong>Missão:</strong> o <code>pyvenv.cfg</code> tem uma linha <code>chave = valor</code> por configuração. O programa já lê o arquivo; faça ele mostrar <code>Este ambiente usa o Python 3.14.4</code>, pegando o número da linha que começa com <code>version</code>. Dica: <code>linha.split(" = ")</code> separa a chave do valor.</p>
+<pre class="script" data-file="main.py">with open("pyvenv.cfg", encoding="utf-8") as arquivo:
+    for linha in arquivo:
+        linha = linha.strip()
+        print(linha)
+</pre>
+<pre class="script" data-file="pyvenv.cfg">home = /usr/bin
+include-system-site-packages = false
+version = 3.14.4
+executable = /usr/bin/python3.14
+command = /usr/bin/python3 -m venv /home/ana/padaria/.venv
+</pre>
+<pre class="solucao" data-file="main.py">with open("pyvenv.cfg", encoding="utf-8") as arquivo:
+    for linha in arquivo:
+        linha = linha.strip()
+        chave, valor = linha.split(" = ")
+        if chave == "version":
+            print(f"Este ambiente usa o Python {valor}")
+</pre>
+</div>
+
+<hr>
+
+<h2>4. Desativando: <code>deactivate</code></h2>
+<p>Terminou o trabalho no projeto? <code>deactivate</code> ("desativar") devolve o terminal ao normal. O <code>(.venv)</code> some do prompt, e o <code>python</code> sem 3 volta a não existir:</p>
+
+<pre class="term" data-cwd="~/padaria">$ source .venv/bin/activate
+(.venv) ana@notebook:~/padaria$ deactivate
+$ which python
+$ python --version
+Comando 'python' não encontrado, você quis dizer:
+  comando 'python3' do deb python3
+  comando 'python' do deb python-is-python3
+</pre>
+
+<p>O <code>which python</code> não respondeu nada: não há programa com esse nome fora do ambiente. Desativar não apaga nada; o ambiente continua lá, com os pacotes, esperando o próximo <code>source</code>.</p>
+
+<hr>
+
+<h2>5. Cada projeto com o seu</h2>
+<p>Agora o exemplo da introdução, de verdade. A agenda da Ana precisa do <code>requests</code> 2.32.3. Ela cria o ambiente da agenda com a opção <code>--prompt</code>, que troca o nome que aparece no prompt:</p>
+
+<pre class="term">$ mkdir agenda
+$ cd agenda
+$ python3 -m venv .venv --prompt agenda
+$ source .venv/bin/activate
+(agenda) ana@notebook:~/agenda$ pip install -q "requests==2.32.3"
+(agenda) ana@notebook:~/agenda$ pip list
+Package            Version
+------------------ ---------
+certifi            2026.7.22
+charset-normalizer 3.5.2
+idna               3.20
+pip                25.1.1
+requests           2.32.3
+urllib3            2.8.0
+(agenda) ana@notebook:~/agenda$ deactivate
+</pre>
+
+<p>(O <code>-q</code>, de <em>quiet</em>, "quieto", faz o <code>pip</code> instalar sem imprimir o andamento.) E a lojinha, da aula do <code>pip</code>, continua com a versão dela:</p>
+
+<pre class="term" data-cwd="~/agenda">$ cd ../loja
+$ source .venv/bin/activate
+(.venv) ana@notebook:~/loja$ pip list
+Package            Version
+------------------ ---------
+certifi            2026.7.22
+charset-normalizer 3.5.2
+idna               3.20
+pip                25.1.1
+requests           2.34.2
+urllib3            2.8.0
+(.venv) ana@notebook:~/loja$ deactivate
+</pre>
+
+<p>Duas versões do mesmo pacote no mesmo computador, cada uma na sua caixa, sem uma atrapalhar a outra.</p>
+
+<div class="tip">
+<strong><code>--prompt</code> ou não?</strong>
+<p>Com várias janelas de terminal abertas, <code>(agenda)</code> diz mais do que <code>(.venv)</code>. Mas é só o rótulo: a pasta continua se chamando <code>.venv</code>, e o resto funciona igual.</p>
+</div>
+
+<hr>
+
+<h2>6. Apagar e recriar: o ambiente é descartável</h2>
+<p>Um ambiente virtual não guarda nada que você escreveu: o seu código fica <strong>fora</strong> dele, na pasta do projeto. Por isso ele é descartável. Estragou, ficou com pacotes demais, mudou de versão do Python? Apague e crie de novo. O <code>requirements.txt</code> (aula <a href="pip.html">pip</a>) traz os pacotes de volta:</p>
+
+<pre class="term">$ cd loja
+$ ls
+baixar.py
+requirements.txt
+$ rm -rf .venv
+$ python3 -m venv .venv
+$ source .venv/bin/activate
+(.venv) ana@notebook:~/loja$ pip install -q -r requirements.txt
+(.venv) ana@notebook:~/loja$ pip list
+Package            Version
+------------------ ---------
+certifi            2026.7.22
+charset-normalizer 3.5.2
+idna               3.20
+pip                25.1.1
+requests           2.34.2
+urllib3            2.8.0
+(.venv) ana@notebook:~/loja$ echo $VIRTUAL_ENV
+/home/ana/loja/.venv
+(.venv) ana@notebook:~/loja$ python baixar.py
+Código: 200
+Tipo: text/html; charset=utf-8
+Tamanho: 577 caracteres
+</pre>
+
+<p>(O <code>ls</code> não mostra a <code>.venv</code> porque o nome começa com ponto.) Os mesmos pacotes, nas mesmas versões, e o programa funcionando. Essa é a rotina de quem recebe um projeto Python de outra pessoa: <strong>criar o ambiente, ativar, <code>pip install -r requirements.txt</code></strong>.</p>
+
+<div class="warning">
+<strong><code>rm -rf</code> não tem volta</strong>
+<p>O <code>rm -rf .venv</code> apaga a pasta e tudo dentro, sem perguntar e sem lixeira. Confira o nome antes de apertar Enter: um espaço a mais (<code>rm -rf . venv</code>) apagaria a pasta atual inteira.</p>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de usar o ambiente</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Jeito</th><th>Exemplo</th><th>Quando usar</th></tr>
+<tr><td>Ativar e usar os nomes curtos</td><td><code>source .venv/bin/activate</code> e depois <code>python</code>, <code>pip</code></td><td>No dia a dia, trabalhando no projeto pelo terminal</td></tr>
+<tr><td>Chamar pelo caminho, sem ativar</td><td><code>.venv/bin/python programa.py</code></td><td>Em scripts e agendadores, ou para um comando só</td></tr>
+<tr><td><code>python -m pip</code> no ambiente</td><td><code>.venv/bin/python -m pip install requests</code></td><td>Quando você quer ter certeza de qual Python recebe o pacote</td></tr>
+<tr><td>Deixar o editor de código cuidar</td><td>O VS Code (e outros) acha a <code>.venv</code> e ativa sozinho no terminal dele</td><td>Quando você programa num editor desses</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Rodar o <code>activate</code> sem o <code>source</code></strong>
+<pre class="term" data-cwd="~/padaria">$ .venv/bin/activate
+bash: .venv/bin/activate: Permissão negada
+</pre>
+<p>Parece lógico chamar o script pelo caminho, como um programa. Mas o <code>activate</code> não tem permissão de execução, de propósito (repare no <code>-rw-r--r--</code> dele no <code>ls -l</code>: nenhum <code>x</code>). Se ele rodasse como programa, mudaria um terminal "filho" que fecha logo em seguida, e o seu terminal continuaria igual. <strong>Como consertar:</strong> <code>source .venv/bin/activate</code> (ou a forma curta, <code>. .venv/bin/activate</code>, com um ponto e um espaço).</p>
+</div>
+
+<div class="cenario">
+<strong>O caminho errado (ou a pasta errada)</strong>
+<pre class="term" data-cwd="~/padaria">$ source venv/bin/activate
+bash: venv/bin/activate: Arquivo ou diretório inexistente
+</pre>
+<p>A pasta se chama <code>.venv</code>, com ponto, e o comando pediu <code>venv</code>, sem. Muitos tutoriais usam <code>venv</code> ou <code>env</code>; o caminho tem de ser o da pasta que <strong>você</strong> criou. O mesmo erro aparece se você estiver em outra pasta: o caminho <code>.venv/bin/activate</code> é a partir de onde o terminal está. <strong>Como consertar:</strong> entre na pasta do projeto (<code>cd ~/padaria</code>) e confira o nome com <code>ls -a</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>deactivate</code> sem ambiente ativo</strong>
+<pre class="term" data-cwd="~/padaria">$ deactivate
+deactivate: comando não encontrado
+</pre>
+<p>O <code>deactivate</code> só existe <strong>enquanto</strong> um ambiente está ativo: é o próprio <code>activate</code> que o cria. Sem <code>(…)</code> no prompt, não há o que desativar. Não é problema nenhum.</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu de dar o nome da pasta</strong>
+<pre class="term">$ python3 -m venv
+usage: python3 -m venv [-h] [--system-site-packages] [--symlinks | --copies]
+                       [--clear] [--upgrade] [--without-pip] [--prompt PROMPT]
+                       [--upgrade-deps] [--without-scm-ignore-files]
+                       ENV_DIR [ENV_DIR ...]
+python3 -m venv: error: the following arguments are required: ENV_DIR
+</pre>
+<p>"Os seguintes argumentos são obrigatórios: <code>ENV_DIR</code>" (<em>environment directory</em>, "pasta do ambiente"). A primeira parte é o resumo de uso: entre colchetes ficam as opções que você pode dar; <code>ENV_DIR</code>, sem colchetes, é o que você tem de dar. (Mensagens desse formato vêm do módulo <code>argparse</code>, que você vai usar para fazer os seus próprios programas de terminal na aula <a href="argparse.html">argparse</a>.) <strong>Como consertar:</strong> <code>python3 -m venv .venv</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Copiou o projeto com a <code>.venv</code> junto</strong>
+<p>A Ana quis fazer uma versão de teste da lojinha e copiou a pasta inteira. Ativou o ambiente da cópia e…</p>
+<pre class="term">$ cp -r loja loja-copia
+$ cd loja-copia
+$ source .venv/bin/activate
+(.venv) ana@notebook:~/loja-copia$ which python
+/home/ana/loja/.venv/bin/python
+(.venv) ana@notebook:~/loja-copia$ pip --version
+pip 25.1.1 from /home/ana/loja/.venv/lib/python3.14/site-packages/pip (python 3.14)
+</pre>
+<p>Sem erro nenhum, mas olhe os caminhos: <code>/home/ana/<strong>loja</strong>/.venv</code>, e não <code>loja-copia</code>. O ambiente ativado foi o da pasta <strong>original</strong>. Um <code>pip install</code> agora mudaria a lojinha de verdade, e não a cópia de teste. O motivo: o ambiente guarda o caminho completo de onde foi criado (você viu no <code>pyvenv.cfg</code> e na primeira linha do <code>pip</code>), e o <code>activate</code> também:</p>
+<pre class="term" data-cwd="~/loja">$ grep -n "export VIRTUAL_ENV=" .venv/bin/activate
+49:        export VIRTUAL_ENV=/home/ana/loja/.venv
+</pre>
+<p>Um ambiente virtual <strong>não se muda de lugar</strong>: nem copiando, nem renomeando a pasta do projeto. <strong>Como consertar:</strong> na cópia, apague a <code>.venv</code> copiada e crie outra (<code>rm -rf .venv</code>, <code>python3 -m venv .venv</code>, <code>pip install -r requirements.txt</code>). E, para mandar o projeto para alguém, mande o código e o <code>requirements.txt</code>, nunca a <code>.venv</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>The virtual environment was not created successfully because ensurepip is not available</code></strong>
+<p>Em alguns Ubuntu e Debian, o <code>python3 -m venv</code> falha com essa mensagem (ilustrativa: no computador da Ana o pacote já está instalado). O Ubuntu separa a criação de ambientes num pacote próprio. <strong>Como consertar:</strong> <code>sudo apt install python3-venv</code> e crie o ambiente de novo (apague antes a pasta que ficou pela metade).</p>
+</div>
+
+<p>Para fechar, uma comparação que o próprio <code>pip</code> não faz por você: o que muda entre os ambientes de dois projetos.</p>
+
+<div class="trypy" data-goal="out:requests: loja 2.34.2, agenda 2.32.3;;semerro">
+<p class="try-task"><strong>Missão:</strong> os dicionários têm o <code>pip freeze</code> da lojinha e da agenda (pacote → versão). Complete o laço para mostrar, só dos pacotes com versões <strong>diferentes</strong>, uma linha como <code>requests: loja 2.34.2, agenda 2.32.3</code>.</p>
+<pre class="script" data-file="main.py">loja = {"certifi": "2026.7.22", "idna": "3.20", "requests": "2.34.2", "urllib3": "2.8.0"}
+agenda = {"certifi": "2026.7.22", "idna": "3.20", "requests": "2.32.3", "urllib3": "2.8.0"}
+
+for pacote in loja:
+    print(pacote)
+</pre>
+<pre class="solucao" data-file="main.py">loja = {"certifi": "2026.7.22", "idna": "3.20", "requests": "2.34.2", "urllib3": "2.8.0"}
+agenda = {"certifi": "2026.7.22", "idna": "3.20", "requests": "2.32.3", "urllib3": "2.8.0"}
+
+for pacote in loja:
+    if loja[pacote] != agenda[pacote]:
+        print(f"{pacote}: loja {loja[pacote]}, agenda {agenda[pacote]}")
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Comando</th><th>O que faz</th></tr>
+<tr><td><code>python3 -m venv .venv</code></td><td>Cria o ambiente na pasta <code>.venv</code></td></tr>
+<tr><td><code>python3 -m venv .venv --prompt nome</code></td><td>Cria com outro rótulo no prompt: <code>(nome)</code></td></tr>
+<tr><td><code>source .venv/bin/activate</code></td><td>Ativa o ambiente neste terminal (no Windows: <code>.venv\Scripts\Activate.ps1</code>)</td></tr>
+<tr><td><code>deactivate</code></td><td>Desativa</td></tr>
+<tr><td><code>which python</code></td><td>Mostra qual Python roda com esse nome</td></tr>
+<tr><td><code>echo $VIRTUAL_ENV</code></td><td>Mostra o caminho do ambiente ativo</td></tr>
+<tr><td><code>.venv/bin/python programa.py</code></td><td>Roda com o Python do ambiente, sem ativar</td></tr>
+<tr><td><code>rm -rf .venv</code></td><td>Apaga o ambiente (o código do projeto fica)</td></tr>
+<tr><td><code>pip install -r requirements.txt</code></td><td>Recoloca os pacotes num ambiente novo</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Em Python</th><th>O que é</th></tr>
+<tr><td><code>sys.executable</code></td><td>O caminho do Python que está rodando o programa</td></tr>
+<tr><td><code>sys.prefix</code></td><td>A pasta do ambiente em uso (ou do Python do sistema)</td></tr>
+<tr><td><code>sys.base_prefix</code></td><td>A pasta do Python original</td></tr>
+<tr><td><code>sys.prefix != sys.base_prefix</code></td><td><code>True</code> dentro de um ambiente virtual</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>bash: .venv/bin/activate: Permissão negada</code></td><td>Faltou o <code>source</code> na frente</td></tr>
+<tr><td><code>bash: venv/bin/activate: Arquivo ou diretório inexistente</code></td><td>Nome da pasta errado ou terminal em outra pasta</td></tr>
+<tr><td><code>deactivate: comando não encontrado</code></td><td>Nenhum ambiente ativo</td></tr>
+<tr><td><code>error: the following arguments are required: ENV_DIR</code></td><td>Faltou o nome da pasta no <code>python3 -m venv</code></td></tr>
+<tr><td><code>which python</code> aponta para outra pasta</td><td>A <code>.venv</code> foi copiada ou movida: recrie</td></tr>
+<tr><td><code>ModuleNotFoundError</code> de um pacote que você instalou</td><td>O ambiente não está ativo (sem <code>(.venv)</code> no prompt)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Criar</h3>
+<p>Complete o comando que cria um ambiente virtual na pasta <code>.venv</code>:</p>
+<div class="ex-code">python3 -m <input data-answer="venv" aria-label="módulo"> .venv</div>
+</div>
+
+<div class="exercise">
+<h3>2. Ativar</h3>
+<p>Complete o comando que ativa o ambiente no terminal:</p>
+<div class="ex-code"><input data-answer="source|." aria-label="comando"> .venv/bin/activate</div>
+</div>
+
+<div class="exercise">
+<h3>3. Desativar</h3>
+<p>Qual comando desliga o ambiente ativo?</p>
+<div class="ex-code"><input data-answer="deactivate" aria-label="comando"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Como você sabe, olhando o terminal, que um ambiente virtual está ativo?</p>
+<label><input type="radio" name="q4"> A janela muda de cor</label>
+<label><input type="radio" name="q4"> O prompt começa com o nome do ambiente entre parênteses, como <code>(.venv)</code></label>
+<label><input type="radio" name="q4"> O comando <code>python3</code> deixa de existir</label>
+<label><input type="radio" name="q4"> Não tem como saber</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. Por que cada projeto deve ter o seu ambiente virtual?</p>
+<label><input type="radio" name="q5"> Para o programa rodar mais rápido</label>
+<label><input type="radio" name="q5"> Porque o Python só roda dentro de um ambiente</label>
+<label><input type="radio" name="q5"> Para cada projeto ter os seus pacotes, nas versões de que precisa, sem atrapalhar os outros</label>
+<label><input type="radio" name="q5"> Para esconder o código dos outros usuários</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. A Ana vai mandar a lojinha para a Bia. O que ela deve mandar?</p>
+<label><input type="radio" name="q6"> A pasta inteira, com a <code>.venv</code></label>
+<label><input type="radio" name="q6"> Só a <code>.venv</code></label>
+<label><input type="radio" name="q6"> Só o <code>pyvenv.cfg</code></label>
+<label><input type="radio" name="q6"> O código e o <code>requirements.txt</code>; a Bia cria o ambiente dela e roda <code>pip install -r requirements.txt</code></label>
+</div>
+
+<h3>Missão final: o ambiente está ativo?</h3>
+
+<div class="trypy" data-goal="out:(.venv) ana@notebook:~/loja$;;out:Sem ambiente: ana@notebook:~/agenda$;;semerro">
+<p class="try-task"><strong>Missão:</strong> o <code>activate</code> põe o nome do ambiente na frente do prompt. Complete a função <code>prompt</code> para devolver <code>(.venv) ana@notebook:~/loja$</code> quando <code>ambiente</code> tiver um nome e só <code>ana@notebook:~/agenda$</code> quando <code>ambiente</code> for <code>None</code> (aula <a href="none.html">O Valor None</a>).</p>
+<pre class="script" data-file="main.py">def prompt(pasta, ambiente):
+    base = f"ana@notebook:{pasta}$"
+    return base
+
+
+print("Com ambiente:", prompt("~/loja", ".venv"))
+print("Sem ambiente:", prompt("~/agenda", None))
+</pre>
+<pre class="solucao" data-file="main.py">def prompt(pasta, ambiente):
+    base = f"ana@notebook:{pasta}$"
+    if ambiente is None:
+        return base
+    return f"({ambiente}) {base}"
+
+
+print("Com ambiente:", prompt("~/loja", ".venv"))
+print("Sem ambiente:", prompt("~/agenda", None))
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Um <strong>ambiente virtual</strong> é uma pasta (o costume é <code>.venv</code>) com um Python particular e os pacotes de <strong>um</strong> projeto.</li>
+  <li>Crie com <code>python3 -m venv .venv</code>, ative com <code>source .venv/bin/activate</code>, desative com <code>deactivate</code>.</li>
+  <li>Ativo, o prompt começa com <code>(.venv)</code>, e <code>python</code> e <code>pip</code> são os do ambiente (<code>which python</code> confirma). Vale só para aquele terminal.</li>
+  <li>Sem ativar, chame pelo caminho: <code>.venv/bin/python programa.py</code>.</li>
+  <li>Cada projeto com o seu: dois projetos podem usar versões diferentes do mesmo pacote no mesmo computador.</li>
+  <li>O ambiente é descartável e preso ao lugar onde foi criado: não copie nem mova; apague e recrie com <code>pip install -r requirements.txt</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
