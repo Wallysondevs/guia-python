@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Strings — textos entre aspas | Guia Python</title>
+<meta name="description" content="Strings (textos) em Python para quem está começando: aspas simples, duplas e triplas, como escrever um apóstrofo ou aspas dentro do texto, textos de várias linhas, a diferença entre &quot;10&quot; e 10, len() para contar caracteres (acentos e espaços contam), por que um texto não pode ser alterado e os erros reais: unterminated string literal, NameError, TypeError.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Strings</span>: Textos</h1>
+
+<p class="intro">Desde o primeiro programa você escreve textos: <code>print("Olá, mundo!")</code>. Em programação, um texto se chama <strong>string</strong> (em inglês, "cordão", "fileira": uma fileira de letras, uma atrás da outra). No Python, o tipo dos textos se chama <code>str</code>, de <em>string</em>. Nomes, endereços, mensagens, senhas, a lista de compras da Ana: tudo isso é string. Esta aula abre o grupo <strong>Textos</strong> e mostra o básico: como escrever um texto, como contar as letras dele e por que um texto, depois de criado, não muda.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A escrever textos com aspas simples (<code>'</code>), duplas (<code>"</code>) e triplas (<code>"""</code>), e quando usar cada uma.</li>
+  <li>A pôr um apóstrofo ou aspas <strong>dentro</strong> do texto, como em <code>Copo d'água</code>.</li>
+  <li>Por que <code>"10"</code> e <code>10</code> são coisas diferentes.</li>
+  <li>A contar os caracteres com <code>len()</code> (acentos e espaços contam).</li>
+  <li>Que um texto é <strong>imutável</strong>: não dá para trocar uma letra dele. E o que fazer no lugar.</li>
+  <li>Os erros reais: aspas sem fechar, texto sem aspas, <code>len()</code> de um número.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: um colar de contas</h2>
+<p>Imagine um colar de contas, cada conta com uma letra pintada: <strong>A</strong>, <strong>n</strong>, <strong>a</strong>. A string é esse colar: uma <strong>fileira de caracteres</strong> em ordem. "Caractere" é qualquer símbolo que se escreve: uma letra (<code>a</code>, <code>Ç</code>), um algarismo (<code>7</code>), um espaço, uma pontuação (<code>!</code>), até um emoji. As aspas são o fecho do colar: mostram ao Python onde o texto começa e onde termina.</p>
+
+<p>Sem as aspas, o Python acharia que <code>Ana</code> é o <strong>nome de uma variável</strong>. Com as aspas, <code>"Ana"</code> é um <strong>valor</strong>: o texto A-n-a.</p>
+
+<hr>
+
+<h2>1. Aspas simples ou duplas</h2>
+<p>Você pode escrever um texto entre aspas duplas (<code>"</code>) ou simples (<code>'</code>). Para o Python, tanto faz:</p>
+
+<pre class="file" data-file="aspas.py">nome = "Ana"
+cidade = 'Teresina'
+
+print(nome)
+print(cidade)
+print("Olá, mundo!")
+</pre>
+
+<pre class="term">$ python3 aspas.py
+Ana
+Teresina
+Olá, mundo!
+</pre>
+
+<dl class="anatomy">
+  <dt>"Ana"</dt><dd>Um texto entre aspas duplas. As aspas <strong>não fazem parte</strong> do texto: o <code>print</code> mostra só <code>Ana</code>.</dd>
+  <dt>'Teresina'</dt><dd>Um texto entre aspas simples. Mesmo tipo, mesmo comportamento.</dd>
+  <dt>nome = "Ana"</dt><dd>Guarda o texto numa variável, como qualquer outro valor (aula <a href="variaveis.html">Variáveis</a>).</dd>
+</dl>
+
+<p>No modo interativo dá para conferir que os dois jeitos dão o mesmo texto, e que o tipo é <code>str</code> (a função <code>type()</code>, da aula <a href="type.html">Descobrindo o Tipo</a>):</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; nome = "Ana"
+&gt;&gt;&gt; nome
+'Ana'
+&gt;&gt;&gt; print(nome)
+Ana
+&gt;&gt;&gt; type(nome)
+&lt;class 'str'&gt;
+&gt;&gt;&gt; 'Ana' == "Ana"
+True
+&gt;&gt;&gt; exit()
+</pre>
+
+<p>Repare numa diferença. Quando você digita só <code>nome</code>, o modo interativo mostra <code>'Ana'</code>, <strong>com aspas</strong> (simples, mesmo que você tenha escrito duplas). Ele está dizendo "isto é um texto". O <code>print(nome)</code> mostra o texto como ele é, <strong>sem aspas</strong>, para uma pessoa ler. É o mesmo texto; só a apresentação muda.</p>
+
+<div class="tip">
+<strong>Escolha um jeito e mantenha</strong>
+<p>O Python aceita os dois, mas misturar à toa deixa o código bagunçado. Este guia usa <strong>aspas duplas</strong> no dia a dia, como a maioria dos projetos (e como a ferramenta de formatação mais usada, o <em>Black</em>, deixa o código). As simples ficam para quando o texto tem aspas duplas dentro, como você vai ver agora.</p>
+</div>
+
+<hr>
+
+<h2>2. Apóstrofo e aspas dentro do texto</h2>
+<p>Por que existem os dois tipos de aspas? Para você poder escrever um tipo <strong>dentro</strong> do texto, usando o outro por fora:</p>
+
+<pre class="file" data-file="aspas-dentro.py">print("Copo d'água")
+print('Ela disse "bom dia"')
+</pre>
+
+<pre class="term">$ python3 aspas-dentro.py
+Copo d'água
+Ela disse "bom dia"
+</pre>
+
+<ul>
+  <li><code>"Copo d'água"</code>: o texto abre com aspas <strong>duplas</strong>, então o Python só considera o texto terminado na próxima aspa <strong>dupla</strong>. O apóstrofo (<code>'</code>) no meio é só mais um caractere.</li>
+  <li><code>'Ela disse "bom dia"'</code>: o contrário. Abre com simples, e as duplas de dentro são caracteres comuns.</li>
+</ul>
+
+<p>E se o texto tiver os dois, apóstrofo <strong>e</strong> aspas duplas? Aí entra a barra invertida (<code>\'</code> e <code>\"</code>), assunto da aula <a href="strings-escape.html">Caracteres de Escape</a>. Ou as aspas triplas, logo abaixo.</p>
+
+<div class="trypy" data-goal="out:Copo d'água;;semerro">
+<p class="try-task"><strong>Missão:</strong> a placa da lanchonete da Ana dá erro de sintaxe. Troque as aspas de fora para que o apóstrofo possa ficar dentro do texto.</p>
+<pre class="script" data-file="main.py">print('Copo d'água: R$ 2')
+</pre>
+<pre class="solucao" data-file="main.py">print("Copo d'água: R$ 2")
+</pre>
+</div>
+
+<hr>
+
+<h2>3. Aspas triplas: textos de várias linhas</h2>
+<p>Um texto entre aspas simples ou duplas precisa caber numa linha só. Para um texto com <strong>várias linhas</strong>, como um bilhete, use <strong>três aspas</strong> seguidas para abrir e três para fechar:</p>
+
+<pre class="file" data-file="triplas.py">bilhete = """Mãe,
+fui à padaria.
+Volto às 8."""
+
+print(bilhete)
+</pre>
+
+<pre class="term">$ python3 triplas.py
+Mãe,
+fui à padaria.
+Volto às 8.
+</pre>
+
+<dl class="anatomy">
+  <dt>"""</dt><dd>Três aspas duplas, coladas: abrem o texto. (Três simples, <code>'''</code>, também funcionam; o costume é o das duplas.)</dd>
+  <dt>Mãe, … Volto às 8.</dt><dd>O texto, com as quebras de linha que você digitou. Elas fazem parte do texto.</dd>
+  <dt>"""</dt><dd>Mais três aspas: fecham o texto.</dd>
+</dl>
+
+<p>Como o Python guarda essas quebras de linha? No modo interativo dá para espiar:</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; texto = """linha 1
+... linha 2"""
+&gt;&gt;&gt; texto
+'linha 1\nlinha 2'
+&gt;&gt;&gt; print(texto)
+linha 1
+linha 2
+&gt;&gt;&gt; exit()
+</pre>
+
+<p>O <code>...</code> é o modo interativo avisando "o texto ainda não fechou, continue". E o <code>\n</code> que aparece em <code>'linha 1\nlinha 2'</code> é o jeito de escrever a <strong>quebra de linha</strong> num texto de uma linha só; o <code>print</code> a transforma numa linha nova de verdade. É o assunto da aula <a href="strings-escape.html">Caracteres de Escape</a>.</p>
+
+<div class="note">
+<strong>Aspas triplas sem variável</strong>
+<p>Você vai ver aspas triplas logo no começo de funções e de arquivos, explicando o que o código faz. São as <strong>docstrings</strong>, que têm aula própria: <a href="docstrings.html">Docstrings</a>.</p>
+</div>
+
+<hr>
+
+<h2>4. <code>"10"</code> não é <code>10</code></h2>
+<p>Tudo o que está entre aspas é texto, mesmo que pareça um número. Olhe o que o <code>+</code> faz com cada um:</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; "10" + "5"
+'105'
+&gt;&gt;&gt; 10 + 5
+15
+&gt;&gt;&gt; type("10")
+&lt;class 'str'&gt;
+&gt;&gt;&gt; exit()
+</pre>
+
+<p>Com números, o <code>+</code> <strong>soma</strong>: 15. Com textos, ele <strong>emenda</strong> um no outro: o texto <code>"10"</code> seguido do texto <code>"5"</code> dá o texto <code>"105"</code>. Isso tem nome, <strong>concatenação</strong>, e é assunto da aula <a href="strings-juntar.html">Juntar e Repetir Textos</a>. Quando o <code>input()</code> lê o teclado, ele sempre devolve texto; é por isso que a aula <a href="conversao.html">Conversão de Tipos</a> ensina a transformar <code>"10"</code> em <code>10</code> com <code>int()</code>.</p>
+
+<p>Por que um número às vezes deve ficar como texto? Telefone, CEP, CPF: você não faz conta com eles, e um CEP como <code>"01310-100"</code> tem até traço. Guarde como texto.</p>
+
+<hr>
+
+<h2>5. <code>len()</code>: quantos caracteres?</h2>
+<p>A função <code>len()</code> (de <em>length</em>, "comprimento") conta quantos caracteres o texto tem:</p>
+
+<pre class="file" data-file="tamanho.py">print(len("Ana"))
+print(len("pão"))
+print(len("Ana Maria"))
+print(len(""))
+
+nome = "Ana Beatriz"
+print("O nome tem", len(nome), "caracteres")
+</pre>
+
+<pre class="term">$ python3 tamanho.py
+3
+3
+9
+0
+O nome tem 11 caracteres
+</pre>
+
+<ul>
+  <li><code>len("Ana")</code> é 3: A, n, a.</li>
+  <li><code>len("pão")</code> também é 3. A letra com acento, <code>ã</code>, conta como <strong>um</strong> caractere só, como você esperaria.</li>
+  <li><code>len("Ana Maria")</code> é 9: 3 letras, mais o espaço, mais 5 letras. <strong>O espaço conta.</strong></li>
+  <li><code>len("")</code> é 0. Duas aspas sem nada no meio são o <strong>texto vazio</strong>: um texto que existe, mas não tem caractere nenhum.</li>
+</ul>
+
+<p>Um uso comum: conferir se uma senha tem o tamanho mínimo, ou se o usuário deixou um campo em branco (aí o tamanho é 0). Você vai fazer essas perguntas com o <a href="if.html"><code>if</code></a>, em breve.</p>
+
+<div class="trypy" data-goal="out:A senha tem 8 caracteres;;src:\blen\(">
+<p class="try-task"><strong>Missão:</strong> o programa deveria mostrar quantos caracteres tem a senha, mas está escrito o número na mão (e errado). Troque o <code>5</code> por <code>len(senha)</code>.</p>
+<pre class="script" data-file="main.py">senha = "pão-2026"
+print("A senha tem", 5, "caracteres")
+</pre>
+<pre class="solucao" data-file="main.py">senha = "pão-2026"
+print("A senha tem", len(senha), "caracteres")
+</pre>
+</div>
+
+<hr>
+
+<h2>6. Um texto não muda: imutabilidade</h2>
+<p>Cada caractere de um texto tem uma posição, chamada <strong>índice</strong>, que começa no zero: em <code>"Ana"</code>, o <code>A</code> está na posição 0. Você lê um caractere com colchetes: <code>nome[0]</code> (a aula <a href="strings-fatias.html">Índices e Fatias</a> é toda sobre isso).</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; nome = "Ana"
+&gt;&gt;&gt; nome[0]
+'A'
+&gt;&gt;&gt; exit()
+</pre>
+
+<p>Ler, pode. Mas e <strong>trocar</strong> o <code>A</code> por um <code>B</code>?</p>
+
+<pre class="file" data-file="imutavel.py">nome = "Ana"
+nome[0] = "B"
+print(nome)
+</pre>
+
+<pre class="term">$ python3 imutavel.py
+Traceback (most recent call last):
+  File "/home/ana/imutavel.py", line 2, in &lt;module&gt;
+    nome[0] = "B"
+    ~~~~^^^
+TypeError: 'str' object does not support item assignment
+</pre>
+
+<dl class="anatomy">
+  <dt>Traceback (most recent call last):</dt><dd>O Python vai contar onde o erro aconteceu (a aula <a href="erros.html">Lendo uma Mensagem de Erro</a> explica cada parte).</dd>
+  <dt>File "/home/ana/imutavel.py", line 2</dt><dd>No arquivo <code>imutavel.py</code>, linha 2.</dd>
+  <dt>~~~~^^^</dt><dd>As marcas apontam o <code>nome[0]</code>: os <code>~</code> sublinham o texto, os <code>^</code> a posição que você tentou mudar.</dd>
+  <dt>TypeError:</dt><dd>"Erro de tipo": esse tipo de valor não aceita essa operação.</dd>
+  <dt>'str' object does not support item assignment</dt><dd>"Um objeto <code>str</code> não aceita atribuição a um item": não dá para pôr outro caractere numa posição do texto.</dd>
+</dl>
+
+<p>As strings do Python são <strong>imutáveis</strong>: depois de criado, um texto nunca muda. É como uma palavra gravada numa placa de metal: você não troca uma letra da placa; se quiser outra palavra, faz uma <strong>placa nova</strong>. No Python, a "placa nova" é um texto novo guardado na mesma variável:</p>
+
+<pre class="file" data-file="imutavel2.py">nome = "Ana"
+print(nome)
+
+nome = "Bia"
+print(nome)
+</pre>
+
+<pre class="term">$ python3 imutavel2.py
+Ana
+Bia
+</pre>
+
+<p>Aqui nada foi alterado: o texto <code>"Ana"</code> continua igual; a <strong>variável</strong> <code>nome</code> é que passou a apontar para outro texto, <code>"Bia"</code>. A variável pode mudar de valor à vontade; o texto, não. E quando você quiser "trocar o A por B" de verdade, existem jeitos que <strong>fabricam um texto novo</strong> a partir do antigo: o método <code>replace()</code> (aula <a href="strings-metodos.html">Métodos de Texto</a>) e as fatias com <code>+</code> (aula <a href="strings-fatias.html">Índices e Fatias</a>). Por que o Python foi feito assim é assunto da aula <a href="mutabilidade.html">Mutável × Imutável</a>.</p>
+
+<hr>
+
+<h2>Formas diferentes de escrever um texto</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Exemplo</th><th>Quando usar</th></tr>
+<tr><td>Aspas duplas</td><td><code>"Ana"</code></td><td>O normal, no dia a dia (e o padrão deste guia)</td></tr>
+<tr><td>Aspas simples</td><td><code>'Ela disse "oi"'</code></td><td>Quando o texto tem aspas duplas dentro</td></tr>
+<tr><td>Aspas duplas com apóstrofo</td><td><code>"Copo d'água"</code></td><td>Quando o texto tem apóstrofo</td></tr>
+<tr><td>Aspas triplas</td><td><code>"""linha 1<br>linha 2"""</code></td><td>Textos de várias linhas e docstrings</td></tr>
+<tr><td>Texto vazio</td><td><code>""</code></td><td>Um texto sem nada, para começar e ir preenchendo depois</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Esqueceu de fechar as aspas</strong>
+<pre class="file" data-file="sem-fechar.py">print("Olá, Ana)
+</pre>
+<pre class="term">$ python3 sem-fechar.py
+  File "/home/ana/sem-fechar.py", line 1
+    print("Olá, Ana)
+          ^
+SyntaxError: unterminated string literal (detected at line 1)
+</pre>
+<dl class="anatomy">
+  <dt>File "/home/ana/sem-fechar.py", line 1</dt><dd>O problema está na linha 1. Repare que não há <code>Traceback</code>: o Python nem começou a rodar. Ele achou o erro só de <strong>ler</strong> o código.</dd>
+  <dt>^</dt><dd>Aponta a aspa que <strong>abriu</strong> o texto.</dd>
+  <dt>SyntaxError:</dt><dd>"Erro de sintaxe": o código não está escrito do jeito que o Python entende.</dd>
+  <dt>unterminated string literal</dt><dd>"Texto sem terminar": a aspa abriu e a linha acabou sem a aspa que fecha. O <code>)</code> virou parte do texto.</dd>
+  <dt>(detected at line 1)</dt><dd>"Percebido na linha 1".</dd>
+</dl>
+<p><strong>Como consertar:</strong> feche as aspas antes do parêntese: <code>print("Olá, Ana")</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Apóstrofo dentro de aspas simples</strong>
+<pre class="file" data-file="apostrofo.py">print('Copo d'água')
+</pre>
+<pre class="term">$ python3 apostrofo.py
+  File "/home/ana/apostrofo.py", line 1
+    print('Copo d'água')
+                      ^
+SyntaxError: unterminated string literal (detected at line 1)
+</pre>
+<p>O mesmo erro, mas o <code>^</code> está no <strong>fim</strong> da linha. Por quê? O Python leu o texto <code>'Copo d'</code> (o apóstrofo fechou o texto), depois a palavra <code>água</code>, e então a última aspa, que <strong>abriu um texto novo</strong> que nunca fecha. <strong>Como consertar:</strong> aspas duplas por fora, <code>print("Copo d'água")</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Aspas duplas dentro de aspas duplas</strong>
+<pre class="file" data-file="aspas-duplas.py">print("Ela disse "oi"")
+</pre>
+<pre class="term">$ python3 aspas-duplas.py
+  File "/home/ana/aspas-duplas.py", line 1
+    print("Ela disse "oi"")
+                      ^^
+SyntaxError: invalid syntax. Is this intended to be part of the string?
+</pre>
+<p>Agora a mensagem é outra. O Python leu o texto <code>"Ela disse "</code>, que terminou na segunda aspa; depois encontrou <code>oi</code> solto, colado no texto, e isso não faz sentido (<code>invalid syntax</code>, "sintaxe inválida"). Os <code>^^</code> sublinham o <code>oi</code>, e a dica pergunta: "isto era para fazer parte do texto?". Era! <strong>Como consertar:</strong> aspas simples por fora, <code>print('Ela disse "oi"')</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Aspas triplas sem fechar</strong>
+<pre class="file" data-file="triplas-aberta.py">bilhete = """Mãe,
+fui à padaria.
+
+print(bilhete)
+</pre>
+<pre class="term">$ python3 triplas-aberta.py
+  File "/home/ana/triplas-aberta.py", line 1
+    bilhete = """Mãe,
+              ^
+SyntaxError: unterminated triple-quoted string literal (detected at line 4)
+</pre>
+<p><code>unterminated triple-quoted string literal</code>: "texto de aspas triplas sem terminar". O Python leu até o fim do arquivo (linha 4) procurando as três aspas que fecham, e não achou; até o <code>print(bilhete)</code> virou parte do bilhete. O <code>^</code> aponta onde o texto <strong>abriu</strong>, na linha 1. <strong>Como consertar:</strong> feche com <code>"""</code> no fim do bilhete.</p>
+</div>
+
+<div class="cenario">
+<strong>Texto sem aspas</strong>
+<pre class="file" data-file="sem-aspas.py">print(Ana)
+</pre>
+<pre class="term">$ python3 sem-aspas.py
+Traceback (most recent call last):
+  File "/home/ana/sem-aspas.py", line 1, in &lt;module&gt;
+    print(Ana)
+          ^^^
+NameError: name 'Ana' is not defined. Did you mean: 'any'?
+</pre>
+<p><code>NameError: name 'Ana' is not defined</code>: "o nome <code>Ana</code> não está definido". Sem aspas, <code>Ana</code> é o nome de uma variável, e nenhuma variável com esse nome foi criada. O Python ainda tenta ajudar, com <code>Did you mean: 'any'?</code> ("você quis dizer <code>any</code>?", uma função do Python de nome parecido), mas aqui a dica não serve: o que faltou foram as aspas. <strong>Como consertar:</strong> <code>print("Ana")</code>.</p>
+</div>
+
+<div class="cenario">
+<strong><code>len()</code> de um número</strong>
+<pre class="file" data-file="len-numero.py">telefone = 86999990000
+print(len(telefone))
+</pre>
+<pre class="term">$ python3 len-numero.py
+Traceback (most recent call last):
+  File "/home/ana/len-numero.py", line 2, in &lt;module&gt;
+    print(len(telefone))
+          ~~~^^^^^^^^^^
+TypeError: object of type 'int' has no len()
+</pre>
+<p><code>object of type 'int' has no len()</code>: "um objeto do tipo <code>int</code> não tem <code>len()</code>". Um número não é uma fileira de caracteres, então não tem "comprimento". <strong>Como consertar:</strong> guarde o telefone como texto, <code>telefone = "86999990000"</code>, como dito na seção 4. (Ou, se ele vier como número, <code>len(str(telefone))</code>.)</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Exemplo → resultado</th></tr>
+<tr><td><code>"texto"</code> ou <code>'texto'</code></td><td>Cria um texto (tipo <code>str</code>)</td><td><code>type("Ana")</code> → <code>&lt;class 'str'&gt;</code></td></tr>
+<tr><td><code>"""…"""</code></td><td>Texto de várias linhas</td><td><code>"""linha 1<br>linha 2"""</code></td></tr>
+<tr><td><code>""</code></td><td>Texto vazio</td><td><code>len("")</code> → <code>0</code></td></tr>
+<tr><td><code>len(texto)</code></td><td>Quantos caracteres (espaços e acentos contam)</td><td><code>len("Ana Maria")</code> → <code>9</code></td></tr>
+<tr><td><code>texto[0]</code></td><td>Lê o primeiro caractere</td><td><code>"Ana"[0]</code> → <code>'A'</code></td></tr>
+<tr><td><code>texto[0] = "B"</code></td><td>Não funciona: textos são imutáveis</td><td><code>TypeError</code></td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>SyntaxError: unterminated string literal</code></td><td>Aspas sem fechar, ou um apóstrofo dentro de aspas simples</td></tr>
+<tr><td><code>SyntaxError: invalid syntax. Is this intended to be part of the string?</code></td><td>Aspas iguais às de fora dentro do texto: troque as de fora</td></tr>
+<tr><td><code>SyntaxError: unterminated triple-quoted string literal</code></td><td>Faltou o <code>"""</code> que fecha</td></tr>
+<tr><td><code>NameError: name 'Ana' is not defined</code></td><td>Texto escrito sem aspas</td></tr>
+<tr><td><code>TypeError: 'str' object does not support item assignment</code></td><td>Tentou trocar um caractere: crie um texto novo</td></tr>
+<tr><td><code>TypeError: object of type 'int' has no len()</code></td><td><code>len()</code> de um número</td></tr>
+<tr><td><code>"10" + "5"</code> deu <code>'105'</code></td><td>Eram textos, não números: converta com <code>int()</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Contando</h3>
+<p>Quanto vale <code>len("café")</code>?</p>
+<div class="ex-code"><input data-answer="4" aria-label="resultado"></div>
+</div>
+
+<div class="exercise">
+<h3>2. O espaço conta</h3>
+<p>Quanto vale <code>len("Ana Maria")</code>?</p>
+<div class="ex-code"><input data-answer="9" aria-label="resultado"></div>
+</div>
+
+<div class="exercise">
+<h3>3. O tipo</h3>
+<p>Complete: <code>type("10")</code> mostra <code>&lt;class '…'&gt;</code>.</p>
+<div class="ex-code">&lt;class '<input data-answer="str" aria-label="tipo">'&gt;</div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Qual destas linhas mostra <code>Ela disse "oi"</code> sem dar erro?</p>
+<label><input type="radio" name="q4"> <code>print("Ela disse "oi"")</code></label>
+<label><input type="radio" name="q4"> <code>print(Ela disse "oi")</code></label>
+<label><input type="radio" name="q4"> <code>print('Ela disse "oi"')</code></label>
+<label><input type="radio" name="q4"> <code>print("""Ela disse "oi"""")</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. Quanto vale <code>"2" + "2"</code>?</p>
+<label><input type="radio" name="q5"> <code>4</code></label>
+<label><input type="radio" name="q5"> <code>'22'</code></label>
+<label><input type="radio" name="q5"> Dá <code>TypeError</code></label>
+<label><input type="radio" name="q5"> <code>'4'</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. Com <code>nome = "Ana"</code>, o que acontece em <code>nome[0] = "B"</code>?</p>
+<label><input type="radio" name="q6"> <code>nome</code> passa a valer <code>"Bna"</code></label>
+<label><input type="radio" name="q6"> <code>nome</code> passa a valer <code>"B"</code></label>
+<label><input type="radio" name="q6"> Nada: a linha é ignorada</label>
+<label><input type="radio" name="q6"> <code>TypeError</code>: textos não podem ser alterados</label>
+</div>
+
+<h3>Missão final: a lista de compras</h3>
+
+<div class="trypy" data-goal="outre:pão\nleite\ncafé;;src:&quot;&quot;&quot;|'''">
+<p class="try-task"><strong>Missão:</strong> a Ana quer guardar a lista de compras numa variável só, com <strong>um item por linha</strong>, e mostrar com um único <code>print</code>. Hoje o programa mostra tudo numa linha. Reescreva o texto com aspas triplas para sair assim: <code>pão</code>, <code>leite</code> e <code>café</code>, um embaixo do outro.</p>
+<pre class="script" data-file="main.py">compras = "pão leite café"
+print(compras)
+</pre>
+<pre class="solucao" data-file="main.py">compras = """pão
+leite
+café"""
+print(compras)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Uma <strong>string</strong> (tipo <code>str</code>) é um texto: uma fileira de caracteres entre aspas.</li>
+  <li>Aspas simples e duplas funcionam igual; use uma por fora quando a outra aparece dentro (<code>"Copo d'água"</code>). Aspas triplas (<code>"""</code>) servem para textos de várias linhas.</li>
+  <li>Tudo entre aspas é texto: <code>"10" + "5"</code> dá <code>'105'</code>.</li>
+  <li><code>len()</code> conta os caracteres; espaços contam, letras com acento contam como um, e <code>len("")</code> é 0.</li>
+  <li>Textos são <strong>imutáveis</strong>: <code>nome[0] = "B"</code> dá <code>TypeError</code>. Para mudar, crie um texto novo e guarde na variável.</li>
+  <li>Aspas sem fechar dão <code>SyntaxError: unterminated string literal</code>; texto sem aspas dá <code>NameError</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
