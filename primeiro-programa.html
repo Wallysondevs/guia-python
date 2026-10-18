@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Primeiro Programa — print, textos entre aspas e os primeiros erros | Guia Python</title>
+<meta name="description" content="O seu primeiro programa em Python, passo a passo: o Olá, mundo com print, textos entre aspas duplas ou simples, várias linhas em ordem, linha em branco, contas e vírgulas no print, um cartão de visita e o recibo da padaria, e os erros reais de quem está começando (aspas e parênteses sem fechar, Print com maiúscula, aspas curvas copiadas, vírgula esquecida), com SyntaxError e NameError explicados.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Seu Primeiro Programa</span></h1>
+
+<p class="intro">Chegou a hora de escrever um programa de verdade, do começo ao fim. Ele vai começar com uma linha só, o famoso <strong>"Olá, mundo!"</strong>, e crescer aos poucos até virar o recibo da padaria do bairro. No caminho, você vai conhecer a instrução <code>print</code> (que mostra coisas na tela), aprender a escrever textos entre aspas, fazer as primeiras contas e, principalmente, ver os erros que todo mundo comete no primeiro dia, com as mensagens reais do Python e o jeito de consertar cada um.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A escrever o "Olá, mundo!" com <code>print</code>, e o que é cada parte da linha.</li>
+  <li>A escrever <strong>textos</strong> entre aspas duplas ou simples, e quando usar cada uma.</li>
+  <li>Que várias linhas de <code>print</code> aparecem na ordem em que foram escritas, e como deixar uma linha em branco.</li>
+  <li>A diferença entre <code>print(2 + 3)</code> e <code>print("2 + 3")</code>, e como mostrar texto e número juntos.</li>
+  <li>Os erros mais comuns do primeiro programa: aspas e parênteses sem fechar, <code>Print</code> com maiúscula, aspas "curvas" copiadas de um documento e a vírgula esquecida.</li>
+  <li>A diferença entre um <code>SyntaxError</code> (nada roda) e um <code>NameError</code> (roda até o erro).</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: o recado no quadro de avisos</h2>
+<p>Imagine que você deixa recados para alguém num quadro de avisos, um embaixo do outro. A pessoa chega e lê de cima para baixo, na ordem. O <code>print</code> é o seu jeito de "escrever no quadro": cada <code>print</code> põe uma linha na tela, e o Python segue as linhas do arquivo na ordem em que você escreveu.</p>
+
+<p>Você vai precisar de um lugar para escrever e rodar. Use o que for mais cômodo:</p>
+<ul>
+  <li>as <strong>caixas Experimente</strong> desta página (é só editar e clicar em Rodar; a aula <a href="simulador.html">O Editor do Guia</a> explica tudo o que elas fazem);</li>
+  <li>ou o seu computador: crie o arquivo com o <code>nano</code> e rode com <code>python3</code>, como na aula <a href="executar.html">Rodando um Programa (.py)</a>.</li>
+</ul>
+
+<hr>
+
+<h2>1. Olá, mundo!</h2>
+<p>Desde os anos 1970, o primeiro programa de quem aprende uma linguagem nova é o que escreve "Olá, mundo!" na tela. É uma tradição: ele é curto, e mostra que tudo está funcionando. Em Python, ele tem uma linha:</p>
+
+<pre class="file" data-file="ola.py">print("Olá, mundo!")
+</pre>
+
+<pre class="term" data-cwd="~/python">$ python3 ola.py
+Olá, mundo!</pre>
+
+<dl class="anatomy">
+  <dt>print</dt><dd>"Imprimir", no sentido de "mostrar na tela". É uma <strong>função</strong> que vem pronta no Python: um "ajudante" que faz um trabalho quando você chama o nome dele.</dd>
+  <dt>(</dt><dd>Abre os parênteses. O que vai dentro deles é o que você entrega ao <code>print</code> para ele mostrar.</dd>
+  <dt>"Olá, mundo!"</dt><dd>Um <strong>texto</strong>. As aspas marcam onde ele começa e onde termina. Elas não aparecem na tela: são a embalagem, não o conteúdo.</dd>
+  <dt>)</dt><dd>Fecha os parênteses. Todo parêntese aberto precisa ser fechado.</dd>
+</dl>
+
+<p>Repare no que <strong>não</strong> tem: não tem ponto e vírgula no fim, não tem nada antes do <code>print</code>, não tem "começo" e "fim" de programa. O arquivo inteiro é o programa. Os textos podem ter acentos, cedilha e emojis à vontade: o Python 3 entende todos.</p>
+
+<div class="trypy" data-goal="out:Olá, Ana!;;semerro">
+<p class="try-task"><strong>Missão:</strong> rode o "Olá, mundo!" e depois troque <code>mundo</code> por <code>Ana</code>, para aparecer <code>Olá, Ana!</code>. Mude só o que está entre as aspas.</p>
+<pre class="script" data-file="main.py">print("Olá, mundo!")
+</pre>
+<pre class="solucao" data-file="main.py">print("Olá, Ana!")
+</pre>
+</div>
+
+<hr>
+
+<h2>2. Aspas duplas ou simples</h2>
+<p>Em Python, um texto pode ir entre aspas <strong>duplas</strong> (<code>"</code>) ou <strong>simples</strong> (<code>'</code>). As duas formas dão exatamente o mesmo texto. A escolha fica útil quando o texto tem aspas dentro:</p>
+
+<pre class="file" data-file="aspas.py">print("Olá, mundo!")
+print('Olá, mundo!')
+print("Um copo d'água, por favor.")
+print('A placa dizia "Fechado".')
+</pre>
+
+<pre class="term" data-cwd="~/python">$ python3 aspas.py
+Olá, mundo!
+Olá, mundo!                                        « o mesmo texto
+Um copo d'água, por favor.
+A placa dizia "Fechado".</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>O texto tem…</th><th>Use</th><th>Exemplo</th></tr>
+<tr><td>Nenhuma aspa dentro</td><td>Qualquer uma (o costume é a dupla)</td><td><code>"Olá, mundo!"</code></td></tr>
+<tr><td>Um apóstrofo (<code>'</code>), como em "d'água"</td><td>Aspas duplas por fora</td><td><code>"Um copo d'água"</code></td></tr>
+<tr><td>Aspas duplas dentro, como uma citação</td><td>Aspas simples por fora</td><td><code>'A placa dizia "Fechado".'</code></td></tr>
+</table>
+</div>
+
+<p>A regra é uma só: o texto termina na primeira aspa <strong>igual</strong> à que o abriu. Por isso uma aspa simples dentro de aspas duplas não atrapalha, e vice-versa. Os textos (que o Python chama de <em>strings</em>) têm uma aula inteira: <a href="strings.html">Strings (Textos)</a>.</p>
+
+<hr>
+
+<h2>3. Várias linhas, na ordem</h2>
+<p>Cada <code>print</code> mostra uma linha, e o Python faz um de cada vez, de cima para baixo. Com cinco <code>print</code>, a Ana montou um cartão de visita:</p>
+
+<pre class="file" data-file="cartao.py">print("==========================")
+print("Ana Souza")
+print("Confeiteira")
+print("Teresina - PI")
+print("==========================")
+</pre>
+
+<pre class="term" data-cwd="~/python">$ python3 cartao.py
+==========================
+Ana Souza
+Confeiteira
+Teresina - PI
+==========================</pre>
+
+<p>A tela mostra as linhas na <strong>mesma ordem</strong> do arquivo. Para o Python, os sinais de <code>=</code> dentro das aspas são só texto, como qualquer outro; o efeito de "moldura" é coisa sua.</p>
+
+<h3>Uma linha em branco: <code>print()</code></h3>
+<p>Com os parênteses vazios, o <code>print</code> não tem nada para mostrar, e escreve só a quebra de linha. O resultado é uma linha em branco, ótima para separar partes:</p>
+
+<pre class="file" data-file="vazio.py">print("Lista de compras")
+print()
+print("arroz")
+print("feijão")
+</pre>
+
+<pre class="term" data-cwd="~/python">$ python3 vazio.py
+Lista de compras
+                                                   « a linha em branco do print()
+arroz
+feijão</pre>
+
+<div class="trypy" data-goal="src:^print\(\s*\)\s*$;;semerro">
+<p class="try-task"><strong>Missão:</strong> faça o seu cartão de visita. Troque o nome, a profissão e a cidade pelos seus (a profissão pode ser qualquer uma, mas, para a missão contar, deixe uma linha com <code>Confeiteira</code> ou escreva a sua e acrescente essa). Depois, acrescente um <code>print()</code> vazio entre o nome e a profissão, para separar os dois.</p>
+<pre class="script" data-file="main.py">print("==========================")
+print("Ana Souza")
+print("Confeiteira")
+print("Teresina - PI")
+print("==========================")
+</pre>
+<pre class="solucao" data-file="main.py">print("==========================")
+print("Ana Souza")
+print()
+print("Confeiteira")
+print("Teresina - PI")
+print("==========================")
+</pre>
+</div>
+
+<hr>
+
+<h2>4. Números e contas</h2>
+<p>O <code>print</code> não mostra só textos. Sem aspas, o Python <strong>calcula</strong> antes de mostrar:</p>
+
+<pre class="file" data-file="contas.py">print(2 + 3)
+print("2 + 3")
+print("Total:", 2 + 3)
+print("Pães:", 10, "unidades")
+print("Preço de 10 pães:", 10 * 0.75)
+</pre>
+
+<pre class="term" data-cwd="~/python">$ python3 contas.py
+5                                                  « sem aspas: a conta
+2 + 3                                              « com aspas: o texto, do jeito que está
+Total: 5
+Pães: 10 unidades
+Preço de 10 pães: 7.5</pre>
+
+<dl class="anatomy">
+  <dt>print(2 + 3)</dt><dd>Sem aspas, <code>2 + 3</code> é uma <strong>conta</strong>: o Python calcula, e o <code>print</code> recebe o resultado, <code>5</code>.</dd>
+  <dt>print("2 + 3")</dt><dd>Com aspas, <code>"2 + 3"</code> é um <strong>texto</strong> que, por acaso, tem números. O Python não faz conta nenhuma: mostra os cinco caracteres como estão.</dd>
+  <dt>print("Total:", 2 + 3)</dt><dd>A <strong>vírgula</strong> separa as coisas que você quer mostrar na mesma linha. O <code>print</code> mostra uma, um espaço, e a outra: <code>Total: 5</code>. O espaço é colocado sozinho.</dd>
+  <dt>print("Pães:", 10, "unidades")</dt><dd>Quantas coisas você quiser, separadas por vírgulas. Cada vírgula vira um espaço na tela.</dd>
+  <dt>10 * 0.75</dt><dd>O <code>*</code> é a multiplicação, e os decimais usam <strong>ponto</strong>: <code>0.75</code>, nunca <code>0,75</code> (a vírgula, você acabou de ver, separa valores).</dd>
+</dl>
+
+<p>As contas têm aula própria (<a href="operadores-aritmeticos.html">Operadores Aritméticos</a>), e o <code>print</code> tem muito mais truques (<a href="print.html">print()</a> e <a href="print-sep-end.html">As Opções sep e end</a>).</p>
+
+<hr>
+
+<h2>5. Juntando tudo: o recibo da padaria</h2>
+<p>A Padaria Pão Quente vende o pão a R$ 0,75 e o litro de leite a R$ 6,50. Com o que você já sabe, a Ana escreveu um recibo:</p>
+
+<pre class="file" data-file="recibo.py">print("Padaria Pão Quente")
+print("------------------")
+print("10 pães:", 10 * 0.75)
+print("1 leite:", 6.50)
+print("Total:", 10 * 0.75 + 6.50)
+print("------------------")
+print("Obrigado e volte sempre!")
+</pre>
+
+<pre class="term" data-cwd="~/python">$ python3 recibo.py
+Padaria Pão Quente
+------------------
+10 pães: 7.5
+1 leite: 6.5                                       « o zero do fim sumiu
+Total: 14.0
+------------------
+Obrigado e volte sempre!</pre>
+
+<p>Funciona, mas repare em dois detalhes: o <code>6.50</code> apareceu como <code>6.5</code>, e o total como <code>14.0</code>. Para o Python, <code>6.50</code> e <code>6.5</code> são o mesmo número, e ele mostra do jeito mais curto. Um recibo de verdade mostraria <code>R$ 6,50</code>; você vai aprender a formatar assim na aula <a href="f-strings.html">f-strings: Formatando Textos</a>. Por enquanto, o importante é que a conta está certa: 7,50 + 6,50 = 14.</p>
+
+<div class="trypy" data-goal="out:2 cafés: 7.0;;out:Total: 21.0;;semerro">
+<p class="try-task"><strong>Missão:</strong> a cliente também levou <strong>2 cafés</strong> de R$ 3,50. Acrescente uma linha <code>print("2 cafés:", 2 * 3.50)</code> depois do leite e some o café no total (<code>+ 2 * 3.50</code>). O total deve ficar <code>21.0</code>.</p>
+<pre class="script" data-file="main.py">print("Padaria Pão Quente")
+print("------------------")
+print("10 pães:", 10 * 0.75)
+print("1 leite:", 6.50)
+print("Total:", 10 * 0.75 + 6.50)
+print("------------------")
+print("Obrigado e volte sempre!")
+</pre>
+<pre class="solucao" data-file="main.py">print("Padaria Pão Quente")
+print("------------------")
+print("10 pães:", 10 * 0.75)
+print("1 leite:", 6.50)
+print("2 cafés:", 2 * 3.50)
+print("Total:", 10 * 0.75 + 6.50 + 2 * 3.50)
+print("------------------")
+print("Obrigado e volte sempre!")
+</pre>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de mostrar a mesma coisa</h2>
+<p>As três linhas abaixo mostram exatamente <code>Total: 5</code>:</p>
+
+<pre class="file" data-file="formas.py">print("Total: 5")
+print("Total:", 5)
+print("Total:", 2 + 3)
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td><code>print("Total: 5")</code></td><td>Quando o texto é fixo e você já sabe o número</td></tr>
+<tr><td><code>print("Total:", 5)</code></td><td>Texto e número separados; útil quando o número vem de uma variável</td></tr>
+<tr><td><code>print("Total:", 2 + 3)</code></td><td>Quando o Python precisa calcular. É o caso mais comum num programa de verdade: você não faz a conta de cabeça, o Python faz</td></tr>
+</table>
+</div>
+
+<p>Mais adiante você vai conhecer as <a href="f-strings.html">f-strings</a>, o jeito mais usado hoje de misturar texto e valores: <code>print(f"Total: {2 + 3}")</code>.</p>
+
+<hr>
+
+<h2>Quando dá errado</h2>
+<p>Todo mundo erra no primeiro programa. Os erros abaixo são os mais comuns, com a mensagem real do Python. Para todos eles, o conselho é o mesmo da aula <a href="introducao.html">Introdução</a>: leia a última linha (o que deu errado), depois o número da linha e os <code>^</code> (onde foi).</p>
+
+<div class="cenario">
+<strong>Esqueceu de fechar as aspas</strong>
+<pre class="file" data-file="e1.py">print("Olá, mundo!)
+</pre>
+<pre class="term" data-cwd="~/python">$ python3 e1.py
+  File "/home/ana/python/e1.py", line 1
+    print("Olá, mundo!)
+          ^
+SyntaxError: unterminated string literal (detected at line 1)</pre>
+<p><strong>O que aconteceu:</strong> "texto não terminado (percebido na linha 1)". As aspas abriram antes de <code>Olá</code> (o <code>^</code> aponta para elas) e nunca fecharam, então o Python achou que o <code>)</code> também fazia parte do texto, e chegou ao fim da linha sem achar o fim do texto. Em inglês, um texto escrito no código é um <em>string literal</em>.</p>
+<p><strong>Como resolver:</strong> feche as aspas: <code>print("Olá, mundo!")</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Aspas que não combinam</strong>
+<pre class="file" data-file="e6.py">print("Olá, mundo!')
+</pre>
+<pre class="term" data-cwd="~/python">$ python3 e6.py
+  File "/home/ana/python/e6.py", line 1
+    print("Olá, mundo!')
+          ^
+SyntaxError: unterminated string literal (detected at line 1)</pre>
+<p><strong>O que aconteceu:</strong> o mesmo erro. O texto abriu com aspa <strong>dupla</strong>, e a aspa <strong>simples</strong> do fim não fecha um texto aberto com dupla (ela é só mais uma letra do texto). <strong>Como resolver:</strong> use o mesmo tipo de aspa nos dois lados.</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu de fechar o parêntese</strong>
+<pre class="file" data-file="e2.py">print("Olá, mundo!"
+</pre>
+<pre class="term" data-cwd="~/python">$ python3 e2.py
+  File "/home/ana/python/e2.py", line 1
+    print("Olá, mundo!"
+         ^
+SyntaxError: '(' was never closed</pre>
+<p><strong>O que aconteceu:</strong> "o <code>(</code> nunca foi fechado". O <code>^</code> aponta para o parêntese que abriu. <strong>Como resolver:</strong> feche-o: <code>print("Olá, mundo!")</code>. Quando o programa tem várias linhas, confira a linha que a mensagem indica: o parêntese esquecido está lá, mesmo que o erro pareça estar mais embaixo.</p>
+</div>
+
+<div class="cenario">
+<strong><code>Print</code> com P maiúsculo</strong>
+<pre class="file" data-file="e3.py">Print("Olá, mundo!")
+</pre>
+<pre class="term" data-cwd="~/python">$ python3 e3.py
+Traceback (most recent call last):
+  File "/home/ana/python/e3.py", line 1, in &lt;module&gt;
+    Print("Olá, mundo!")
+    ^^^^^
+NameError: name 'Print' is not defined. Did you mean: 'print'?</pre>
+<p><strong>O que aconteceu:</strong> para o Python, maiúsculas e minúsculas são letras diferentes. <code>print</code> existe; <code>Print</code>, não: "o nome <code>Print</code> não está definido. Você quis dizer <code>print</code>?". Os celulares e alguns editores de texto põem a primeira letra da linha em maiúscula sozinhos, e esse erro aparece muito por isso. <strong>Como resolver:</strong> <code>print</code>, tudo em minúsculas.</p>
+</div>
+
+<div class="cenario">
+<strong>Aspas "curvas", copiadas de um documento</strong>
+<p>A Ana copiou a linha de um documento do editor de textos e colou no programa:</p>
+<pre class="file" data-file="e4.py">print(“Olá, mundo!”)
+</pre>
+<pre class="term" data-cwd="~/python">$ python3 e4.py
+  File "/home/ana/python/e4.py", line 1
+    print(“Olá, mundo!”)
+          ^
+SyntaxError: invalid character '“' (U+201C)</pre>
+<p><strong>O que aconteceu:</strong> "caractere inválido: <code>“</code>". Olhe de perto: as aspas são <strong>curvas</strong> (<code>“ ”</code>), as aspas "bonitas" que o LibreOffice, o Word e muitos sites colocam sozinhos. Para o Python, só valem as aspas <strong>retas</strong> do teclado (<code>"</code> e <code>'</code>). O <code>U+201C</code> é o código desse caractere na tabela Unicode, para você poder procurar o que ele é.</p>
+<p><strong>Como resolver:</strong> apague as aspas curvas e digite as retas no teclado. E escreva os programas num editor de código (aula <a href="instalar.html">Instalar o Python</a>), nunca num editor de documentos.</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu a vírgula entre o texto e o número</strong>
+<pre class="file" data-file="e5.py">print("Total:" 2 + 3)
+</pre>
+<pre class="term" data-cwd="~/python">$ python3 e5.py
+  File "/home/ana/python/e5.py", line 1
+    print("Total:" 2 + 3)
+          ^^^^^^^^^^^^^^
+SyntaxError: invalid syntax. Perhaps you forgot a comma?</pre>
+<p><strong>O que aconteceu:</strong> "sintaxe inválida. Talvez você tenha esquecido uma vírgula?". Um texto colado num número, sem nada entre eles, não forma uma frase que o Python entenda. Os <code>^</code> sublinham o trecho todo onde a vírgula deveria estar. <strong>Como resolver:</strong> <code>print("Total:", 2 + 3)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Sem parênteses e sem aspas</strong>
+<pre class="file" data-file="e7.py">print Olá
+</pre>
+<pre class="term" data-cwd="~/python">$ python3 e7.py
+  File "/home/ana/python/e7.py", line 1
+    print Olá
+    ^^^^^^^^^
+SyntaxError: Missing parentheses in call to 'print'. Did you mean print(...)?</pre>
+<p><strong>O que aconteceu:</strong> o mesmo erro do código antigo de Python 2 da <a href="introducao.html">Introdução</a>: "faltam os parênteses na chamada do <code>print</code>". E, consertando os parênteses, ainda faltariam as aspas no texto. <strong>Como resolver:</strong> <code>print("Olá")</code>.</p>
+</div>
+
+<h3><code>SyntaxError</code> × <code>NameError</code>: quando o programa chega a rodar</h3>
+<p>Compare dois programas de três linhas, cada um com um erro na <strong>terceira</strong>:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th><code>antes.py</code> (aspas sem fechar)</th><th><code>antes2.py</code> (<code>Print</code> com maiúscula)</th></tr>
+<tr><td><pre class="file" data-file="antes.py">print("Linha 1")
+print("Linha 2")
+print("Linha 3)
+</pre></td><td><pre class="file" data-file="antes2.py">print("Linha 1")
+print("Linha 2")
+Print("Linha 3")
+</pre></td></tr>
+</table>
+</div>
+
+<pre class="term" data-cwd="~/python">$ python3 antes.py
+  File "/home/ana/python/antes.py", line 3
+    print("Linha 3)
+          ^
+SyntaxError: unterminated string literal (detected at line 3)
+$ python3 antes2.py
+Linha 1
+Linha 2
+Traceback (most recent call last):
+  File "/home/ana/python/antes2.py", line 3, in &lt;module&gt;
+    Print("Linha 3")
+    ^^^^^
+NameError: name 'Print' is not defined. Did you mean: 'print'?</pre>
+
+<p>No primeiro, <strong>nenhuma</strong> linha apareceu, nem as duas certas. No segundo, as duas primeiras rodaram. Por quê? Antes de executar qualquer coisa, o Python <strong>lê o arquivo inteiro</strong> para entender a "gramática" (a sintaxe). Um <code>SyntaxError</code> é descoberto nessa leitura, e o programa nem começa: é como um cozinheiro que lê a receita antes e diz "não dá para entender o passo 3". Já o <code>NameError</code> só aparece quando o Python <strong>executa</strong> a linha 3 e procura o nome <code>Print</code>; até lá, as linhas 1 e 2 já tinham rodado. Repare também que o <code>SyntaxError</code> não tem a linha <code>Traceback</code>: ela só aparece em erros de um programa que já estava rodando.</p>
+
+<h3>Missão final: o programa com três erros</h3>
+
+<div class="trypy" data-goal="out:Bom dia, Padaria Pão Quente!;;out:Pães quentinhos: 30;;out:Volte sempre!;;semerro">
+<p class="try-task"><strong>Missão:</strong> a Ana escreveu um aviso para a porta da padaria, mas o programa tem <strong>três erros</strong>, um em cada linha. Rode, leia a mensagem, conserte e rode de novo, até as três linhas aparecerem: <code>Bom dia, Padaria Pão Quente!</code>, <code>Pães quentinhos: 30</code> e <code>Volte sempre!</code>.</p>
+<pre class="script" data-file="main.py">print("Bom dia, Padaria Pão Quente!)
+Print("Pães quentinhos:", 30)
+print("Volte sempre!"
+</pre>
+<pre class="solucao" data-file="main.py">print("Bom dia, Padaria Pão Quente!")
+print("Pães quentinhos:", 30)
+print("Volte sempre!")
+</pre>
+</div>
+
+<p>Repare na ordem em que os erros aparecem: primeiro os de sintaxe (as aspas e o parêntese), e só quando eles estiverem consertados, o <code>NameError</code> do <code>Print</code>.</p>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que mostra</th></tr>
+<tr><td><code>print("Olá, mundo!")</code></td><td><code>Olá, mundo!</code></td></tr>
+<tr><td><code>print('Olá, mundo!')</code></td><td><code>Olá, mundo!</code> (aspas simples: o mesmo texto)</td></tr>
+<tr><td><code>print("Um copo d'água")</code></td><td>Apóstrofo dentro de aspas duplas</td></tr>
+<tr><td><code>print()</code></td><td>Uma linha em branco</td></tr>
+<tr><td><code>print(2 + 3)</code></td><td><code>5</code> (a conta)</td></tr>
+<tr><td><code>print("2 + 3")</code></td><td><code>2 + 3</code> (o texto)</td></tr>
+<tr><td><code>print("Total:", 2 + 3)</code></td><td><code>Total: 5</code> (a vírgula vira um espaço)</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>SyntaxError: unterminated string literal</code></td><td>Aspas sem fechar, ou fechadas com o outro tipo de aspa</td></tr>
+<tr><td><code>SyntaxError: '(' was never closed</code></td><td>Parêntese sem fechar</td></tr>
+<tr><td><code>NameError: name 'Print' is not defined. Did you mean: 'print'?</code></td><td>Maiúscula no lugar errado (ou erro de digitação)</td></tr>
+<tr><td><code>SyntaxError: invalid character '“' (U+201C)</code></td><td>Aspas curvas copiadas de um documento</td></tr>
+<tr><td><code>SyntaxError: invalid syntax. Perhaps you forgot a comma?</code></td><td>Faltou a vírgula entre dois valores</td></tr>
+<tr><td><code>SyntaxError: Missing parentheses in call to 'print'</code></td><td><code>print</code> sem parênteses (jeito do Python 2)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Complete o Olá</h3>
+<p>Complete o nome da função e as aspas:</p>
+<div class="ex-code"><input data-answer="print" aria-label="função">(<input data-answer="&quot;Olá, Ana!&quot;|'Olá, Ana!'" aria-label="texto">)</div>
+</div>
+
+<div class="exercise">
+<h3>2. Texto e número na mesma linha</h3>
+<p>Complete o sinal que separa o texto do número, para aparecer <code>Idade: 30</code>:</p>
+<div class="ex-code">print("Idade:"<input data-answer="," aria-label="sinal"> 30)</div>
+</div>
+
+<div class="exercise">
+<h3>3. A linha em branco</h3>
+<p>Complete para o programa deixar uma linha em branco:</p>
+<div class="ex-code">print<input data-answer="()" aria-label="parênteses"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. O que <code>print("10 + 5")</code> mostra?</p>
+<label><input type="radio" name="q4"> <code>15</code></label>
+<label><input type="radio" name="q4"> <code>10 + 5</code></label>
+<label><input type="radio" name="q4"> <code>"10 + 5"</code></label>
+<label><input type="radio" name="q4"> Um erro.</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">5. Qual destas linhas mostra <code>A placa dizia "Fechado".</code> sem erro?</p>
+<label><input type="radio" name="q5"> <code>print("A placa dizia "Fechado".")</code></label>
+<label><input type="radio" name="q5"> <code>print(A placa dizia "Fechado".)</code></label>
+<label><input type="radio" name="q5"> <code>print('A placa dizia "Fechado".')</code></label>
+<label><input type="radio" name="q5"> <code>Print('A placa dizia "Fechado".')</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Um programa de 5 linhas tem as aspas sem fechar na linha 4. O que aparece quando a Ana roda?</p>
+<label><input type="radio" name="q6"> Só o <code>SyntaxError</code>: o Python lê o arquivo inteiro antes de rodar, e não executa nenhuma linha.</label>
+<label><input type="radio" name="q6"> As linhas 1 a 3 e, depois, o erro.</label>
+<label><input type="radio" name="q6"> As 5 linhas, com o erro no fim.</label>
+<label><input type="radio" name="q6"> Nada, nem mensagem de erro.</label>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>print("…")</code> mostra um texto na tela. As aspas marcam o texto e não aparecem; os parênteses envolvem o que vai ser mostrado.</li>
+  <li>Textos podem ir entre aspas duplas ou simples; use as duplas quando o texto tem apóstrofo, e as simples quando tem aspas duplas.</li>
+  <li>Cada <code>print</code> é uma linha, na ordem do arquivo; <code>print()</code> deixa uma linha em branco.</li>
+  <li>Sem aspas, o Python calcula (<code>print(2 + 3)</code> mostra <code>5</code>); com aspas, é texto. A vírgula junta valores na mesma linha, com um espaço entre eles. Decimais usam ponto.</li>
+  <li>Os erros do primeiro dia: aspas ou parêntese sem fechar, <code>Print</code> com maiúscula, aspas curvas de documento, vírgula esquecida.</li>
+  <li>Um <code>SyntaxError</code> impede o programa inteiro de rodar; um <code>NameError</code> aparece só quando a linha é executada.</li>
+  <li>Próximo passo: as regras de escrita do Python, em <a href="sintaxe.html">Sintaxe e Indentação</a>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
