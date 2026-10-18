@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Métodos de String — referência dos 47 métodos de texto | Guia Python</title>
+<meta name="description" content="Referência rápida dos 47 métodos de string (str) do Python 3.14: upper, lower, title, strip, replace, split, join, find, count, startswith, zfill, isdigit, format, encode, translate e os outros, agrupados por assunto, com exemplo curto, resultado real e o link para a aula.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Métodos de String</span></h1>
+
+<p class="intro">Esta é a página de consulta rápida dos <strong>métodos de string</strong>: as funções que todo texto (<code>str</code>) já traz e que você chama com um ponto, como em <code>nome.upper()</code>. O Python 3.14 tem 47 deles, para trocar maiúsculas e minúsculas, procurar, trocar, limpar, dividir, juntar, alinhar, testar e codificar textos. Cada linha traz um exemplo curto e o resultado real. A explicação passo a passo dos mais usados, com exercícios, está na aula <a href="strings-metodos.html">Métodos de Texto</a>.</p>
+
+<div class="note">
+<strong>Como ler as tabelas</strong>
+<ul>
+  <li><strong>Exemplo</strong> é o que você digitaria depois do <code>&gt;&gt;&gt;</code> do <a href="repl.html">modo interativo</a>; <strong>Resultado</strong> é o que o Python 3.14.4 respondeu no computador da Ana. O modo interativo mostra textos entre aspas (<code>'Ana'</code>); com <code>print()</code> elas não aparecem.</li>
+  <li>Quando o exemplo dá erro, o resultado mostra a última linha da mensagem do Python (em inglês).</li>
+  <li>Espaços que importam estão marcados no texto da explicação. <code>\n</code> é a quebra de linha e <code>\t</code> é a tabulação (veja <a href="strings-escape.html">Caracteres de Escape</a>).</li>
+  <li>A anatomia de uma chamada: <code>"banana".count("a")</code> = <strong>o texto</strong>, um <strong>ponto</strong>, <strong>o nome do método</strong> e, entre parênteses, <strong>os argumentos</strong>.</li>
+</ul>
+</div>
+
+<div class="warning">
+<strong>O texto original nunca muda</strong>
+<p>Strings são <strong>imutáveis</strong>: nenhum método altera o texto. Cada um <strong>devolve um texto novo</strong>, e quem quiser guardá-lo precisa de uma atribuição (<code>nome = nome.capitalize()</code>). Veja no terminal:</p>
+<pre class="term">$ python3 -q
+&gt;&gt;&gt; nome = "ana"
+&gt;&gt;&gt; nome.upper()
+'ANA'
+&gt;&gt;&gt; nome
+'ana'
+&gt;&gt;&gt; nome[0] = "A"
+Traceback (most recent call last):
+  File "&lt;python-input-3&gt;", line 1, in &lt;module&gt;
+    nome[0] = "A"
+    ~~~~^^^
+TypeError: 'str' object does not support item assignment
+&gt;&gt;&gt; nome = nome.capitalize()
+&gt;&gt;&gt; nome
+'Ana'
+&gt;&gt;&gt; exit()
+</pre>
+<p>O <code>nome.upper()</code> mostrou <code>'ANA'</code>, mas <code>nome</code> continuou <code>'ana'</code>. Trocar uma letra direto também não dá: <code>TypeError: 'str' object does not support item assignment</code> = "o objeto str não aceita atribuição a um item". O jeito certo é a última linha: guardar o texto novo na variável.</p>
+</div>
+
+<p>Pule direto para o grupo que você procura:</p>
+<ul>
+  <li><a href="#caixa">Maiúsculas e minúsculas</a>: <code>upper</code>, <code>lower</code>, <code>capitalize</code>, <code>title</code>, <code>swapcase</code>, <code>casefold</code></li>
+  <li><a href="#procurar">Procurar e contar</a>: <code>find</code>, <code>rfind</code>, <code>index</code>, <code>rindex</code>, <code>count</code>, <code>startswith</code>, <code>endswith</code></li>
+  <li><a href="#trocar">Trocar e limpar</a>: <code>replace</code>, <code>strip</code>, <code>lstrip</code>, <code>rstrip</code>, <code>removeprefix</code>, <code>removesuffix</code>, <code>expandtabs</code>, <code>maketrans</code>, <code>translate</code></li>
+  <li><a href="#dividir">Dividir e juntar</a>: <code>split</code>, <code>rsplit</code>, <code>splitlines</code>, <code>partition</code>, <code>rpartition</code>, <code>join</code></li>
+  <li><a href="#alinhar">Alinhar e completar</a>: <code>center</code>, <code>ljust</code>, <code>rjust</code>, <code>zfill</code></li>
+  <li><a href="#testar">Testar (os <code>is…</code>)</a>: <code>isalpha</code>, <code>isdigit</code>, <code>isdecimal</code>, <code>isnumeric</code>, <code>isalnum</code>, <code>isspace</code>, <code>islower</code>, <code>isupper</code>, <code>istitle</code>, <code>isascii</code>, <code>isidentifier</code>, <code>isprintable</code></li>
+  <li><a href="#formatar">Formatar e codificar</a>: <code>format</code>, <code>format_map</code>, <code>encode</code></li>
+  <li><a href="#operadores">Operadores e funções que também servem para texto</a></li>
+</ul>
+
+<hr>
+
+<h2 id="caixa">Maiúsculas e minúsculas</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Método</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>upper()</code></td><td>Tudo em MAIÚSCULAS (<em>upper case</em>). Acentos funcionam.</td><td><code>"Conceição".upper()</code></td><td><code>'CONCEIÇÃO'</code></td><td><a href="strings-metodos.html">Métodos de Texto</a></td></tr>
+<tr><td><code>lower()</code></td><td>Tudo em minúsculas (<em>lower case</em>).</td><td><code>"JOSÉ RIBAMAR".lower()</code></td><td><code>'josé ribamar'</code></td><td><a href="strings-metodos.html">Métodos de Texto</a></td></tr>
+<tr><td><code>capitalize()</code></td><td>Só a primeira letra maiúscula; <strong>o resto vira minúscula</strong>.</td><td><code>"ana BEATRIZ".capitalize()</code></td><td><code>'Ana beatriz'</code></td><td><a href="strings-metodos.html">Métodos de Texto</a></td></tr>
+<tr><td><code>title()</code></td><td>A primeira letra de cada palavra maiúscula (como num título).</td><td><code>"ana beatriz de sousa".title()</code></td><td><code>'Ana Beatriz De Sousa'</code></td><td></td></tr>
+<tr><td></td><td>depois de um apóstrofo também conta como palavra nova</td><td><code>"pão d'água".title()</code></td><td><code>"Pão D'Água"</code></td><td></td></tr>
+<tr><td><code>swapcase()</code></td><td>Inverte: maiúsculas viram minúsculas e vice-versa (<em>swap</em> = "trocar").</td><td><code>"Ana".swapcase()</code></td><td><code>'aNA'</code></td><td></td></tr>
+<tr><td><code>casefold()</code></td><td>Minúsculas "fortes", feitas para <strong>comparar</strong> textos sem ligar para maiúsculas. Diferente do <code>lower()</code> em letras como o <code>ß</code> alemão.</td><td><code>"Straße".lower()</code><br><code>"Straße".casefold()</code></td><td><code>'straße'</code><br><code>'strasse'</code></td><td><a href="operadores-comparacao.html">Comparações</a></td></tr>
+<tr><td></td><td>comparar sem diferenciar maiúsculas</td><td><code>"ÁGUA".casefold() == "água".casefold()</code></td><td><code>True</code></td><td></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="procurar">Procurar e contar</h2>
+
+<p>As posições começam em <strong>0</strong>: em <code>"banana"</code>, o <code>b</code> está na posição 0, o primeiro <code>n</code> na 2 (veja <a href="strings-fatias.html">Índices e Fatias</a>).</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Método</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>find(sub)</code></td><td>A posição da <strong>primeira</strong> vez que <code>sub</code> aparece.</td><td><code>"banana".find("na")</code></td><td><code>2</code></td><td><a href="strings-metodos.html">Métodos de Texto</a></td></tr>
+<tr><td></td><td>não achou: devolve <code>-1</code> (sem erro)</td><td><code>"banana".find("x")</code></td><td><code>-1</code></td><td></td></tr>
+<tr><td><code>find(sub, início)</code></td><td>Começa a procurar na posição <code>início</code>.</td><td><code>"banana".find("a", 2)</code></td><td><code>3</code></td><td></td></tr>
+<tr><td><code>rfind(sub)</code></td><td>A posição da <strong>última</strong> vez (procura da direita, <em>right</em>).</td><td><code>"banana".rfind("na")</code></td><td><code>4</code></td><td></td></tr>
+<tr><td><code>index(sub)</code></td><td>Como o <code>find</code>…</td><td><code>"banana".index("na")</code></td><td><code>2</code></td><td></td></tr>
+<tr><td></td><td>…mas, se não acha, dá <strong>erro</strong></td><td><code>"banana".index("x")</code></td><td><code>ValueError: substring not found</code></td><td><a href="try-except.html">try e except</a></td></tr>
+<tr><td><code>rindex(sub)</code></td><td>Como o <code>rfind</code>, com erro se não acha.</td><td><code>"banana".rindex("na")</code></td><td><code>4</code></td><td></td></tr>
+<tr><td><code>count(sub)</code></td><td>Quantas vezes <code>sub</code> aparece (sem sobrepor).</td><td><code>"banana".count("a")</code>, <code>"banana".count("na")</code></td><td><code>3</code>, <code>2</code></td><td><a href="strings-metodos.html">Métodos de Texto</a></td></tr>
+<tr><td><code>startswith(início)</code></td><td>"Começa com…?" (<em>starts with</em>)</td><td><code>"Dr. Ana".startswith("Dr.")</code></td><td><code>True</code></td><td><a href="strings-metodos.html">Métodos de Texto</a></td></tr>
+<tr><td><code>endswith(fim)</code></td><td>"Termina com…?" (<em>ends with</em>)</td><td><code>"foto.jpg".endswith(".jpg")</code></td><td><code>True</code></td><td></td></tr>
+<tr><td></td><td>aceita uma tupla de opções; diferencia maiúsculas</td><td><code>"foto.JPG".endswith((".jpg", ".png"))</code></td><td><code>False</code></td><td></td></tr>
+<tr><td><code>sub in texto</code></td><td>Não é método, mas é o jeito mais simples de perguntar "tem?"</td><td><code>"ana" in "banana"</code></td><td><code>True</code></td><td><a href="operadores-is-in.html">is e in</a></td></tr>
+</table>
+</div>
+
+<div class="tip">
+<strong><code>find</code> ou <code>index</code>?</strong>
+<p>Use <code>in</code> quando só quer saber <strong>se</strong> tem. Use <code>find</code> quando quer a posição e "não achou" é normal (teste se deu <code>-1</code>). Use <code>index</code> quando o texto <strong>tem que</strong> estar lá: se não estiver, o erro avisa logo. O <code>-1</code> do <code>find</code> é traiçoeiro: <code>texto[texto.find("x")]</code> pega a <strong>última</strong> letra sem reclamar.</p>
+</div>
+
+<hr>
+
+<h2 id="trocar">Trocar e limpar</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Método</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>replace(de, para)</code></td><td>Troca <strong>todas</strong> as vezes que <code>de</code> aparece por <code>para</code>.</td><td><code>"2026-10-18".replace("-", "/")</code></td><td><code>'2026/10/18'</code></td><td><a href="strings-metodos.html">Métodos de Texto</a></td></tr>
+<tr><td><code>replace(de, para, n)</code></td><td>Troca só as <code>n</code> primeiras.</td><td><code>"banana".replace("a", "o", 1)</code></td><td><code>'bonana'</code></td><td></td></tr>
+<tr><td></td><td>desde o 3.13, o <code>n</code> pode ter nome: <code>count=</code></td><td><code>"banana".replace("a", "o", count=2)</code></td><td><code>'bonona'</code></td><td></td></tr>
+<tr><td><code>strip()</code></td><td>Tira os espaços (e <code>\n</code>, <code>\t</code>) do começo e do fim (<em>strip</em> = "descascar").</td><td><code>"&nbsp;&nbsp;&nbsp;Ana&nbsp;&nbsp;&nbsp;".strip()</code></td><td><code>'Ana'</code></td><td><a href="strings-metodos.html">Métodos de Texto</a></td></tr>
+<tr><td><code>lstrip()</code></td><td>Só do começo (à esquerda, <em>left</em>).</td><td><code>"&nbsp;&nbsp;&nbsp;Ana&nbsp;&nbsp;&nbsp;".lstrip()</code></td><td><code>'Ana&nbsp;&nbsp;&nbsp;'</code></td><td></td></tr>
+<tr><td><code>rstrip()</code></td><td>Só do fim (à direita, <em>right</em>). Muito usado para tirar o <code>\n</code> das linhas de um arquivo.</td><td><code>"&nbsp;&nbsp;&nbsp;Ana&nbsp;&nbsp;&nbsp;".rstrip()</code></td><td><code>'&nbsp;&nbsp;&nbsp;Ana'</code></td><td><a href="arquivos-ler.html">Lendo Arquivos</a></td></tr>
+<tr><td><code>strip(letras)</code></td><td>Tira das pontas <strong>qualquer</strong> das letras dadas (não é uma palavra!).</td><td><code>"--PI--".strip("-")</code></td><td><code>'PI'</code></td><td></td></tr>
+<tr><td></td><td></td><td><code>"000123".lstrip("0")</code></td><td><code>'123'</code></td><td></td></tr>
+<tr><td></td><td>cuidado: tira <code>w</code>, <code>.</code>, <code>m</code>, <code>o</code> e <code>c</code> em qualquer ordem</td><td><code>"www.loja.com".strip("w.moc")</code></td><td><code>'loja'</code></td><td></td></tr>
+<tr><td><code>removeprefix(início)</code></td><td>Tira o começo, se for <strong>exatamente</strong> esse texto. Se não for, devolve o texto igual.</td><td><code>"Sr. Davi".removeprefix("Sr. ")</code><br><code>"Sr. Davi".removeprefix("Dr. ")</code></td><td><code>'Davi'</code><br><code>'Sr. Davi'</code></td><td></td></tr>
+<tr><td><code>removesuffix(fim)</code></td><td>Tira o fim, se for exatamente esse texto.</td><td><code>"foto.jpg".removesuffix(".jpg")</code></td><td><code>'foto'</code></td><td></td></tr>
+<tr><td><code>expandtabs(n)</code></td><td>Troca cada <code>\t</code> por espaços, até a próxima coluna múltipla de <code>n</code> (o padrão é 8).</td><td><code>"a\tb".expandtabs(4)</code></td><td><code>'a&nbsp;&nbsp;&nbsp;b'</code></td><td><a href="strings-escape.html">Caracteres de Escape</a></td></tr>
+<tr><td><code>str.maketrans(de, para)</code></td><td>Monta uma "tabela de troca", letra por letra, para o <code>translate</code>. É chamado no tipo <code>str</code>, não num texto.</td><td><code>tabela = str.maketrans("áéç", "aec")</code><br><code>tabela</code></td><td><code>{225: 97, 233: 101, 231: 99}</code> (os códigos das letras, veja <a href="ref-funcoes-embutidas.html#converter"><code>ord</code></a>)</td><td></td></tr>
+<tr><td><code>translate(tabela)</code></td><td>Troca cada letra segundo a tabela. Letras fora da tabela ficam.</td><td><code>"maçã é café".translate(tabela)</code></td><td><code>'macã e cafe'</code> (o <code>ã</code> não estava na tabela)</td><td></td></tr>
+<tr><td></td><td>com um dicionário: trocar vários sinais de uma vez</td><td><code>"R$ 1.234,50".translate(str.maketrans({".": "", ",": "."}))</code></td><td><code>'R$ 1234.50'</code></td><td></td></tr>
+<tr><td></td><td>o terceiro argumento do <code>maketrans</code> lista o que <strong>apagar</strong></td><td><code>"(11) 9999-0000".translate(str.maketrans("", "", "()- "))</code></td><td><code>'1199990000'</code></td><td></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="dividir">Dividir e juntar</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Método</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>split()</code></td><td>Corta o texto nos espaços e devolve uma <strong>lista</strong> de palavras. Vários espaços seguidos contam como um.</td><td><code>"arroz feijão&nbsp;&nbsp;café".split()</code></td><td><code>['arroz', 'feijão', 'café']</code></td><td><a href="strings-metodos.html">Métodos de Texto</a></td></tr>
+<tr><td><code>split(sep)</code></td><td>Corta em cada <code>sep</code>. Dois <code>sep</code> seguidos dão um texto vazio no meio.</td><td><code>"arroz,feijão,,café".split(",")</code></td><td><code>['arroz', 'feijão', '', 'café']</code></td><td><a href="csv.html">Arquivos CSV</a></td></tr>
+<tr><td><code>split(sep, n)</code></td><td>Corta no máximo <code>n</code> vezes, da esquerda.</td><td><code>"a,b,c,d".split(",", 2)</code></td><td><code>['a', 'b', 'c,d']</code></td><td></td></tr>
+<tr><td><code>rsplit(sep, n)</code></td><td>Corta no máximo <code>n</code> vezes, <strong>da direita</strong>.</td><td><code>"a,b,c,d".rsplit(",", 1)</code></td><td><code>['a,b,c', 'd']</code></td><td></td></tr>
+<tr><td><code>splitlines()</code></td><td>Corta nas quebras de linha (<code>\n</code>, <code>\r\n</code>…), sem deixar um item vazio no fim.</td><td><code>"linha 1\nlinha 2\r\nlinha 3".splitlines()</code></td><td><code>['linha 1', 'linha 2', 'linha 3']</code></td><td><a href="arquivos-ler.html">Lendo Arquivos</a></td></tr>
+<tr><td></td><td>compare com <code>split("\n")</code></td><td><code>"linha 1\nlinha 2\n".split("\n")</code></td><td><code>['linha 1', 'linha 2', '']</code></td><td></td></tr>
+<tr><td></td><td><code>keepends=True</code> mantém as quebras</td><td><code>"linha 1\nlinha 2\n".splitlines(keepends=True)</code></td><td><code>['linha 1\n', 'linha 2\n']</code></td><td></td></tr>
+<tr><td><code>partition(sep)</code></td><td>Corta na <strong>primeira</strong> vez que <code>sep</code> aparece e devolve uma tupla de 3: antes, o separador, depois.</td><td><code>"nome=Ana=Sousa".partition("=")</code></td><td><code>('nome', '=', 'Ana=Sousa')</code></td><td><a href="desempacotamento.html">Desempacotamento</a></td></tr>
+<tr><td></td><td>se não acha, o texto todo fica na primeira parte</td><td><code>"sem igual".partition("=")</code></td><td><code>('sem igual', '', '')</code></td><td></td></tr>
+<tr><td><code>rpartition(sep)</code></td><td>Corta na <strong>última</strong> vez.</td><td><code>"nome=Ana=Sousa".rpartition("=")</code></td><td><code>('nome=Ana', '=', 'Sousa')</code></td><td></td></tr>
+<tr><td><code>sep.join(lista)</code></td><td>O contrário do <code>split</code>: junta os textos da lista, com <code>sep</code> entre eles. Repare: o método é chamado <strong>no separador</strong>.</td><td><code>", ".join(["arroz", "feijão", "café"])</code></td><td><code>'arroz, feijão, café'</code></td><td><a href="strings-juntar.html">Juntar e Repetir Textos</a></td></tr>
+<tr><td></td><td>sem separador</td><td><code>"".join(["A", "n", "a"])</code></td><td><code>'Ana'</code></td><td></td></tr>
+<tr><td></td><td>um texto também é uma sequência</td><td><code>"-".join("Ana")</code></td><td><code>'A-n-a'</code></td><td></td></tr>
+<tr><td></td><td>só junta <strong>textos</strong></td><td><code>", ".join([1, 2, 3])</code></td><td><code>TypeError: sequence item 0: expected str instance, int found</code></td><td></td></tr>
+<tr><td></td><td>converta antes</td><td><code>", ".join(str(n) for n in [1, 2, 3])</code></td><td><code>'1, 2, 3'</code></td><td><a href="conversao.html">Conversão de Tipos</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="alinhar">Alinhar e completar</h2>
+
+<p>Os quatro recebem a <strong>largura</strong> final do texto. Se o texto já for maior, ele volta igual.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Método</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>center(largura)</code></td><td>Centraliza, completando com espaços dos dois lados.</td><td><code>"Ana".center(9)</code></td><td><code>'&nbsp;&nbsp;&nbsp;Ana&nbsp;&nbsp;&nbsp;'</code></td><td><a href="ref-formatacao.html">Formatação</a></td></tr>
+<tr><td><code>center(largura, letra)</code></td><td>Completa com outra letra.</td><td><code>"Ana".center(9, "*")</code></td><td><code>'***Ana***'</code></td><td></td></tr>
+<tr><td><code>ljust(largura)</code></td><td>Alinha à esquerda (completa à direita).</td><td><code>"Ana".ljust(6) + "|"</code></td><td><code>'Ana&nbsp;&nbsp;&nbsp;|'</code></td><td></td></tr>
+<tr><td><code>rjust(largura)</code></td><td>Alinha à direita (completa à esquerda).</td><td><code>"Ana".rjust(6)</code></td><td><code>'&nbsp;&nbsp;&nbsp;Ana'</code></td><td></td></tr>
+<tr><td></td><td></td><td><code>"7".rjust(3, "0")</code></td><td><code>'007'</code></td><td></td></tr>
+<tr><td><code>zfill(largura)</code></td><td>Completa com zeros à esquerda (<em>zero fill</em>), respeitando o sinal.</td><td><code>"42".zfill(5)</code>, <code>"-42".zfill(5)</code></td><td><code>'00042'</code>, <code>'-0042'</code></td><td></td></tr>
+</table>
+</div>
+
+<p>As f-strings fazem o mesmo com <code>{nome:^9}</code>, <code>{nome:&lt;6}</code>, <code>{nome:&gt;6}</code> e <code>{numero:05}</code>: veja <a href="ref-formatacao.html">Formatação</a>.</p>
+
+<hr>
+
+<h2 id="testar">Testar (os métodos <code>is…</code>)</h2>
+
+<p>Todos respondem <code>True</code> ou <code>False</code>. Para o texto vazio <code>""</code>, quase todos respondem <code>False</code>; só <code>isascii()</code> e <code>isprintable()</code> respondem <code>True</code>.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Método</th><th>"O texto todo é…?"</th><th>Exemplo</th><th>Resultado</th></tr>
+<tr><td><code>isalpha()</code></td><td>só letras (acentuadas valem)</td><td><code>"Conceição".isalpha()</code><br><code>"".isalpha()</code></td><td><code>True</code><br><code>False</code></td></tr>
+<tr><td><code>isalnum()</code></td><td>só letras e algarismos (<em>alphanumeric</em>). Espaço não vale.</td><td><code>"Ana2026".isalnum()</code><br><code>"Ana Sousa".isalnum()</code></td><td><code>True</code><br><code>False</code></td></tr>
+<tr><td><code>isdigit()</code></td><td>só algarismos. Ponto e sinal de menos não são algarismos!</td><td><code>"123".isdigit()</code><br><code>"12.5".isdigit()</code><br><code>"-5".isdigit()</code></td><td><code>True</code><br><code>False</code><br><code>False</code></td></tr>
+<tr><td><code>isdecimal()</code></td><td>só algarismos de 0 a 9 (os que o <code>int()</code> aceita). É o mais rigoroso dos três.</td><td><code>"123".isdecimal()</code><br><code>"²".isdecimal()</code></td><td><code>True</code><br><code>False</code></td></tr>
+<tr><td><code>isnumeric()</code></td><td>só caracteres numéricos, inclusive frações e expoentes (o mais largo dos três)</td><td><code>"½".isnumeric()</code><br><code>"½".isdigit()</code><br><code>"²".isdigit()</code></td><td><code>True</code><br><code>False</code><br><code>True</code></td></tr>
+<tr><td><code>isspace()</code></td><td>só espaços, <code>\t</code> e <code>\n</code></td><td><code>"&nbsp;&nbsp;&nbsp;\t\n".isspace()</code><br><code>"".isspace()</code></td><td><code>True</code><br><code>False</code></td></tr>
+<tr><td><code>islower()</code></td><td>todas as letras minúsculas</td><td><code>"ana".islower()</code></td><td><code>True</code></td></tr>
+<tr><td><code>isupper()</code></td><td>todas as letras maiúsculas</td><td><code>"ANA".isupper()</code></td><td><code>True</code></td></tr>
+<tr><td><code>istitle()</code></td><td>escrito como título (cada palavra com a primeira maiúscula)</td><td><code>"Ana Sousa".istitle()</code></td><td><code>True</code></td></tr>
+<tr><td><code>isascii()</code></td><td>só caracteres ASCII (sem acentos nem emojis). Responde <code>True</code> para <code>""</code>.</td><td><code>"Ana".isascii()</code><br><code>"Conceição".isascii()</code></td><td><code>True</code><br><code>False</code></td></tr>
+<tr><td><code>isidentifier()</code></td><td>um nome válido de variável</td><td><code>"preco_total".isidentifier()</code><br><code>"2nome".isidentifier()</code></td><td><code>True</code><br><code>False</code></td></tr>
+<tr><td><code>isprintable()</code></td><td>sem caracteres "invisíveis" de controle, como <code>\n</code>. Também responde <code>True</code> para <code>""</code>.</td><td><code>"Olá".isprintable()</code><br><code>"Olá\n".isprintable()</code></td><td><code>True</code><br><code>False</code></td></tr>
+</table>
+</div>
+
+<div class="tip">
+<strong>Para conferir o que a pessoa digitou</strong>
+<p>Antes de <code>int(texto)</code>, <code>texto.isdecimal()</code> diz se a conversão vai dar certo para números inteiros positivos. Para aceitar <code>-5</code> e <code>7.5</code>, o melhor caminho é tentar converter com <a href="try-except.html">try e except</a>.</p>
+</div>
+
+<hr>
+
+<h2 id="formatar">Formatar e codificar</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Método</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>format(valores…)</code></td><td>Troca cada <code>{}</code> do texto pelo próximo valor. Hoje, prefira as f-strings, que fazem o mesmo de um jeito mais legível.</td><td><code>"{} tem {} anos".format("Ana", 30)</code></td><td><code>'Ana tem 30 anos'</code></td><td><a href="f-strings.html">f-strings</a></td></tr>
+<tr><td></td><td>com nomes</td><td><code>"{nome} tem {idade} anos".format(nome="Ana", idade=30)</code></td><td><code>'Ana tem 30 anos'</code></td><td></td></tr>
+<tr><td></td><td>com número de posição (repetindo)</td><td><code>"{0} e {0}".format("Ana")</code></td><td><code>'Ana e Ana'</code></td><td></td></tr>
+<tr><td></td><td>com especificação</td><td><code>"R$ {:.2f}".format(4.5)</code></td><td><code>'R$ 4.50'</code></td><td><a href="ref-formatacao.html">Formatação</a></td></tr>
+<tr><td><code>format_map(dicionário)</code></td><td>Como o <code>format</code>, mas pega os nomes de um dicionário.</td><td><code>dados = {"nome": "Ana", "cidade": "Teresina"}</code><br><code>"{nome} mora em {cidade}".format_map(dados)</code></td><td><code>'Ana mora em Teresina'</code></td><td><a href="dicionarios.html">Dicionários</a></td></tr>
+<tr><td><code>encode()</code></td><td>Transforma o texto em <strong>bytes</strong>, em UTF-8 se você não disser outra codificação.</td><td><code>"olá".encode()</code></td><td><code>b'ol\xc3\xa1'</code></td><td><a href="arquivos.html">Abrindo Arquivos</a></td></tr>
+<tr><td><code>encode(codificação)</code></td><td>Em outra codificação.</td><td><code>"olá".encode("latin-1")</code></td><td><code>b'ol\xe1'</code></td><td></td></tr>
+<tr><td></td><td>uma letra que não existe na codificação dá erro…</td><td><code>"olá😀".encode("ascii")</code></td><td><code>UnicodeEncodeError: 'ascii' codec can't encode characters in position 2-3: ordinal not in range(128)</code></td><td></td></tr>
+<tr><td></td><td>…a não ser com <code>errors="replace"</code></td><td><code>"olá😀".encode("ascii", errors="replace")</code></td><td><code>b'ol??'</code></td><td></td></tr>
+<tr><td><code>bytes.decode()</code></td><td>O caminho de volta, de bytes para texto (é um método dos <code>bytes</code>, não do <code>str</code>).</td><td><code>b"ol\xc3\xa1".decode()</code></td><td><code>'olá'</code></td><td></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="operadores">Operadores e funções que também servem para texto</h2>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Exemplo</th><th>Resultado</th><th>Aula</th></tr>
+<tr><td><code>a + b</code></td><td>Junta dois textos.</td><td><code>"Ana" + " " + "Sousa"</code></td><td><code>'Ana Sousa'</code></td><td><a href="strings-juntar.html">Juntar e Repetir Textos</a></td></tr>
+<tr><td><code>texto * n</code></td><td>Repete o texto <code>n</code> vezes.</td><td><code>"-" * 10</code></td><td><code>'----------'</code></td><td><a href="strings-juntar.html">Juntar e Repetir Textos</a></td></tr>
+<tr><td><code>len(texto)</code></td><td>Quantas letras.</td><td><code>len("Conceição")</code></td><td><code>9</code></td><td><a href="strings.html">Strings</a></td></tr>
+<tr><td><code>texto[i]</code>, <code>texto[a:b]</code></td><td>Uma letra; uma fatia.</td><td><code>"Python"[0], "Python"[-1], "Python"[1:4]</code></td><td><code>('P', 'n', 'yth')</code></td><td><a href="strings-fatias.html">Índices e Fatias</a></td></tr>
+<tr><td><code>f"…{valor}…"</code></td><td>Monta um texto com valores dentro.</td><td colspan="2">veja <a href="f-strings.html">f-strings</a> e <a href="ref-formatacao.html">Formatação</a></td><td><a href="f-strings.html">f-strings</a></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Experimente</h2>
+
+<div class="trypy" data-goal="out:[Ana Beatriz De Sousa];;src:\.strip\(;;src:\.title\(">
+<p class="try-task"><strong>Missão:</strong> o nome chegou do formulário com espaços sobrando e maiúsculas misturadas. Use <code>strip()</code> e <code>title()</code> (um depois do outro, na mesma linha) para que a saída fique <code>[Ana Beatriz De Sousa]</code>. Os colchetes mostram se ainda sobrou algum espaço.</p>
+<pre class="script" data-file="main.py">entrada = "  ana BEATRIZ de sousa  "
+nome = entrada
+print(f"[{nome}]")
+</pre>
+<pre class="solucao" data-file="main.py">entrada = "  ana BEATRIZ de sousa  "
+nome = entrada.strip().title()
+print(f"[{nome}]")
+</pre>
+</div>
+
+<p>Repare na solução: <code>entrada.strip()</code> devolve um texto novo, e o <code>.title()</code> é chamado <strong>nesse texto novo</strong>. Encadear métodos assim é muito comum.</p>
+
+<div class="trypy">
+<p class="try-task"><strong>Livre:</strong> teste qualquer método desta página com a frase, ou troque a frase.</p>
+<pre class="script" data-file="main.py">frase = "O rato roeu a roupa do rei de Roma"
+print(frase.lower().count("r"))
+print(frase.split())
+print(" ".join(reversed(frase.split())))
+print(frase.replace("rato", "gato"))
+print(frase.startswith("O"), frase.endswith("Roma"))
+print(frase.upper().center(40, "*"))
+</pre>
+</div>
+
+<p>No computador da Ana, esse programa mostra:</p>
+
+<pre class="term">$ python3 frase.py
+5
+['O', 'rato', 'roeu', 'a', 'roupa', 'do', 'rei', 'de', 'Roma']
+Roma de rei do roupa a roeu rato O
+O gato roeu a roupa do rei de Roma
+True True
+***O RATO ROEU A ROUPA DO REI DE ROMA***
+</pre>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li>Os métodos de string nunca mudam o texto: devolvem um texto novo. Guarde-o com <code>nome = nome.metodo()</code>.</li>
+  <li>Caixa: <code>upper</code>, <code>lower</code>, <code>capitalize</code>, <code>title</code>, <code>swapcase</code>; para comparar, <code>casefold</code>.</li>
+  <li>Procurar: <code>find</code> (dá <code>-1</code>), <code>index</code> (dá erro), <code>count</code>, <code>startswith</code>, <code>endswith</code>, e o operador <code>in</code>.</li>
+  <li>Limpar e trocar: <code>strip</code> e companhia (tiram <strong>letras</strong> das pontas), <code>removeprefix</code>/<code>removesuffix</code> (tiram um <strong>texto exato</strong>), <code>replace</code>, <code>translate</code>.</li>
+  <li>Dividir e juntar: <code>split</code> devolve uma lista; <code>sep.join(lista)</code> faz o contrário, e só com textos.</li>
+  <li>Alinhar: <code>center</code>, <code>ljust</code>, <code>rjust</code>, <code>zfill</code>. Testar: os <code>is…</code>, que dão <code>False</code> para <code>""</code> (menos <code>isascii</code> e <code>isprintable</code>).</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
