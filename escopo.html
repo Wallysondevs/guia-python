@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Escopo (global e local) — onde cada variável existe | Guia Python</title>
+<meta name="description" content="Escopo em Python para quem está começando: variáveis locais (que só existem dentro da função) e globais, ler uma global dentro da função, o mesmo nome dentro e fora, o UnboundLocalError real e por que ele acontece, a palavra global (e por que evitá-la), o nonlocal, e o nome de função embutida tomado por uma variável.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Escopo (global e local)</span></h1>
+
+<p class="intro">Nas aulas de funções, apareceu várias vezes um <code>NameError</code> estranho: a variável existia dentro da função, mas, fora dela, o Python dizia que ela "não está definida". Não é defeito: cada variável tem um <strong>lugar onde ela existe</strong>, e esse lugar se chama <strong>escopo</strong> (em inglês, <em>scope</em>, "alcance"). Nesta aula você vai entender onde cada variável vive, quem enxerga quem, e o erro mais confuso desse assunto, o <code>UnboundLocalError</code>.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é uma variável <strong>local</strong> (de dentro da função) e uma <strong>global</strong> (do programa principal).</li>
+  <li>Que a função <strong>enxerga</strong> as globais, mas o programa principal não enxerga as locais.</li>
+  <li>O que acontece quando dentro e fora há uma variável com o mesmo nome.</li>
+  <li>Por que aparece o <code>UnboundLocalError</code>, com a mensagem real.</li>
+  <li>A palavra <code>global</code>, e por que o jeito melhor quase sempre é parâmetro + <code>return</code>.</li>
+  <li>O <code>nonlocal</code>, e o que acontece quando uma variável toma o nome de uma função embutida.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: o quadro da parede e o rascunho de cada uma</h2>
+<p>Na parede da padaria há um <strong>quadro</strong> com os avisos de todo mundo: "taxa de entrega: R$ 5". Qualquer funcionária que passa consegue ler. Já cada uma, quando faz uma conta, usa um <strong>papel de rascunho</strong> próprio. Ela anota, calcula e, quando acaba a tarefa, joga o rascunho fora. Ninguém mais vê o que estava escrito ali.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Na padaria</th><th>No Python</th><th>Quem enxerga</th></tr>
+<tr><td>O quadro da parede</td><td>Variável <strong>global</strong>: criada fora de qualquer função, no programa principal</td><td>Todo mundo: o programa principal e todas as funções</td></tr>
+<tr><td>O rascunho de uma funcionária</td><td>Variável <strong>local</strong>: criada dentro de uma função (inclusive os parâmetros)</td><td>Só aquela função, e só enquanto ela está rodando</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. A variável local: só existe dentro da função</h2>
+
+<pre class="file" data-file="local.py">def fechar_caixa():
+    total = 150 + 230
+    print(f"Dentro da função: {total}")
+
+
+fechar_caixa()
+print(f"Fora da função: {total}")
+</pre>
+
+<pre class="term">$ python3 local.py
+Dentro da função: 380
+Traceback (most recent call last):
+  File "/home/ana/local.py", line 7, in &lt;module&gt;
+    print(f"Fora da função: {total}")
+                             ^^^^^
+NameError: name 'total' is not defined
+</pre>
+
+<p>A variável <code>total</code> foi criada <strong>dentro</strong> da função: é local, o rascunho da <code>fechar_caixa</code>. Dentro dela, funcionou. Quando a função terminou, o rascunho foi para o lixo. Na linha 7, já no programa principal (<code>&lt;module&gt;</code>), o nome <code>total</code> não existe mais. Os parâmetros funcionam igual: são variáveis locais que já nascem preenchidas.</p>
+
+<p>Para levar um valor de dentro para fora, a função tem de <strong>devolvê-lo</strong>, com <code>return</code> (aula <a href="return.html">return</a>). É a funcionária entregando o resultado antes de jogar o rascunho fora.</p>
+
+<h3>Cada chamada, um rascunho novo</h3>
+<p>As variáveis locais não sobrevivem de uma chamada para a outra. Cada chamada começa do zero:</p>
+
+<pre class="file" data-file="cada_chamada.py">def contar_visita():
+    visitas = 0
+    visitas = visitas + 1
+    print(f"Visitas: {visitas}")
+
+
+contar_visita()
+contar_visita()
+contar_visita()
+</pre>
+
+<pre class="term">$ python3 cada_chamada.py
+Visitas: 1
+Visitas: 1
+Visitas: 1
+</pre>
+
+<p>A Ana queria ver 1, 2, 3, mas a cada chamada a função cria um <code>visitas</code> novo, valendo 0. A seção 4 mostra como resolver.</p>
+
+<div class="trypy" data-goal="src:\breturn\b;;out:Troco: R$ 17.50;;semerro">
+<p class="try-task"><strong>Missão:</strong> o troco é calculado dentro da função, mas o <code>print</code> de fora não o encontra. Rode, veja o <code>NameError</code>, e faça a função <strong>devolver</strong> o troco para o programa principal.</p>
+<pre class="script" data-file="main.py">def calcular_troco(pago, conta):
+    troco = pago - conta
+
+
+calcular_troco(50, 32.5)
+print(f"Troco: R$ {troco:.2f}")
+</pre>
+<pre class="solucao" data-file="main.py">def calcular_troco(pago, conta):
+    troco = pago - conta
+    return troco
+
+
+troco = calcular_troco(50, 32.5)
+print(f"Troco: R$ {troco:.2f}")
+</pre>
+</div>
+
+<hr>
+
+<h2>2. A variável global: a função consegue ler</h2>
+<p>O caminho contrário funciona: uma variável criada no programa principal pode ser <strong>lida</strong> dentro da função.</p>
+
+<pre class="file" data-file="global_ler.py">taxa_entrega = 5
+
+
+def preco_final(preco):
+    return preco + taxa_entrega
+
+
+print(preco_final(20))
+print(preco_final(42))
+</pre>
+
+<pre class="term">$ python3 global_ler.py
+25
+47
+</pre>
+
+<p>Dentro de <code>preco_final</code>, o Python procura <code>taxa_entrega</code> entre as variáveis locais e não acha. Então ele procura no programa principal, e acha: é o quadro da parede. A busca segue esta ordem:</p>
+
+<ol class="passo">
+  <li><strong>Local</strong>: as variáveis da própria função (e os parâmetros).</li>
+  <li><strong>A função de fora</strong>, quando há uma função dentro de outra (seção 6).</li>
+  <li><strong>Global</strong>: as variáveis do programa principal.</li>
+  <li><strong>Embutidos</strong>: os nomes que já vêm com o Python, como <code>print</code>, <code>len</code>, <code>list</code>.</li>
+</ol>
+
+<p>O primeiro lugar onde o nome aparece ganha. (Os programadores chamam essa ordem de <strong>LEGB</strong>: <em>Local, Enclosing, Global, Built-in</em>.)</p>
+
+<hr>
+
+<h2>3. O mesmo nome dentro e fora</h2>
+<p>E se a função <strong>atribuir</strong> um valor a um nome que também existe fora?</p>
+
+<pre class="file" data-file="mesmo_nome.py">nome = "Ana"
+
+
+def trocar():
+    nome = "Bruno"
+    print(f"Dentro: {nome}")
+
+
+trocar()
+print(f"Fora: {nome}")
+</pre>
+
+<pre class="term">$ python3 mesmo_nome.py
+Dentro: Bruno
+Fora: Ana
+</pre>
+
+<p>O global <strong>não mudou</strong>. O <code>nome = "Bruno"</code> de dentro da função criou uma variável <strong>local nova</strong>, que por acaso tem o mesmo nome. São duas variáveis diferentes: a funcionária escreveu "Bruno" no rascunho dela; o quadro da parede continua dizendo "Ana". A regra:</p>
+
+<div class="warning">
+<strong>A regra que explica quase tudo</strong>
+<p>Se uma função <strong>atribui</strong> um valor a um nome (<code>nome = …</code>, <code>nome += …</code>) em <strong>qualquer</strong> lugar do corpo, esse nome é <strong>local em toda a função</strong>, do começo ao fim. Se ela só <strong>lê</strong> o nome, ele pode ser global.</p>
+</div>
+
+<p>Com parâmetros acontece o mesmo: mudar o parâmetro não muda a variável de fora.</p>
+
+<pre class="file" data-file="parametro_local.py">def aumentar(preco):
+    preco = preco + 1
+    print(f"Dentro: {preco}")
+
+
+preco = 10
+aumentar(preco)
+print(f"Fora: {preco}")
+</pre>
+
+<pre class="term">$ python3 parametro_local.py
+Dentro: 11
+Fora: 10
+</pre>
+
+<div class="note">
+<strong>Mas a lista muda!</strong>
+<p>Com listas e dicionários há uma diferença importante entre <strong>trocar</strong> o valor da variável (<code>x = …</code>, que cria uma local) e <strong>mexer dentro</strong> do valor (<code>x.append(…)</code>). A função recebe a <strong>mesma</strong> lista que está fora, não uma cópia; então, se ela mexer dentro, a mudança aparece fora:</p>
+<pre class="file" data-file="lista_muda.py">def adicionar_cafe(compras):
+    compras.append("café")
+
+
+lista = ["arroz", "feijão"]
+adicionar_cafe(lista)
+print(lista)
+</pre>
+<pre class="term">$ python3 lista_muda.py
+['arroz', 'feijão', 'café']
+</pre>
+<p>Isso não é escopo, é a diferença entre valores que mudam por dentro e valores que não mudam. Tem aula própria: <a href="mutabilidade.html">Mutável × Imutável</a>.</p>
+</div>
+
+<hr>
+
+<h2>4. O <code>UnboundLocalError</code></h2>
+<p>A Ana quer contar as visitas ao site da padaria. Ela tirou o <code>visitas = 0</code> de dentro da função (para não zerar a cada chamada) e o colocou fora:</p>
+
+<pre class="file" data-file="unbound.py">visitas = 0
+
+
+def contar_visita():
+    visitas = visitas + 1
+    print(f"Visitas: {visitas}")
+
+
+contar_visita()
+</pre>
+
+<pre class="term">$ python3 unbound.py
+Traceback (most recent call last):
+  File "/home/ana/unbound.py", line 9, in &lt;module&gt;
+    contar_visita()
+    ~~~~~~~~~~~~~^^
+  File "/home/ana/unbound.py", line 5, in contar_visita
+    visitas = visitas + 1
+              ^^^^^^^
+UnboundLocalError: cannot access local variable 'visitas' where it is not associated with a value
+</pre>
+
+<p>Linha por linha:</p>
+<dl class="anatomy">
+  <dt>File "…", line 9, in &lt;module&gt;</dt><dd>O programa principal, na linha 9, chamou <code>contar_visita()</code>.</dd>
+  <dt>File "…", line 5, in contar_visita</dt><dd>Dentro da função, na linha 5, deu o erro. O <code>^^^^^^^</code> aponta o <code>visitas</code> do lado <strong>direito</strong> do <code>=</code>, o que está sendo lido.</dd>
+  <dt>UnboundLocalError</dt><dd>"Erro de variável local não ligada": uma variável local foi usada antes de receber um valor.</dd>
+  <dt>cannot access local variable 'visitas' where it is not associated with a value</dt><dd>"Não dá para acessar a variável <strong>local</strong> <code>'visitas'</code>, que ainda não tem valor".</dd>
+</dl>
+
+<p>Mas <code>visitas</code> não era global, valendo 0? Lembre a regra da seção 3: a linha <code>visitas = visitas + 1</code> <strong>atribui</strong> a <code>visitas</code>. Então, para o Python, <code>visitas</code> é <strong>local</strong> na função inteira, e ele decide isso antes de rodar a primeira linha do corpo. Na hora de calcular <code>visitas + 1</code>, ele vai buscar o <code>visitas</code> <strong>local</strong>, que ainda está vazio, e nem olha o global.</p>
+
+<p>Basta a atribuição aparecer em qualquer lugar da função, até depois da leitura:</p>
+
+<pre class="file" data-file="unbound_print.py">preco = 10
+
+
+def mostrar():
+    print(preco)
+    preco = 12
+
+
+mostrar()
+</pre>
+
+<pre class="term">$ python3 unbound_print.py
+Traceback (most recent call last):
+  File "/home/ana/unbound_print.py", line 9, in &lt;module&gt;
+    mostrar()
+    ~~~~~~~^^
+  File "/home/ana/unbound_print.py", line 5, in mostrar
+    print(preco)
+          ^^^^^
+UnboundLocalError: cannot access local variable 'preco' where it is not associated with a value
+</pre>
+
+<p>Sem a linha 6, o <code>print(preco)</code> mostraria o 10 do global, como na seção 2. Com ela, <code>preco</code> virou local na função toda, e a linha 5 tenta ler uma local que ainda não tem valor.</p>
+
+<hr>
+
+<h2>5. Dois jeitos de resolver: <code>global</code>, ou parâmetro + <code>return</code></h2>
+
+<h3>Com a palavra <code>global</code></h3>
+<p>A palavra <code>global</code> diz ao Python: "dentro desta função, este nome é o do quadro da parede, e não um rascunho":</p>
+
+<pre class="file" data-file="com_global.py">visitas = 0
+
+
+def contar_visita():
+    global visitas
+    visitas = visitas + 1
+    print(f"Visitas: {visitas}")
+
+
+contar_visita()
+contar_visita()
+contar_visita()
+print(f"No fim: {visitas}")
+</pre>
+
+<pre class="term">$ python3 com_global.py
+Visitas: 1
+Visitas: 2
+Visitas: 3
+No fim: 3
+</pre>
+
+<dl class="anatomy">
+  <dt>global visitas</dt><dd>Vem no começo do corpo, antes de qualquer uso. A partir daí, ler e atribuir <code>visitas</code> mexe na variável do programa principal.</dd>
+</dl>
+
+<h3>Com parâmetro e <code>return</code> (o preferido)</h3>
+<p>O mesmo resultado, sem <code>global</code>: o valor entra pelo parâmetro e sai pelo <code>return</code>.</p>
+
+<pre class="file" data-file="sem_global.py">def contar_visita(visitas):
+    visitas = visitas + 1
+    print(f"Visitas: {visitas}")
+    return visitas
+
+
+visitas = 0
+visitas = contar_visita(visitas)
+visitas = contar_visita(visitas)
+visitas = contar_visita(visitas)
+print(f"No fim: {visitas}")
+</pre>
+
+<pre class="term">$ python3 sem_global.py
+Visitas: 1
+Visitas: 2
+Visitas: 3
+No fim: 3
+</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td>Parâmetro + <code>return</code></td><td><strong>Quase sempre.</strong> Lendo só a chamada, <code>visitas = contar_visita(visitas)</code>, você sabe o que entra e o que sai. A função funciona sozinha, fácil de testar e de reaproveitar</td></tr>
+<tr><td><code>global</code></td><td>Em programas bem pequenos, ou para uma configuração do programa inteiro. Com muitas funções mexendo nas mesmas globais, fica difícil descobrir quem mudou o quê</td></tr>
+<tr><td>Ler uma global sem mudar (seção 2)</td><td>Tudo bem para valores fixos, como <code>TAXA_ENTREGA = 5</code>. O costume é escrever esses nomes em MAIÚSCULAS, para avisar que não mudam</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>6. Função dentro de função: <code>nonlocal</code></h2>
+<p>Dá para definir uma função dentro de outra. A de dentro enxerga as variáveis da de fora (o "E" do LEGB). Para <strong>mudá-las</strong>, existe o <code>nonlocal</code>, que funciona como o <code>global</code>, só que aponta para a função de fora:</p>
+
+<pre class="file" data-file="nonlocal.py">def padaria():
+    pedidos = 0
+
+    def novo_pedido():
+        nonlocal pedidos
+        pedidos = pedidos + 1
+
+    novo_pedido()
+    novo_pedido()
+    print(f"Pedidos: {pedidos}")
+
+
+padaria()
+</pre>
+
+<pre class="term">$ python3 nonlocal.py
+Pedidos: 2
+</pre>
+
+<p>Por enquanto, só guarde que ele existe. Funções dentro de funções aparecem de verdade na aula <a href="decoradores.html">Decoradores</a>.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>Usar fora a variável de dentro</strong>
+<p>É o <code>NameError: name 'total' is not defined</code> da seção 1. <strong>Como consertar:</strong> devolva o valor com <code>return</code> e guarde-o numa variável no programa principal: <code>total = fechar_caixa()</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Mudar uma global sem avisar</strong>
+<p>É o <code>UnboundLocalError: cannot access local variable '…' where it is not associated with a value</code> da seção 4. Aparece quando a função lê um nome e também atribui a ele. <strong>Como consertar:</strong> passe o valor por parâmetro e devolva com <code>return</code> (ou, em último caso, use <code>global</code>).</p>
+</div>
+
+<div class="cenario">
+<strong>O <code>global</code> depois do uso</strong>
+<pre class="file" data-file="global_tarde.py">visitas = 0
+
+
+def contar_visita():
+    visitas = 1
+    global visitas
+</pre>
+<pre class="term">$ python3 global_tarde.py
+  File "/home/ana/global_tarde.py", line 6
+    global visitas
+    ^^^^^^^^^^^^^^
+SyntaxError: name 'visitas' is assigned to before global declaration
+</pre>
+<p>"O nome <code>'visitas'</code> recebe um valor antes da declaração <code>global</code>". A declaração tem de vir antes de qualquer uso do nome na função. <strong>Como consertar:</strong> coloque o <code>global visitas</code> na primeira linha do corpo.</p>
+</div>
+
+<div class="cenario">
+<strong>"Achei que tinha mudado": o mesmo nome dentro e fora</strong>
+<p>É a seção 3: uma atribuição dentro da função cria uma local, e a global continua como estava, sem erro nenhum. Se uma variável "não muda" depois de chamar a função, é provável que a função tenha mudado só uma local com o mesmo nome. <strong>Como consertar:</strong> devolva o valor novo com <code>return</code> e atribua fora: <code>preco = aumentar(preco)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Uma variável com o nome de uma função embutida</strong>
+<p>Os nomes embutidos (o "B" do LEGB) ficam em último lugar na busca. Se você cria uma variável com o mesmo nome, ela ganha, e a função embutida some do seu programa:</p>
+<pre class="file" data-file="embutida.py">list = ["arroz", "feijão"]
+print(list)
+letras = list("café")
+</pre>
+<pre class="term">$ python3 embutida.py
+['arroz', 'feijão']
+Traceback (most recent call last):
+  File "/home/ana/embutida.py", line 3, in &lt;module&gt;
+    letras = list("café")
+             ~~~~^^^^^^^^
+TypeError: 'list' object is not callable
+</pre>
+<p>"Um objeto do tipo lista não pode ser chamado". Na linha 3, <code>list</code> já não é a função que cria listas: é a variável da linha 1, que é uma lista, e uma lista não se chama com parênteses. O mesmo acontece com <code>sum</code>, <code>max</code>, <code>input</code>, <code>print</code>, <code>str</code>… <strong>Como consertar:</strong> escolha outro nome (<code>compras</code>, <code>lista_compras</code>).</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Situação</th><th>O que acontece</th></tr>
+<tr><td>Variável criada dentro da função (ou parâmetro)</td><td>Local: só existe dentro, durante a chamada. Cada chamada começa do zero</td></tr>
+<tr><td>Variável criada no programa principal</td><td>Global: o programa e as funções podem ler</td></tr>
+<tr><td>Função só <strong>lê</strong> um nome global</td><td>Funciona: lê a global</td></tr>
+<tr><td>Função <strong>atribui</strong> a um nome</td><td>O nome é local na função inteira; a global de mesmo nome não muda</td></tr>
+<tr><td>Função lê e atribui o mesmo nome</td><td><code>UnboundLocalError</code></td></tr>
+<tr><td><code>global nome</code></td><td>Dentro da função, <code>nome</code> passa a ser a global (pode ler e mudar)</td></tr>
+<tr><td><code>nonlocal nome</code></td><td>Numa função dentro de outra, <code>nome</code> passa a ser o da função de fora</td></tr>
+<tr><td>Ordem de busca</td><td>Local → função de fora → global → embutidos (LEGB)</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>NameError: name 'x' is not defined</code> (fora da função)</td><td><code>x</code> é local de uma função: use <code>return</code></td></tr>
+<tr><td><code>UnboundLocalError: cannot access local variable 'x' …</code></td><td>A função lê e atribui <code>x</code>: use parâmetro + <code>return</code>, ou <code>global x</code></td></tr>
+<tr><td><code>SyntaxError: name 'x' is assigned to before global declaration</code></td><td>O <code>global x</code> veio depois de usar <code>x</code></td></tr>
+<tr><td><code>TypeError: 'list' object is not callable</code></td><td>Uma variável tomou o nome da função embutida <code>list</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A palavra que avisa</h3>
+<p>Complete para que a função mude a variável <code>pontos</code> do programa principal:</p>
+<div class="ex-code">def ganhar():<br>&nbsp;&nbsp;&nbsp;&nbsp;<input data-answer="global" aria-label="palavra-chave"> pontos<br>&nbsp;&nbsp;&nbsp;&nbsp;pontos = pontos + 10</div>
+</div>
+
+<div class="exercise">
+<h3>2. O valor de fora</h3>
+<p>Depois deste programa, quanto vale <code>nome</code> no programa principal?</p>
+<div class="ex-code">nome = "Carla"<br>def mudar():<br>&nbsp;&nbsp;&nbsp;&nbsp;nome = "Davi"<br>mudar()<br>print(nome)&nbsp;&nbsp;# mostra: <input data-answer="Carla" aria-label="resposta"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">3. Uma variável criada dentro de uma função…</p>
+<label><input type="radio" name="q3"> …pode ser usada no programa principal depois da chamada</label>
+<label><input type="radio" name="q3"> …guarda o valor de uma chamada para a outra</label>
+<label><input type="radio" name="q3"> …só existe dentro da função, enquanto ela roda</label>
+<label><input type="radio" name="q3"> …vira global automaticamente</label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">4. Por que <code>total = total + 1</code> dentro de uma função dá <code>UnboundLocalError</code>, mesmo existindo um <code>total</code> global?</p>
+<label><input type="radio" name="q4"> Porque funções não conseguem ler variáveis globais</label>
+<label><input type="radio" name="q4"> Porque a atribuição torna <code>total</code> local na função inteira, e a local ainda não tem valor quando é lida</label>
+<label><input type="radio" name="q4"> Porque falta o <code>return</code></label>
+<label><input type="radio" name="q4"> Porque <code>total</code> é um nome embutido</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Qual é o jeito preferido de uma função mudar um valor do programa principal?</p>
+<label><input type="radio" name="q5"> Receber o valor por parâmetro e devolver o novo com <code>return</code></label>
+<label><input type="radio" name="q5"> Usar <code>global</code> em todas as funções</label>
+<label><input type="radio" name="q5"> Criar uma local com o mesmo nome</label>
+<label><input type="radio" name="q5"> Usar <code>nonlocal</code></label>
+</div>
+
+<h3>Missão final: o estoque da padaria</h3>
+
+<div class="trypy" data-goal="out:Vendeu 3. Restam 17.;;out:Vendeu 5. Restam 12.;;semerro">
+<p class="try-task"><strong>Missão:</strong> a função <code>vender</code> deveria tirar unidades do estoque, mas dá <code>UnboundLocalError</code>. Conserte, de preferência com parâmetro e <code>return</code> (ou com <code>global</code>). O estoque começa em 20 e as vendas são de 3 e de 5.</p>
+<pre class="script" data-file="main.py">estoque = 20
+
+
+def vender(quantidade):
+    estoque = estoque - quantidade
+    print(f"Vendeu {quantidade}. Restam {estoque}.")
+
+
+vender(3)
+vender(5)
+</pre>
+<pre class="solucao" data-file="main.py">def vender(estoque, quantidade):
+    estoque = estoque - quantidade
+    print(f"Vendeu {quantidade}. Restam {estoque}.")
+    return estoque
+
+
+estoque = 20
+estoque = vender(estoque, 3)
+estoque = vender(estoque, 5)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><strong>Escopo</strong> é o lugar onde uma variável existe.</li>
+  <li><strong>Local</strong>: criada dentro da função (parâmetros também). Só existe ali, durante a chamada; fora dela, <code>NameError</code>.</li>
+  <li><strong>Global</strong>: criada no programa principal. As funções podem ler.</li>
+  <li>Se a função <strong>atribui</strong> a um nome, ele é local na função inteira. Ler antes de atribuir dá <code>UnboundLocalError</code>.</li>
+  <li><code>global nome</code> deixa a função mudar a global, mas o jeito preferido é parâmetro + <code>return</code>.</li>
+  <li><code>nonlocal</code> faz o mesmo para a função de fora. A busca segue a ordem LEGB, e um nome seu pode esconder um embutido (<code>list = …</code>).</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
