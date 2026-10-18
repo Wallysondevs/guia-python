@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Cópia Rasa e Cópia Profunda — copy.copy e copy.deepcopy | Guia Python</title>
+<meta name="description" content="Cópia rasa e cópia profunda para quem está começando: por que = não copia, copy.copy, .copy(), list() e [:] copiam só a primeira camada, a surpresa das listas aninhadas (a lista da turma com as notas), copy.deepcopy, dicionários e objetos, quando a cópia rasa basta, a armadilha do [[0] * 3] * 2 e os erros reais do Python 3.14.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Cópia Rasa e Cópia Profunda</span></h1>
+
+<p class="intro">Na aula <a href="mutabilidade.html">Mutável × Imutável</a>, você viu que <code>b = a</code> não copia nada: só cola mais uma etiqueta no mesmo objeto. E viu que <code>compras.copy()</code> resolve. Agora a professora da turma da Ana tem uma lista em que <strong>cada aluno é outra lista</strong>, com o nome e as notas. Ela faz uma cópia para testar a nota da recuperação e descobre que as notas originais mudaram também. Nesta aula você vai entender por quê: existem dois tipos de cópia, a <strong>rasa</strong> e a <strong>profunda</strong>, e a diferença só aparece quando há objetos dentro de objetos.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>O que é uma cópia rasa (<code>copy.copy</code>, <code>.copy()</code>, <code>list()</code>, <code>[:]</code>) e o que ela copia de verdade.</li>
+  <li>Por que mudar uma nota na cópia rasa muda a nota original.</li>
+  <li>O que é uma cópia profunda (<code>copy.deepcopy</code>) e quando ela é necessária.</li>
+  <li>Como conferir com <code>is</code> o que foi copiado e o que é compartilhado.</li>
+  <li>Cópias de dicionários e de objetos das suas classes.</li>
+  <li>Quando a cópia rasa basta (e por que ela é a mais usada).</li>
+  <li>A armadilha do <code>[[0] * 3] * 2</code> e os erros reais.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: a pasta e as folhas</h2>
+<p>A professora guarda as notas numa <strong>pasta</strong>, com uma <strong>folha</strong> para cada aluno. Ela pede duas cópias na secretaria:</p>
+<ul>
+  <li>Na <strong>cópia rasa</strong>, a secretaria compra uma pasta nova e põe dentro… as <strong>mesmas folhas</strong>, com um bilhete "a folha da Bia está lá na outra pasta". A pasta é nova: dá para pôr ou tirar folhas sem mexer na original. Mas, se alguém riscar uma nota na folha da Bia, risca a única folha da Bia que existe.</li>
+  <li>Na <strong>cópia profunda</strong>, a secretaria compra uma pasta nova e <strong>tira xerox de cada folha</strong>. Agora dá para riscar à vontade: as folhas originais estão intactas.</li>
+</ul>
+<p>Em Python, a pasta é a lista de fora (<code>turma</code>) e as folhas são as listas de dentro (uma por aluno).</p>
+
+<pre class="file" data-file="desenho.txt">turma ──► [ ● , ● ]                  a pasta (lista de fora)
+            │   └──► ["Caio", 6.0, 5.5]   uma folha (lista de dentro)
+            └──────► ["Bia", 8.5, 7.0]    outra folha
+
+cópia rasa:     pasta NOVA, apontando para as MESMAS folhas
+cópia profunda: pasta NOVA, com folhas NOVAS (xerox de cada uma)
+</pre>
+
+<hr>
+
+<h2>1. Lembrando: <code>=</code> não é cópia</h2>
+
+<pre class="file" data-file="igual_nao_copia.py">turma = [["Bia", 8.5, 7.0], ["Caio", 6.0, 5.5]]
+outra = turma
+outra.append(["Duda", 9.0, 9.5])
+print(len(turma))
+print(outra is turma)
+</pre>
+
+<pre class="term">$ python3 igual_nao_copia.py
+3
+True
+</pre>
+
+<p>A Duda entrou na <code>turma</code> também: <code>outra</code> e <code>turma</code> são duas etiquetas na mesma pasta (<code>is</code> dá <code>True</code>). Nenhuma cópia foi feita.</p>
+
+<hr>
+
+<h2>2. A cópia rasa: <code>copy.copy</code></h2>
+<p>O módulo <code>copy</code> ("copiar"), que já vem com o Python, tem as duas cópias. A rasa se chama <code>copy.copy</code>:</p>
+
+<pre class="file" data-file="rasa.py">import copy
+
+turma = [["Bia", 8.5, 7.0], ["Caio", 6.0, 5.5]]
+rasa = copy.copy(turma)
+
+print(rasa == turma, rasa is turma)
+rasa.append(["Duda", 9.0, 9.5])
+print("Original:", turma)
+print("Cópia:   ", rasa)
+</pre>
+
+<dl class="anatomy">
+  <dt>import copy</dt><dd>Traz o módulo <code>copy</code> (aula <a href="modulos.html">Módulos e import</a>).</dd>
+  <dt>copy.copy(turma)</dt><dd>Cria uma <strong>lista nova</strong> (a pasta nova), com os mesmos itens da <code>turma</code>.</dd>
+  <dt>rasa == turma, rasa is turma</dt><dd>Mesmo conteúdo (<code>True</code>), mas objetos diferentes (<code>False</code>): agora existem duas pastas.</dd>
+  <dt>rasa.append(…)</dt><dd>Põe uma folha nova só na pasta nova.</dd>
+</dl>
+
+<pre class="term">$ python3 rasa.py
+True False
+Original: [['Bia', 8.5, 7.0], ['Caio', 6.0, 5.5]]
+Cópia:    [['Bia', 8.5, 7.0], ['Caio', 6.0, 5.5], ['Duda', 9.0, 9.5]]
+</pre>
+
+<p>Funcionou: a Duda entrou só na cópia. Para pôr e tirar itens da lista de fora, a cópia rasa é suficiente.</p>
+
+<div class="trypy" data-goal="out:Original: 2 alunos;;out:Cópia: 3 alunos">
+<p class="try-task"><strong>Missão:</strong> a professora quer uma turma nova, com a Duda, sem mexer na turma original. Troque o <code>=</code> por uma cópia (rasa basta aqui) para que o original continue com 2 alunos.</p>
+<pre class="script" data-file="main.py">turma = [["Bia", 8.5, 7.0], ["Caio", 6.0, 5.5]]
+nova_turma = turma
+nova_turma.append(["Duda", 9.0, 9.5])
+print("Original:", len(turma), "alunos")
+print("Cópia:", len(nova_turma), "alunos")
+</pre>
+<pre class="solucao" data-file="main.py">import copy
+
+turma = [["Bia", 8.5, 7.0], ["Caio", 6.0, 5.5]]
+nova_turma = copy.copy(turma)
+nova_turma.append(["Duda", 9.0, 9.5])
+print("Original:", len(turma), "alunos")
+print("Cópia:", len(nova_turma), "alunos")
+</pre>
+</div>
+
+<hr>
+
+<h2>3. A surpresa: mudar uma nota na cópia rasa</h2>
+<p>Agora a professora quer testar na cópia uma nota 10 para a Bia:</p>
+
+<pre class="file" data-file="rasa_surpresa.py">import copy
+
+turma = [["Bia", 8.5, 7.0], ["Caio", 6.0, 5.5]]
+rasa = copy.copy(turma)
+
+rasa[0][1] = 10.0
+print("Original:", turma)
+print("Cópia:   ", rasa)
+print(rasa is turma)
+print(rasa[0] is turma[0])
+</pre>
+
+<pre class="term">$ python3 rasa_surpresa.py
+Original: [['Bia', 10.0, 7.0], ['Caio', 6.0, 5.5]]
+Cópia:    [['Bia', 10.0, 7.0], ['Caio', 6.0, 5.5]]
+False
+True
+</pre>
+
+<p><strong>A nota mudou no original.</strong> As duas últimas linhas explicam:</p>
+<ul>
+  <li><code>rasa is turma</code> é <code>False</code>: as pastas são diferentes.</li>
+  <li><code>rasa[0] is turma[0]</code> é <code>True</code>: a folha da Bia é <strong>a mesma</strong> nas duas pastas.</li>
+</ul>
+<p><code>rasa[0][1] = 10.0</code> quer dizer "na folha da Bia (<code>rasa[0]</code>), troque a primeira nota (<code>[1]</code>)". Como só existe uma folha da Bia, a mudança aparece pelas duas pastas. É isso que "rasa" quer dizer: a cópia vai só até a <strong>primeira camada</strong>. Daí para dentro, tudo é compartilhado.</p>
+
+<hr>
+
+<h2>4. A cópia profunda: <code>copy.deepcopy</code></h2>
+
+<pre class="file" data-file="profunda.py">import copy
+
+turma = [["Bia", 8.5, 7.0], ["Caio", 6.0, 5.5]]
+profunda = copy.deepcopy(turma)
+
+profunda[0][1] = 10.0
+print("Original:", turma)
+print("Cópia:   ", profunda)
+print(profunda is turma)
+print(profunda[0] is turma[0])
+</pre>
+
+<dl class="anatomy">
+  <dt>copy.deepcopy(turma)</dt><dd><em>Deep copy</em>, "cópia profunda". Cria uma lista nova <strong>e</strong> uma cópia nova de cada lista lá dentro, e assim por diante, em todas as camadas: a xerox de cada folha.</dd>
+</dl>
+
+<pre class="term">$ python3 profunda.py
+Original: [['Bia', 8.5, 7.0], ['Caio', 6.0, 5.5]]
+Cópia:    [['Bia', 10.0, 7.0], ['Caio', 6.0, 5.5]]
+False
+False
+</pre>
+
+<p>Agora o original ficou intacto, e <code>profunda[0] is turma[0]</code> deu <code>False</code>: a folha da Bia na cópia é outra folha. A cópia profunda é <strong>totalmente independente</strong> do original.</p>
+
+<div class="trypy" data-goal="out:Original: [['Bia', 8.5, 7.0], ['Caio', 6.0, 5.5]];;out:Recuperação: [['Bia', 9.5, 8.0], ['Caio', 7.0, 6.5]]">
+<p class="try-task"><strong>Missão:</strong> a professora soma 1 ponto em cada nota da cópia, para simular a recuperação, mas as notas originais estão mudando também (rode e veja). Troque o tipo de cópia para que o original fique intacto.</p>
+<pre class="script" data-file="main.py">import copy
+
+turma = [["Bia", 8.5, 7.0], ["Caio", 6.0, 5.5]]
+recuperacao = copy.copy(turma)
+
+for aluno in recuperacao:
+    aluno[1] += 1
+    aluno[2] += 1
+
+print("Original:", turma)
+print("Recuperação:", recuperacao)
+</pre>
+<pre class="solucao" data-file="main.py">import copy
+
+turma = [["Bia", 8.5, 7.0], ["Caio", 6.0, 5.5]]
+recuperacao = copy.deepcopy(turma)
+
+for aluno in recuperacao:
+    aluno[1] += 1
+    aluno[2] += 1
+
+print("Original:", turma)
+print("Recuperação:", recuperacao)
+</pre>
+</div>
+
+<hr>
+
+<h2>5. Os vários jeitos de fazer uma cópia rasa</h2>
+<p>Você não precisa importar nada para a cópia rasa de uma lista. Estes quatro jeitos fazem exatamente a mesma coisa:</p>
+
+<pre class="file" data-file="formas_rasas.py">import copy
+
+turma = [["Bia", 8.5, 7.0], ["Caio", 6.0, 5.5]]
+copias = [turma.copy(), list(turma), turma[:], copy.copy(turma)]
+for c in copias:
+    print(c is turma, c[0] is turma[0])
+</pre>
+
+<pre class="term">$ python3 formas_rasas.py
+False True
+False True
+False True
+False True
+</pre>
+
+<p>Nos quatro casos, a pasta é nova (<code>False</code>) e a folha da Bia é a mesma (<code>True</code>): todas são cópias <strong>rasas</strong>. O <code>turma[:]</code> é a fatia "do começo ao fim" (aula <a href="strings-fatias.html">Índices e Fatias</a>), e o <code>list(turma)</code> cria uma lista a partir de outra.</p>
+
+<p>Também dá para copiar as duas camadas "à mão", copiando cada lista de dentro com uma list comprehension (aula <a href="list-comprehension.html">List Comprehension</a>):</p>
+
+<pre class="file" data-file="manual.py">turma = [["Bia", 8.5, 7.0], ["Caio", 6.0, 5.5]]
+copia = [aluno.copy() for aluno in turma]
+copia[0][1] = 10.0
+print("Original:", turma)
+print("Cópia:   ", copia)
+</pre>
+
+<pre class="term">$ python3 manual.py
+Original: [['Bia', 8.5, 7.0], ['Caio', 6.0, 5.5]]
+Cópia:    [['Bia', 10.0, 7.0], ['Caio', 6.0, 5.5]]
+</pre>
+
+<p>Funciona porque aqui são exatamente duas camadas. Se houvesse uma terceira (uma lista dentro da lista do aluno), ela continuaria compartilhada. O <code>deepcopy</code> desce até o fim, quantas camadas houver.</p>
+
+<hr>
+
+<h2>6. Dicionários: a mesma regra</h2>
+<p>O <code>.copy()</code> de um dicionário também é raso. O cardápio da lojinha tem uma lista de itens para cada categoria:</p>
+
+<pre class="file" data-file="dicionario.py">import copy
+
+cardapio = {"cafés": ["expresso", "coado"], "doces": ["bolo"]}
+rasa = cardapio.copy()
+profunda = copy.deepcopy(cardapio)
+
+rasa["salgados"] = ["coxinha"]
+rasa["cafés"].append("cappuccino")
+profunda["doces"].append("brigadeiro")
+
+print("Original:", cardapio)
+print("Rasa:    ", rasa)
+print("Profunda:", profunda)
+</pre>
+
+<pre class="term">$ python3 dicionario.py
+Original: {'cafés': ['expresso', 'coado', 'cappuccino'], 'doces': ['bolo']}
+Rasa:     {'cafés': ['expresso', 'coado', 'cappuccino'], 'doces': ['bolo'], 'salgados': ['coxinha']}
+Profunda: {'cafés': ['expresso', 'coado'], 'doces': ['bolo', 'brigadeiro']}
+</pre>
+
+<ul>
+  <li>A chave nova <code>"salgados"</code> ficou só na cópia rasa: acrescentar chaves é mexer na primeira camada.</li>
+  <li>O <code>"cappuccino"</code> apareceu no original: a lista de cafés é a mesma nas duas.</li>
+  <li>O <code>"brigadeiro"</code> ficou só na profunda: ela tem as suas próprias listas.</li>
+</ul>
+
+<hr>
+
+<h2>7. Objetos das suas classes</h2>
+<p>O módulo <code>copy</code> também copia objetos das classes que você escreve, com a mesma regra. Uma <code>Turma</code> feita com dataclass (aula <a href="dataclasses.html">Dataclasses</a>):</p>
+
+<pre class="file" data-file="objetos.py">import copy
+from dataclasses import dataclass, field
+
+
+@dataclass
+class Turma:
+    nome: str
+    alunos: list = field(default_factory=list)
+
+
+manha = Turma("Manhã", ["Bia", "Caio"])
+rasa = copy.copy(manha)
+profunda = copy.deepcopy(manha)
+
+manha.alunos.append("Duda")
+print(rasa)
+print(profunda)
+</pre>
+
+<pre class="term">$ python3 objetos.py
+Turma(nome='Manhã', alunos=['Bia', 'Caio', 'Duda'])
+Turma(nome='Manhã', alunos=['Bia', 'Caio'])
+</pre>
+
+<p>A cópia rasa é um objeto <code>Turma</code> novo, mas o atributo <code>alunos</code> aponta para a mesma lista; por isso a Duda apareceu nela. A profunda copiou a lista também.</p>
+
+<hr>
+
+<h2>8. Quando a cópia rasa basta</h2>
+<p>Se os itens de dentro são <strong>imutáveis</strong> (textos, números, tuplas de imutáveis), compartilhá-los não tem perigo nenhum: ninguém consegue mudá-los. Você só consegue <strong>trocar</strong> o item da cópia por outro, e isso é mexer na primeira camada:</p>
+
+<pre class="file" data-file="imutaveis.py">import copy
+
+compras = ["café", "leite"]
+copia = compras.copy()
+copia[0] = "chá"
+print(compras, copia)
+print(copia[1] is compras[1])
+
+ponto = (2, 3)
+print(copy.copy(ponto) is ponto)
+print(copy.deepcopy(ponto) is ponto)
+</pre>
+
+<pre class="term">$ python3 imutaveis.py
+['café', 'leite'] ['chá', 'leite']
+True
+True
+True
+</pre>
+
+<ul>
+  <li>Trocar <code>copia[0]</code> não afetou a lista original, mesmo com a cópia rasa.</li>
+  <li>O texto <code>"leite"</code> é o mesmo objeto nas duas listas (<code>True</code>), e tudo bem: ele nunca vai mudar.</li>
+  <li>O Python é esperto com imutáveis: copiar a tupla <code>(2, 3)</code>, rasa ou profunda, devolve <strong>a própria tupla</strong>. Para que gastar memória com uma cópia de algo que não pode mudar?</li>
+</ul>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>O que tem dentro</th><th>Cópia rasa basta?</th></tr>
+<tr><td>Textos, números, <code>True</code>/<code>False</code>, <code>None</code></td><td>Sim</td></tr>
+<tr><td>Tuplas só de imutáveis</td><td>Sim</td></tr>
+<tr><td>Listas, dicionários, conjuntos, objetos que você vai modificar</td><td>Não: use <code>copy.deepcopy</code> (ou copie cada camada)</td></tr>
+<tr><td>Listas de dentro que você só vai <strong>ler</strong>, nunca mudar</td><td>Sim (mas cuidado se o programa crescer)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de fazer a mesma coisa</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que é</th><th>Quando usar</th></tr>
+<tr><td><code>b = a</code></td><td>Nenhuma cópia: mais uma etiqueta</td><td>Quando você quer mesmo o mesmo objeto</td></tr>
+<tr><td><code>a.copy()</code></td><td>Cópia rasa (listas, dicionários, conjuntos)</td><td>O jeito mais claro para a cópia rasa de uma lista ou dicionário</td></tr>
+<tr><td><code>list(a)</code>, <code>dict(a)</code>, <code>a[:]</code></td><td>Cópia rasa</td><td>Também comuns; <code>list(x)</code> serve para copiar de qualquer coisa que se percorre</td></tr>
+<tr><td><code>copy.copy(a)</code></td><td>Cópia rasa de qualquer objeto</td><td>Objetos que não têm <code>.copy()</code> (os das suas classes)</td></tr>
+<tr><td><code>[x.copy() for x in a]</code></td><td>Cópia de duas camadas</td><td>Lista de listas, quando você sabe que são só duas camadas</td></tr>
+<tr><td><code>copy.deepcopy(a)</code></td><td>Cópia profunda, todas as camadas</td><td>Objetos aninhados que você vai modificar</td></tr>
+</table>
+</div>
+<p>A cópia profunda faz mais trabalho (visita cada objeto lá dentro) e ocupa mais memória. Por isso o costume é usar a rasa quando ela basta, e a profunda quando há objetos mutáveis dentro que vão mudar.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>A tabela feita com <code>*</code>: todas as linhas mudam juntas</strong>
+<p>A Ana quer uma tabela de vendas com 2 dias e 3 turnos, começando com zeros. O jeito "esperto" parece ser multiplicar listas:</p>
+<pre class="file" data-file="grade.py">vendas = [[0] * 3] * 2
+vendas[0][1] = 5
+print(vendas)
+print(vendas[0] is vendas[1])
+</pre>
+<pre class="term">$ python3 grade.py
+[[0, 5, 0], [0, 5, 0]]
+True
+</pre>
+<p>Ela mudou só o dia 0, e o 5 apareceu nos dois dias. O <code>[[0] * 3]</code> cria <strong>uma</strong> linha, e o <code>* 2</code> repete a <strong>etiqueta</strong> dessa linha, sem copiar nada: <code>vendas[0] is vendas[1]</code> dá <code>True</code>. É a cópia rasa de novo, só que escondida. (O <code>[0] * 3</code> de dentro não tem problema: repete o número 0, que é imutável.)</p>
+<p><strong>Como consertar:</strong> crie uma linha nova para cada dia, com uma list comprehension:</p>
+<pre class="file" data-file="grade_certa.py">vendas = [[0] * 3 for _ in range(2)]
+vendas[0][1] = 5
+print(vendas)
+print(vendas[0] is vendas[1])
+</pre>
+<pre class="term">$ python3 grade_certa.py
+[[0, 5, 0], [0, 0, 0]]
+False
+</pre>
+<p>O <code>_</code> é o nome de costume para uma variável que não vai ser usada: só queremos repetir duas vezes.</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu o <code>import copy</code></strong>
+<pre class="file" data-file="sem_import.py">turma = [["Bia", 8.5, 7.0], ["Caio", 6.0, 5.5]]
+profunda = copy.deepcopy(turma)
+</pre>
+<pre class="term">$ python3 sem_import.py
+Traceback (most recent call last):
+  File "/home/ana/sem_import.py", line 2, in &lt;module&gt;
+    profunda = copy.deepcopy(turma)
+               ^^^^
+NameError: name 'copy' is not defined. Did you forget to import 'copy'?
+</pre>
+<p>"O nome <code>copy</code> não está definido. Você esqueceu de importar <code>copy</code>?" O Python 3.14 reconhece o nome de um módulo da biblioteca padrão e já sugere o conserto. <strong>Como consertar:</strong> <code>import copy</code> no começo do arquivo. (Repare que o método <code>turma.copy()</code> não precisa de import; o módulo <code>copy</code>, sim.)</p>
+</div>
+
+<div class="cenario">
+<strong><code>.copy</code> sem os parênteses</strong>
+<pre class="file" data-file="sem_parenteses.py">compras = ["café", "leite"]
+copia = compras.copy
+copia.append("pão")
+</pre>
+<pre class="term">$ python3 sem_parenteses.py
+Traceback (most recent call last):
+  File "/home/ana/sem_parenteses.py", line 3, in &lt;module&gt;
+    copia.append("pão")
+    ^^^^^^^^^^^^
+AttributeError: 'builtin_function_or_method' object has no attribute 'append'
+</pre>
+<p>"Um objeto do tipo função (<code>builtin_function_or_method</code>) não tem <code>append</code>." Sem os parênteses, <code>compras.copy</code> não <strong>chama</strong> o método: guarda o próprio método na variável. O erro só aparece na linha seguinte, quando você tenta usar a "cópia" como lista. <strong>Como consertar:</strong> <code>copia = compras.copy()</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>A cópia rasa que muda o original</strong>
+<p>Você viu nas seções 3 e 6: com listas (ou dicionários) dentro, mudar um item de dentro da cópia rasa muda o original, sem erro nenhum. O sinal para desconfiar: <code>copia[0] is original[0]</code> dá <code>True</code>. <strong>Como consertar:</strong> <code>copy.deepcopy</code>.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>import copy</code></td><td>Traz o módulo de cópias</td></tr>
+<tr><td><code>copy.copy(x)</code></td><td>Cópia rasa: objeto novo, itens compartilhados</td></tr>
+<tr><td><code>copy.deepcopy(x)</code></td><td>Cópia profunda: objeto novo e cópias de tudo o que há dentro</td></tr>
+<tr><td><code>lista.copy()</code>, <code>list(lista)</code>, <code>lista[:]</code></td><td>Cópia rasa de uma lista</td></tr>
+<tr><td><code>dicionario.copy()</code>, <code>dict(dicionario)</code></td><td>Cópia rasa de um dicionário</td></tr>
+<tr><td><code>[linha.copy() for linha in tabela]</code></td><td>Copia duas camadas</td></tr>
+<tr><td><code>[[0] * 3 for _ in range(2)]</code></td><td>Tabela com linhas independentes</td></tr>
+<tr><td><code>copia is original</code></td><td><code>False</code> em qualquer cópia</td></tr>
+<tr><td><code>copia[0] is original[0]</code></td><td><code>True</code> na rasa, <code>False</code> na profunda (para itens mutáveis)</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td>Mudei a "cópia" e tudo mudou, inclusive pôr e tirar itens</td><td>Não foi cópia: <code>b = a</code></td></tr>
+<tr><td>Pôr e tirar itens funciona, mas mudar um item de dentro muda o original</td><td>Cópia rasa com objetos mutáveis dentro: use <code>deepcopy</code></td></tr>
+<tr><td>Mudei uma linha da tabela e todas mudaram</td><td>Tabela criada com <code>[[…]] * n</code></td></tr>
+<tr><td><code>NameError: name 'copy' is not defined. Did you forget to import 'copy'?</code></td><td>Faltou <code>import copy</code></td></tr>
+<tr><td><code>'builtin_function_or_method' object has no attribute …</code></td><td>Faltaram os parênteses: <code>.copy()</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. A cópia profunda</h3>
+<p>Complete o nome da função que copia todas as camadas:</p>
+<div class="ex-code">import copy<br>independente = copy.<input data-answer="deepcopy" aria-label="nome da função">(turma)</div>
+</div>
+
+<div class="exercise">
+<h3>2. Rasa ou profunda?</h3>
+<p><code>c = copy.copy(turma)</code>, com <code>turma = [["Bia", 8.5]]</code>. O que mostra <code>print(c[0] is turma[0])</code>?</p>
+<div class="ex-code"><input data-answer="True" aria-label="resultado"></div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. Qual destas escritas faz uma cópia <strong>profunda</strong>?</p>
+<label><input type="radio" name="q3"> <code>turma[:]</code></label>
+<label><input type="radio" name="q3"> <code>copy.deepcopy(turma)</code></label>
+<label><input type="radio" name="q3"> <code>turma.copy()</code></label>
+<label><input type="radio" name="q3"> <code>list(turma)</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">4. <code>rasa = turma.copy()</code> e depois <code>rasa.append(["Duda", 9.0])</code>. A <code>turma</code> original…</p>
+<label><input type="radio" name="q4"> ganha a Duda também</label>
+<label><input type="radio" name="q4"> dá <code>TypeError</code></label>
+<label><input type="radio" name="q4"> fica vazia</label>
+<label><input type="radio" name="q4"> não muda: acrescentar itens mexe só na primeira camada, e ela é nova</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. <code>compras = ["café", "leite"]</code>. Por que <code>compras.copy()</code> basta aqui, sem <code>deepcopy</code>?</p>
+<label><input type="radio" name="q5"> Porque os itens são textos, que são imutáveis: compartilhá-los não tem perigo</label>
+<label><input type="radio" name="q5"> Porque a lista é curta</label>
+<label><input type="radio" name="q5"> Porque <code>.copy()</code> sempre é profunda</label>
+<label><input type="radio" name="q5"> Porque <code>deepcopy</code> não funciona com textos</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">6. Por que <code>[[0] * 3] * 2</code> é uma armadilha?</p>
+<label><input type="radio" name="q6"> Porque dá <code>SyntaxError</code></label>
+<label><input type="radio" name="q6"> Porque cria 6 linhas</label>
+<label><input type="radio" name="q6"> Porque as duas linhas são a mesma lista: mudar uma muda a outra</label>
+<label><input type="radio" name="q6"> Porque os zeros viram textos</label>
+</div>
+
+<h3>Missão final: a tabela de vendas</h3>
+
+<div class="trypy" data-goal="out:[[0, 5, 0], [0, 0, 0]];;semerro">
+<p class="try-task"><strong>Missão:</strong> a Ana registrou 5 vendas no dia 0, turno 1, mas o 5 apareceu nos dois dias. Mude a criação da tabela para que cada dia tenha a sua própria lista.</p>
+<pre class="script" data-file="main.py">vendas = [[0] * 3] * 2
+vendas[0][1] = 5
+print(vendas)
+</pre>
+<pre class="solucao" data-file="main.py">vendas = [[0] * 3 for _ in range(2)]
+vendas[0][1] = 5
+print(vendas)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>b = a</code> não copia: é mais uma etiqueta no mesmo objeto.</li>
+  <li>A <strong>cópia rasa</strong> (<code>copy.copy</code>, <code>.copy()</code>, <code>list()</code>, <code>[:]</code>) cria um objeto novo só na primeira camada; os itens de dentro são <strong>compartilhados</strong>. Pôr e tirar itens é seguro; mudar um item mutável de dentro muda o original.</li>
+  <li>A <strong>cópia profunda</strong> (<code>copy.deepcopy</code>) copia todas as camadas: o resultado é totalmente independente.</li>
+  <li>Para saber o que é compartilhado, use <code>is</code>: <code>copia[0] is original[0]</code>.</li>
+  <li>Com itens imutáveis (textos, números), a cópia rasa basta. Com listas, dicionários ou objetos dentro que vão mudar, use a profunda.</li>
+  <li>Dicionários e objetos das suas classes seguem a mesma regra.</li>
+  <li><code>[[0] * 3] * 2</code> repete a mesma linha; crie linhas independentes com <code>[[0] * 3 for _ in range(2)]</code>.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
