@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Removendo Itens — remove, pop, del e clear nas listas | Guia Python</title>
+<meta name="description" content="Como tirar itens de uma lista em Python: remove() pelo valor, pop() pelo índice (e o item que ele devolve), del, clear(), tirar todas as ocorrências, a fila de atendimento, o perigo de remover dentro de um for, e os erros reais do Python 3.14: ValueError do remove, IndexError do pop em lista vazia.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">Removendo Itens</span></h1>
+
+<p class="intro">No mercado, a Ana vai pondo os produtos no carrinho e <strong>riscando</strong> cada um da lista. Na cantina da escola, quem é atendido sai da fila. No fim do mês, a lista inteira vai para o lixo. Tirar itens de uma lista é tão comum quanto pôr, e o Python tem quatro jeitos de fazer isso, cada um para uma situação: <code>remove()</code>, <code>pop()</code>, <code>del</code> e <code>clear()</code>.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A tirar um item pelo <strong>valor</strong> com <code>remove()</code>, e o que acontece com itens repetidos.</li>
+  <li>A tirar um item pelo <strong>índice</strong> com <code>pop()</code>, e a usar o item que ele devolve.</li>
+  <li>A apagar itens e fatias com <code>del</code>, e a esvaziar a lista com <code>clear()</code>.</li>
+  <li>A tirar <strong>todas</strong> as ocorrências de um item.</li>
+  <li>Por que remover itens <strong>dentro</strong> de um <code>for</code> pula itens, e como fazer certo.</li>
+  <li>Os erros reais: o <code>ValueError</code> do <code>remove</code> e o <code>IndexError</code> do <code>pop</code>.</li>
+</ul>
+</div>
+
+<hr>
+
+<h2>A ideia: riscar pelo nome ou pela posição</h2>
+<p>Há duas maneiras de dizer a alguém qual item riscar da lista:</p>
+<ul>
+  <li><strong>Pelo nome:</strong> "risca o café". Você não sabe (nem precisa saber) em que posição ele está. É o <code>remove("café")</code>.</li>
+  <li><strong>Pela posição:</strong> "risca o primeiro", "risca o último". Você não liga para qual é o item. É o <code>pop(0)</code>, o <code>pop()</code> e o <code>del lista[0]</code>.</li>
+</ul>
+<p>Em qualquer dos casos, os itens que vêm depois <strong>andam uma casa para a esquerda</strong> para ocupar o lugar vazio. A lista nunca fica com um "buraco".</p>
+
+<hr>
+
+<h2>1. <code>remove()</code>: tirar pelo valor</h2>
+
+<pre class="file" data-file="remove.py">compras = ["arroz", "feijão", "café", "leite"]
+compras.remove("café")
+print(compras)
+cesta = ["pão", "leite", "pão", "ovos", "pão"]
+cesta.remove("pão")
+print(cesta)
+</pre>
+
+<pre class="term">$ python3 remove.py
+['arroz', 'feijão', 'leite']
+['leite', 'pão', 'ovos', 'pão']
+</pre>
+
+<dl class="anatomy">
+  <dt>compras.remove("café")</dt><dd>"Lista de compras, remova o café". O Python procura o primeiro item <strong>igual</strong> a <code>"café"</code> e o tira. O leite, que estava no índice 3, passa para o 2.</dd>
+  <dt>cesta.remove("pão")</dt><dd>Com itens repetidos, o <code>remove</code> tira só o <strong>primeiro</strong> que encontrar. Sobraram dois pães.</dd>
+</dl>
+
+<p>Como o <code>append</code> (aula <a href="listas-adicionar.html">Adicionando Itens</a>), o <code>remove</code> muda a própria lista e devolve <code>None</code>. Por isso a linha é só <code>compras.remove("café")</code>, sem <code>=</code>.</p>
+
+<h3>Tirando sem dar erro, e tirando todos</h3>
+<p>Se o item não estiver na lista, o <code>remove</code> para o programa com um erro (você vai vê-lo em <a href="#errado">Quando dá errado</a>). O jeito seguro é perguntar antes com <code>in</code>. E, para tirar <strong>todas</strong> as ocorrências, repita enquanto o item ainda estiver lá:</p>
+
+<pre class="file" data-file="remove_seguro.py">compras = ["arroz", "feijão", "café", "leite"]
+item = "açúcar"
+if item in compras:
+    compras.remove(item)
+    print(f"{item} riscado.")
+else:
+    print(f"{item} não estava na lista.")
+cesta = ["pão", "leite", "pão", "ovos", "pão"]
+while "pão" in cesta:
+    cesta.remove("pão")
+print(cesta)
+</pre>
+
+<pre class="term">$ python3 remove_seguro.py
+açúcar não estava na lista.
+['leite', 'ovos']
+</pre>
+
+<p>O <code>while "pão" in cesta:</code> (aula <a href="while.html">while</a>) remove um pão por volta e para quando não sobra nenhum. Funciona bem em listas pequenas como esta; para listas grandes, o jeito mais rápido é criar uma lista nova só com o que fica, como você vai ver na seção 5.</p>
+
+<div class="trypy" data-goal="out:['arroz', 'feijão', 'leite'];;src:\.remove\(">
+<p class="try-task"><strong>Missão:</strong> a Ana já pôs o sabão no carrinho. Use <code>remove</code> para riscá-lo da lista, antes do <code>print</code>.</p>
+<pre class="script" data-file="main.py">compras = ["arroz", "feijão", "sabão", "leite"]
+
+print(compras)
+</pre>
+<pre class="solucao" data-file="main.py">compras = ["arroz", "feijão", "sabão", "leite"]
+compras.remove("sabão")
+print(compras)
+</pre>
+</div>
+
+<hr>
+
+<h2>2. <code>pop()</code>: tirar pela posição (e ficar com o item)</h2>
+<p>O <code>pop</code> ("estourar", "tirar de uma vez") tem duas diferenças em relação ao <code>remove</code>: ele recebe o <strong>índice</strong>, e não o valor; e ele <strong>devolve</strong> o item que tirou, para você usar. Sem índice, ele tira o <strong>último</strong>.</p>
+
+<pre class="term">&gt;&gt;&gt; compras = ["arroz", "feijão", "café", "leite"]
+&gt;&gt;&gt; compras.pop()
+'leite'
+&gt;&gt;&gt; compras
+['arroz', 'feijão', 'café']
+&gt;&gt;&gt; compras.pop(1)
+'feijão'
+&gt;&gt;&gt; compras
+['arroz', 'café']
+</pre>
+
+<p>No modo interativo, o <code>'leite'</code> que aparece logo depois de <code>compras.pop()</code> é o <strong>valor devolvido</strong>: o item que saiu. Depois, <code>pop(1)</code> tirou o item de índice 1, o feijão.</p>
+
+<h3>A fila da cantina</h3>
+<p>Uma fila é o exemplo perfeito: quem chegou primeiro é atendido primeiro (sai do começo, <code>pop(0)</code>), e o programa precisa saber <strong>quem</strong> está sendo atendido. É para isso que serve o valor devolvido:</p>
+
+<pre class="file" data-file="fila.py">fila = ["Ana", "Bruno", "Carla", "Davi"]
+ultimo = fila.pop()
+print(f"{ultimo} desistiu e saiu da fila.")
+atendido = fila.pop(0)
+print(f"Atendendo: {atendido}")
+print(f"Ainda na fila: {fila}")
+</pre>
+
+<pre class="term">$ python3 fila.py
+Davi desistiu e saiu da fila.
+Atendendo: Ana
+Ainda na fila: ['Bruno', 'Carla']
+</pre>
+
+<dl class="anatomy">
+  <dt>ultimo = fila.pop()</dt><dd>Tira o último (o Davi) <strong>e</strong> guarda o nome dele em <code>ultimo</code>. Aqui o <code>=</code> está certo: o <code>pop</code>, ao contrário do <code>append</code> e do <code>remove</code>, devolve algo útil.</dd>
+  <dt>atendido = fila.pop(0)</dt><dd>Tira o primeiro (a Ana). O Bruno passa a ser o índice 0.</dd>
+</dl>
+
+<div class="trypy" data-goal="out:Atendendo: Ana;;out:Atendendo: Bruno;;out:Ainda na fila: ['Carla'];;src:\.pop\(0\)">
+<p class="try-task"><strong>Missão:</strong> a cantina vai atender <strong>duas</strong> pessoas, sempre a primeira da fila. Complete as duas linhas com <code>fila.pop(0)</code> no lugar dos <code>""</code>.</p>
+<pre class="script" data-file="main.py">fila = ["Ana", "Bruno", "Carla"]
+atendido = ""
+print(f"Atendendo: {atendido}")
+atendido = ""
+print(f"Atendendo: {atendido}")
+print(f"Ainda na fila: {fila}")
+</pre>
+<pre class="solucao" data-file="main.py">fila = ["Ana", "Bruno", "Carla"]
+atendido = fila.pop(0)
+print(f"Atendendo: {atendido}")
+atendido = fila.pop(0)
+print(f"Atendendo: {atendido}")
+print(f"Ainda na fila: {fila}")
+</pre>
+</div>
+
+<hr>
+
+<h2>3. <code>del</code>: apagar pelo índice ou uma fatia</h2>
+<p><code>del</code> (de <em>delete</em>, "apagar") não é um método: é uma <strong>palavra-chave</strong> do Python, escrita antes do que você quer apagar, sem ponto e sem parênteses. Ela apaga um item pelo índice, como o <code>pop</code>, mas não devolve nada. E apaga fatias inteiras:</p>
+
+<pre class="file" data-file="del.py">compras = ["arroz", "feijão", "café", "leite", "sabão", "sal"]
+del compras[0]
+print(compras)
+del compras[1:3]
+print(compras)
+del compras[-1]
+print(compras)
+compras.clear()
+print(compras)
+</pre>
+
+<pre class="term">$ python3 del.py
+['feijão', 'café', 'leite', 'sabão', 'sal']
+['feijão', 'sabão', 'sal']
+['feijão', 'sabão']
+[]
+</pre>
+
+<dl class="anatomy">
+  <dt>del compras[0]</dt><dd>Apaga o item de índice 0, o arroz.</dd>
+  <dt>del compras[1:3]</dt><dd>Apaga a fatia dos índices 1 e 2 (café e leite), como você viu fatias em <a href="listas-acessar.html">Acessando Itens</a>.</dd>
+  <dt>del compras[-1]</dt><dd>Apaga o último, o sal.</dd>
+  <dt>compras.clear()</dt><dd>O método <code>clear</code> ("limpar") tira <strong>todos</strong> os itens. A lista continua existindo, só que vazia: <code>[]</code>.</dd>
+</dl>
+
+<h3><code>del</code> sem índice apaga a variável</h3>
+<p>Cuidado com a diferença entre esvaziar a lista e apagar a <strong>variável</strong>:</p>
+
+<pre class="term">&gt;&gt;&gt; compras = ["arroz", "café"]
+&gt;&gt;&gt; del compras
+&gt;&gt;&gt; compras
+Traceback (most recent call last):
+  File "&lt;python-input-2&gt;", line 1, in &lt;module&gt;
+    compras
+NameError: name 'compras' is not defined
+</pre>
+
+<p><code>del compras</code>, sem colchetes, apaga o <strong>nome</strong> <code>compras</code>: depois disso, é como se a variável nunca tivesse existido (<code>NameError</code>). Para ter uma lista vazia e continuar usando, é <code>compras.clear()</code>.</p>
+
+<hr>
+
+<h2>4. Qual usar?</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Você sabe…</th><th>…e quer</th><th>Use</th><th>Se não existir</th></tr>
+<tr><td>O valor ("o café")</td><td>Tirar a primeira ocorrência</td><td><code>lista.remove("café")</code></td><td><code>ValueError</code></td></tr>
+<tr><td>O valor</td><td>Tirar todas as ocorrências</td><td><code>while x in lista: lista.remove(x)</code> ou uma lista nova (seção 5)</td><td>Não faz nada</td></tr>
+<tr><td>A posição</td><td>Tirar e <strong>usar</strong> o item</td><td><code>item = lista.pop(i)</code></td><td><code>IndexError</code></td></tr>
+<tr><td>Nada (quer o último)</td><td>Tirar e usar o último</td><td><code>item = lista.pop()</code></td><td><code>IndexError</code> se a lista estiver vazia</td></tr>
+<tr><td>A posição</td><td>Só apagar</td><td><code>del lista[i]</code></td><td><code>IndexError</code></td></tr>
+<tr><td>Um trecho</td><td>Apagar vários seguidos</td><td><code>del lista[a:b]</code></td><td>Não dá erro</td></tr>
+<tr><td>—</td><td>Esvaziar tudo</td><td><code>lista.clear()</code></td><td>—</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>5. Removendo dentro de um <code>for</code>: o item pulado</h2>
+<p>A professora quer tirar da lista todas as notas abaixo de 6. Parece simples: passar pelas notas e remover as baixas.</p>
+
+<pre class="file" data-file="notas_errado.py">notas = [4.0, 5.5, 8.0, 3.0, 9.0, 7.5]
+for nota in notas:
+    if nota &lt; 6:
+        notas.remove(nota)
+print(notas)
+</pre>
+
+<pre class="term">$ python3 notas_errado.py
+[5.5, 8.0, 9.0, 7.5]
+</pre>
+
+<p><strong>O 5.5 escapou</strong>, e nenhum erro apareceu. O que aconteceu? O <code>for</code> anda pela lista <strong>pelo índice</strong>: primeiro o 0, depois o 1, o 2…</p>
+
+<ol class="passo">
+  <li>Volta 1, índice 0: a nota é 4.0. É menor que 6, então sai. A lista vira <code>[5.5, 8.0, 3.0, 9.0, 7.5]</code>: <strong>todo mundo andou uma casa para a esquerda</strong>, e o 5.5 agora está no índice 0.</li>
+  <li>Volta 2, índice 1: o <code>for</code> segue em frente, para o índice 1, onde agora está o <strong>8.0</strong>. O 5.5, que foi para o índice 0, nunca é olhado.</li>
+  <li>Volta 3, índice 2: o 3.0. Sai. O 9.0 e o 7.5 andam para a esquerda.</li>
+  <li>Volta 4, índice 3: o 7.5 (o 9.0 foi para o índice 2 e também foi pulado, mas ele não precisava sair).</li>
+</ol>
+
+<p>É como riscar a lista de compras enquanto uma pessoa a reescreve sem os itens riscados: você perde o lugar. Dois jeitos certos:</p>
+
+<pre class="file" data-file="notas_certo.py">notas = [4.0, 5.5, 8.0, 3.0, 9.0, 7.5]
+for nota in notas[:]:
+    if nota &lt; 6:
+        notas.remove(nota)
+print(notas)
+</pre>
+
+<pre class="term">$ python3 notas_certo.py
+[8.0, 9.0, 7.5]
+</pre>
+
+<p>O <code>notas[:]</code> é uma <strong>cópia</strong> da lista (uma fatia do começo ao fim, aula <a href="listas-copiar.html">Copiando Listas</a>). O <code>for</code> anda pela cópia, que não muda, e o <code>remove</code> tira os itens da original. Ninguém perde o lugar.</p>
+
+<pre class="file" data-file="notas_certo2.py">notas = [4.0, 5.5, 8.0, 3.0, 9.0, 7.5]
+aprovadas = []
+for nota in notas:
+    if nota &gt;= 6:
+        aprovadas.append(nota)
+print(aprovadas)
+</pre>
+
+<pre class="term">$ python3 notas_certo2.py
+[8.0, 9.0, 7.5]
+</pre>
+
+<p>O segundo jeito pensa ao contrário: em vez de <strong>tirar</strong> as notas baixas, ele monta uma lista <strong>nova</strong> só com as que ficam. A lista original não muda durante o <code>for</code>, então nada é pulado. Este é o jeito mais usado (e o mais rápido em listas grandes), e na aula <a href="list-comprehension.html">List Comprehension</a> você vai escrevê-lo numa linha só.</p>
+
+<div class="warning">
+<strong>Regra de ouro</strong>
+<p>Nunca tire (nem ponha) itens numa lista enquanto um <code>for</code> anda por <strong>essa mesma lista</strong>. Ande por uma cópia (<code>for x in lista[:]</code>) ou monte uma lista nova.</p>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>ValueError: remover o que não está na lista</strong>
+<pre class="file" data-file="remove_erro.py">compras = ["arroz", "feijão", "café", "leite"]
+compras.remove("açúcar")
+print(compras)
+</pre>
+<pre class="term">$ python3 remove_erro.py
+Traceback (most recent call last):
+  File "/home/ana/remove_erro.py", line 2, in &lt;module&gt;
+    compras.remove("açúcar")
+    ~~~~~~~~~~~~~~^^^^^^^^^^
+ValueError: list.remove(x): x not in list
+</pre>
+<p>Linha por linha:</p>
+<ul>
+  <li><code>File "/home/ana/remove_erro.py", line 2</code>: o erro foi na linha 2. O <code>print</code> da linha 3 não chegou a rodar.</li>
+  <li>Os <code>^^^^</code> marcam o <code>("açúcar")</code>: o valor pedido é o problema.</li>
+  <li><code>ValueError: list.remove(x): x not in list</code>: "erro de valor: <code>list.remove(x)</code>: x não está na lista". O <code>x</code> quer dizer "o valor que você pediu"; a mensagem não repete qual era. É a mesma mensagem do <code>index()</code>, que você viu em <a href="listas-acessar.html#errado">Acessando Itens</a>.</li>
+</ul>
+<p>Lembre que a comparação é exata: <code>remove("Café")</code> ou <code>remove("cafe")</code> numa lista com <code>"café"</code> dão o mesmo erro. <strong>Como consertar:</strong> confira antes com <code>if item in lista:</code>, como no <code>remove_seguro.py</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>O índice no <code>remove</code></strong>
+<p>A Ana queria tirar o primeiro item e escreveu <code>remove(0)</code>:</p>
+<pre class="term">&gt;&gt;&gt; compras = ["arroz", "café"]
+&gt;&gt;&gt; compras.remove(0)
+Traceback (most recent call last):
+  File "&lt;python-input-1&gt;", line 1, in &lt;module&gt;
+    compras.remove(0)
+    ~~~~~~~~~~~~~~^^^
+ValueError: list.remove(x): x not in list
+</pre>
+<p>O <code>remove</code> não sabe nada de índices: ele procurou na lista um item <strong>igual ao número 0</strong>, e não havia nenhum. (Pior: numa lista de números, como <code>[0, 5, 7]</code>, o <code>remove(0)</code> funcionaria, mas tiraria o <strong>valor</strong> 0, onde quer que ele estivesse.) <strong>Como consertar:</strong> pelo índice, use <code>pop(0)</code> ou <code>del lista[0]</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>IndexError: o <code>pop</code> numa lista vazia ou num índice que não existe</strong>
+<pre class="file" data-file="fila_vazia.py">fila = ["Ana"]
+print(fila.pop(0))
+print(fila.pop(0))
+</pre>
+<pre class="term">$ python3 fila_vazia.py
+Ana
+Traceback (most recent call last):
+  File "/home/ana/fila_vazia.py", line 3, in &lt;module&gt;
+    print(fila.pop(0))
+          ~~~~~~~~^^^
+IndexError: pop from empty list
+</pre>
+<p>O primeiro <code>pop</code> atendeu a Ana, e a fila ficou vazia. O segundo não tinha de onde tirar: <code>pop from empty list</code>, "pop de uma lista vazia". Com uma lista que tem itens, mas um índice grande demais, a mensagem muda um pouco:</p>
+<pre class="term">&gt;&gt;&gt; compras = ["arroz", "café"]
+&gt;&gt;&gt; compras.pop(10)
+Traceback (most recent call last):
+  File "&lt;python-input-1&gt;", line 1, in &lt;module&gt;
+    compras.pop(10)
+    ~~~~~~~~~~~^^^^
+IndexError: pop index out of range
+</pre>
+<p><strong>Como consertar:</strong> antes de tirar, confira se ainda tem alguém: <code>if fila:</code> (uma lista vazia conta como falso, aula <a href="booleanos.html">Booleanos</a>) ou <code>if len(fila) &gt; 0:</code>. Um laço que atende até a fila acabar fica assim: <code>while fila: atendido = fila.pop(0)</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Guardar o resultado do <code>remove</code></strong>
+<pre class="term">&gt;&gt;&gt; compras = ["arroz", "café"]
+&gt;&gt;&gt; item = compras.remove("arroz")
+&gt;&gt;&gt; print(item)
+None
+</pre>
+<p>A Ana queria guardar o item que saiu, mas o <code>remove</code> devolve <code>None</code> (você já sabe qual é o item: foi você que o escreveu!). Só o <code>pop</code> devolve o item removido. E nunca escreva <code>compras = compras.remove(…)</code>: a lista vira <code>None</code>, como o <code>append</code> da aula <a href="listas-adicionar.html#errado">Adicionando Itens</a>.</p>
+</div>
+
+<div class="cenario">
+<strong>Itens pulados ao remover dentro do <code>for</code></strong>
+<p>Você viu na seção 5: sem erro nenhum, o resultado sai errado. Se uma remoção "esqueceu" alguns itens, procure um <code>remove</code>, <code>pop</code> ou <code>del</code> dentro de um <code>for</code> que anda pela mesma lista.</p>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th><th>Devolve</th></tr>
+<tr><td><code>lista.remove(x)</code></td><td>Tira a primeira ocorrência do valor <code>x</code></td><td><code>None</code></td></tr>
+<tr><td><code>lista.pop()</code></td><td>Tira o último item</td><td>O item tirado</td></tr>
+<tr><td><code>lista.pop(i)</code></td><td>Tira o item de índice <code>i</code></td><td>O item tirado</td></tr>
+<tr><td><code>del lista[i]</code></td><td>Apaga o item de índice <code>i</code></td><td>— (é uma instrução)</td></tr>
+<tr><td><code>del lista[a:b]</code></td><td>Apaga a fatia</td><td>—</td></tr>
+<tr><td><code>lista.clear()</code></td><td>Tira todos os itens; a lista fica <code>[]</code></td><td><code>None</code></td></tr>
+<tr><td><code>del lista</code></td><td>Apaga a <strong>variável</strong></td><td>—</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>ValueError: list.remove(x): x not in list</code></td><td>O valor não está na lista (maiúsculas, acentos?) ou passou um índice para o <code>remove</code></td></tr>
+<tr><td><code>IndexError: pop from empty list</code></td><td><code>pop</code> numa lista vazia: confira com <code>if lista:</code></td></tr>
+<tr><td><code>IndexError: pop index out of range</code></td><td><code>pop(i)</code> com um índice que não existe</td></tr>
+<tr><td><code>NameError: name 'compras' is not defined</code> depois de um <code>del</code></td><td><code>del compras</code> apagou a variável; para esvaziar, <code>clear()</code></td></tr>
+<tr><td>Sobrou um item que deveria ter saído</td><td>Remoção dentro de um <code>for</code> na mesma lista, ou <code>remove</code> tirou só a primeira ocorrência</td></tr>
+<tr><td>A variável vale <code>None</code></td><td>Guardou o resultado do <code>remove</code> ou do <code>clear</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Riscando pelo nome</h3>
+<p>Complete para tirar o leite da lista:</p>
+<div class="ex-code">compras.<input data-answer="remove" aria-label="método" size="8">("leite")</div>
+</div>
+
+<div class="exercise">
+<h3>2. O último a sair</h3>
+<p>Complete para tirar o último item e guardá-lo em <code>item</code>:</p>
+<div class="ex-code">item = compras.<input data-answer="pop()" aria-label="método" size="8"></div>
+</div>
+
+<div class="exercise">
+<h3>3. Quanto sobrou?</h3>
+<p>Com <code>cesta = ["pão", "pão", "ovos", "pão"]</code>, depois de <code>cesta.remove("pão")</code>, quantos pães ficam na cesta?</p>
+<div class="ex-code"><input data-answer="2" aria-label="quantidade" size="3"></div>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Qual destes tira o primeiro item <strong>e</strong> devolve o item tirado?</p>
+<label><input type="radio" name="q4"> <code>lista.remove(0)</code></label>
+<label><input type="radio" name="q4"> <code>del lista[0]</code></label>
+<label><input type="radio" name="q4"> <code>lista.pop(0)</code></label>
+<label><input type="radio" name="q4"> <code>lista.clear(0)</code></label>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">5. Depois de <code>compras.clear()</code>, o que <code>print(compras)</code> mostra?</p>
+<label><input type="radio" name="q5"> <code>NameError</code></label>
+<label><input type="radio" name="q5"> <code>[]</code></label>
+<label><input type="radio" name="q5"> <code>None</code></label>
+<label><input type="radio" name="q5"> Nada</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">6. Por que remover itens de uma lista dentro de um <code>for</code> que anda por ela mesma é perigoso?</p>
+<label><input type="radio" name="q6"> Os itens seguintes andam uma casa para a esquerda e o <code>for</code> pula alguns, sem dar erro</label>
+<label><input type="radio" name="q6"> O Python não deixa e dá <code>SyntaxError</code></label>
+<label><input type="radio" name="q6"> A lista é apagada</label>
+<label><input type="radio" name="q6"> O <code>for</code> fica repetindo para sempre</label>
+</div>
+
+<h3>Missão final: só as notas de aprovação</h3>
+
+<div class="trypy" data-goal="out:[8.0, 9.0, 7.5];;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa deveria tirar todas as notas abaixo de 6, mas o 5.5 escapa. Conserte o laço (dica: faça o <code>for</code> andar por uma cópia, <code>notas[:]</code>, ou monte uma lista nova só com as notas que ficam).</p>
+<pre class="script" data-file="main.py">notas = [4.0, 5.5, 8.0, 3.0, 9.0, 7.5]
+for nota in notas:
+    if nota &lt; 6:
+        notas.remove(nota)
+print(notas)
+</pre>
+<pre class="solucao" data-file="main.py">notas = [4.0, 5.5, 8.0, 3.0, 9.0, 7.5]
+for nota in notas[:]:
+    if nota &lt; 6:
+        notas.remove(nota)
+print(notas)
+</pre>
+</div>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>remove(x)</code> tira pelo <strong>valor</strong>, só a primeira ocorrência; se não houver, <code>ValueError</code>. Pergunte antes com <code>in</code>.</li>
+  <li><code>pop(i)</code> tira pelo <strong>índice</strong> e <strong>devolve</strong> o item; <code>pop()</code> tira o último. Lista vazia: <code>IndexError</code>.</li>
+  <li><code>del lista[i]</code> e <code>del lista[a:b]</code> apagam pelo índice ou pela fatia; <code>del lista</code> apaga a variável.</li>
+  <li><code>clear()</code> esvazia a lista, que continua existindo.</li>
+  <li>Os itens seguintes sempre andam para a esquerda: não fica buraco.</li>
+  <li>Para tirar todas as ocorrências: <code>while x in lista: lista.remove(x)</code>, ou uma lista nova só com o que fica.</li>
+  <li>Nunca remova itens dentro de um <code>for</code> que anda pela mesma lista: ande por uma cópia (<code>lista[:]</code>) ou monte uma lista nova.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
