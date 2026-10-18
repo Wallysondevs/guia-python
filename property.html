@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python @property — atributos que conferem o valor | Guia Python</title>
+<meta name="description" content="O @property em Python para quem está começando: atributos calculados (aluno.media, sem parênteses), atributos só de leitura (no setter), o setter com validação que levanta ValueError, a validação que também vale no __init__, tratar o erro com try/except, e os erros reais (RecursionError do self.preco dentro do property, 'float' object is not callable, setter com outro nome, unsupported format string passed to method.__format__).">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">@property</span></h1>
+
+<p class="intro">A lojinha da Ana tem uma regra simples: preço negativo não existe. Mas, como você viu na aula <a href="encapsulamento.html">Encapsulamento</a>, qualquer linha do programa pode escrever <code>cafe.preco = -5</code>, e o Python aceita calado. Uma saída é esconder o preço em <code>_preco</code> e obrigar todo mundo a usar métodos como <code>ver_preco()</code> e <code>mudar_preco(…)</code>, mas aí o código fica cheio de parênteses e quem já escrevia <code>cafe.preco</code> tem de mudar tudo. O <code>@property</code> junta o melhor dos dois mundos: por fora, <code>cafe.preco</code> continua parecendo um atributo comum; por dentro, cada leitura e cada mudança passam por um <strong>método seu</strong>, que pode calcular, conferir e recusar.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A criar um atributo <strong>calculado</strong> com <code>@property</code>: <code>bia.media</code>, sem parênteses.</li>
+  <li>Por que um <code>@property</code> sozinho é <strong>só de leitura</strong>, e a mensagem <code>has no setter</code>.</li>
+  <li>A escrever o <strong>setter</strong> (<code>@preco.setter</code>), que confere o valor e levanta <code>ValueError</code> quando ele é inválido.</li>
+  <li>A fazer a validação valer também na criação do objeto, no <code>__init__</code>.</li>
+  <li>A tratar o erro com <code>try</code>/<code>except</code>.</li>
+  <li>Os erros reais: o <code>RecursionError</code> do <code>self.preco</code> dentro do próprio property, os parênteses a mais, o setter com outro nome e o <code>@property</code> esquecido.</li>
+</ul>
+</div>
+
+<p>Esta aula usa duas coisas de aulas anteriores: o <code>raise</code>, que <strong>levanta</strong> um erro de propósito (aula <a href="raise.html">raise</a>), e o <code>try</code>/<code>except</code>, que trata um erro (aula <a href="try-except.html">try e except</a>). O <code>@</code> antes do nome é um <strong>decorador</strong>; por enquanto, basta saber que ele "enfeita" o método logo abaixo e muda o jeito de usá-lo. Os decoradores têm aula própria: <a href="decoradores.html">Decoradores</a>.</p>
+
+<hr>
+
+<h2>A ideia: a máquina de etiquetar</h2>
+<p>Para pôr preço num produto, a Ana usa a máquina de etiquetar da loja. Para quem olha a prateleira, a etiqueta é só um adesivo com um número. Mas a máquina tem um segredo: antes de imprimir, ela confere o número. Se alguém digita <code>-5</code>, ela apita e não imprime nada.</p>
+
+<p>O <code>@property</code> é essa máquina. Quem usa o objeto lê e escreve <code>cafe.preco</code> como se fosse um adesivo comum. Mas, entre a pessoa e o dado guardado, existe um método que confere tudo.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Quem usa escreve</th><th>O Python chama</th><th>Nome em inglês</th></tr>
+<tr><td><code>cafe.preco</code> (ler)</td><td>O método marcado com <code>@property</code></td><td><em>getter</em>, "pegador"</td></tr>
+<tr><td><code>cafe.preco = 21.00</code> (mudar)</td><td>O método marcado com <code>@preco.setter</code></td><td><em>setter</em>, "definidor"</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>1. O problema</h2>
+
+<pre class="file" data-file="problema.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+
+cafe = Produto("Café", 18.90)
+cafe.preco = -5
+print(cafe.preco)
+</pre>
+
+<pre class="term">$ python3 problema.py
+-5
+</pre>
+
+<p>Preço negativo, e ninguém reclamou. Vamos resolver em dois passos: primeiro o <code>@property</code> para <strong>ler</strong>, depois o <code>setter</code> para <strong>mudar com conferência</strong>.</p>
+
+<hr>
+
+<h2>2. Um atributo calculado: <code>@property</code></h2>
+<p>Comece pelo caso mais simples. A média de uma aluna não precisa ser guardada: ela pode ser <strong>calculada</strong> a partir das notas toda vez que alguém pedir. Com <code>@property</code>, o cálculo fica num método, mas se usa como atributo:</p>
+
+<pre class="file" data-file="getter.py">class Aluno:
+    def __init__(self, nome, nota1, nota2):
+        self.nome = nome
+        self.nota1 = nota1
+        self.nota2 = nota2
+
+    @property
+    def media(self):
+        return (self.nota1 + self.nota2) / 2
+
+
+bia = Aluno("Bia", 8.0, 9.5)
+print(bia.media)
+bia.nota2 = 10.0
+print(bia.media)
+</pre>
+
+<dl class="anatomy">
+  <dt>@property</dt><dd>Escrito na linha de cima do <code>def</code>, colado nele. Transforma o método <code>media</code> numa <strong>propriedade</strong>: um "atributo" que, quando lido, roda o método.</dd>
+  <dt>def media(self):</dt><dd>Um método comum, só com o <code>self</code>, que <strong>devolve</strong> um valor com <code>return</code>.</dd>
+  <dt>bia.media</dt><dd><strong>Sem parênteses.</strong> Quem lê o código nem percebe que é um método: parece um atributo como <code>bia.nome</code>. Por baixo, o Python chama o <code>media(bia)</code>.</dd>
+</dl>
+
+<pre class="term">$ python3 getter.py
+8.75
+9.0                                « a nota mudou, e a média acompanhou sozinha
+</pre>
+
+<p>A vantagem de calcular na hora: a média nunca fica desatualizada. Na aula <a href="init-self.html">__init__ e self</a>, a média era calculada uma vez, no <code>__init__</code>; se a nota mudasse depois, a média ficava errada. Com <code>@property</code>, ela é sempre a conta das notas de agora.</p>
+
+<h3>Só de leitura</h3>
+<p>Um <code>@property</code> sozinho só sabe <strong>ler</strong>. Tentar escrever nele dá erro:</p>
+
+<pre class="file" data-file="sem_setter.py">class Aluno:
+    def __init__(self, nome, nota1, nota2):
+        self.nome = nome
+        self.nota1 = nota1
+        self.nota2 = nota2
+
+    @property
+    def media(self):
+        return (self.nota1 + self.nota2) / 2
+
+
+bia = Aluno("Bia", 8.0, 9.5)
+bia.media = 10
+</pre>
+
+<pre class="term">$ python3 sem_setter.py
+Traceback (most recent call last):
+  File "/home/ana/sem_setter.py", line 13, in &lt;module&gt;
+    bia.media = 10
+    ^^^^^^^^^
+AttributeError: property 'media' of 'Aluno' object has no setter
+</pre>
+
+<p>"A propriedade <code>media</code> do objeto <code>Aluno</code> não tem <em>setter</em>": não existe um método para <strong>mudar</strong> a média. E faz sentido: ninguém muda a média direto; muda as notas. Isso é útil de propósito. Uma conta bancária pode mostrar o saldo como propriedade só de leitura, e deixar o saldo mudar apenas pelos métodos:</p>
+
+<pre class="file" data-file="saldo_leitura.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self._saldo = saldo
+
+    @property
+    def saldo(self):
+        return self._saldo
+
+    def depositar(self, valor):
+        if valor &gt; 0:
+            self._saldo += valor
+
+
+conta = ContaBancaria("Ana", 100)
+conta.depositar(50)
+print(conta.saldo)
+conta.saldo = 1_000_000
+</pre>
+
+<pre class="term">$ python3 saldo_leitura.py
+150
+Traceback (most recent call last):
+  File "/home/ana/saldo_leitura.py", line 18, in &lt;module&gt;
+    conta.saldo = 1_000_000
+    ^^^^^^^^^^^
+AttributeError: property 'saldo' of 'ContaBancaria' object has no setter
+</pre>
+
+<p>Compare com a aula de encapsulamento: lá, a "fraude" <code>conta.saldo = …</code> passava calada (criava um atributo novo). Aqui ela <strong>dá erro</strong>, na hora e na linha certa. O valor de verdade fica em <code>self._saldo</code> (com sublinhado, como manda o combinado), e o <code>conta.saldo</code> é a janela de vidro por onde se olha.</p>
+
+<div class="trypy" data-goal="out:Média da Bia: 8.75;;src:@property;;semerro">
+<p class="try-task"><strong>Missão:</strong> o código lá de baixo usa <code>bia.media</code> <strong>sem parênteses</strong>, como um atributo, e quebra. Sem mexer nas linhas de baixo, transforme o método <code>media</code> numa propriedade, para o programa mostrar <code>Média da Bia: 8.75</code>.</p>
+<pre class="script" data-file="main.py">class Aluno:
+    def __init__(self, nome, nota1, nota2):
+        self.nome = nome
+        self.nota1 = nota1
+        self.nota2 = nota2
+
+    def media(self):
+        return (self.nota1 + self.nota2) / 2
+
+
+bia = Aluno("Bia", 8.0, 9.5)
+print(f"Média da {bia.nome}: {bia.media:.2f}")
+</pre>
+<pre class="solucao" data-file="main.py">class Aluno:
+    def __init__(self, nome, nota1, nota2):
+        self.nome = nome
+        self.nota1 = nota1
+        self.nota2 = nota2
+
+    @property
+    def media(self):
+        return (self.nota1 + self.nota2) / 2
+
+
+bia = Aluno("Bia", 8.0, 9.5)
+print(f"Média da {bia.nome}: {bia.media:.2f}")
+</pre>
+</div>
+
+<hr>
+
+<h2>3. O setter: mudar com conferência</h2>
+<p>Agora a máquina de etiquetar completa. O preço vai ser lido <strong>e</strong> mudado como atributo, e toda mudança passa pela conferência:</p>
+
+<pre class="file" data-file="setter.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    @property
+    def preco(self):
+        return self._preco
+
+    @preco.setter
+    def preco(self, valor):
+        if valor &lt; 0:
+            raise ValueError(f"preço inválido: {valor} (não pode ser negativo)")
+        self._preco = valor
+
+
+cafe = Produto("Café", 18.90)
+print(cafe.preco)
+cafe.preco = 21.00
+print(cafe.preco)
+print(vars(cafe))
+cafe.preco = -5
+print("esta linha não roda")
+</pre>
+
+<dl class="anatomy">
+  <dt>@property def preco(self):</dt><dd>O <em>getter</em>: quando alguém lê <code>cafe.preco</code>, devolve o valor guardado em <code>self._preco</code>.</dd>
+  <dt>self._preco</dt><dd>Onde o valor mora <strong>de verdade</strong>. O nome precisa ser <strong>diferente</strong> do da propriedade; o costume é o mesmo nome com um sublinhado na frente. (Veja em <a href="#errado">Quando dá errado</a> o que acontece se for igual.)</dd>
+  <dt>@preco.setter</dt><dd>"Este é o <em>setter</em> da propriedade <code>preco</code>". O <code>preco</code> do <code>@preco.setter</code> é a propriedade criada logo acima.</dd>
+  <dt>def preco(self, valor):</dt><dd>O <em>setter</em> tem o <strong>mesmo nome</strong> da propriedade e recebe, além do <code>self</code>, o <code>valor</code> que está do lado direito do <code>=</code>. Em <code>cafe.preco = 21.00</code>, o <code>valor</code> é <code>21.00</code>.</dd>
+  <dt>raise ValueError(…)</dt><dd>Se o valor não serve, o setter <strong>levanta</strong> um erro e não guarda nada. <code>ValueError</code> ("erro de valor") é a exceção que o Python usa quando o tipo está certo, mas o valor não faz sentido.</dd>
+  <dt>self._preco = valor</dt><dd>Só chega aqui o valor que passou na conferência.</dd>
+  <dt>self.preco = preco (no __init__)</dt><dd>Repare: o <code>__init__</code> escreve <code>self.preco</code>, <strong>sem</strong> sublinhado. Isso passa pelo setter, e a conferência vale <strong>também na criação</strong> do produto.</dd>
+</dl>
+
+<pre class="term">$ python3 setter.py
+18.9
+21.0
+{'nome': 'Café', '_preco': 21.0}
+Traceback (most recent call last):
+  File "/home/ana/setter.py", line 22, in &lt;module&gt;
+    cafe.preco = -5
+    ^^^^^^^^^^
+  File "/home/ana/setter.py", line 13, in preco
+    raise ValueError(f"preço inválido: {valor} (não pode ser negativo)")
+ValueError: preço inválido: -5 (não pode ser negativo)
+</pre>
+
+<p>Linha por linha:</p>
+<ul>
+  <li><code>18.9</code> e <code>21.0</code>: a leitura e a mudança funcionaram, como num atributo comum.</li>
+  <li><code>{'nome': 'Café', '_preco': 21.0}</code>: dentro do objeto, o valor mora em <code>_preco</code>. Não existe nenhum atributo <code>preco</code> no objeto: o <code>preco</code> é a propriedade, que mora na classe.</li>
+  <li><code>File "/home/ana/setter.py", line 22, in &lt;module&gt;</code>: o erro começou na linha 22, a do <code>cafe.preco = -5</code>.</li>
+  <li><code>File "/home/ana/setter.py", line 13, in preco</code>: e estourou na linha 13, dentro do setter <code>preco</code>, no <code>raise</code>.</li>
+  <li><code>ValueError: preço inválido: -5 (não pode ser negativo)</code>: o tipo do erro e a <strong>sua</strong> mensagem, do jeito que você escreveu. Escreva mensagens que digam o que estava errado e por quê.</li>
+</ul>
+<p>E o <code>print("esta linha não roda")</code> não rodou: um erro não tratado encerra o programa.</p>
+
+<h3>A conferência vale desde o nascimento</h3>
+<p>Como o <code>__init__</code> usa <code>self.preco = preco</code>, nem dá para <strong>criar</strong> um produto com preço errado:</p>
+
+<pre class="file" data-file="no_init.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    @property
+    def preco(self):
+        return self._preco
+
+    @preco.setter
+    def preco(self, valor):
+        if valor &lt; 0:
+            raise ValueError(f"preço inválido: {valor} (não pode ser negativo)")
+        self._preco = valor
+
+
+leite = Produto("Leite", -6.50)
+</pre>
+
+<pre class="term">$ python3 no_init.py
+Traceback (most recent call last):
+  File "/home/ana/no_init.py", line 17, in &lt;module&gt;
+    leite = Produto("Leite", -6.50)
+  File "/home/ana/no_init.py", line 4, in __init__
+    self.preco = preco
+    ^^^^^^^^^^
+  File "/home/ana/no_init.py", line 13, in preco
+    raise ValueError(f"preço inválido: {valor} (não pode ser negativo)")
+ValueError: preço inválido: -6.5 (não pode ser negativo)
+</pre>
+
+<p>Agora o rastro tem <strong>três</strong> andares: a linha 17 criou o produto, o <code>__init__</code> (linha 4) escreveu <code>self.preco</code>, e o setter (linha 13) recusou. Leia de cima para baixo para seguir o caminho; a última linha diz o que deu errado. Se o <code>__init__</code> escrevesse <code>self._preco = preco</code>, direto, o leite nasceria com preço negativo, sem conferência nenhuma. Por isso: <strong>no <code>__init__</code>, use a propriedade, não o atributo com sublinhado</strong>.</p>
+
+<hr>
+
+<h2>4. Tratando o erro</h2>
+<p>Quem usa a classe pode tratar o <code>ValueError</code> com <code>try</code>/<code>except</code>, e o programa segue:</p>
+
+<pre class="file" data-file="tratar.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    @property
+    def preco(self):
+        return self._preco
+
+    @preco.setter
+    def preco(self, valor):
+        if valor &lt; 0:
+            raise ValueError(f"preço inválido: {valor} (não pode ser negativo)")
+        self._preco = valor
+
+
+cafe = Produto("Café", 18.90)
+for novo in [21.00, -5, 19.90]:
+    try:
+        cafe.preco = novo
+        print(f"Preço trocado para R$ {cafe.preco:.2f}")
+    except ValueError as erro:
+        print(f"Não deu: {erro}")
+print(f"Preço final: R$ {cafe.preco:.2f}")
+</pre>
+
+<pre class="term">$ python3 tratar.py
+Preço trocado para R$ 21.00
+Não deu: preço inválido: -5 (não pode ser negativo)
+Preço trocado para R$ 19.90
+Preço final: R$ 19.90
+</pre>
+
+<p>O <code>-5</code> foi recusado, o preço anterior (21.00) ficou intacto até a troca seguinte, e o programa não quebrou. O <code>as erro</code> guarda a exceção, e o <code>print</code> dela mostra a mensagem que o setter escreveu.</p>
+
+<div class="tip">
+<strong>Conferindo o tipo também</strong>
+<p>O setter pode fazer quantas conferências quiser. (Abaixo, só o setter; o resto da classe é igual ao de cima.) Um preço digitado como texto, <code>"18,90"</code>, também é um erro, mas de <strong>tipo</strong>, e para isso existe o <code>TypeError</code>:</p>
+<pre class="file" data-file="tipo.py">    @preco.setter
+    def preco(self, valor):
+        if not isinstance(valor, (int, float)):
+            raise TypeError(f"o preço precisa ser um número, não {type(valor).__name__}")
+        if valor &lt; 0:
+            raise ValueError(f"preço inválido: {valor} (não pode ser negativo)")
+        self._preco = valor
+</pre>
+<p>Com <code>Produto("Café", "18,90")</code>, a última linha do rastro fica <code>TypeError: o preço precisa ser um número, não str</code>. Sem essa conferência, a comparação <code>valor &lt; 0</code> daria um erro bem menos claro: <code>TypeError: '&lt;' not supported between instances of 'str' and 'int'</code> ("o &lt; não funciona entre texto e número").</p>
+</div>
+
+<hr>
+
+<h2>Formas diferentes de proteger o preço</h2>
+
+<p>Muita gente que vem do Java escreve métodos <code>get_</code> e <code>set_</code>:</p>
+
+<pre class="file" data-file="getset.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.set_preco(preco)
+
+    def get_preco(self):
+        return self._preco
+
+    def set_preco(self, valor):
+        if valor &lt; 0:
+            raise ValueError("preço negativo")
+        self._preco = valor
+
+
+cafe = Produto("Café", 18.90)
+cafe.set_preco(cafe.get_preco() + 2)
+print(cafe.get_preco())
+</pre>
+
+<pre class="term">$ python3 getset.py
+20.9
+</pre>
+
+<p>Funciona e valida igual. Mas compare a linha do aumento: <code>cafe.set_preco(cafe.get_preco() + 2)</code> contra <code>cafe.preco += 2</code>, que é o que o <code>@property</code> permite.</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Forma</th><th>Quando usar</th></tr>
+<tr><td>Atributo comum: <code>self.preco = preco</code></td><td>Comece por aqui. Se não há regra nenhuma, não precisa de property</td></tr>
+<tr><td><code>@property</code> sozinho</td><td>Valor calculado (<code>media</code>) ou só de leitura (<code>saldo</code>)</td></tr>
+<tr><td><code>@property</code> + <code>@preco.setter</code></td><td>Quando a mudança precisa de conferência. É o jeito "pythônico"</td></tr>
+<tr><td><code>get_preco()</code> / <code>set_preco()</code></td><td>Funciona, mas evite em Python: o <code>@property</code> faz o mesmo com uma escrita mais limpa</td></tr>
+</table>
+</div>
+
+<p>A grande vantagem do <code>@property</code> é poder <strong>começar simples</strong>. Escreva <code>self.preco = preco</code>, um atributo comum. Se um dia aparecer a regra do preço negativo, transforme <code>preco</code> numa propriedade: quem usa a classe continua escrevendo <code>cafe.preco</code>, e nenhuma linha fora da classe precisa mudar.</p>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+
+<div class="cenario">
+<strong>O property chamando a si mesmo: <code>RecursionError</code></strong>
+<p>O erro mais comum com <code>@property</code>: guardar o valor com o <strong>mesmo nome</strong> da propriedade, sem o sublinhado.</p>
+<pre class="file" data-file="recursao.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    @property
+    def preco(self):
+        return self.preco
+
+    @preco.setter
+    def preco(self, valor):
+        self.preco = valor
+
+
+cafe = Produto("Café", 18.90)
+</pre>
+<pre class="term">$ python3 recursao.py
+Traceback (most recent call last):
+  File "/home/ana/recursao.py", line 15, in &lt;module&gt;
+    cafe = Produto("Café", 18.90)
+           ~~~~~~~^^^^^^^^^^^^^^^
+  File "/home/ana/recursao.py", line 4, in __init__
+    self.preco = preco
+    ^^^^^^^^^^
+  File "/home/ana/recursao.py", line 12, in preco
+    self.preco = valor
+    ^^^^^^^^^^
+  File "/home/ana/recursao.py", line 12, in preco
+    self.preco = valor
+    ^^^^^^^^^^
+  File "/home/ana/recursao.py", line 12, in preco
+    self.preco = valor
+    ^^^^^^^^^^
+  [Previous line repeated 995 more times]
+RecursionError: maximum recursion depth exceeded
+</pre>
+<p>Siga o rastro: o <code>__init__</code> escreveu <code>self.preco</code>, o que chamou o setter. O setter, na linha 12, escreveu <code>self.preco = valor</code>… o que chamou <strong>o setter de novo</strong>, que escreveu <code>self.preco</code> de novo, e assim por diante. "<code>[Previous line repeated 995 more times]</code>": a mesma linha se repetiu mais 995 vezes, até o Python desistir com <code>RecursionError: maximum recursion depth exceeded</code>, "profundidade máxima de recursão excedida" (aula <a href="recursao.html">Recursão</a>). <strong>Como consertar:</strong> dentro do getter e do setter, use o nome com sublinhado: <code>return self._preco</code> e <code>self._preco = valor</code>. A propriedade é a porta; o <code>_preco</code> é o cômodo.</p>
+</div>
+
+<div class="cenario">
+<strong>Parênteses a mais: <code>'float' object is not callable</code></strong>
+<pre class="file" data-file="parenteses.py">class Aluno:
+    def __init__(self, nome, nota1, nota2):
+        self.nome = nome
+        self.nota1 = nota1
+        self.nota2 = nota2
+
+    @property
+    def media(self):
+        return (self.nota1 + self.nota2) / 2
+
+
+bia = Aluno("Bia", 8.0, 9.5)
+print(bia.media())
+</pre>
+<pre class="term">$ python3 parenteses.py
+Traceback (most recent call last):
+  File "/home/ana/parenteses.py", line 13, in &lt;module&gt;
+    print(bia.media())
+          ~~~~~~~~~^^
+TypeError: 'float' object is not callable
+</pre>
+<p>"Um objeto <code>float</code> não pode ser chamado". O <code>bia.media</code> já rodou o método e virou o número <code>8.75</code>; os parênteses tentaram "chamar" o 8.75. <strong>Como consertar:</strong> propriedade se usa sem parênteses: <code>bia.media</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Esquecer o <code>@property</code>: <code>unsupported format string passed to method.__format__</code></strong>
+<p>O erro contrário: o código usa <code>bia.media</code> sem parênteses, mas a classe esqueceu o <code>@property</code>.</p>
+<pre class="file" data-file="esqueceu.py">class Aluno:
+    def __init__(self, nome, nota1, nota2):
+        self.nome = nome
+        self.nota1 = nota1
+        self.nota2 = nota2
+
+    def media(self):
+        return (self.nota1 + self.nota2) / 2
+
+
+bia = Aluno("Bia", 8.0, 9.5)
+print(bia.media)
+print(f"Média: {bia.media:.2f}")
+</pre>
+<pre class="term">$ python3 esqueceu.py
+&lt;bound method Aluno.media of &lt;__main__.Aluno object at 0x7f20d53906e0&gt;&gt;
+Traceback (most recent call last):
+  File "/home/ana/esqueceu.py", line 13, in &lt;module&gt;
+    print(f"Média: {bia.media:.2f}")
+                   ^^^^^^^^^^^^^^^
+TypeError: unsupported format string passed to method.__format__
+</pre>
+<p>O primeiro <code>print</code> mostra o método "amarrado" (o <em>bound method</em> da aula <a href="atributos-metodos.html">Atributos e Métodos</a>), e não a média. No segundo, o <code>:.2f</code> tentou formatar o <strong>método</strong> com duas casas decimais, e o Python não sabe fazer isso: "formato não suportado passado para <code>method.__format__</code>". O endereço <code>0x…</code> muda a cada execução. <strong>Como consertar:</strong> ponha o <code>@property</code> na linha de cima do <code>def media</code> (ou chame com parênteses, se não quiser uma propriedade).</p>
+</div>
+
+<div class="cenario">
+<strong>O setter com outro nome: <code>has no setter</code> logo na criação</strong>
+<pre class="file" data-file="nome_setter.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    @property
+    def preco(self):
+        return self._preco
+
+    @preco.setter
+    def mudar_preco(self, valor):
+        if valor &lt; 0:
+            raise ValueError("preço negativo")
+        self._preco = valor
+
+
+cafe = Produto("Café", 18.90)
+</pre>
+<pre class="term">$ python3 nome_setter.py
+Traceback (most recent call last):
+  File "/home/ana/nome_setter.py", line 17, in &lt;module&gt;
+    cafe = Produto("Café", 18.90)
+           ~~~~~~~^^^^^^^^^^^^^^^
+  File "/home/ana/nome_setter.py", line 4, in __init__
+    self.preco = preco
+    ^^^^^^^^^^
+AttributeError: property 'preco' of 'Produto' object has no setter
+</pre>
+<p>Parece que o setter está ali, mas o Python diz que a propriedade <code>preco</code> não tem setter. O <code>@preco.setter</code> cria uma propriedade nova, <strong>com setter</strong>, e a guarda com o nome do <code>def</code> que vem logo abaixo: <code>mudar_preco</code>. A propriedade <code>preco</code> continuou só de leitura. <strong>Como consertar:</strong> o getter e o setter precisam ter <strong>o mesmo nome</strong>: <code>def preco(self, valor):</code>.</p>
+</div>
+
+<div class="trypy" data-goal="out:Erro:;;out:Preço: R$ 21.00;;src:@preco\.setter;;semerro">
+<p class="try-task"><strong>Missão:</strong> o <code>Produto</code> tem a propriedade <code>preco</code>, mas falta o <strong>setter</strong>, e o programa quebra já na criação do café. Escreva o <code>@preco.setter</code>: ele deve levantar um <code>ValueError</code> quando o valor for negativo e, se não for, guardar o valor em <code>self._preco</code>. O código de baixo tenta pôr <code>-5</code> (deve aparecer uma linha começando com <code>Erro:</code>) e depois <code>21.00</code> (deve aparecer <code>Preço: R$ 21.00</code>).</p>
+<pre class="script" data-file="main.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    @property
+    def preco(self):
+        return self._preco
+
+    # escreva aqui o setter do preço
+
+
+cafe = Produto("Café", 18.90)
+for novo in [-5, 21.00]:
+    try:
+        cafe.preco = novo
+    except ValueError as erro:
+        print(f"Erro: {erro}")
+print(f"Preço: R$ {cafe.preco:.2f}")
+</pre>
+<pre class="solucao" data-file="main.py">class Produto:
+    def __init__(self, nome, preco):
+        self.nome = nome
+        self.preco = preco
+
+    @property
+    def preco(self):
+        return self._preco
+
+    @preco.setter
+    def preco(self, valor):
+        if valor &lt; 0:
+            raise ValueError("o preço não pode ser negativo")
+        self._preco = valor
+
+
+cafe = Produto("Café", 18.90)
+for novo in [-5, 21.00]:
+    try:
+        cafe.preco = novo
+    except ValueError as erro:
+        print(f"Erro: {erro}")
+print(f"Preço: R$ {cafe.preco:.2f}")
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>@property</code> + <code>def media(self): return …</code></td><td>Cria a propriedade <code>media</code>: lida como <code>obj.media</code>, sem parênteses</td></tr>
+<tr><td><code>@preco.setter</code> + <code>def preco(self, valor):</code></td><td>O setter: roda em <code>obj.preco = valor</code></td></tr>
+<tr><td><code>self._preco</code></td><td>Onde o valor mora de verdade (nome diferente do da propriedade)</td></tr>
+<tr><td><code>raise ValueError("…")</code></td><td>Recusa um valor que não faz sentido</td></tr>
+<tr><td><code>raise TypeError("…")</code></td><td>Recusa um valor do tipo errado</td></tr>
+<tr><td><code>self.preco = preco</code> no <code>__init__</code></td><td>Faz a conferência valer também na criação</td></tr>
+<tr><td><code>@preco.deleter</code></td><td>Existe também: roda em <code>del obj.preco</code>. Raramente usado</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Sintoma</th><th>Causa provável</th></tr>
+<tr><td><code>AttributeError: property 'media' of 'Aluno' object has no setter</code></td><td>Escreveu numa propriedade só de leitura (de propósito ou não), ou o setter tem outro nome</td></tr>
+<tr><td><code>RecursionError: maximum recursion depth exceeded</code></td><td>O getter ou o setter usa <code>self.preco</code> no lugar de <code>self._preco</code></td></tr>
+<tr><td><code>TypeError: 'float' object is not callable</code></td><td>Parênteses numa propriedade: <code>bia.media()</code></td></tr>
+<tr><td><code>&lt;bound method …&gt;</code> ou <code>unsupported format string passed to method.__format__</code></td><td>Faltou o <code>@property</code></td></tr>
+<tr><td>Objeto criado com valor inválido, sem erro</td><td>O <code>__init__</code> usa <code>self._preco = …</code> e pula o setter</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. O decorador</h3>
+<p>Complete o que vai na linha de cima do <code>def</code> para <code>aluno.media</code> funcionar sem parênteses:</p>
+<div class="ex-code"><input data-answer="@property" aria-label="decorador"><br>def media(self):</div>
+</div>
+
+<div class="exercise">
+<h3>2. O setter</h3>
+<p>Complete a linha que marca o setter da propriedade <code>preco</code>:</p>
+<div class="ex-code"><input data-answer="@preco.setter" aria-label="decorador do setter"><br>def preco(self, valor):</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. Dentro do setter, onde se guarda o valor?</p>
+<label><input type="radio" name="q3"> Em <code>self.preco</code></label>
+<label><input type="radio" name="q3"> Em <code>self._preco</code>, um nome diferente do da propriedade</label>
+<label><input type="radio" name="q3"> Numa variável global</label>
+<label><input type="radio" name="q3"> Num <code>return</code></label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">4. A classe tem <code>@property def saldo(self)</code> e nenhum setter. O que acontece com <code>conta.saldo = 500</code>?</p>
+<label><input type="radio" name="q4"> O saldo vira 500</label>
+<label><input type="radio" name="q4"> Cria um atributo novo, calado</label>
+<label><input type="radio" name="q4"> <code>ValueError</code></label>
+<label><input type="radio" name="q4"> <code>AttributeError: property 'saldo' of 'ContaBancaria' object has no setter</code></label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Por que o <code>__init__</code> deve escrever <code>self.preco = preco</code>, e não <code>self._preco = preco</code>?</p>
+<label><input type="radio" name="q5"> Para a conferência do setter valer também na criação do objeto</label>
+<label><input type="radio" name="q5"> Porque <code>self._preco</code> dá erro no <code>__init__</code></label>
+<label><input type="radio" name="q5"> Porque fica mais rápido</label>
+<label><input type="radio" name="q5"> Não faz diferença</label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">6. O programa parou com <code>RecursionError: maximum recursion depth exceeded</code> e o rastro repete a linha <code>self.preco = valor</code>. O que está errado?</p>
+<label><input type="radio" name="q6"> Faltou o <code>@property</code></label>
+<label><input type="radio" name="q6"> O valor é negativo</label>
+<label><input type="radio" name="q6"> O setter escreve <code>self.preco</code>, o que chama o próprio setter de novo, sem fim</label>
+<label><input type="radio" name="q6"> O <code>__init__</code> não tem <code>self</code></label>
+</div>
+
+<h3>Missão final: a conta que não aceita saldo negativo</h3>
+
+<div class="trypy" data-goal="out:Recusado:;;out:Saldo: R$ 80.00;;src:@saldo\.setter;;src:@property;;semerro">
+<p class="try-task"><strong>Missão:</strong> transforme o <code>saldo</code> da conta numa propriedade com setter. O getter devolve <code>self._saldo</code>; o setter levanta <code>ValueError</code> se o valor for negativo e, se não for, guarda em <code>self._saldo</code>. O código de baixo tenta sacar 500 de quem tem 100 (deve aparecer uma linha começando com <code>Recusado:</code>) e depois sacar 20 (deve sobrar <code>Saldo: R$ 80.00</code>). Não mexa no <code>__init__</code> nem no <code>sacar</code>: eles já usam <code>self.saldo</code>.</p>
+<pre class="script" data-file="main.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self.saldo = saldo
+
+    # escreva aqui a propriedade saldo (getter e setter)
+
+    def sacar(self, valor):
+        self.saldo = self.saldo - valor
+
+
+conta = ContaBancaria("Ana", 100)
+for valor in [500, 20]:
+    try:
+        conta.sacar(valor)
+    except ValueError as erro:
+        print(f"Recusado: {erro}")
+print(f"Saldo: R$ {conta.saldo:.2f}")
+</pre>
+<pre class="solucao" data-file="main.py">class ContaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self.saldo = saldo
+
+    @property
+    def saldo(self):
+        return self._saldo
+
+    @saldo.setter
+    def saldo(self, valor):
+        if valor &lt; 0:
+            raise ValueError("o saldo não pode ficar negativo")
+        self._saldo = valor
+
+    def sacar(self, valor):
+        self.saldo = self.saldo - valor
+
+
+conta = ContaBancaria("Ana", 100)
+for valor in [500, 20]:
+    try:
+        conta.sacar(valor)
+    except ValueError as erro:
+        print(f"Recusado: {erro}")
+print(f"Saldo: R$ {conta.saldo:.2f}")
+</pre>
+</div>
+
+<p>Repare na mágica: o <code>sacar</code> não tem nenhum <code>if</code>. Ele só escreve <code>self.saldo = …</code>, e é o setter quem confere. Qualquer outro método que mexer no saldo (um <code>pagar_boleto</code>, uma <code>transferir</code>) ganha a mesma proteção de graça.</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>@property</code> transforma um método numa <strong>propriedade</strong>: usada como atributo (<code>bia.media</code>, sem parênteses), mas calculada por um método a cada leitura.</li>
+  <li>Uma propriedade sem setter é <strong>só de leitura</strong>: escrever nela dá <code>AttributeError: … has no setter</code>. Ótimo para valores calculados e para o saldo.</li>
+  <li><code>@preco.setter</code> + <code>def preco(self, valor):</code> roda a cada <code>obj.preco = valor</code>; ele confere e levanta <code>ValueError</code> (ou <code>TypeError</code>) quando o valor não serve.</li>
+  <li>O valor de verdade mora num nome diferente, com sublinhado: <code>self._preco</code>. Usar <code>self.preco</code> dentro da própria propriedade dá <code>RecursionError</code>.</li>
+  <li>No <code>__init__</code>, escreva <code>self.preco = preco</code>, para a conferência valer desde a criação.</li>
+  <li>Getter e setter têm o <strong>mesmo nome</strong>. Comece com atributos comuns; vire propriedade quando aparecer uma regra, sem mudar o código de quem usa a classe.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
