@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python if — fazer o programa decidir | Guia Python</title>
+<meta name="description" content="O if do Python para quem nunca programou: rodar um bloco só quando a condição é verdadeira, os dois-pontos, a indentação de 4 espaços que marca o bloco, o que conta como verdadeiro e falso (bool), vários if seguidos, pass, e os erros reais do Python 3.14: expected ':', expected an indented block, Maybe you meant '==', unexpected indent, TabError e o TypeError de comparar texto com número. Com missões no editor.">
+<link rel="stylesheet" href="assets/style.css">
+<script>try{var t=localStorage.getItem("tema");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" id="sidebar" aria-label="Tópicos"></nav>
+<main class="main">
+<div class="content">
+
+<div class="pager"></div>
+
+<h1>Python <span class="hl">if</span></h1>
+
+<p class="intro">Até aqui, os seus programas faziam sempre a mesma coisa: rodavam todas as linhas, de cima para baixo, uma vez cada. Um programa de verdade precisa <strong>decidir</strong>. Se a nota da prova é 7 ou mais, a aluna passou. Se a compra passou de R$ 100, o frete é grátis. Se a pessoa tem 16 anos ou mais, ela já pode votar. Para isso existe o <code>if</code> (em inglês, "se"): ele roda um pedaço do programa <strong>só quando</strong> uma condição é verdadeira.</p>
+
+<div class="note">
+<strong>Você vai aprender</strong>
+<ul>
+  <li>A escrever um <code>if</code>: a condição, os <strong>dois-pontos</strong> e o <strong>bloco</strong> recuado.</li>
+  <li>Como o Python sabe onde o bloco começa e termina: a <strong>indentação</strong> (o recuo de 4 espaços).</li>
+  <li>O que pode ser uma condição: comparações, <code>and</code>/<code>or</code>, e qualquer valor (o que conta como "verdadeiro" e "falso").</li>
+  <li>Que vários <code>if</code> seguidos são testados um por um, cada um por conta própria.</li>
+  <li>Para que serve o <code>pass</code>.</li>
+  <li>Os erros reais do Python 3.14: <code>expected ':'</code>, <code>expected an indented block</code>, <code>Maybe you meant '=='</code>, <code>unexpected indent</code>, <code>TabError</code> e o <code>TypeError</code> de comparar o texto do <code>input()</code> com um número.</li>
+</ul>
+</div>
+
+<p>Todos os programas desta aula rodaram no <strong>Python 3.14</strong> do computador fictício da Ana (usuária <code>ana</code>, computador <code>notebook</code>), na pasta pessoal dela, com <code>python3 arquivo.py</code>.</p>
+
+<hr>
+
+<h2>A ideia: "se chover, leve o guarda-chuva"</h2>
+<p>Antes de sair de casa, a Ana olha pela janela. <strong>Se</strong> estiver chovendo, ela pega o guarda-chuva. Se não estiver, ela não faz nada de especial. Em qualquer caso, depois ela sai de casa.</p>
+<p>Repare nas três partes dessa frase:</p>
+<ol class="passo">
+  <li>A <strong>pergunta</strong>: "está chovendo?". A resposta só pode ser sim ou não.</li>
+  <li>O que fazer <strong>só se a resposta for sim</strong>: pegar o guarda-chuva.</li>
+  <li>O que vem <strong>depois</strong>, aconteça o que acontecer: sair de casa.</li>
+</ol>
+<p>O <code>if</code> do Python tem exatamente essas três partes. A pergunta se chama <strong>condição</strong>. As respostas "sim" e "não" você já conhece da aula <a href="booleanos.html">Booleanos</a>: são <code>True</code> (verdadeiro) e <code>False</code> (falso). E as perguntas você já sabe fazer com as <a href="operadores-comparacao.html">comparações</a> (<code>&gt;=</code>, <code>==</code>, <code>&lt;</code>…).</p>
+
+<hr>
+
+<h2>1. O primeiro <code>if</code>: a nota da prova</h2>
+<p>A escola da Ana aprova quem tira <strong>7 ou mais</strong>. Este programa pergunta a nota (com o <code>input()</code>, da aula <a href="input.html">input(): Lendo o Teclado</a>) e dá os parabéns só para quem passou:</p>
+
+<pre class="file" data-file="nota.py">nota = float(input("Digite a nota da prova: "))
+if nota &gt;= 7:
+    print("Parabéns, você passou!")
+    print("Sua nota foi", nota)
+print("Fim do boletim.")
+</pre>
+
+<pre class="term">$ python3 nota.py
+Digite a nota da prova: 8.5
+Parabéns, você passou!          « 8.5 &gt;= 7 é True: o bloco rodou
+Sua nota foi 8.5
+Fim do boletim.
+$ python3 nota.py
+Digite a nota da prova: 5
+Fim do boletim.                 « 5 &gt;= 7 é False: o bloco foi pulado</pre>
+
+<p>Com 8.5, as duas linhas de dentro do <code>if</code> rodaram. Com 5, o Python pulou as duas e foi direto para <code>Fim do boletim.</code>, que roda <strong>sempre</strong>, porque está fora do <code>if</code>. Vamos olhar cada pedaço:</p>
+
+<dl class="anatomy">
+  <dt>if</dt><dd>Palavra reservada do Python: "se". Sempre em minúsculas.</dd>
+  <dt>nota &gt;= 7</dt><dd>A <strong>condição</strong>: "a nota é maior ou igual a 7?". O Python calcula a resposta, <code>True</code> ou <code>False</code>. Não precisa de parênteses em volta (em C e em Java precisa; no Python, não).</dd>
+  <dt>:</dt><dd>Os <strong>dois-pontos</strong> fecham a linha do <code>if</code>. Eles querem dizer "agora vem o bloco". Esquecer os dois-pontos é o erro número 1 de quem está começando (veja <a href="#errado">Quando dá errado</a>).</dd>
+  <dt>os 4 espaços</dt><dd>As linhas de dentro do <code>if</code> começam 4 espaços mais para a direita. Esse recuo se chama <strong>indentação</strong>, e no Python ele não é enfeite: é ele que diz quais linhas fazem parte do <code>if</code>.</dd>
+  <dt>o bloco</dt><dd>As duas linhas com <code>print</code> recuadas formam o <strong>bloco</strong> do <code>if</code>. Ou rodam as duas, ou nenhuma.</dd>
+  <dt>print("Fim do boletim.")</dt><dd>Esta linha voltou para a margem esquerda: o bloco acabou. Ela já não depende da condição.</dd>
+</dl>
+
+<div class="tip">
+<strong>Por que <code>float(input(…))</code>?</strong>
+<p>O <code>input()</code> sempre devolve um <strong>texto</strong>, mesmo que a pessoa digite números. Para comparar com <code>7</code>, é preciso converter o texto em número: <code>float()</code> para números com casas decimais (como 8.5), <code>int()</code> para inteiros (como uma idade). Isso está na aula <a href="conversao.html">Conversão de Tipos</a>. A seção <a href="#errado">Quando dá errado</a> mostra o que acontece quando você esquece.</p>
+</div>
+
+<h3>A condição é um <code>True</code> ou <code>False</code></h3>
+<p>No modo interativo (aula <a href="repl.html">O Modo Interativo</a>) dá para ver a pergunta e a resposta separadas do <code>if</code>:</p>
+
+<pre class="term">$ python3
+Python 3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; nota = 8.5
+&gt;&gt;&gt; nota &gt;= 7
+True
+&gt;&gt;&gt; type(nota &gt;= 7)
+&lt;class 'bool'&gt;
+&gt;&gt;&gt; exit()</pre>
+
+<p>O <code>if</code> só olha essa resposta: <code>True</code>, roda o bloco; <code>False</code>, pula. Também dá para escrever um <code>if</code> no modo interativo. Depois dos dois-pontos o prompt vira <code>...</code> ("continue"), você digita o bloco recuado e, no fim, aperta Enter numa linha vazia para avisar que o bloco acabou:</p>
+
+<pre class="term">&gt;&gt;&gt; nota = 8
+&gt;&gt;&gt; if nota &gt;= 7:
+...     print("Passou!")
+...                              « linha vazia: o bloco acabou
+Passou!</pre>
+
+<div class="trypy">
+<p class="try-task"><strong>Experimente:</strong> clique em Rodar e digite uma nota no terminal da caixa. Rode várias vezes: com 9, com 7 (repare que 7 também passa, porque a condição é "maior <strong>ou igual</strong>"), com 6.9 e com 3. Depois troque o 7 por 6 e veja quem passa a ser aprovado.</p>
+<pre class="script" data-file="main.py">nota = float(input("Digite a nota da prova: "))
+if nota &gt;= 7:
+    print("Parabéns, você passou!")
+    print("Sua nota foi", nota)
+print("Fim do boletim.")
+</pre>
+</div>
+
+<hr>
+
+<h2>2. A indentação: onde o bloco começa e termina</h2>
+<p>Em muitas linguagens, o bloco fica entre chaves <code>{ }</code>. No Python, não: <strong>o recuo é o bloco</strong>. Todas as linhas seguidas com o mesmo recuo, logo abaixo dos dois-pontos, pertencem ao <code>if</code>. A primeira linha que volta para a margem de antes encerra o bloco.</p>
+
+<pre class="file" data-file="bloco.py">temperatura = 33
+print("Hoje faz", temperatura, "graus.")
+if temperatura &gt; 30:
+    print("Que calor!")
+
+    print("Beba bastante água.")
+print("Tenha um bom dia.")
+</pre>
+
+<pre class="term">$ python3 bloco.py
+Hoje faz 33 graus.
+Que calor!
+Beba bastante água.
+Tenha um bom dia.</pre>
+
+<ul>
+  <li>As linhas 4 e 6 estão recuadas: são o bloco do <code>if</code>.</li>
+  <li>A <strong>linha em branco</strong> no meio (linha 5) não encerra o bloco. O Python ignora linhas vazias dentro de um arquivo; quem encerra o bloco é a linha 7, que voltou para a margem.</li>
+  <li>Troque a temperatura para 20: só aparecem a primeira e a última linha.</li>
+</ul>
+
+<div class="warning">
+<strong>Regra do guia: 4 espaços, sempre</strong>
+<p>O Python aceita qualquer recuo (2 espaços, 8 espaços, um Tab), desde que <strong>todas as linhas do mesmo bloco tenham o mesmo recuo</strong>. Mas o costume de todo mundo, escrito no guia de estilo oficial (a <a href="estilo-pep8.html">PEP 8</a>), é <strong>4 espaços</strong>. Quase todo editor de código já faz isso sozinho: você aperta Enter depois dos dois-pontos e ele recua a próxima linha; aperta a tecla Tab e ele põe 4 espaços. Nunca misture Tab e espaços no mesmo arquivo: o Python recusa (veja o <code>TabError</code> mais abaixo).</p>
+</div>
+
+<h3>Uma linha a menos de recuo muda tudo</h3>
+<p>Como o recuo decide o que está dentro do <code>if</code>, uma linha no recuo errado não dá erro nenhum: o programa simplesmente faz outra coisa. A Ana queria cancelar a compra quando ela fosse maior que o saldo:</p>
+
+<pre class="file" data-file="fora.py">saldo = 100
+compra = 30
+if compra &gt; saldo:
+    print("Saldo insuficiente!")
+print("Compra cancelada.")
+</pre>
+
+<pre class="term">$ python3 fora.py
+Compra cancelada.               « a compra cabia no saldo, mas foi cancelada!</pre>
+
+<p>O <code>print("Compra cancelada.")</code> ficou na margem, fora do bloco, e por isso roda sempre. O Python não tem como adivinhar a intenção da Ana. O conserto é recuar a linha 5 com 4 espaços, para ela entrar no bloco.</p>
+
+<hr>
+
+<h2>3. Vários <code>if</code> seguidos</h2>
+<p>Um programa pode ter quantos <code>if</code> quiser. Cada um é <strong>uma pergunta separada</strong>, testada na sua vez, sem olhar o que os outros responderam. No Brasil, votar é permitido a partir dos 16 anos e obrigatório a partir dos 18:</p>
+
+<pre class="file" data-file="voto.py">idade = int(input("Quantos anos você tem? "))
+if idade &gt;= 16:
+    print("Você já pode votar.")
+if idade &gt;= 18:
+    print("Para você, votar é obrigatório.")
+if idade &lt; 16:
+    print("Ainda não dá para votar.")
+print("Obrigado por responder!")
+</pre>
+
+<pre class="term">$ python3 voto.py
+Quantos anos você tem? 20
+Você já pode votar.                « 20 &gt;= 16: sim
+Para você, votar é obrigatório.    « 20 &gt;= 18: sim também
+Obrigado por responder!
+$ python3 voto.py
+Quantos anos você tem? 17
+Você já pode votar.                « 17 &gt;= 16: sim; 17 &gt;= 18: não
+Obrigado por responder!
+$ python3 voto.py
+Quantos anos você tem? 14
+Ainda não dá para votar.           « só o terceiro if deu True
+Obrigado por responder!</pre>
+
+<p>Com 20 anos, <strong>dois</strong> blocos rodaram, porque as duas primeiras perguntas tiveram resposta "sim". Os três <code>if</code> são independentes: o Python testa o primeiro, depois o segundo, depois o terceiro, sempre. Quando você quiser que <strong>só um</strong> caminho seja escolhido (ou isto, ou aquilo), o certo é o <code>else</code> e o <code>elif</code>, das próximas aulas: <a href="if-else.html">if e else</a> e <a href="elif.html">elif</a>.</p>
+
+<hr>
+
+<h2>4. Mudar valores dentro do bloco: o frete grátis</h2>
+<p>O bloco do <code>if</code> pode ter qualquer coisa: contas, novas variáveis, outros <code>print</code>. A loja da Ana cobra R$ 15,00 de frete, mas dá frete grátis para compras <strong>a partir de R$ 100</strong>:</p>
+
+<pre class="file" data-file="frete.py">total = float(input("Total da compra: R$ "))
+frete = 15.0
+if total &gt;= 100:
+    frete = 0.0
+    print("Parabéns: o frete é grátis!")
+print(f"Frete: R$ {frete:.2f}")
+print(f"Total a pagar: R$ {total + frete:.2f}")
+</pre>
+
+<pre class="term">$ python3 frete.py
+Total da compra: R$ 120
+Parabéns: o frete é grátis!
+Frete: R$ 0.00
+Total a pagar: R$ 120.00
+$ python3 frete.py
+Total da compra: R$ 80
+Frete: R$ 15.00                 « o if não rodou: o frete continuou 15.0
+Total a pagar: R$ 95.00</pre>
+
+<dl class="anatomy">
+  <dt>frete = 15.0</dt><dd>O valor <strong>normal</strong>, guardado antes do <code>if</code>. É o que vale se a condição der <code>False</code>.</dd>
+  <dt>frete = 0.0</dt><dd>Dentro do bloco, o valor é trocado. Isso só acontece quando a compra é de R$ 100 ou mais.</dd>
+  <dt>{frete:.2f}</dt><dd>A <a href="f-strings.html">f-string</a> mostra o número com duas casas decimais.</dd>
+</dl>
+
+<p>Esse jeito (dar um valor padrão e trocar no <code>if</code>) é muito comum. Outro jeito de escrever a mesma coisa, com <code>else</code>, está na próxima aula.</p>
+
+<div class="trypy" data-stdin="150" data-goal="out:Frete grátis!;;src:^\s*if\b">
+<p class="try-task"><strong>Missão:</strong> a padaria do bairro também quer dar frete grátis nas encomendas a partir de R$ 100. A entrada preparada é <code>150</code>. Acrescente um <code>if</code> que mostre <code>Frete grátis!</code> quando o total for <strong>maior ou igual</strong> a 100.</p>
+<pre class="script" data-file="main.py">total = float(input("Total da encomenda: R$ "))
+print(f"Encomenda de R$ {total:.2f} registrada.")
+</pre>
+<pre class="solucao" data-file="main.py">total = float(input("Total da encomenda: R$ "))
+print(f"Encomenda de R$ {total:.2f} registrada.")
+if total &gt;= 100:
+    print("Frete grátis!")
+</pre>
+</div>
+
+<hr>
+
+<h2>5. O que pode ser uma condição</h2>
+
+<h3>Comparações, sozinhas ou juntas</h3>
+<p>A condição mais comum é uma comparação, mas você pode juntar várias com <code>and</code> ("e") e <code>or</code> ("ou"), da aula <a href="operadores-logicos.html">and, or e not</a>. Uma nota só vale se estiver entre 0 e 10:</p>
+
+<pre class="file" data-file="faixa.py">nota = float(input("Nota (0 a 10): "))
+if nota &lt; 0 or nota &gt; 10:
+    print("Nota inválida!")
+if 0 &lt;= nota &lt;= 10:
+    print("Nota registrada:", nota)
+</pre>
+
+<pre class="term">$ python3 faixa.py
+Nota (0 a 10): 11
+Nota inválida!                  « 11 &gt; 10: o or deu True
+$ python3 faixa.py
+Nota (0 a 10): 7.5
+Nota registrada: 7.5            « 0 &lt;= 7.5 &lt;= 10: True</pre>
+
+<p>O <code>0 &lt;= nota &lt;= 10</code> é uma <strong>comparação encadeada</strong>: o Python lê como na matemática, "nota entre 0 e 10", e é o mesmo que <code>0 &lt;= nota and nota &lt;= 10</code>.</p>
+
+<h3>Qualquer valor: "verdadeiro" e "falso"</h3>
+<p>O <code>if</code> aceita <strong>qualquer valor</strong> como condição, não só <code>True</code> e <code>False</code>. Quando não é um booleano, o Python pergunta ao valor se ele é "verdadeiro" ou "falso", do mesmo jeito que a função <code>bool()</code> faz:</p>
+
+<pre class="term">&gt;&gt;&gt; bool(0)
+False
+&gt;&gt;&gt; bool(3)
+True
+&gt;&gt;&gt; bool(-1)
+True
+&gt;&gt;&gt; bool(0.0)
+False
+&gt;&gt;&gt; bool("")
+False
+&gt;&gt;&gt; bool("Ana")
+True
+&gt;&gt;&gt; bool(" ")
+True                             « um espaço já é um texto que não está vazio
+&gt;&gt;&gt; bool(None)
+False</pre>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Conta como falso</th><th>Conta como verdadeiro</th></tr>
+<tr><td><code>False</code>, <code>None</code></td><td><code>True</code></td></tr>
+<tr><td>o zero: <code>0</code>, <code>0.0</code></td><td>qualquer outro número: <code>3</code>, <code>-1</code>, <code>0.5</code></td></tr>
+<tr><td>o texto vazio: <code>""</code></td><td>qualquer texto com algo dentro: <code>"Ana"</code>, <code>" "</code>, <code>"0"</code></td></tr>
+<tr><td>coleções vazias (listas, dicionários…, que você vai ver no Nível 2)</td><td>coleções com pelo menos um item</td></tr>
+</table>
+</div>
+
+<p>Isso permite um atalho muito usado: <code>if nome:</code> quer dizer "se o nome não está vazio". Quando a pessoa só aperta Enter no <code>input()</code>, ele devolve o texto vazio <code>""</code>:</p>
+
+<pre class="file" data-file="saudacao.py">nome = input("Seu nome (ou Enter para pular): ")
+if nome:
+    print(f"Olá, {nome}!")
+print("Bem-vindo à padaria do bairro.")
+</pre>
+
+<pre class="term">$ python3 saudacao.py
+Seu nome (ou Enter para pular): Ana
+Olá, Ana!
+Bem-vindo à padaria do bairro.
+$ python3 saudacao.py
+Seu nome (ou Enter para pular):          « aqui a Ana só apertou Enter
+Bem-vindo à padaria do bairro.</pre>
+
+<div class="warning">
+<strong>O texto <code>"0"</code> é verdadeiro</strong>
+<p>Cuidado: só o <strong>número</strong> zero é falso. O <strong>texto</strong> <code>"0"</code> (que é o que o <code>input()</code> devolve quando alguém digita 0) tem um caractere dentro, então é verdadeiro. No lab, <code>print(bool("0"), bool("False"))</code> mostrou <code>True True</code>. Se você quer saber se a pessoa digitou o número zero, converta primeiro: <code>if int(texto) == 0:</code>.</p>
+</div>
+
+<hr>
+
+<h2>6. Um bloco que ainda não faz nada: <code>pass</code></h2>
+<p>O bloco do <code>if</code> não pode ficar vazio: depois dos dois-pontos o Python <strong>exige</strong> pelo menos uma linha recuada. Quando você ainda não sabe o que vai pôr ali, use <code>pass</code> ("passar a vez"), uma instrução que não faz nada:</p>
+
+<pre class="file" data-file="pass_exemplo.py">estoque = 3
+if estoque &lt; 5:
+    pass  # depois: avisar o fornecedor
+print("Relatório pronto.")
+</pre>
+
+<pre class="term">$ python3 pass_exemplo.py
+Relatório pronto.</pre>
+
+<p>O comentário sozinho não serviria: o Python ignora comentários, e o bloco ficaria vazio (o erro aparece em <a href="#errado">Quando dá errado</a>). O <code>pass</code> é um "guardador de lugar" para você voltar depois.</p>
+
+<hr>
+
+<h2>Formas diferentes de escrever a mesma condição</h2>
+<p>As condições de cada linha da tabela dão sempre a mesma resposta:</p>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Jeito mais longo</th><th>Jeito mais curto</th><th>Qual usar</th></tr>
+<tr><td><code>if nome != "":</code></td><td><code>if nome:</code></td><td>O curto é o costume do Python para "não está vazio". O longo também está certo e pode ser mais claro no começo</td></tr>
+<tr><td><code>if nota &gt;= 0 and nota &lt;= 10:</code></td><td><code>if 0 &lt;= nota &lt;= 10:</code></td><td>O encadeado: lê como na matemática</td></tr>
+<tr><td><code>if (nota &gt;= 7):</code></td><td><code>if nota &gt;= 7:</code></td><td>Sem parênteses. Eles funcionam, mas não são necessários no Python (são costume de quem vem do C ou do Java)</td></tr>
+<tr><td><code>if aprovado == True:</code></td><td><code>if aprovado:</code></td><td>Sem o <code>== True</code>: a variável já é <code>True</code> ou <code>False</code></td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2 id="errado">Quando dá errado</h2>
+<p>Quase todos os erros do <code>if</code> são de <strong>escrita</strong> (sintaxe): o Python lê o arquivo inteiro antes de rodar e, se achar algo que não sabe ler, recusa o programa sem rodar <strong>nenhuma</strong> linha. Repare que a mensagem não começa com <code>Traceback</code>: o programa nem começou.</p>
+
+<div class="cenario">
+<strong>Esqueceu os dois-pontos</strong>
+<pre class="file" data-file="dois_pontos.py">nota = 8
+if nota &gt;= 7
+    print("Passou!")
+</pre>
+<pre class="term">$ python3 dois_pontos.py
+  File "/home/ana/dois_pontos.py", line 2
+    if nota &gt;= 7
+                ^
+SyntaxError: expected ':'</pre>
+<p>Linha por linha:</p>
+<ul>
+  <li><code>File "/home/ana/dois_pontos.py", line 2</code>: o problema está no arquivo <code>dois_pontos.py</code>, na <strong>linha 2</strong>.</li>
+  <li><code>if nota &gt;= 7</code>: a linha com o problema, copiada.</li>
+  <li><code>^</code>: a setinha aponta o lugar exato: logo depois do 7, onde deveriam estar os dois-pontos.</li>
+  <li><code>SyntaxError: expected ':'</code>: "erro de sintaxe: era esperado um <code>:</code>". O Python diz exatamente o que falta.</li>
+</ul>
+<p><strong>Como consertar:</strong> <code>if nota &gt;= 7:</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Esqueceu o recuo</strong>
+<pre class="file" data-file="sem_recuo.py">nota = 8
+if nota &gt;= 7:
+print("Passou!")
+</pre>
+<pre class="term">$ python3 sem_recuo.py
+  File "/home/ana/sem_recuo.py", line 3
+    print("Passou!")
+    ^^^^^
+IndentationError: expected an indented block after 'if' statement on line 2</pre>
+<p><code>IndentationError</code> é o "erro de indentação" (de recuo). A mensagem diz: "era esperado um bloco recuado depois do <code>if</code> da linha 2". O Python encontrou o <code>print</code> na margem, onde devia começar o bloco. O mesmo erro aparece quando o bloco tem <strong>só um comentário</strong>: comentário não conta como linha. <strong>Como consertar:</strong> recue o <code>print</code> com 4 espaços (ou, se o bloco ainda não tem nada, escreva <code>pass</code>).</p>
+</div>
+
+<div class="cenario">
+<strong><code>=</code> no lugar de <code>==</code></strong>
+<pre class="file" data-file="igual.py">nota = 10
+if nota = 10:
+    print("Nota máxima!")
+</pre>
+<pre class="term">$ python3 igual.py
+  File "/home/ana/igual.py", line 2
+    if nota = 10:
+       ^^^^^^^^^
+SyntaxError: invalid syntax. Maybe you meant '==' or ':=' instead of '='?</pre>
+<p>Um <code>=</code> só <strong>guarda</strong> um valor numa variável; para <strong>comparar</strong> são dois, <code>==</code>. O Python percebe a confusão e dá a dica: "sintaxe inválida. Você quis dizer <code>'=='</code> ou <code>':='</code> em vez de <code>'='</code>?". Os <code>^^^^^^^^^</code> sublinham o trecho inteiro. (O <code>:=</code>, chamado "operador morsa", é um recurso mais avançado; quase sempre a resposta certa é o <code>==</code>.) <strong>Como consertar:</strong> <code>if nota == 10:</code>.</p>
+</div>
+
+<div class="cenario">
+<strong>Recuo sobrando ou torto</strong>
+<p>Uma linha recuada <strong>mais</strong> que as outras do bloco, sem um novo <code>if</code> que justifique:</p>
+<pre class="file" data-file="recuo_sobrando.py">nota = 8
+if nota &gt;= 7:
+    print("Passou!")
+        print("Parabéns!")
+</pre>
+<pre class="term">$ python3 recuo_sobrando.py
+  File "/home/ana/recuo_sobrando.py", line 4
+    print("Parabéns!")
+IndentationError: unexpected indent</pre>
+<p>"Recuo inesperado": a linha 4 tem 8 espaços, mas nada pedia um bloco novo ali. E quando a linha volta para um recuo que <strong>não existe</strong> antes dela:</p>
+<pre class="file" data-file="recuo_torto.py">nota = 8
+if nota &gt;= 7:
+        print("Passou!")
+    print("Parabéns!")
+</pre>
+<pre class="term">$ python3 recuo_torto.py
+  File "/home/ana/recuo_torto.py", line 4
+    print("Parabéns!")
+                      ^
+IndentationError: unindent does not match any outer indentation level</pre>
+<p>"O recuo não bate com nenhum nível de fora". O bloco começou com 8 espaços; a linha 4 voltou para 4 espaços, que não é nem o recuo do bloco (8) nem o da margem (0). O Python não sabe a que bloco ela pertence. <strong>Como consertar:</strong> as linhas do mesmo bloco têm de ter <strong>exatamente</strong> o mesmo recuo. Use 4 espaços em todas.</p>
+</div>
+
+<div class="cenario">
+<strong>Tab e espaços misturados</strong>
+<p>No arquivo abaixo, a linha 3 foi recuada com 4 espaços e a linha 4 com um Tab. Na tela, as duas parecem iguais:</p>
+<pre class="term">$ python3 tab.py
+  File "/home/ana/tab.py", line 4
+    	print("Parabéns!")
+    ^
+TabError: inconsistent use of tabs and spaces in indentation</pre>
+<p>"Uso inconsistente de tabs e espaços na indentação". O Python se recusa a adivinhar quantos espaços vale um Tab. <strong>Como consertar:</strong> configure o editor para pôr espaços quando você aperta Tab (quase todos já vêm assim para arquivos <code>.py</code>) e refaça o recuo da linha.</p>
+</div>
+
+<div class="cenario">
+<strong><code>If</code> com maiúscula</strong>
+<pre class="file" data-file="maiuscula.py">nota = 8
+If nota &gt;= 7:
+    print("Passou!")
+</pre>
+<pre class="term">$ python3 maiuscula.py
+  File "/home/ana/maiuscula.py", line 2
+    If nota &gt;= 7:
+    ^^
+SyntaxError: invalid syntax. Did you mean 'if'?</pre>
+<p>O Python diferencia maiúsculas de minúsculas. <code>If</code> não é palavra nenhuma para ele, e o Python 3.14 sugere: "Você quis dizer <code>'if'</code>?".</p>
+</div>
+
+<div class="cenario">
+<strong>Comparar o texto do <code>input()</code> com um número</strong>
+<p>Este erro é diferente: o programa <strong>começa</strong> a rodar e só quebra quando chega no <code>if</code>.</p>
+<pre class="file" data-file="texto_numero.py">idade = input("Quantos anos você tem? ")
+if idade &gt;= 16:
+    print("Você já pode votar.")
+</pre>
+<pre class="term">$ python3 texto_numero.py
+Quantos anos você tem? 17
+Traceback (most recent call last):
+  File "/home/ana/texto_numero.py", line 2, in &lt;module&gt;
+    if idade &gt;= 16:
+       ^^^^^^^^^^^
+TypeError: '&gt;=' not supported between instances of 'str' and 'int'</pre>
+<ul>
+  <li><code>Traceback (most recent call last):</code>: agora sim aparece o "rastro" do erro, porque o programa estava rodando (ele até perguntou a idade).</li>
+  <li><code>line 2, in &lt;module&gt;</code>: na linha 2, no corpo principal do programa.</li>
+  <li><code>TypeError</code>: erro de <strong>tipo</strong>. "<code>&gt;=</code> não é suportado entre <code>str</code> (texto) e <code>int</code> (inteiro)". O <code>input()</code> devolveu o texto <code>"17"</code>, e o Python não compara texto com número.</li>
+</ul>
+<p><strong>Como consertar:</strong> converta na hora de ler: <code>idade = int(input("Quantos anos você tem? "))</code>.</p>
+</div>
+
+<div class="trypy" data-stdin="16" data-goal="out:Pode votar pela primeira vez!;;semerro">
+<p class="try-task"><strong>Missão:</strong> o programa abaixo tem <strong>três</strong> erros: um <code>=</code> que devia ser <code>==</code>, os dois-pontos que faltam e o recuo do <code>print</code>. Rode, leia a mensagem, conserte um de cada vez e rode de novo. A entrada preparada é <code>16</code>.</p>
+<pre class="script" data-file="main.py">idade = int(input("Quantos anos você tem? "))
+if idade = 16
+print("Pode votar pela primeira vez!")
+</pre>
+<pre class="solucao" data-file="main.py">idade = int(input("Quantos anos você tem? "))
+if idade == 16:
+    print("Pode votar pela primeira vez!")
+</pre>
+</div>
+
+<hr>
+
+<h2>Referência rápida</h2>
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Escrita</th><th>O que faz</th></tr>
+<tr><td><code>if condição:</code> + bloco recuado</td><td>Roda o bloco só se a condição for verdadeira</td></tr>
+<tr><td>4 espaços de recuo</td><td>Marcam as linhas que fazem parte do bloco</td></tr>
+<tr><td>Linha de volta à margem</td><td>Encerra o bloco; roda sempre</td></tr>
+<tr><td><code>if a and b:</code> / <code>if a or b:</code></td><td>As duas condições / pelo menos uma</td></tr>
+<tr><td><code>if 0 &lt;= x &lt;= 10:</code></td><td>Comparação encadeada: x entre 0 e 10</td></tr>
+<tr><td><code>if nome:</code></td><td>Se o texto não está vazio (vale para qualquer valor: 0, <code>""</code> e <code>None</code> são falsos)</td></tr>
+<tr><td><code>pass</code></td><td>Não faz nada; guarda o lugar de um bloco ainda vazio</td></tr>
+</table>
+</div>
+
+<div class="table-wrap">
+<table class="ref">
+<tr><th>Mensagem</th><th>Causa provável</th></tr>
+<tr><td><code>SyntaxError: expected ':'</code></td><td>Faltaram os dois-pontos no fim da linha do <code>if</code></td></tr>
+<tr><td><code>IndentationError: expected an indented block after 'if' statement on line N</code></td><td>O bloco não foi recuado, ou só tem comentário</td></tr>
+<tr><td><code>SyntaxError: invalid syntax. Maybe you meant '==' or ':=' instead of '='?</code></td><td><code>=</code> no lugar de <code>==</code></td></tr>
+<tr><td><code>IndentationError: unexpected indent</code></td><td>Uma linha recuada a mais</td></tr>
+<tr><td><code>IndentationError: unindent does not match any outer indentation level</code></td><td>Recuos diferentes no mesmo bloco</td></tr>
+<tr><td><code>TabError: inconsistent use of tabs and spaces in indentation</code></td><td>Tab e espaços misturados</td></tr>
+<tr><td><code>SyntaxError: invalid syntax. Did you mean 'if'?</code></td><td><code>If</code> com maiúscula</td></tr>
+<tr><td><code>TypeError: '&gt;=' not supported between instances of 'str' and 'int'</code></td><td>Comparou o texto do <code>input()</code> com um número: faltou <code>int()</code> ou <code>float()</code></td></tr>
+<tr><td>Nenhum erro, mas uma linha roda sempre</td><td>Ela ficou fora do bloco (sem recuo)</td></tr>
+</table>
+</div>
+
+<hr>
+
+<h2>Exercícios</h2>
+
+<div class="exercise">
+<h3>1. Complete o <code>if</code></h3>
+<p>Mostre "Pode votar" para quem tem 16 anos ou mais. Complete o operador e o sinal que fecha a linha:</p>
+<div class="ex-code">if idade <input data-answer="&gt;=" aria-label="operador"> 16<input data-answer=":" aria-label="sinal"><br>&nbsp;&nbsp;&nbsp;&nbsp;print("Pode votar")</div>
+</div>
+
+<div class="exercise">
+<h3>2. Quantos espaços?</h3>
+<p>Quantos espaços de recuo o guia de estilo do Python (e este guia) recomenda para o bloco do <code>if</code>?</p>
+<div class="ex-code">Resposta: <input data-answer="4|quatro" aria-label="número de espaços"> espaços</div>
+</div>
+
+<div class="mc" data-answer="2">
+<p class="mc-q">3. O que este programa mostra?</p>
+<pre class="file">saldo = 50
+if saldo &gt; 100:
+    print("Saldo alto")
+print("Fim")
+</pre>
+<label><input type="radio" name="q3"> <code>Saldo alto</code> e <code>Fim</code></label>
+<label><input type="radio" name="q3"> Só <code>Fim</code></label>
+<label><input type="radio" name="q3"> Nada</label>
+<label><input type="radio" name="q3"> Um <code>IndentationError</code></label>
+</div>
+
+<div class="mc" data-answer="3">
+<p class="mc-q">4. Com <code>idade = 20</code>, quantas linhas o <code>voto.py</code> da seção 3 mostra, contando o "Obrigado por responder!"?</p>
+<label><input type="radio" name="q4"> 1</label>
+<label><input type="radio" name="q4"> 2</label>
+<label><input type="radio" name="q4"> 3</label>
+<label><input type="radio" name="q4"> 4</label>
+</div>
+
+<div class="mc" data-answer="1">
+<p class="mc-q">5. Qual destes valores faz o <code>if valor:</code> pular o bloco?</p>
+<label><input type="radio" name="q5"> <code>""</code> (texto vazio)</label>
+<label><input type="radio" name="q5"> <code>"0"</code></label>
+<label><input type="radio" name="q5"> <code>-1</code></label>
+<label><input type="radio" name="q5"> <code>" "</code> (um espaço)</label>
+</div>
+
+<div class="mc" data-answer="4">
+<p class="mc-q">6. O Python respondeu <code>SyntaxError: invalid syntax. Maybe you meant '==' or ':=' instead of '='?</code>. O que aconteceu?</p>
+<label><input type="radio" name="q6"> Faltaram os dois-pontos</label>
+<label><input type="radio" name="q6"> O bloco não foi recuado</label>
+<label><input type="radio" name="q6"> Comparou texto com número</label>
+<label><input type="radio" name="q6"> Usou <code>=</code> (guardar) onde devia ser <code>==</code> (comparar)</label>
+</div>
+
+<h3>Missão final: o brinde da padaria</h3>
+
+<div class="trypy" data-stdin="45" data-goal="out:Ganhou um pão de queijo de brinde!;;out:Volte sempre!;;src:^\s*if\b">
+<p class="try-task"><strong>Missão:</strong> a padaria dá um pão de queijo de brinde em compras <strong>acima de R$ 30</strong>. O programa já lê o total (a entrada preparada é <code>45</code>) e se despede. Acrescente, entre as duas linhas, um <code>if</code> que mostre <code>Ganhou um pão de queijo de brinde!</code> quando o total for maior que 30. O <code>Volte sempre!</code> tem de continuar aparecendo para todo mundo.</p>
+<pre class="script" data-file="main.py">total = float(input("Total da compra: R$ "))
+print("Volte sempre!")
+</pre>
+<pre class="solucao" data-file="main.py">total = float(input("Total da compra: R$ "))
+if total &gt; 30:
+    print("Ganhou um pão de queijo de brinde!")
+print("Volte sempre!")
+</pre>
+</div>
+
+<p>Depois de cumprir a missão, copie o programa para um arquivo e rode no seu terminal com outros valores: 30, 30.01, 12. Com exatamente 30 não há brinde, porque a condição é "maior que", e não "maior ou igual".</p>
+
+<hr>
+
+<h2>Resumo</h2>
+<ul>
+  <li><code>if</code> ("se") roda um bloco <strong>só quando a condição é verdadeira</strong>; se for falsa, o bloco é pulado e o programa segue.</li>
+  <li>A linha do <code>if</code> termina com <strong>dois-pontos</strong>; o bloco vem embaixo, recuado com <strong>4 espaços</strong>. A primeira linha que volta para a margem encerra o bloco.</li>
+  <li>No Python o recuo não é enfeite: uma linha fora do bloco roda sempre, sem erro nenhum.</li>
+  <li>A condição pode ser uma comparação, várias juntas com <code>and</code>/<code>or</code>, uma comparação encadeada (<code>0 &lt;= x &lt;= 10</code>) ou qualquer valor: <code>0</code>, <code>""</code>, <code>None</code> e <code>False</code> contam como falsos; o resto, como verdadeiro.</li>
+  <li>Vários <code>if</code> seguidos são perguntas independentes: mais de um bloco pode rodar.</li>
+  <li><code>pass</code> guarda o lugar de um bloco que ainda não faz nada.</li>
+  <li>Erros clássicos: <code>expected ':'</code>, <code>expected an indented block</code>, <code>Maybe you meant '=='</code>, <code>unexpected indent</code>, <code>TabError</code>, e o <code>TypeError</code> de comparar o texto do <code>input()</code> com um número.</li>
+</ul>
+
+<div class="pager"></div>
+
+</div>
+</main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
