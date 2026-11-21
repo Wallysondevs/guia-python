@@ -10,7 +10,7 @@
 ## Os comandos (rodam no notebook, o trabalho acontece na VPS)
 | Comando | O que faz |
 |---|---|
-| `~/guia-c-lab/vps 'comando'` | Roda um comando na VPS (a pasta inicial é `/home/admin`). Ex.: `~/guia-c-lab/vps 'cat ~/guia-python/CONTRIBUINDO.md'` |
+| `~/guia-c-lab/vps 'comando'` | Roda um comando na VPS (a pasta inicial é `/home/ana`). Ex.: `~/guia-c-lab/vps 'cat ~/guia-python/CONTRIBUINDO.md'` |
 | `~/guia-c-lab/vps 'timeout 120 ~/guia-python-lab/lab -n SEU-NOME -i' < cmds.txt` | Laboratório da Ana (o stdin passa pelo ssh). |
 | `~/guia-python-lab/enviar SCRATCH/SEU-NOME/pagina.html` | Copia a página para `~/guia-python/` na VPS. |
 | `~/guia-python-lab/testar [--nativo] pagina.html` | Testador de missões na VPS (`timeout` incluso). Só existe depois que o agente do simulador entregar o testador. |
@@ -35,6 +35,6 @@
 5. **Lab com o seu nome:** `-n SEU-NOME`.
 6. **Não edite arquivos dos outros:** `assets/`, `tools/`, `CONTRIBUINDO.md`, `RECURSOS.md` e as páginas de outros autores. Achou um problema? Anote no fim do seu relatório.
 7. **Nada da máquina real nas páginas:**
-   - nenhum caminho com nome de usuário real, `/home/admin`, `ip-172-…` ou o IP da VPS;
+   - nenhum caminho com nome de usuário real, `ip-172-…` ou o IP da VPS;
    - nenhum nome real, fuso real, MAC ou IP real;
    - só a Ana: `/home/ana` e `notebook`.

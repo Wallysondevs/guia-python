@@ -142,10 +142,24 @@ function analisarHtml(html) {
     if (NIVEIS && !NIVEIS.has(alvo) && !alvo.includes("/"))
       problemas.push({ grav: "aviso", linha: linhaDe(l.index), msg: 'link para "' + alvo + '", que não está na NIVEIS' });
   }
-  const _u = ["wal", "lyson"].join("");
-  const PROIBIDO = new RegExp("/home/admin|/home/" + _u + "|" + _u + "(?!devs\\.github\\.io)|ip-172-\\d|guia-python-lab|/tmp/claude|/home/pyodide|web_user", "i");
-  // dados reais que não podem ir para o git (IP da VPS etc.): um por linha em ~/.guia-proibido
-  const PROIBIDO_EXTRA = (() => { try { return fs.readFileSync(path.join(require("os").homedir(), ".guia-proibido"), "utf8").split("\n").map((x) => x.trim()).filter(Boolean); } catch (e) { return []; } })();
+  // pastas pessoais que não sejam a da Ana, nomes de máquina da nuvem, o lab e rascunhos;
+  // valores de uma máquina específica: PROIBIDO=lista.txt ou ~/.guia-proibido (um por linha)
+  const PROIBIDO = /\/home\/(?!ana\b|seu-nome\b)[a-z][a-z0-9_-]*|ip-172-\d|guia-python-lab|\/tmp\/claude|web_user/i;
+  const PROIBIDO_EXTRA = (() => {
+    const itens = [], visto = new Set();
+    const arquivos = [];
+    if (process.env.PROIBIDO) arquivos.push(process.env.PROIBIDO);
+    arquivos.push(path.join(require("os").homedir(), ".guia-proibido"));
+    for (const arq of arquivos) {
+      try {
+        for (const linha of fs.readFileSync(arq, "utf8").split("\n")) {
+          const x = linha.trim();
+          if (x && !x.startsWith("#") && !visto.has(x)) { visto.add(x); itens.push(x); }
+        }
+      } catch (e) { /* lista opcional: PROIBIDO=arquivo ou ~/.guia-proibido */ }
+    }
+    return itens;
+  })();
   const linhasSrc = html.split("\n");
   for (let k = 0; k < linhasSrc.length; k++) {
     const p = PROIBIDO.exec(linhasSrc[k]) || PROIBIDO_EXTRA.map((x) => [x]).find((x) => linhasSrc[k].includes(x[0]));

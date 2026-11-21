@@ -9,7 +9,7 @@ O guia é uma **escola**, estilo W3Schools, para quem **nunca programou**. **Uma
 Antes de tudo, leia o `RECURSOS.md`: onde trabalhar (VPS) e como.
 
 ## 1. Esqueleto do arquivo
-Use como modelo a estrutura de `/home/admin/guia-sql/where.html` (cabeçalho, `<main>`, blocos, rodapé, `.exercise`, `.mc`, `dl.anatomy`, `div.cenario`, `div.note`, `table.ref`). Troque:
+Use como modelo a estrutura de `/home/ana/guia-sql/where.html` (cabeçalho, `<main>`, blocos, rodapé, `.exercise`, `.mc`, `dl.anatomy`, `div.cenario`, `div.note`, `table.ref`). Troque:
 - `<title>Python TEMA — descrição | Guia Python</title>`;
 - `<h1>Python <span class="hl">TEMA</span></h1>`;
 - a caixa `.trysql` por **`.trypy`** (seção 3).
