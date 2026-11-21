@@ -1,3 +1,5 @@
+<p align="center"><img src="capa.png" alt="Capa do guia-python" width="100%"></p>
+
 # Guia Python
 
 Site: https://wallysondevs.github.io/guia-python/
