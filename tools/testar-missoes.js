@@ -142,7 +142,8 @@ function analisarHtml(html) {
     if (NIVEIS && !NIVEIS.has(alvo) && !alvo.includes("/"))
       problemas.push({ grav: "aviso", linha: linhaDe(l.index), msg: 'link para "' + alvo + '", que não está na NIVEIS' });
   }
-  const PROIBIDO = /\/home\/admin|\/home\/wallyson|wallyson(?!devs\.github\.io)|ip-172-\d|guia-python-lab|\/tmp\/claude|\/home\/pyodide|web_user/i;
+  const _u = ["wal", "lyson"].join("");
+  const PROIBIDO = new RegExp("/home/admin|/home/" + _u + "|" + _u + "(?!devs\\.github\\.io)|ip-172-\\d|guia-python-lab|/tmp/claude|/home/pyodide|web_user", "i");
   // dados reais que não podem ir para o git (IP da VPS etc.): um por linha em ~/.guia-proibido
   const PROIBIDO_EXTRA = (() => { try { return fs.readFileSync(path.join(require("os").homedir(), ".guia-proibido"), "utf8").split("\n").map((x) => x.trim()).filter(Boolean); } catch (e) { return []; } })();
   const linhasSrc = html.split("\n");

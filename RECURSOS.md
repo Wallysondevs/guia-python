@@ -35,6 +35,6 @@
 5. **Lab com o seu nome:** `-n SEU-NOME`.
 6. **Não edite arquivos dos outros:** `assets/`, `tools/`, `CONTRIBUINDO.md`, `RECURSOS.md` e as páginas de outros autores. Achou um problema? Anote no fim do seu relatório.
 7. **Nada da máquina real nas páginas:**
-   - nenhum `/home/wallyson`, `/home/admin`, `ip-172-…` ou o IP da VPS;
+   - nenhum caminho com nome de usuário real, `/home/admin`, `ip-172-…` ou o IP da VPS;
    - nenhum nome real, fuso real, MAC ou IP real;
    - só a Ana: `/home/ana` e `notebook`.
